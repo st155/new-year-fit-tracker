@@ -2,6 +2,13 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Sparkles } from 'lucide-react';
 import { AUDIENCE_LEVEL_LABELS } from '@/lib/benchmark-standards';
+import { RecalculatedLevels, LEVEL_LABELS } from '@/lib/benchmark-recalculate';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface PreviewPanelProps {
   name: string;
@@ -13,6 +20,7 @@ interface PreviewPanelProps {
     type: string;
     benchmarkValue: number;
     unit: string;
+    allLevels?: RecalculatedLevels;
   }>;
   audienceLevel: number;
 }
@@ -27,6 +35,7 @@ export const PreviewPanel = ({
 }: PreviewPanelProps) => {
   const levelLabels = ['Beginner', 'Intermediate', 'Advanced', 'Elite'];
   const levelName = levelLabels[audienceLevel] || 'Unknown';
+  
   return (
     <Card className="p-6 bg-card border-2 border-primary/50 shadow-xl">
       <div className="space-y-4">
@@ -55,22 +64,53 @@ export const PreviewPanel = ({
           <div>
             <Label className="text-xs text-muted-foreground mb-2 block">Disciplines & Benchmarks</Label>
             <div className="space-y-2">
-              {disciplines.map((discipline, idx) => (
-                <div
-                  key={idx}
-                  className="flex justify-between items-center p-3 rounded-lg bg-primary/10 border border-primary/20"
-                >
-                  <span className="text-sm font-medium text-foreground">{discipline.name}</span>
-                  <div className="text-right">
-                    <span className="text-sm font-bold text-primary">
-                      {discipline.benchmarkValue} {discipline.unit}
-                    </span>
-                    <span className="text-xs text-muted-foreground ml-2">
-                      ({levelName})
-                    </span>
+              <TooltipProvider>
+                {disciplines.map((discipline, idx) => (
+                  <div
+                    key={idx}
+                    className="flex justify-between items-center p-3 rounded-lg bg-primary/10 border border-primary/20"
+                  >
+                    <span className="text-sm font-medium text-foreground">{discipline.name}</span>
+                    <div className="text-right">
+                      {discipline.allLevels ? (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="text-sm font-bold text-primary cursor-help underline decoration-dotted underline-offset-2">
+                              {discipline.benchmarkValue} {discipline.unit}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent side="left" className="p-3">
+                            <div className="space-y-1.5">
+                              <p className="font-semibold text-xs mb-2 border-b pb-1">All Difficulty Levels</p>
+                              {(Object.keys(discipline.allLevels) as (keyof RecalculatedLevels)[]).map((levelKey) => {
+                                const isCurrentLevel = LEVEL_LABELS[levelKey] === levelName;
+                                return (
+                                  <div 
+                                    key={levelKey} 
+                                    className={`flex justify-between gap-4 text-xs ${
+                                      isCurrentLevel ? 'font-bold text-primary' : ''
+                                    }`}
+                                  >
+                                    <span>{LEVEL_LABELS[levelKey]}:</span>
+                                    <span>{discipline.allLevels![levelKey]} {discipline.unit}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      ) : (
+                        <span className="text-sm font-bold text-primary">
+                          {discipline.benchmarkValue} {discipline.unit}
+                        </span>
+                      )}
+                      <span className="text-xs text-muted-foreground ml-2">
+                        ({levelName})
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </TooltipProvider>
             </div>
           </div>
         </div>
