@@ -1,0 +1,37 @@
+{
+  "menu": "Меню",
+  "navigation": "Навигация",
+  "home": "Главная",
+  "dashboard": "Дашборд",
+  "recommendations": "Советы",
+  "progress": "Прогресс",
+  "goals": "Цели",
+  "habits": "Привычки",
+  "body": "Тело",
+  "workouts": "Тренировки",
+  "challenges": "Челленджи",
+  "feed": "Лента",
+  "leaderboard": "Рейтинг",
+  "supplements": "Добавки",
+  "medicalDocuments": "Мед. документы",
+  "fitnessData": "Фитнес дата",
+  "integrations": "Интеграции",
+  "connections": "Подключения",
+  "profile": "Профиль",
+  "settings": "Настройки",
+  "logout": "Выйти",
+  "more": "Ещё",
+  "about": "О приложении",
+  "privacyPolicy": "Политика конфиденциальности",
+  "trainer": {
+    "dashboard": "Тренерский кабинет",
+    "analytics": "Аналитика",
+    "admin": "Администрирование",
+    "myProgress": "Мой прогресс",
+    "myGoals": "Мои цели"
+  },
+  "roles": {
+    "trainer": "Тренер",
+    "user": "Пользователь"
+  }
+}

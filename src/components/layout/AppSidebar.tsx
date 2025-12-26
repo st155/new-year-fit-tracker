@@ -25,8 +25,9 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useTranslation } from "@/lib/translations";
+import { useTranslation } from "react-i18next";
 import { useLifecycleAlerts } from "@/hooks/biostack";
+import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 
 export function AppSidebar() {
   const { user, signOut } = useAuth();
@@ -36,7 +37,7 @@ export function AppSidebar() {
   const [isTrainer, setIsTrainer] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const isCollapsed = state === "collapsed";
-  const { t } = useTranslation();
+  const { t } = useTranslation('navigation');
   const { unreadCount } = useLifecycleAlerts(user?.id);
 
   const currentPath = location.pathname;
@@ -74,31 +75,31 @@ export function AppSidebar() {
   }, [user]);
 
   const biostackItems = [
-    { title: "Supplements", url: "/supplements", iconType: "activity" as const, badge: "New" },
-    { title: "Medical Documents", url: "/medical-documents", iconType: "activity" as const },
+    { title: t('supplements'), url: "/supplements", iconType: "activity" as const, badge: "New" },
+    { title: t('medicalDocuments'), url: "/medical-documents", iconType: "activity" as const },
   ];
 
   const mainItems = [
-    { title: "navigation.dashboard", url: "/dashboard", iconType: "home" as const },
-    { title: "navigation.progress", url: "/progress", iconType: "stats" as const },
-    { title: "navigation.habits", url: "/habits", iconType: "habits" as const },
-    { title: "navigation.body", url: "/body", iconType: "activity" as const },
-    { title: "navigation.workouts", url: "/workouts", iconType: "activity" as const, badge: "AI" },
-    { title: "navigation.challenges", url: "/challenges", iconType: "challenges" as const },
-    { title: "navigation.goals", url: "/goals", iconType: "activity" as const },
-    { title: "navigation.feed", url: "/feed", iconType: "activity" as const },
+    { title: t('dashboard'), url: "/dashboard", iconType: "home" as const },
+    { title: t('progress'), url: "/progress", iconType: "stats" as const },
+    { title: t('habits'), url: "/habits", iconType: "habits" as const },
+    { title: t('body'), url: "/body", iconType: "activity" as const },
+    { title: t('workouts'), url: "/workouts", iconType: "activity" as const, badge: "AI" },
+    { title: t('challenges'), url: "/challenges", iconType: "challenges" as const },
+    { title: t('goals'), url: "/goals", iconType: "activity" as const },
+    { title: t('feed'), url: "/feed", iconType: "activity" as const },
   ];
 
   const trainerItems = [
-    { title: "navigation.trainerDashboard", url: "/trainer-dashboard", iconType: "trainer" as const },
-    { title: "navigation.analytics", url: "/trainer-analytics", iconType: "stats" as const },
-    { title: "navigation.admin", url: "/admin", iconType: "settings" as const },
+    { title: t('trainer.dashboard'), url: "/trainer-dashboard", iconType: "trainer" as const },
+    { title: t('trainer.analytics'), url: "/trainer-analytics", iconType: "stats" as const },
+    { title: t('trainer.admin'), url: "/admin", iconType: "settings" as const },
   ];
 
   const settingsItems = [
-    { title: "navigation.profile", url: "/profile", iconType: "settings" as const },
-    { title: "navigation.integrations", url: "/integrations", iconType: "integrations" as const },
-    { title: "navigation.fitnessData", url: "/fitness-data", iconType: "connections" as const },
+    { title: t('profile'), url: "/profile", iconType: "settings" as const },
+    { title: t('integrations'), url: "/integrations", iconType: "integrations" as const },
+    { title: t('fitnessData'), url: "/fitness-data", iconType: "connections" as const },
   ];
 
   const isActive = (path: string) => currentPath === path;
@@ -141,7 +142,7 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {biostackItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton
                     onClick={() => navigate(item.url)}
                     className={`w-full justify-start ${
@@ -180,12 +181,12 @@ export function AppSidebar() {
         {/* Main Navigation */}
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            {t('navigation.navigation')}
+            {t('navigation')}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {mainItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton
                     onClick={() => navigate(item.url)}
                     className={`w-full justify-start ${
@@ -201,7 +202,7 @@ export function AppSidebar() {
                     />
                     {!isCollapsed && (
                       <span className="flex items-center gap-2">
-                        {t(item.title)}
+                        {item.title}
                         {'badge' in item && item.badge && (
                           <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-primary/20 text-primary">
                             {item.badge}
@@ -220,12 +221,12 @@ export function AppSidebar() {
         {isTrainer && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              {t('common.trainer')}
+              {t('roles.trainer')}
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {trainerItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
+                  <SidebarMenuItem key={item.url}>
                     <SidebarMenuButton
                       onClick={() => navigate(item.url)}
                       className={`w-full justify-start ${
@@ -239,7 +240,7 @@ export function AppSidebar() {
                         isActive={isActive(item.url)}
                         className="scale-75"
                       />
-                      {!isCollapsed && <span>{t(item.title)}</span>}
+                      {!isCollapsed && <span>{item.title}</span>}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
@@ -251,12 +252,12 @@ export function AppSidebar() {
         {/* Settings Section */}
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            {t('navigation.settings')}
+            {t('settings')}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {settingsItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton
                     onClick={() => navigate(item.url)}
                     className={`w-full justify-start ${
@@ -270,7 +271,7 @@ export function AppSidebar() {
                       isActive={isActive(item.url)}
                       className="scale-75"
                     />
-                    {!isCollapsed && <span>{t(item.title)}</span>}
+                    {!isCollapsed && <span>{item.title}</span>}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -280,6 +281,13 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-border/50 p-4">
+        {/* Language Switcher */}
+        {!isCollapsed && (
+          <div className="mb-3">
+            <LanguageSwitcher />
+          </div>
+        )}
+        
         {/* User Profile */}
         {profile && (
           <div className="space-y-3">
@@ -298,7 +306,7 @@ export function AppSidebar() {
                   </p>
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary" className="text-xs">
-                      {isTrainer ? t('common.trainer') : t('common.user')}
+                      {isTrainer ? t('roles.trainer') : t('roles.user')}
                     </Badge>
                   </div>
                 </div>
@@ -313,7 +321,7 @@ export function AppSidebar() {
                 className="w-full justify-start text-muted-foreground hover:text-foreground"
               >
                 <LogOut className="h-4 w-4 mr-2" />
-                {t('navigation.logout')}
+                {t('logout')}
               </Button>
             )}
           </div>
