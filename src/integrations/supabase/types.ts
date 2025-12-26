@@ -6413,7 +6413,9 @@ export type Database = {
           expires_at: string | null
           id: string
           is_active: boolean
+          last_sync_at: string | null
           last_sync_date: string | null
+          oauth_state: string | null
           refresh_token: string | null
           scope: string | null
           updated_at: string
@@ -6427,7 +6429,9 @@ export type Database = {
           expires_at?: string | null
           id?: string
           is_active?: boolean
+          last_sync_at?: string | null
           last_sync_date?: string | null
+          oauth_state?: string | null
           refresh_token?: string | null
           scope?: string | null
           updated_at?: string
@@ -6441,7 +6445,9 @@ export type Database = {
           expires_at?: string | null
           id?: string
           is_active?: boolean
+          last_sync_at?: string | null
           last_sync_date?: string | null
+          oauth_state?: string | null
           refresh_token?: string | null
           scope?: string | null
           updated_at?: string
