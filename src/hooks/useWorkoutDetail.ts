@@ -24,9 +24,10 @@ export function useWorkoutDetail(workoutId: string) {
         .from('workouts')
         .select('*')
         .eq('id', workoutId)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
+      if (!data) return null;
       
       // Transform source_data for convenience
       const sourceData = data.source_data as any;
