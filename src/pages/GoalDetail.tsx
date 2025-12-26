@@ -1,6 +1,4 @@
-import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import GoalProgressDetail from "@/components/detail/GoalProgressDetail";
 import { PageLoader } from "@/components/ui/page-loader";
@@ -8,69 +6,29 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 
-interface Goal {
-  id: string;
-  goal_name: string;
-  goal_type: string;
-  target_value: number;
-  target_unit: string;
-  user_id: string;
-  challenge_id: string | null;
-  is_personal: boolean;
-}
+// New imports from features/goals
+import { useGoalDetailQuery } from "@/features/goals/hooks";
 
 const GoalDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [goal, setGoal] = useState<Goal | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (user && id) {
-      fetchGoal();
-    }
-  }, [user, id]);
-
-  const fetchGoal = async () => {
-    if (!user || !id) return;
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      const { data, error: fetchError } = await supabase
-        .from('goals')
-        .select('*')
-        .eq('id', id)
-        .maybeSingle();
-
-      if (fetchError) throw fetchError;
-
-      if (!data) {
-        setError("Цель не найдена");
-        return;
-      }
-
-      // Проверяем права доступа
-      const hasAccess = 
-        data.user_id === user.id || // Личная цель пользователя
-        !data.is_personal; // Или цель челленджа (публичная)
-
-      if (!hasAccess) {
-        setError("У вас нет доступа к этой цели");
-        return;
-      }
-
-      setGoal(data);
-    } catch (err) {
-      console.error('Error fetching goal:', err);
-      setError("Ошибка при загрузке цели");
-    } finally {
-      setLoading(false);
-    }
-  };
+  
+  const { data: goal, isLoading: loading, error: queryError } = useGoalDetailQuery(id || '');
+  
+  // Check access rights
+  const hasAccess = goal && (
+    goal.user_id === user?.id || // Personal goal
+    !goal.is_personal // Challenge goal (public)
+  );
+  
+  const error = queryError 
+    ? "Ошибка при загрузке цели" 
+    : (goal && !hasAccess) 
+      ? "У вас нет доступа к этой цели"
+      : (!goal && !loading)
+        ? "Цель не найдена"
+        : null;
 
   const handleBack = () => {
     navigate(-1);
@@ -80,7 +38,7 @@ const GoalDetail = () => {
     return <PageLoader message="Загрузка цели..." />;
   }
 
-  if (error || !goal) {
+  if (error || !goal || !hasAccess) {
     return (
       <div className="container max-w-4xl mx-auto p-4 md:p-6">
         <Card className="border-destructive/50">

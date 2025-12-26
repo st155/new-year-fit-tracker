@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import { useClientContext } from "@/contexts/ClientContext";
 import { useNavigate } from "react-router-dom";
-import { GoalCreateDialog } from "@/components/goals/GoalCreateDialog";
+import { GoalCreateDialog } from "@/features/goals/components";
 
 import { useGoalsRealtime, useMeasurementsRealtime } from "@/hooks/useRealtime";
 import { toast } from "sonner";

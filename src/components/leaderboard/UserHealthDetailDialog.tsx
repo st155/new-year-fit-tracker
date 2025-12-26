@@ -7,7 +7,7 @@ import { Loader2 } from "lucide-react";
 import { useBodyComposition } from "@/hooks/useBodyComposition";
 import { BodyCompositionHistory } from "@/components/body-composition/BodyCompositionHistory";
 import { UserOverviewTab } from "./UserOverviewTab";
-import { useChallengeGoals } from "@/hooks/useChallengeGoals";
+import { useChallengeGoalsQuery as useChallengeGoals } from "@/features/goals/hooks";
 import { ChallengeGoalCard } from "@/components/progress/ChallengeGoalCard";
 
 interface UserHealthDetailDialogProps {

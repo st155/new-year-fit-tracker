@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
-import { QuickMeasurementDialog } from "@/components/goals/QuickMeasurementDialog";
+import { QuickMeasurementDialog } from "@/features/goals/components";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatTimeDisplay } from "@/lib/utils";
 

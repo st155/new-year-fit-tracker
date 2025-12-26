@@ -1,5 +1,5 @@
 import { useAuth } from '@/hooks/useAuth';
-import { useChallengeGoals, ChallengeGoal } from '@/hooks/useChallengeGoals';
+import { useChallengeGoalsQuery as useChallengeGoals, ChallengeGoal } from '@/features/goals';
 import { AnimatedPage } from '@/components/layout/AnimatedPage';
 import { motion } from 'framer-motion';
 import { staggerContainer, staggerItem } from '@/lib/animations';
