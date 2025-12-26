@@ -23,13 +23,6 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
-// Whitelist of users who can use direct Whoop integration
-const WHOOP_DIRECT_USERS = [
-  'b9fc3f8b-e7bf-44f9-a591-cec47f9c93ae', // Alexey Gubarev
-  'f9e07829-5fd7-4e27-94eb-b3f5c49b4e7e', // Anton
-  '932aab9d-a104-4ba2-885f-2dfdc5dd5df2', // Pavel Radaev
-];
-
 interface WhoopStatus {
   connected: boolean;
   whoop_user_id?: string;
@@ -64,17 +57,54 @@ export function WhoopDirectIntegration() {
   const [disconnecting, setDisconnecting] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState('28');
   const [lastSyncResult, setLastSyncResult] = useState<SyncResult | null>(null);
+  const [isEligible, setIsEligible] = useState<boolean | null>(null);
 
-  // Check if user is whitelisted
-  const isWhitelisted = user && WHOOP_DIRECT_USERS.includes(user.id);
-
+  // Check if user is eligible (participant of any active challenge)
   useEffect(() => {
-    if (user && isWhitelisted) {
+    const checkEligibility = async () => {
+      if (!user) {
+        setIsEligible(false);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const today = new Date().toISOString().split('T')[0];
+        
+        const { data, error } = await supabase
+          .from('challenge_participants')
+          .select(`
+            challenge_id,
+            challenges!inner(id, is_active, end_date)
+          `)
+          .eq('user_id', user.id)
+          .eq('challenges.is_active', true)
+          .gte('challenges.end_date', today)
+          .limit(1);
+
+        if (error) {
+          console.error('Error checking Whoop eligibility:', error);
+          setIsEligible(false);
+        } else {
+          setIsEligible((data?.length || 0) > 0);
+        }
+      } catch (err) {
+        console.error('Failed to check Whoop eligibility:', err);
+        setIsEligible(false);
+      }
+    };
+
+    checkEligibility();
+  }, [user]);
+
+  // Check Whoop status when eligible
+  useEffect(() => {
+    if (isEligible === true && user) {
       checkStatus();
-    } else {
+    } else if (isEligible === false) {
       setLoading(false);
     }
-  }, [user, isWhitelisted]);
+  }, [user, isEligible]);
 
   // Listen for postMessage from OAuth popup
   useEffect(() => {
@@ -235,8 +265,8 @@ export function WhoopDirectIntegration() {
     }
   };
 
-  // Don't show for non-whitelisted users
-  if (!isWhitelisted) {
+  // Don't show for ineligible users or while checking eligibility
+  if (isEligible === null || isEligible === false) {
     return null;
   }
 
