@@ -4,6 +4,8 @@ import { ReadinessDial } from './ReadinessDial';
 import { ActionStrip } from './ActionStrip';
 import { MetricsCarouselV2 } from './MetricsCarouselV2';
 import { HabitsBentoCompact } from './HabitsBentoCompact';
+import { QuickWidgetsSection } from './QuickWidgetsSection';
+import { RetestAlertBanner } from './RetestAlertBanner';
 
 export function MobileDashboardV2() {
   return (
@@ -33,6 +35,14 @@ export function MobileDashboardV2() {
       {/* Compact Habits */}
       <div className="mt-4">
         <HabitsBentoCompact />
+      </div>
+      
+      {/* Retest Alert Banner (conditional) */}
+      <RetestAlertBanner />
+      
+      {/* Quick Widgets Section */}
+      <div className="mt-6">
+        <QuickWidgetsSection />
       </div>
     </motion.div>
   );

@@ -5,3 +5,8 @@ export { ActionStrip } from './ActionStrip';
 export { ActivityRings } from './ActivityRings';
 export { MetricsCarouselV2 } from './MetricsCarouselV2';
 export { HabitsBentoCompact } from './HabitsBentoCompact';
+export { QuickWidgetsSection } from './QuickWidgetsSection';
+export { IntegrationsCard } from './IntegrationsCard';
+export { ActiveProtocolsMiniCard } from './ActiveProtocolsMiniCard';
+export { LeaderboardMiniCard } from './LeaderboardMiniCard';
+export { RetestAlertBanner } from './RetestAlertBanner';
