@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Award, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { MetricsBadge } from "@/lib/challenge-scoring-v3";
+import type { MetricsBadge } from "@/features/challenges/types";
 
 interface BadgesSectionProps {
   badges: MetricsBadge[];

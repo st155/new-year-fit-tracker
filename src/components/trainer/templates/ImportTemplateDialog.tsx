@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Upload, FileJson } from "lucide-react";
 import { toast } from "sonner";
-import { ChallengeTemplate, importTemplateFromJSON, saveImportedTemplate } from "@/lib/challenge-templates";
+import { type ChallengeTemplate, importTemplateFromJSON, saveImportedTemplate } from "@/features/challenges/utils";
 
 interface ImportTemplateDialogProps {
   open: boolean;

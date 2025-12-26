@@ -1,5 +1,5 @@
 import { Card } from '@/components/ui/card';
-import { ChallengePreset } from '@/lib/challenge-presets';
+import type { ChallengePreset } from '@/features/challenges/utils';
 import { cn } from '@/lib/utils';
 
 interface PresetCardProps {

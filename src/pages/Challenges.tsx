@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { motion } from "framer-motion";
 import { staggerContainer, staggerItem } from "@/lib/animations";
-import { useChallenges } from "@/hooks/useChallenges";
+import { useChallengesQuery } from "@/features/challenges";
 import { ChallengeCard } from "@/components/challenges/ChallengeCard";
 import { Trophy, Target, Users, TrendingUp, Sparkles, Plus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,7 +17,7 @@ import { EmptyStateV3 } from "@/components/ui/empty-state-v3";
 
 export default function Challenges() {
   const { user } = useAuth();
-  const { challenges, isLoading, error, refetch } = useChallenges(user?.id);
+  const { challenges, isLoading, error, refetch } = useChallengesQuery(user?.id);
   
   console.log('🏆 [Challenges Page] Render:', {
     userId: user?.id,

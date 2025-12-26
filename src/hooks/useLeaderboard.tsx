@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useLeaderboardQuery } from './core/useLeaderboardQuery';
-import { usePreferredChallenge } from './usePreferredChallenge';
+import { usePreferredChallengeQuery } from '@/features/challenges';
 
 interface UseLeaderboardOptions {
   limit?: number;
@@ -17,7 +17,7 @@ export function useLeaderboard(options: UseLeaderboardOptions = {}) {
   const { limit, autoRefresh = false, refreshInterval = 30000, timePeriod = 'overall', challengeId: manualChallengeId } = options;
   
   // Get preferred challenge if no manual override
-  const { challengeId: preferredChallengeId, title: challengeTitle, isLoading: challengesLoading } = usePreferredChallenge(user?.id);
+  const { challengeId: preferredChallengeId, title: challengeTitle, isLoading: challengesLoading } = usePreferredChallengeQuery(user?.id);
   const effectiveChallengeId = manualChallengeId || preferredChallengeId;
 
   const { 

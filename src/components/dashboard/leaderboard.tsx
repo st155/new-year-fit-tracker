@@ -11,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "@/lib/translations";
 import { UserHealthDetailDialog } from "@/components/leaderboard/UserHealthDetailDialog";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
-import { formatPoints, getRankColorClass } from "@/lib/challenge-scoring-v3";
+import { formatPoints, getRankColorClass } from "@/features/challenges/utils";
 
 export function Leaderboard() {
   const navigate = useNavigate();

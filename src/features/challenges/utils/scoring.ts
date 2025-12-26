@@ -252,10 +252,5 @@ export function getRankColorClass(rank: number): string {
 // ============ Points Breakdown Helpers ============
 
 export function calculateTotalFromBreakdown(breakdown: PointsBreakdown): number {
-  const performance = Object.values(breakdown.performance).reduce((a, b) => a + b, 0);
-  const recovery = Object.values(breakdown.recovery).reduce((a, b) => a + b, 0);
-  const synergy = Object.values(breakdown.synergy).reduce((a, b) => a + b, 0);
-  const bonus = Object.values(breakdown.bonus).reduce((a, b) => a + b, 0);
-  
-  return performance + recovery + synergy + bonus;
+  return breakdown.performance.total + breakdown.recovery.total + breakdown.synergy.total;
 }

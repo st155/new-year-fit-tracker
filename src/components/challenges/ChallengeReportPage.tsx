@@ -4,7 +4,7 @@ import { ArrowLeft, Share2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageLoader } from "@/components/ui/page-loader";
 import { useAuth } from "@/hooks/useAuth";
-import { useChallengeReport } from "@/hooks/useChallengeReport";
+import { useChallengeReportQuery } from "@/features/challenges";
 import { ReportHeader } from "./report/ReportHeader";
 import { GoalsProgressSection } from "./report/GoalsProgressSection";
 import { ActivitySummaryCard } from "./report/ActivitySummaryCard";
@@ -19,7 +19,7 @@ export function ChallengeReportPage() {
   const navigate = useNavigate();
 
   const isPreview = searchParams.get("preview") === "true";
-  const { data: report, isLoading, error } = useChallengeReport(challengeId, user?.id, { preview: isPreview });
+  const { data: report, isLoading, error } = useChallengeReportQuery(challengeId, user?.id, { preview: isPreview });
 
   const handleShare = async () => {
     if (!report) return;
