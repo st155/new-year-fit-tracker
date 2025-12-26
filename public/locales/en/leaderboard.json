@@ -1,0 +1,20 @@
+{
+  "title": "Leaderboard",
+  "team": "Team",
+  "rank": "Rank",
+  "points": "points",
+  "activeDays": "active days",
+  "viewFull": "View full leaderboard",
+  "noData": "No leaderboard data",
+  "noDataDesc": "Start participating in challenges to appear on the leaderboard",
+  "noChallenge": "No active challenge",
+  "noChallengeDesc": "Join a challenge to see the leaderboard",
+  "errorLoading": "Error loading",
+  "retry": "Retry",
+  "refresh": "Refresh",
+  "loading": "Loading leaderboard...",
+  "you": "(You)",
+  "weeklyLeaders": "Weekly Leaders",
+  "fullRankings": "Full Rankings",
+  "topPodium": "Top 3 Podium"
+}

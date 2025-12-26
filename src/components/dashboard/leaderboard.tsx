@@ -8,14 +8,14 @@ import { cn } from "@/lib/utils";
 import { LeaderboardSkeleton } from "@/components/ui/dashboard-skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { useTranslation } from "@/lib/translations";
+import { useTranslation } from 'react-i18next';
 import { UserHealthDetailDialog } from "@/components/leaderboard/UserHealthDetailDialog";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
 import { formatPoints, getRankColorClass } from "@/features/challenges/utils";
 
 export function Leaderboard() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t } = useTranslation('dashboard');
   const { leaderboard, loading, error, refresh, challengeTitle } = useLeaderboard({ 
     limit: 5, 
     timePeriod: 'overall',
@@ -53,12 +53,12 @@ export function Leaderboard() {
         <Card className="border-2 border-destructive/20 bg-card/40 backdrop-blur-sm">
           <CardContent className="p-8 text-center space-y-3">
             <p className="text-sm text-destructive font-medium">
-              Ошибка загрузки лидерборда
+              {t('leaderboard.errorLoading')}
             </p>
             <p className="text-xs text-muted-foreground">{error}</p>
             <Button onClick={() => refresh()} variant="outline" size="sm">
               <RefreshCw className="mr-2 h-3 w-3" />
-              Повторить
+              {t('leaderboard.retry')}
             </Button>
           </CardContent>
         </Card>
@@ -78,14 +78,14 @@ export function Leaderboard() {
         <Card className="border-2 border-accent/20 bg-card/40 backdrop-blur-sm">
           <CardContent className="p-8 text-center space-y-3">
             <p className="text-sm text-muted-foreground">
-              Нет данных лидерборда
+              {t('leaderboard.noData')}
             </p>
             <p className="text-xs text-muted-foreground">
-              Начните участвовать в челленджах для отображения в таблице
+              {t('leaderboard.noDataDesc')}
             </p>
             <Button onClick={() => refresh()} variant="outline" size="sm">
               <RefreshCw className="mr-2 h-3 w-3" />
-              Обновить
+              {t('refresh')}
             </Button>
           </CardContent>
         </Card>

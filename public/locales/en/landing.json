@@ -1,0 +1,48 @@
+{
+  "getStarted": "Get Started",
+  "goToApp": "Go to App",
+  "newChallengeSoon": "New challenge coming soon!",
+  "heroTitle1": "Achieve fitness goals",
+  "heroTitle2": "together with your team",
+  "heroSubtitle": "Join challenges, track progress and compete with friends",
+  "startFreeTrial": "Start Free Trial",
+  "watchDemo": "Watch Demo",
+  "stats": {
+    "participants": "Participants",
+    "challenges": "Challenges",
+    "metrics": "Metrics tracked"
+  },
+  "features": {
+    "title": "Everything you need to succeed",
+    "tracking": {
+      "title": "Smart Tracking",
+      "desc": "Automatic data collection from your devices"
+    },
+    "challenges": {
+      "title": "Team Challenges",
+      "desc": "Compete with friends and colleagues"
+    },
+    "ai": {
+      "title": "AI Analytics",
+      "desc": "Personal recommendations based on your data"
+    },
+    "integrations": {
+      "title": "Integrations",
+      "desc": "Whoop, Garmin, Apple Health and more"
+    }
+  },
+  "testimonials": {
+    "title": "What our users say"
+  },
+  "cta": {
+    "title": "Ready to start?",
+    "subtitle": "Join thousands of users today",
+    "button": "Start Free Trial"
+  },
+  "footer": {
+    "about": "About",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "contact": "Contact"
+  }
+}

@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AIPhotoUpload } from "@/components/ui/ai-photo-upload";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
-import { useTranslation } from "@/lib/translations";
+import { useTranslation } from 'react-i18next';
 
 interface QuickActionsProps {
   userRole: "participant" | "trainer";
@@ -17,14 +17,14 @@ export function QuickActions({ userRole }: QuickActionsProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isAIDialogOpen, setIsAIDialogOpen] = useState(false);
-  const { t } = useTranslation();
+  const { t } = useTranslation('dashboard');
 
   if (userRole === "trainer") {
     return (
       <div className="space-y-4 animate-fade-in">
         <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide flex items-center gap-2 px-1">
           <BarChart3 className="h-4 w-4 text-primary" />
-          {t('navigation.dashboard')}
+          {t('title')}
         </h3>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 stagger-fade-in">
@@ -37,7 +37,7 @@ export function QuickActions({ userRole }: QuickActionsProps) {
                 <div className="p-2 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-all duration-500 group-hover:scale-110 group-hover:rotate-6">
                   <BarChart3 className="h-5 w-5 text-primary" />
                 </div>
-                <span className="font-semibold text-foreground">{t('navigation.dashboard')}</span>
+                <span className="font-semibold text-foreground">{t('title')}</span>
               </div>
             </CardContent>
           </Card>
@@ -51,7 +51,7 @@ export function QuickActions({ userRole }: QuickActionsProps) {
                 <div className="p-2 rounded-xl bg-accent/10 group-hover:bg-accent/20 transition-all duration-500 group-hover:scale-110 group-hover:rotate-6">
                   <MessageSquare className="h-5 w-5 text-accent" />
                 </div>
-                <span className="font-semibold text-foreground">{t('trainer.messages', { defaultValue: 'Client Messages' })}</span>
+                <span className="font-semibold text-foreground">{t('trainer.messages')}</span>
               </div>
             </CardContent>
           </Card>
@@ -65,7 +65,7 @@ export function QuickActions({ userRole }: QuickActionsProps) {
                 <div className="p-2 rounded-xl bg-blue-500/10 group-hover:bg-blue-500/20 transition-all duration-500 group-hover:scale-110 group-hover:rotate-6">
                   <Calendar className="h-5 w-5 text-blue-500" />
                 </div>
-                <span className="font-semibold text-foreground">{t('trainer.plans', { defaultValue: 'Training Plans' })}</span>
+                <span className="font-semibold text-foreground">{t('trainer.plans')}</span>
               </div>
             </CardContent>
           </Card>
@@ -79,7 +79,7 @@ export function QuickActions({ userRole }: QuickActionsProps) {
                 <div className="p-2 rounded-xl bg-purple-500/10 group-hover:bg-purple-500/20 transition-all duration-500 group-hover:scale-110 group-hover:rotate-6">
                   <Target className="h-5 w-5 text-purple-500" />
                 </div>
-                <span className="font-semibold text-foreground">{t('trainer.goals', { defaultValue: 'Goals Management' })}</span>
+                <span className="font-semibold text-foreground">{t('trainer.goals')}</span>
               </div>
             </CardContent>
           </Card>
@@ -97,7 +97,7 @@ export function QuickActions({ userRole }: QuickActionsProps) {
           <DialogTrigger asChild>
             <button className="group h-20 rounded-2xl border-0 bg-gradient-to-br from-orange-400 via-red-500 to-pink-600 text-white cursor-pointer hover:scale-105 active:scale-95 transition-all duration-500 shadow-lg hover:shadow-2xl flex flex-col items-center justify-center gap-1.5 p-3">
               <Brain className="h-5 w-5 transition-all duration-500 group-hover:scale-110 group-hover:rotate-12" />
-              <span className="text-[10px] font-semibold">{t('actions.aiAnalysis')}</span>
+              <span className="text-[10px] font-semibold">{t('quickActions.aiAnalysis')}</span>
             </button>
           </DialogTrigger>
           <DialogContent className="max-w-md">
@@ -121,7 +121,7 @@ export function QuickActions({ userRole }: QuickActionsProps) {
           onClick={() => setIsAIDialogOpen(true)}
         >
           <Upload className="h-5 w-5 transition-all duration-500 group-hover:scale-110 group-hover:-translate-y-1" />
-          <span className="text-[10px] font-semibold">{t('actions.upload')}</span>
+          <span className="text-[10px] font-semibold">{t('quickActions.upload')}</span>
         </button>
         
         <button 
@@ -129,7 +129,7 @@ export function QuickActions({ userRole }: QuickActionsProps) {
           onClick={() => navigate('/goals/create')}
         >
           <Target className="h-5 w-5 transition-all duration-500 group-hover:scale-110 group-hover:rotate-90" />
-          <span className="text-[10px] font-semibold">{t('actions.newGoal')}</span>
+          <span className="text-[10px] font-semibold">{t('quickActions.newGoal')}</span>
         </button>
       </div>
       
@@ -142,7 +142,7 @@ export function QuickActions({ userRole }: QuickActionsProps) {
           <div className="p-1 rounded-full bg-white/20 transition-all duration-500 group-hover:scale-110">
             <TrendingUp className="h-4 w-4" />
           </div>
-          <span className="text-xs font-semibold">{t('actions.progress')}</span>
+          <span className="text-xs font-semibold">{t('quickActions.progress')}</span>
         </button>
 
         <button 
@@ -152,7 +152,7 @@ export function QuickActions({ userRole }: QuickActionsProps) {
           <div className="p-1 rounded-full bg-white/20 transition-all duration-500 group-hover:scale-110 group-hover:rotate-12">
             <Trophy className="h-4 w-4" />
           </div>
-          <span className="text-xs font-semibold">{t('actions.leaderboard')}</span>
+          <span className="text-xs font-semibold">{t('quickActions.leaderboard')}</span>
         </button>
 
         <button 
@@ -162,7 +162,7 @@ export function QuickActions({ userRole }: QuickActionsProps) {
           <div className="p-1 rounded-full bg-white/20 transition-all duration-500 group-hover:scale-110">
             <Activity className="h-4 w-4" />
           </div>
-          <span className="text-xs font-semibold">{t('actions.data')}</span>
+          <span className="text-xs font-semibold">{t('quickActions.data')}</span>
         </button>
       </div>
       
@@ -175,9 +175,9 @@ export function QuickActions({ userRole }: QuickActionsProps) {
         <div className="flex items-start gap-2.5">
           <div className="text-xl shrink-0 transition-all duration-500 group-hover:scale-110 group-hover:rotate-12">💡</div>
           <div className="text-left space-y-0.5">
-            <p className="text-xs font-semibold text-primary">{t('actions.tipTitle')}</p>
+            <p className="text-xs font-semibold text-primary">{t('quickActions.tipTitle')}</p>
             <p className="text-[10px] text-muted-foreground leading-tight">
-              {t('actions.tipText')}
+              {t('quickActions.tipText')}
             </p>
           </div>
         </div>

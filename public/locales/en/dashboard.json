@@ -1,0 +1,68 @@
+{
+  "title": "Dashboard",
+  "myMetrics": "My Metrics",
+  "refresh": "Refresh",
+  "quickActions": {
+    "title": "Quick Actions",
+    "aiAnalysis": "AI Analysis",
+    "upload": "Upload",
+    "newGoal": "New Goal",
+    "progress": "Progress",
+    "leaderboard": "Leaderboard",
+    "data": "Data",
+    "tipTitle": "Tip",
+    "tipText": "Connect your devices for automatic tracking"
+  },
+  "trainer": {
+    "messages": "Client Messages",
+    "plans": "Training Plans",
+    "goals": "Goals Management"
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "team": "Team",
+    "rank": "Rank",
+    "points": "points",
+    "activeDays": "active days",
+    "viewFull": "View full leaderboard",
+    "noData": "No leaderboard data",
+    "noDataDesc": "Start participating in challenges to appear on the leaderboard",
+    "errorLoading": "Error loading leaderboard",
+    "retry": "Retry"
+  },
+  "metrics": {
+    "recovery": "Recovery",
+    "fromWhoop": "From Whoop",
+    "noData": "No data"
+  },
+  "extraMetrics": {
+    "sleep": "Sleep",
+    "strain": "Strain",
+    "activeMin": "Active Min",
+    "calories": "Calories",
+    "avgSteps": "Avg Steps",
+    "restHr": "Rest HR",
+    "hydration": "Hydration",
+    "workouts": "Workouts",
+    "subtitles": {
+      "avgPerNight": "avg per night",
+      "today": "today",
+      "thisWeek": "this week",
+      "dailyAvg": "daily avg",
+      "morningAvg": "morning avg"
+    },
+    "units": {
+      "hours": "h",
+      "min": "min",
+      "kcal": "kcal",
+      "bpm": "bpm",
+      "liters": "L",
+      "times": "times",
+      "steps": "steps"
+    }
+  },
+  "ai": {
+    "fitnessTitle": "AI Fitness Analysis",
+    "uploadTracker": "Upload your tracker photo"
+  }
+}

@@ -8,7 +8,7 @@ import { Leaderboard } from "./leaderboard";
 import { WeeklyGoals } from "./weekly-goals";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useTranslation } from "@/lib/translations";
+import { useTranslation } from 'react-i18next';
 
 interface MetricCardProps {
   icon: React.ReactNode;
@@ -88,18 +88,18 @@ function CompactMetricCard({ icon, title, value, unit, change, subtitle, color, 
 export function AdditionalMetrics() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { t } = useTranslation();
+  const { t } = useTranslation('dashboard');
   
   const [metricsData, setMetricsData] = useState<Record<string, any>>({
-    sleep: { value: "—", change: null, subtitle: t('extraMetrics.subtitles.avgPerNight') },
-    recovery: { value: "—", change: null, subtitle: t('dashboard.metrics.from_whoop') },
-    strain: { value: "—", change: null, subtitle: t('extraMetrics.subtitles.today') },
-    activeMin: { value: "—", change: null, subtitle: t('extraMetrics.subtitles.thisWeek') },
-    calories: { value: "—", change: null, subtitle: t('extraMetrics.subtitles.dailyAvg') },
-    avgSteps: { value: "—", change: null, subtitle: t('extraMetrics.subtitles.thisWeek') },
-    restHr: { value: "—", change: null, subtitle: t('extraMetrics.subtitles.morningAvg') },
-    hydration: { value: "—", change: null, subtitle: t('extraMetrics.subtitles.today') },
-    workouts: { value: "—", change: null, subtitle: t('extraMetrics.subtitles.thisWeek') }
+    sleep: { value: "—", change: null, subtitle: "" },
+    recovery: { value: "—", change: null, subtitle: "" },
+    strain: { value: "—", change: null, subtitle: "" },
+    activeMin: { value: "—", change: null, subtitle: "" },
+    calories: { value: "—", change: null, subtitle: "" },
+    avgSteps: { value: "—", change: null, subtitle: "" },
+    restHr: { value: "—", change: null, subtitle: "" },
+    hydration: { value: "—", change: null, subtitle: "" },
+    workouts: { value: "—", change: null, subtitle: "" }
   });
 
   useEffect(() => {
@@ -220,7 +220,7 @@ export function AdditionalMetrics() {
         if (recoveryRes.data && recoveryRes.data.length > 0) {
           const recoveryRecord = recoveryRes.data[0];
           newMetrics.recovery.value = Math.round(Number(recoveryRecord.value)).toString();
-          newMetrics.recovery.subtitle = `${t('dashboard.metrics.from_whoop')} (${new Date(recoveryRecord.measurement_date).toLocaleDateString()})`;
+          newMetrics.recovery.subtitle = `${t('metrics.fromWhoop')} (${new Date(recoveryRecord.measurement_date).toLocaleDateString()})`;
         }
 
         // Strain - берем последний доступный и показываем дату
@@ -349,7 +349,7 @@ export function AdditionalMetrics() {
       icon: <Footprints className="h-4 w-4 text-accent" />,
       title: t('extraMetrics.avgSteps'),
       value: metricsData.avgSteps.value,
-      unit: t('metrics.units.steps'),
+      unit: t('extraMetrics.units.steps'),
       change: metricsData.avgSteps.change,
       subtitle: metricsData.avgSteps.subtitle,
       color: "accent",
