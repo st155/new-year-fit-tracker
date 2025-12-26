@@ -722,13 +722,24 @@ async function syncUserData(serviceClient: any, tokenData: WhoopToken, daysBack:
     console.warn(`⚠️ [whoop-sync] Failed to fetch workouts:`, error);
   }
 
-  // Batch insert metrics
+  // Batch insert metrics - deduplicate first
   if (metricsToInsert.length > 0) {
-    console.log(`💾 [whoop-sync] Inserting ${metricsToInsert.length} metrics...`);
+    // Deduplicate metrics by unique key (metric_name + measurement_date + source)
+    const uniqueMetricsMap = new Map<string, typeof metricsToInsert[0]>();
+    for (const metric of metricsToInsert) {
+      const key = `${metric.metric_name}_${metric.measurement_date}_${metric.source}`;
+      // Keep the last value (or the one with external_id if exists)
+      if (!uniqueMetricsMap.has(key) || metric.external_id) {
+        uniqueMetricsMap.set(key, metric);
+      }
+    }
+    const uniqueMetrics = Array.from(uniqueMetricsMap.values());
+    
+    console.log(`💾 [whoop-sync] Inserting ${uniqueMetrics.length} metrics (deduplicated from ${metricsToInsert.length})...`);
     
     const { error: metricsError } = await serviceClient
       .from('unified_metrics')
-      .upsert(metricsToInsert, {
+      .upsert(uniqueMetrics, {
         onConflict: 'user_id,metric_name,measurement_date,source',
         ignoreDuplicates: false,
       });
@@ -738,14 +749,14 @@ async function syncUserData(serviceClient: any, tokenData: WhoopToken, daysBack:
     }
   }
 
-  // Batch insert workouts
+  // Batch insert workouts - use correct constraint (user_id, external_id)
   if (workoutsToInsert.length > 0) {
     console.log(`💾 [whoop-sync] Inserting ${workoutsToInsert.length} workouts...`);
     
     const { error: workoutsError } = await serviceClient
       .from('workouts')
       .upsert(workoutsToInsert, {
-        onConflict: 'external_id',
+        onConflict: 'user_id,external_id',
         ignoreDuplicates: false,
       });
 
