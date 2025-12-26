@@ -85,17 +85,47 @@ async function fetchWhoopData(accessToken: string, endpoint: string, params?: Re
     });
   }
 
+  console.log(`🔗 [whoop-sync] Requesting: ${url.toString()}`);
+  
   const response = await fetch(url.toString(), {
     headers: { 'Authorization': `Bearer ${accessToken}` },
   });
 
+  const responseText = await response.text();
+  console.log(`📊 [whoop-sync] Response for ${endpoint}: ${response.status} - ${responseText.slice(0, 300)}`);
+
   if (!response.ok) {
-    const errorText = await response.text();
-    console.error(`❌ [whoop-sync] API error for ${endpoint}:`, errorText);
-    throw new Error(`Whoop API error: ${response.status}`);
+    throw new Error(`Whoop API error: ${response.status} - ${responseText}`);
   }
 
-  return response.json();
+  return JSON.parse(responseText);
+}
+
+// Fetch all pages of data with pagination
+async function fetchAllWhoopData(accessToken: string, endpoint: string, params: Record<string, string>): Promise<any[]> {
+  const allRecords: any[] = [];
+  let nextToken: string | null = null;
+  let pageCount = 0;
+  const maxPages = 10; // Safety limit
+  
+  do {
+    const queryParams = {
+      ...params,
+      limit: '25', // V2 API max limit
+      ...(nextToken ? { nextToken } : {}),
+    };
+    
+    const data = await fetchWhoopData(accessToken, endpoint, queryParams);
+    const records = data.records || [];
+    allRecords.push(...records);
+    nextToken = data.next_token || null;
+    pageCount++;
+    
+    console.log(`📄 [whoop-sync] ${endpoint} page ${pageCount}: ${records.length} records, nextToken: ${nextToken ? 'yes' : 'no'}`);
+  } while (nextToken && pageCount < maxPages);
+  
+  console.log(`✅ [whoop-sync] ${endpoint} total: ${allRecords.length} records from ${pageCount} pages`);
+  return allRecords;
 }
 
 async function syncUserData(serviceClient: any, tokenData: WhoopToken, daysBack: number = 7) {
@@ -112,15 +142,15 @@ async function syncUserData(serviceClient: any, tokenData: WhoopToken, daysBack:
   const metricsToInsert: any[] = [];
   const workoutsToInsert: any[] = [];
 
+  // Fetch cycles (contains strain data)
   try {
-    // Fetch cycles (contains strain data)
     console.log(`🔄 [whoop-sync] Fetching cycles...`);
-    const cyclesData = await fetchWhoopData(accessToken, '/cycle', {
+    const cycles = await fetchAllWhoopData(accessToken, '/cycle', {
       start: `${startStr}T00:00:00.000Z`,
       end: `${endStr}T23:59:59.999Z`,
     });
 
-    for (const cycle of cyclesData.records || []) {
+    for (const cycle of cycles) {
       const measurementDate = cycle.start?.split('T')[0];
       if (!measurementDate) continue;
 
@@ -177,7 +207,7 @@ async function syncUserData(serviceClient: any, tokenData: WhoopToken, daysBack:
           user_id: userId,
           metric_name: 'Active Calories',
           metric_category: 'activity',
-          value: Math.round(cycle.score.kilojoule / 4.184), // kJ to kcal
+          value: Math.round(cycle.score.kilojoule / 4.184),
           unit: 'kcal',
           source: 'whoop',
           provider: 'whoop',
@@ -188,15 +218,20 @@ async function syncUserData(serviceClient: any, tokenData: WhoopToken, daysBack:
         });
       }
     }
+    console.log(`✅ [whoop-sync] Cycles processed: ${cycles.length} records`);
+  } catch (error) {
+    console.warn(`⚠️ [whoop-sync] Failed to fetch cycles:`, error);
+  }
 
-    // Fetch recovery data
+  // Fetch recovery data
+  try {
     console.log(`🔄 [whoop-sync] Fetching recovery...`);
-    const recoveryData = await fetchWhoopData(accessToken, '/recovery', {
+    const recoveries = await fetchAllWhoopData(accessToken, '/recovery', {
       start: `${startStr}T00:00:00.000Z`,
       end: `${endStr}T23:59:59.999Z`,
     });
 
-    for (const recovery of recoveryData.records || []) {
+    for (const recovery of recoveries) {
       const measurementDate = recovery.created_at?.split('T')[0];
       if (!measurementDate) continue;
 
@@ -212,7 +247,7 @@ async function syncUserData(serviceClient: any, tokenData: WhoopToken, daysBack:
           measurement_date: measurementDate,
           priority: 1,
           confidence_score: 95,
-          external_id: `whoop_recovery_${recovery.cycle_id}`,
+          external_id: `whoop_recovery_${recovery.cycle_id || recovery.sleep_id}`,
         });
       }
 
@@ -228,7 +263,7 @@ async function syncUserData(serviceClient: any, tokenData: WhoopToken, daysBack:
           measurement_date: measurementDate,
           priority: 1,
           confidence_score: 95,
-          external_id: `whoop_hrv_${recovery.cycle_id}`,
+          external_id: `whoop_hrv_${recovery.cycle_id || recovery.sleep_id}`,
         });
       }
 
@@ -244,11 +279,10 @@ async function syncUserData(serviceClient: any, tokenData: WhoopToken, daysBack:
           measurement_date: measurementDate,
           priority: 1,
           confidence_score: 95,
-          external_id: `whoop_rhr_${recovery.cycle_id}`,
+          external_id: `whoop_rhr_${recovery.cycle_id || recovery.sleep_id}`,
         });
       }
 
-      // SpO2 - like Terra API
       if (recovery.score?.spo2_percentage !== undefined) {
         metricsToInsert.push({
           user_id: userId,
@@ -261,11 +295,10 @@ async function syncUserData(serviceClient: any, tokenData: WhoopToken, daysBack:
           measurement_date: measurementDate,
           priority: 1,
           confidence_score: 95,
-          external_id: `whoop_spo2_${recovery.cycle_id}`,
+          external_id: `whoop_spo2_${recovery.cycle_id || recovery.sleep_id}`,
         });
       }
 
-      // Respiratory Rate - like Terra API
       if (recovery.score?.respiratory_rate !== undefined) {
         metricsToInsert.push({
           user_id: userId,
@@ -278,11 +311,10 @@ async function syncUserData(serviceClient: any, tokenData: WhoopToken, daysBack:
           measurement_date: measurementDate,
           priority: 1,
           confidence_score: 95,
-          external_id: `whoop_resp_${recovery.cycle_id}`,
+          external_id: `whoop_resp_${recovery.cycle_id || recovery.sleep_id}`,
         });
       }
 
-      // Skin Temperature Delta - if available
       if (recovery.score?.skin_temp_celsius !== undefined) {
         metricsToInsert.push({
           user_id: userId,
@@ -295,19 +327,24 @@ async function syncUserData(serviceClient: any, tokenData: WhoopToken, daysBack:
           measurement_date: measurementDate,
           priority: 1,
           confidence_score: 95,
-          external_id: `whoop_skin_temp_${recovery.cycle_id}`,
+          external_id: `whoop_skin_temp_${recovery.cycle_id || recovery.sleep_id}`,
         });
       }
     }
+    console.log(`✅ [whoop-sync] Recovery processed: ${recoveries.length} records`);
+  } catch (error) {
+    console.warn(`⚠️ [whoop-sync] Failed to fetch recovery (this is OK if no data):`, error);
+  }
 
-    // Fetch sleep data
+  // Fetch sleep data
+  try {
     console.log(`🔄 [whoop-sync] Fetching sleep...`);
-    const sleepData = await fetchWhoopData(accessToken, '/sleep', {
+    const sleeps = await fetchAllWhoopData(accessToken, '/sleep', {
       start: `${startStr}T00:00:00.000Z`,
       end: `${endStr}T23:59:59.999Z`,
     });
 
-    for (const sleep of sleepData.records || []) {
+    for (const sleep of sleeps) {
       const measurementDate = sleep.start?.split('T')[0];
       if (!measurementDate) continue;
 
@@ -462,10 +499,15 @@ async function syncUserData(serviceClient: any, tokenData: WhoopToken, daysBack:
         }
       }
     }
+    console.log(`✅ [whoop-sync] Sleep processed: ${sleeps.length} records`);
+  } catch (error) {
+    console.warn(`⚠️ [whoop-sync] Failed to fetch sleep:`, error);
+  }
 
-    // Fetch workouts
+  // Fetch workouts
+  try {
     console.log(`🔄 [whoop-sync] Fetching workouts...`);
-    const workoutsData = await fetchWhoopData(accessToken, '/workout', {
+    const workouts = await fetchAllWhoopData(accessToken, '/workout', {
       start: `${startStr}T00:00:00.000Z`,
       end: `${endStr}T23:59:59.999Z`,
     });
@@ -553,7 +595,7 @@ async function syncUserData(serviceClient: any, tokenData: WhoopToken, daysBack:
     // Track workouts by date for Workout Count metric
     const workoutsByDate: Record<string, number> = {};
 
-    for (const workout of workoutsData.records || []) {
+    for (const workout of workouts) {
       const startTime = workout.start;
       const endTime = workout.end;
       if (!startTime) continue;
@@ -675,60 +717,59 @@ async function syncUserData(serviceClient: any, tokenData: WhoopToken, daysBack:
         external_id: `whoop_workout_count_${date}`,
       });
     }
-
-    // Batch insert metrics
-    if (metricsToInsert.length > 0) {
-      console.log(`💾 [whoop-sync] Inserting ${metricsToInsert.length} metrics...`);
-      
-      const { error: metricsError } = await serviceClient
-        .from('unified_metrics')
-        .upsert(metricsToInsert, {
-          onConflict: 'user_id,metric_name,measurement_date,source',
-          ignoreDuplicates: false,
-        });
-
-      if (metricsError) {
-        console.error(`❌ [whoop-sync] Error inserting metrics:`, metricsError);
-      }
-    }
-
-    // Batch insert workouts
-    if (workoutsToInsert.length > 0) {
-      console.log(`💾 [whoop-sync] Inserting ${workoutsToInsert.length} workouts...`);
-      
-      const { error: workoutsError } = await serviceClient
-        .from('workouts')
-        .upsert(workoutsToInsert, {
-          onConflict: 'external_id',
-          ignoreDuplicates: false,
-        });
-
-      if (workoutsError) {
-        console.error(`❌ [whoop-sync] Error inserting workouts:`, workoutsError);
-      }
-    }
-
-    // Update last sync time
-    await serviceClient
-      .from('whoop_tokens')
-      .update({ 
-        last_sync_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .eq('user_id', userId);
-
-    console.log(`✅ [whoop-sync] Sync completed for user ${userId}: ${metricsToInsert.length} metrics, ${workoutsToInsert.length} workouts`);
-
-    return {
-      success: true,
-      metrics_count: metricsToInsert.length,
-      workouts_count: workoutsToInsert.length,
-    };
-
-  } catch (error: any) {
-    console.error(`❌ [whoop-sync] Error syncing user ${userId}:`, error.message);
-    throw error;
+    console.log(`✅ [whoop-sync] Workouts processed: ${workouts.length} records`);
+  } catch (error) {
+    console.warn(`⚠️ [whoop-sync] Failed to fetch workouts:`, error);
   }
+
+  // Batch insert metrics
+  if (metricsToInsert.length > 0) {
+    console.log(`💾 [whoop-sync] Inserting ${metricsToInsert.length} metrics...`);
+    
+    const { error: metricsError } = await serviceClient
+      .from('unified_metrics')
+      .upsert(metricsToInsert, {
+        onConflict: 'user_id,metric_name,measurement_date,source',
+        ignoreDuplicates: false,
+      });
+
+    if (metricsError) {
+      console.error(`❌ [whoop-sync] Error inserting metrics:`, metricsError);
+    }
+  }
+
+  // Batch insert workouts
+  if (workoutsToInsert.length > 0) {
+    console.log(`💾 [whoop-sync] Inserting ${workoutsToInsert.length} workouts...`);
+    
+    const { error: workoutsError } = await serviceClient
+      .from('workouts')
+      .upsert(workoutsToInsert, {
+        onConflict: 'external_id',
+        ignoreDuplicates: false,
+      });
+
+    if (workoutsError) {
+      console.error(`❌ [whoop-sync] Error inserting workouts:`, workoutsError);
+    }
+  }
+
+  // Update last sync time
+  await serviceClient
+    .from('whoop_tokens')
+    .update({ 
+      last_sync_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('user_id', userId);
+
+  console.log(`✅ [whoop-sync] Sync completed for user ${userId}: ${metricsToInsert.length} metrics, ${workoutsToInsert.length} workouts`);
+
+  return {
+    success: true,
+    metrics_count: metricsToInsert.length,
+    workouts_count: workoutsToInsert.length,
+  };
 }
 
 serve(async (req) => {
