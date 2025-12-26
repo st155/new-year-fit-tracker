@@ -999,19 +999,23 @@ async function batchInsertMetrics(
   metricsData: any[]
 ): Promise<number> {
   // Direct insert to unified_metrics (simplified!)
-  const valuesToInsert = metricsData.map(m => ({
-    user_id: userId,
-    metric_name: m.metric_name,
-    metric_category: m.category || getCategoryForMetric(m.metric_name),
-    value: m.value,
-    unit: getUnitForMetric(m.metric_name),
-    measurement_date: m.measurement_date,
-    source: m.source,
-    provider: m.source, // For Terra
-    external_id: m.external_id,
-    priority: getPriorityForSource(m.source),
-    confidence_score: 50, // Will be recalculated by confidence job
-  }));
+  // Normalize source to lowercase for consistency (Terra sends WHOOP, we want whoop)
+  const valuesToInsert = metricsData.map(m => {
+    const normalizedSource = m.source.toLowerCase();
+    return {
+      user_id: userId,
+      metric_name: m.metric_name,
+      metric_category: m.category || getCategoryForMetric(m.metric_name),
+      value: m.value,
+      unit: getUnitForMetric(m.metric_name),
+      measurement_date: m.measurement_date,
+      source: normalizedSource,
+      provider: normalizedSource,
+      external_id: m.external_id,
+      priority: getPriorityForSource(normalizedSource),
+      confidence_score: 50, // Will be recalculated by confidence job
+    };
+  });
 
   // Deduplicate within batch (keep last)
   const uniqueValues = new Map();

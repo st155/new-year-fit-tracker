@@ -20,13 +20,6 @@ const SCOPES = [
   'read:body_measurement'
 ].join(' ');
 
-// Whitelist of users who can use direct Whoop integration
-const WHOOP_DIRECT_USERS = [
-  'b9fc3f8b-e7bf-44f9-a591-cec47f9c93ae', // Alexey Gubarev
-  'f9e07829-5fd7-4e27-94eb-b3f5c49b4e7e', // Anton  
-  '932aab9d-a104-4ba2-885f-2dfdc5dd5df2', // Pavel Radaev
-];
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -49,10 +42,8 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    // Check if user is whitelisted
-    if (!WHOOP_DIRECT_USERS.includes(user.id)) {
-      throw new Error('Direct Whoop integration is not available for this user. Please use Terra integration.');
-    }
+    // Eligibility is now checked on the frontend (challenge participant check)
+    // No whitelist needed here - the frontend controls access
 
     const { action, code, state } = await req.json();
     const clientId = Deno.env.get('WHOOP_CLIENT_ID');
@@ -171,11 +162,30 @@ serve(async (req) => {
 
       console.log(`✅ [whoop-auth] Tokens stored successfully for user ${user.id}`);
 
+      // Deactivate Terra WHOOP token to prevent duplicate data
+      // This ensures seamless transition from Terra to direct integration
+      const { data: terraToken, error: terraError } = await serviceClient
+        .from('terra_tokens')
+        .update({ 
+          is_active: false, 
+          updated_at: new Date().toISOString() 
+        })
+        .eq('user_id', user.id)
+        .ilike('provider', 'whoop')
+        .select('id');
+
+      if (terraToken && terraToken.length > 0) {
+        console.log(`🔄 [whoop-auth] Deactivated Terra WHOOP token for seamless transition`);
+      } else if (terraError) {
+        console.warn(`⚠️ [whoop-auth] Could not deactivate Terra token:`, terraError.message);
+      }
+
       return new Response(
         JSON.stringify({ 
           success: true, 
           whoop_user_id: whoopUserId,
-          expires_at: expiresAt
+          expires_at: expiresAt,
+          terra_deactivated: (terraToken?.length || 0) > 0
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
