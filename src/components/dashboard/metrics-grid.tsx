@@ -8,14 +8,15 @@ import { useMetricMapping } from "@/hooks/metrics/useMetricMapping";
 import { MetricsGridSkeleton } from "@/components/ui/dashboard-skeleton";
 import { MetricCard } from "@/components/metrics";
 import { createMetricConfig, MetricKey } from "@/lib/metric-config";
-
-// MetricCard is now imported from @/components/metrics
+import { useIsMobile } from "@/hooks/primitive/useMediaQuery";
+import { MetricsCarousel } from "./MetricsCarousel";
 
 export function MetricsGrid() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useTranslation('dashboard');
   const { viewMode, deviceFilter } = useMetricsView();
+  const isMobile = useIsMobile();
   
   // Unified metrics
   const { metrics: unifiedMetrics, loading: unifiedLoading } = useLatestMetrics(user?.id);
@@ -66,6 +67,18 @@ export function MetricsGrid() {
     return <MetricsGridSkeleton />;
   }
 
+  // Mobile: Show carousel
+  if (isMobile) {
+    return (
+      <MetricsCarousel
+        mappedMetrics={mappedMetrics as any}
+        selectedMetrics={selectedMetrics}
+        onMetricClick={(route) => navigate(`/metric/${route}`)}
+      />
+    );
+  }
+
+  // Desktop: Show grid
   return (
     <div className="relative">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 relative">
