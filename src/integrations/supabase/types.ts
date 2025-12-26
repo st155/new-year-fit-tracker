@@ -6405,6 +6405,30 @@ export type Database = {
         }
         Relationships: []
       }
+      whoop_oauth_states: {
+        Row: {
+          consumed_at: string | null
+          created_at: string
+          redirect_uri: string
+          state: string
+          user_id: string
+        }
+        Insert: {
+          consumed_at?: string | null
+          created_at?: string
+          redirect_uri: string
+          state: string
+          user_id: string
+        }
+        Update: {
+          consumed_at?: string | null
+          created_at?: string
+          redirect_uri?: string
+          state?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       whoop_tokens: {
         Row: {
           access_token: string
@@ -7103,6 +7127,7 @@ export type Database = {
       cleanup_idempotency_keys: { Args: never; Returns: undefined }
       cleanup_old_pending_logs: { Args: never; Returns: number }
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
+      cleanup_old_whoop_oauth_states: { Args: never; Returns: undefined }
       cleanup_rate_limits: { Args: never; Returns: undefined }
       cleanup_terra_webhooks: { Args: never; Returns: undefined }
       create_or_get_metric: {
