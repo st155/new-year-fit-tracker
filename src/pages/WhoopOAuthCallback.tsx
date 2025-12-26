@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, XCircle, Loader2, ArrowLeft, RefreshCw } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
 type Status = 'loading' | 'success' | 'error';
@@ -94,6 +94,18 @@ export default function WhoopOAuthCallback() {
     }, 1000);
   };
 
+  const getReturnUrl = (): string => {
+    const savedUrl = sessionStorage.getItem('whoop_return_url');
+    sessionStorage.removeItem('whoop_return_url');
+    sessionStorage.removeItem('whoop_connecting');
+    
+    if (!savedUrl) {
+      return '/fitness-data?tab=connections';
+    }
+    
+    return savedUrl;
+  };
+
   const handleSuccess = (whoopUserId?: string) => {
     console.log('✅ [WhoopCallback] Success! Whoop user ID:', whoopUserId);
     setStatus('success');
@@ -106,14 +118,14 @@ export default function WhoopOAuthCallback() {
     });
 
     if (isPopup) {
-      // Auto-close popup after 1.5 seconds
+      // Auto-close popup after 2 seconds
       startCountdown(2, () => {
         console.log('🪟 [WhoopCallback] Closing popup...');
         window.close();
       });
     } else {
-      // Redirect after delay
-      startCountdown(2, () => {
+      // Same-tab redirect: auto-redirect after 3 seconds
+      startCountdown(3, () => {
         const returnUrl = getReturnUrl();
         console.log('🔀 [WhoopCallback] Redirecting to:', returnUrl);
         navigate(returnUrl, { replace: true });
@@ -139,18 +151,7 @@ export default function WhoopOAuthCallback() {
         window.close();
       });
     }
-  };
-
-  const getReturnUrl = (): string => {
-    const savedUrl = sessionStorage.getItem('whoop_return_url');
-    sessionStorage.removeItem('whoop_return_url');
-    sessionStorage.removeItem('whoop_connecting');
-    
-    if (!savedUrl) {
-      return '/fitness-data?tab=connections';
-    }
-    
-    return savedUrl;
+    // For same-tab flow: DON'T auto-redirect on error, show buttons instead
   };
 
   const exchangeToken = async (code: string, state: string) => {
@@ -212,6 +213,11 @@ export default function WhoopOAuthCallback() {
     }
   };
 
+  const handleRetry = () => {
+    // Go to integrations page to retry
+    navigate('/fitness-data?tab=connections', { replace: true });
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
@@ -244,7 +250,7 @@ export default function WhoopOAuthCallback() {
           
           {countdown !== null && (
             <div className="space-y-2">
-              <Progress value={(countdown / (status === 'success' ? 2 : 3)) * 100} className="h-2" />
+              <Progress value={(countdown / (status === 'success' ? 3 : 3)) * 100} className="h-2" />
               <p className="text-xs text-muted-foreground">
                 {isPopup ? 'Окно закроется' : 'Перенаправление'} через {countdown} сек...
               </p>
@@ -257,14 +263,37 @@ export default function WhoopOAuthCallback() {
             </p>
           )}
 
-          {(status === 'error' || status === 'success') && (
+          {/* Success: show return button */}
+          {status === 'success' && (
             <Button 
               onClick={handleClose} 
-              variant={status === 'error' ? 'outline' : 'default'}
+              variant="default"
               className="w-full"
             >
-              {isPopup ? 'Закрыть окно' : 'Вернуться назад'}
+              {isPopup ? 'Закрыть окно' : 'Вернуться на страницу интеграций'}
             </Button>
+          )}
+
+          {/* Error: show retry and return buttons (especially important for mobile same-tab flow) */}
+          {status === 'error' && (
+            <div className="space-y-2">
+              <Button 
+                onClick={handleRetry} 
+                variant="default"
+                className="w-full"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Попробовать снова
+              </Button>
+              <Button 
+                onClick={handleClose} 
+                variant="outline"
+                className="w-full"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                {isPopup ? 'Закрыть окно' : 'Вернуться на страницу интеграций'}
+              </Button>
+            </div>
           )}
         </CardContent>
       </Card>
