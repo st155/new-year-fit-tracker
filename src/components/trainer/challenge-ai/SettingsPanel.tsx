@@ -2,6 +2,7 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 
 interface Discipline {
   name: string;
@@ -19,6 +20,9 @@ interface SettingsPanelProps {
   availableDisciplines: Discipline[];
   targetAudience: number;
   onTargetAudienceChange: (value: number) => void;
+  customBenchmarks?: Record<string, number>;
+  onBenchmarkChange?: (disciplineName: string, value: number) => void;
+  calculatedBenchmarks?: Record<string, number>;
 }
 
 const DIFFICULTY_LABELS = ['Beginner', 'Intermediate', 'Advanced', 'Elite'];
@@ -34,6 +38,9 @@ export const SettingsPanel = ({
   availableDisciplines,
   targetAudience,
   onTargetAudienceChange,
+  customBenchmarks = {},
+  onBenchmarkChange,
+  calculatedBenchmarks = {},
 }: SettingsPanelProps) => {
   const toggleDiscipline = (disciplineName: string) => {
     if (selectedDisciplines.includes(disciplineName)) {
@@ -52,6 +59,13 @@ export const SettingsPanel = ({
 
   const selectTop4 = () => {
     onSelectedDisciplinesChange(availableDisciplines.slice(0, 4).map(d => d.name));
+  };
+
+  const handleBenchmarkInputChange = (disciplineName: string, value: string) => {
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue) && onBenchmarkChange) {
+      onBenchmarkChange(disciplineName, numValue);
+    }
   };
 
   return (
@@ -111,7 +125,7 @@ export const SettingsPanel = ({
       <Card className="p-4 bg-card border-2 border-border/50">
         <div className="space-y-3">
           <div className="flex justify-between items-center">
-            <Label className="text-sm font-semibold">Select Disciplines</Label>
+            <Label className="text-sm font-semibold">Disciplines & Benchmarks</Label>
             <div className="flex gap-2">
               <button 
                 onClick={selectTop4}
@@ -128,34 +142,55 @@ export const SettingsPanel = ({
               </button>
             </div>
           </div>
-          <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto pr-2">
-            {availableDisciplines.map((discipline, idx) => (
-              <div 
-                key={discipline.name}
-                className={`flex items-center space-x-3 p-2 rounded-lg transition-colors ${
-                  selectedDisciplines.includes(discipline.name) 
-                    ? 'bg-primary/10 border border-primary/30' 
-                    : 'bg-muted/30 hover:bg-muted/50'
-                }`}
-              >
-                <Checkbox
-                  id={`discipline-${idx}`}
-                  checked={selectedDisciplines.includes(discipline.name)}
-                  onCheckedChange={() => toggleDiscipline(discipline.name)}
-                  className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                />
-                <label 
-                  htmlFor={`discipline-${idx}`}
-                  className="flex-1 text-sm font-medium cursor-pointer flex justify-between items-center"
+          <div className="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto pr-2">
+            {availableDisciplines.map((discipline, idx) => {
+              const isSelected = selectedDisciplines.includes(discipline.name);
+              const currentBenchmark = customBenchmarks[discipline.name] ?? calculatedBenchmarks[discipline.name];
+              const hasCustomValue = customBenchmarks[discipline.name] !== undefined;
+              
+              return (
+                <div 
+                  key={discipline.name}
+                  className={`flex items-center gap-3 p-2 rounded-lg transition-colors ${
+                    isSelected 
+                      ? 'bg-primary/10 border border-primary/30' 
+                      : 'bg-muted/30 hover:bg-muted/50'
+                  }`}
                 >
-                  <span>{discipline.name}</span>
-                  <span className="text-xs text-muted-foreground">{discipline.unit}</span>
-                </label>
-              </div>
-            ))}
+                  <Checkbox
+                    id={`discipline-${idx}`}
+                    checked={isSelected}
+                    onCheckedChange={() => toggleDiscipline(discipline.name)}
+                    className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                  />
+                  <label 
+                    htmlFor={`discipline-${idx}`}
+                    className="flex-1 text-sm font-medium cursor-pointer"
+                  >
+                    {discipline.name}
+                  </label>
+                  
+                  {isSelected && (
+                    <div className="flex items-center gap-1">
+                      <Input
+                        type="number"
+                        value={currentBenchmark ?? ''}
+                        onChange={(e) => handleBenchmarkInputChange(discipline.name, e.target.value)}
+                        className={`w-20 h-7 text-sm text-right ${
+                          hasCustomValue ? 'border-primary bg-primary/5' : ''
+                        }`}
+                        placeholder="Auto"
+                      />
+                      <span className="text-xs text-muted-foreground w-8">{discipline.unit}</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
-          <div className="text-xs text-muted-foreground text-center">
-            {selectedDisciplines.length} of {availableDisciplines.length} selected
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>{selectedDisciplines.length} of {availableDisciplines.length} selected</span>
+            <span className="italic">Edit values to customize</span>
           </div>
         </div>
       </Card>

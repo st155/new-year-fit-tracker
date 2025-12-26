@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Sparkles, FileText } from 'lucide-react';
@@ -9,6 +9,7 @@ import { PreviewPanel } from './challenge-ai/PreviewPanel';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { BENCHMARK_STANDARDS, calculateStandardBenchmark, AUDIENCE_LEVEL_LABELS } from '@/lib/benchmark-standards';
+import { recalculateBenchmarkLevels, RecalculatedLevels } from '@/lib/benchmark-recalculate';
 import { TemplateManager } from './templates/TemplateManager';
 
 interface CreateChallengeDialogAIProps {
@@ -32,16 +33,18 @@ export const CreateChallengeDialogAI = ({
   const [targetAudience, setTargetAudience] = useState(1);
   const [isCreating, setIsCreating] = useState(false);
   const [templateManagerOpen, setTemplateManagerOpen] = useState(false);
+  const [customBenchmarks, setCustomBenchmarks] = useState<Record<string, number>>({});
 
   const difficultyMultipliers = [0.7, 1.0, 1.4, 1.8];
   const audienceMultipliers = [0.8, 1.0, 1.3, 1.6];
 
-  // Update selected disciplines when preset changes
+  // Reset custom benchmarks when preset changes
   useEffect(() => {
     if (selectedPreset) {
       // Default to first 4 disciplines (or all if less than 4)
       const defaultCount = Math.min(4, selectedPreset.disciplines.length);
       setSelectedDisciplines(selectedPreset.disciplines.slice(0, defaultCount).map(d => d.name));
+      setCustomBenchmarks({}); // Reset custom benchmarks for new preset
     }
   }, [selectedPreset]);
 
@@ -59,7 +62,8 @@ export const CreateChallengeDialogAI = ({
     return `A ${difficultyLabels[difficulty]} ${duration}-week ${selectedPreset.category.toLowerCase()} challenge designed for ${audienceLabels[targetAudience]}. ${selectedPreset.description}`;
   };
 
-  const calculateBenchmark = (disc: any, difficultyLevel: number, audienceLevel: number) => {
+  // Calculate default benchmark for a discipline
+  const calculateDefaultBenchmark = (disc: any, difficultyLevel: number, audienceLevel: number) => {
     // Use scientifically-backed standards if available
     if (disc.benchmarkKey && BENCHMARK_STANDARDS[disc.benchmarkKey]) {
       return calculateStandardBenchmark(
@@ -77,36 +81,70 @@ export const CreateChallengeDialogAI = ({
     let value: number;
     
     if (disc.direction === 'lower') {
-      // For "lower is better" metrics - inverse the multipliers
       const inverseMult = 1 / (baseMult * audienceMult);
       value = disc.baseValue * inverseMult;
     } else if (disc.direction === 'target') {
-      // For "target" metrics - minimal variation, slightly increase with audience
       const targetVariation = 1 + (audienceMult - 1) * 0.15;
       value = disc.baseValue * targetVariation;
     } else {
-      // For "higher is better" metrics
       value = disc.baseValue * disc.scalingFactor * baseMult * audienceMult;
     }
     
-    // Apply min/max constraints
     if (disc.min !== undefined) value = Math.max(disc.min, value);
     if (disc.max !== undefined) value = Math.min(disc.max, value);
     
     return Math.round(value * 10) / 10;
   };
 
+  // Memoized calculated benchmarks for display
+  const calculatedBenchmarks = useMemo(() => {
+    if (!selectedPreset) return {};
+    
+    const result: Record<string, number> = {};
+    selectedPreset.disciplines.forEach((disc) => {
+      result[disc.name] = calculateDefaultBenchmark(disc, difficulty, targetAudience);
+    });
+    return result;
+  }, [selectedPreset, difficulty, targetAudience]);
+
+  // Handle custom benchmark change
+  const handleBenchmarkChange = (disciplineName: string, value: number) => {
+    setCustomBenchmarks(prev => ({
+      ...prev,
+      [disciplineName]: value,
+    }));
+  };
+
+  // Get final benchmark value (custom or calculated)
+  const getFinalBenchmark = (disciplineName: string) => {
+    return customBenchmarks[disciplineName] ?? calculatedBenchmarks[disciplineName];
+  };
+
+  // Calculate all levels for a discipline
+  const calculateAllLevels = (disc: any): RecalculatedLevels => {
+    const hasCustom = customBenchmarks[disc.name] !== undefined;
+    const currentValue = getFinalBenchmark(disc.name);
+    const combinedLevel = Math.min(3, Math.round((targetAudience + difficulty) / 2));
+    
+    return recalculateBenchmarkLevels(
+      currentValue,
+      combinedLevel,
+      disc.direction,
+      { min: disc.min, max: disc.max }
+    );
+  };
+
   const generateDisciplines = () => {
     if (!selectedPreset) return [];
     
-    // Filter disciplines by selected names, maintaining original order
     return selectedPreset.disciplines
       .filter(disc => selectedDisciplines.includes(disc.name))
       .map((disc) => ({
         name: disc.name,
         type: disc.type,
-        benchmarkValue: calculateBenchmark(disc, difficulty, targetAudience),
+        benchmarkValue: getFinalBenchmark(disc.name),
         unit: disc.unit,
+        allLevels: calculateAllLevels(disc),
       }));
   };
 
@@ -240,6 +278,9 @@ export const CreateChallengeDialogAI = ({
                     }))}
                     targetAudience={targetAudience}
                     onTargetAudienceChange={setTargetAudience}
+                    customBenchmarks={customBenchmarks}
+                    onBenchmarkChange={handleBenchmarkChange}
+                    calculatedBenchmarks={calculatedBenchmarks}
                   />
                 </div>
 
