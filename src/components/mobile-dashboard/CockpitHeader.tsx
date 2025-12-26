@@ -73,19 +73,19 @@ export function CockpitHeader() {
           size="icon" 
           className="h-9 w-9 text-muted-foreground hover:text-foreground relative" 
           asChild
+          aria-label="Integrations"
         >
           <Link to="/fitness-data?tab=connections">
             <Plug className="h-5 w-5" />
-            {integrationCount > 0 && (
+            {integrationCount > 0 ? (
               <span className={cn(
                 "absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 rounded-full text-[10px] font-medium flex items-center justify-center text-white",
                 needsSync ? "bg-amber-500" : "bg-emerald-500"
               )}>
                 {integrationCount}
               </span>
-            )}
-            {integrationCount === 0 && (
-              <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-orange-500" />
+            ) : (
+              <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-orange-500 animate-pulse" />
             )}
           </Link>
         </Button>
