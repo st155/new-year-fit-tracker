@@ -308,3 +308,26 @@ export async function deleteMeasurement(measurementId: string): Promise<void> {
     throw error;
   }
 }
+
+// ============= GoalsService Object Export =============
+
+export const GoalsService = {
+  // Goals
+  fetchGoals,
+  fetchGoalById,
+  fetchPersonalGoals,
+  fetchChallengeGoalsByIds,
+  createGoal,
+  updateGoal,
+  deleteGoal,
+  // Measurements
+  fetchMeasurements,
+  fetchMeasurementsByGoalId,
+  createMeasurement,
+  createMeasurementsBatch,
+  deleteMeasurement,
+  // Current Values & Participations
+  fetchGoalCurrentValues,
+  fetchChallengeParticipations,
+  fetchUnifiedMetricsHistory,
+};
