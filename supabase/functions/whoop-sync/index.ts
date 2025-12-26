@@ -9,12 +9,7 @@ const corsHeaders = {
 const WHOOP_API_BASE = 'https://api.prod.whoop.com/developer/v1';
 const WHOOP_TOKEN_URL = 'https://api.prod.whoop.com/oauth/oauth2/token';
 
-// Whitelist of users who can use direct Whoop integration
-const WHOOP_DIRECT_USERS = [
-  'b9fc3f8b-e7bf-44f9-a591-cec47f9c93ae', // Alexey Gubarev
-  'f9e07829-5fd7-4e27-94eb-b3f5c49b4e7e', // Anton
-  '932aab9d-a104-4ba2-885f-2dfdc5dd5df2', // Pavel Radaev
-];
+// Direct Whoop integration is now available for all users with valid tokens
 
 interface WhoopToken {
   user_id: string;
@@ -757,10 +752,6 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    // Check if user is whitelisted
-    if (!WHOOP_DIRECT_USERS.includes(user.id)) {
-      throw new Error('Direct Whoop integration is not available for this user');
-    }
 
     const { days_back = 7 } = await req.json().catch(() => ({}));
 

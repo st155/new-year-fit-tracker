@@ -9,12 +9,7 @@ const corsHeaders = {
 const WHOOP_API_BASE = 'https://api.prod.whoop.com/developer/v1';
 const WHOOP_TOKEN_URL = 'https://api.prod.whoop.com/oauth/oauth2/token';
 
-// Only sync for whitelisted users
-const WHOOP_DIRECT_USERS = [
-  'b9fc3f8b-e7bf-44f9-a591-cec47f9c93ae', // Alexey Gubarev
-  'f9e07829-5fd7-4e27-94eb-b3f5c49b4e7e', // Anton
-  '932aab9d-a104-4ba2-885f-2dfdc5dd5df2', // Pavel Radaev
-];
+// Direct Whoop integration is now available for all users with valid tokens
 
 async function refreshTokenIfNeeded(serviceClient: any, tokenData: any): Promise<string | null> {
   const expiresAt = new Date(tokenData.expires_at);
@@ -645,12 +640,11 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // Get all active whoop tokens for whitelisted users
+    // Get all active whoop tokens (for all users)
     const { data: tokens, error: tokensError } = await serviceClient
       .from('whoop_tokens')
       .select('*')
-      .eq('is_active', true)
-      .in('user_id', WHOOP_DIRECT_USERS);
+      .eq('is_active', true);
 
     if (tokensError) {
       throw new Error(`Failed to fetch tokens: ${tokensError.message}`);
