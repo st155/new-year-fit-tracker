@@ -16,6 +16,9 @@ const ALLOWED_ORIGINS = [
   'https://1eef6188-774b-4d2c-ab12-3f76f54542b1.lovableproject.com',
 ];
 
+// State is valid for 15 minutes
+const STATE_VALIDITY_MINUTES = 15;
+
 // Helper to validate and get redirect URI
 function getValidatedRedirectUri(requestedUri?: string): string {
   if (!requestedUri) return DEFAULT_REDIRECT_URI;
@@ -91,7 +94,14 @@ serve(async (req) => {
     if (PROTECTED_ACTIONS.includes(action)) {
       const authHeader = req.headers.get('Authorization');
       if (!authHeader) {
-        log('error', 'Missing authorization header for protected action', { action });
+        log('warn', 'No authorization header for protected action', { action });
+        // For status action, return graceful response instead of error
+        if (action === 'status') {
+          return new Response(
+            JSON.stringify({ connected: false, reason: 'no_session' }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
         throw new Error('Missing authorization header');
       }
 
@@ -103,67 +113,81 @@ serve(async (req) => {
 
       const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
       if (authError || !authUser) {
-        log('error', 'Unauthorized', { auth_error: authError?.message });
+        log('warn', 'Invalid session', { auth_error: authError?.message, action });
+        // For status action, return graceful response
+        if (action === 'status') {
+          return new Response(
+            JSON.stringify({ connected: false, reason: 'invalid_session' }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
         throw new Error('Unauthorized');
       }
       user = authUser;
-      log('info', 'Authenticated user', { user_id: user.id, user_email: user.email });
+      log('info', 'Authenticated user', { user_id: user.id });
     }
 
+    // ============================================================
+    // ACTION: get-auth-url
+    // ============================================================
     if (action === 'get-auth-url') {
       if (!user) throw new Error('User required');
       
-      // Check if we have a fresh state already (idempotent - prevent race conditions)
-      const STATE_FRESHNESS_MS = 10 * 60 * 1000; // 10 minutes
-      const { data: existingToken } = await serviceClient
-        .from('whoop_tokens')
-        .select('oauth_state, updated_at')
+      // Check if we have a fresh state already in whoop_oauth_states (idempotent)
+      const { data: existingState, error: existingError } = await serviceClient
+        .from('whoop_oauth_states')
+        .select('state, created_at, redirect_uri')
         .eq('user_id', user.id)
-        .single();
+        .is('consumed_at', null)
+        .gte('created_at', new Date(Date.now() - STATE_VALIDITY_MINUTES * 60 * 1000).toISOString())
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (existingError) {
+        log('warn', 'Error checking existing state', { error: existingError.message });
+      }
 
       let stateToken: string;
       let isReused = false;
 
-      if (existingToken?.oauth_state && existingToken.updated_at) {
-        const stateAge = Date.now() - new Date(existingToken.updated_at).getTime();
-        if (stateAge < STATE_FRESHNESS_MS) {
-          // Reuse existing fresh state
-          stateToken = existingToken.oauth_state;
-          isReused = true;
-          log('info', 'Reusing existing fresh oauth_state', {
-            state_age_seconds: Math.round(stateAge / 1000),
-            state_prefix: stateToken.substring(0, 12),
-            state_suffix: stateToken.slice(-8),
-            state_length: stateToken.length,
-          });
-        } else {
-          // State is stale, generate new one
-          stateToken = `${crypto.randomUUID()}:${user.id}`;
-          log('info', 'Existing state is stale, generating new one', {
-            old_state_age_seconds: Math.round(stateAge / 1000),
-          });
-        }
-      } else {
-        // No existing state, generate new one
-        stateToken = `${crypto.randomUUID()}:${user.id}`;
-        log('info', 'No existing state, generating new one');
-      }
-
-      // Only save to DB if we generated a new state
-      if (!isReused) {
-        await serviceClient
-          .from('whoop_tokens')
-          .upsert({
-            user_id: user.id,
-            oauth_state: stateToken,
-            is_active: false,
-            updated_at: new Date().toISOString(),
-          }, { onConflict: 'user_id' });
-        
-        log('info', 'Saved new oauth_state to DB', {
+      if (existingState && existingState.redirect_uri === redirectUri) {
+        // Reuse existing fresh state
+        stateToken = existingState.state;
+        isReused = true;
+        log('info', 'Reusing existing fresh state', {
           state_prefix: stateToken.substring(0, 12),
           state_suffix: stateToken.slice(-8),
           state_length: stateToken.length,
+          created_at: existingState.created_at,
+        });
+      } else {
+        // Generate new state (just UUID, user_id stored in table)
+        stateToken = crypto.randomUUID();
+        
+        // Insert into whoop_oauth_states
+        const { error: insertError } = await serviceClient
+          .from('whoop_oauth_states')
+          .insert({
+            state: stateToken,
+            user_id: user.id,
+            redirect_uri: redirectUri,
+          });
+
+        if (insertError) {
+          log('error', 'Failed to insert oauth state', {
+            error_code: insertError.code,
+            error_message: insertError.message,
+            error_details: insertError.details,
+          });
+          throw new Error(`Failed to create OAuth state: ${insertError.message}`);
+        }
+
+        log('info', 'Created new oauth state', {
+          state_prefix: stateToken.substring(0, 12),
+          state_suffix: stateToken.slice(-8),
+          state_length: stateToken.length,
+          redirect_uri: redirectUri,
         });
       }
 
@@ -176,11 +200,8 @@ serve(async (req) => {
 
       log('info', 'Generated auth URL', {
         state_prefix: stateToken.substring(0, 12),
-        state_suffix: stateToken.slice(-8),
-        state_length: stateToken.length,
         state_reused: isReused,
         redirect_uri: redirectUri,
-        user_id: user.id,
       });
 
       return new Response(
@@ -200,6 +221,9 @@ serve(async (req) => {
       );
     }
 
+    // ============================================================
+    // ACTION: exchange-token
+    // ============================================================
     if (action === 'exchange-token') {
       if (!code) {
         log('error', 'Missing authorization code');
@@ -218,59 +242,65 @@ serve(async (req) => {
         code_length: code.length,
       });
 
-      // Extract user_id from state: {random}:{user_id}
-      const stateParts = state.split(':');
-      if (stateParts.length < 2) {
-        log('error', 'Invalid state token format', { 
-          state_preview: state.substring(0, 20),
-          state_length: state.length,
-          parts_count: stateParts.length,
-        });
-        throw new Error('Invalid state token format');
+      // Validate state from whoop_oauth_states table
+      const { data: stateRecord, error: stateError } = await serviceClient
+        .from('whoop_oauth_states')
+        .select('user_id, redirect_uri, created_at, consumed_at')
+        .eq('state', state)
+        .maybeSingle();
+
+      if (stateError) {
+        log('error', 'Error fetching state record', { error: stateError.message });
+        throw new Error('State validation failed - database error');
       }
-      
-      const userId = stateParts.slice(1).join(':'); // Handle UUIDs with colons
-      log('info', 'Extracted user_id from state', { user_id: userId });
 
-      // Validate state against stored value
-      const { data: tokenData, error: fetchError } = await serviceClient
-        .from('whoop_tokens')
-        .select('oauth_state, updated_at')
-        .eq('user_id', userId)
-        .single();
-
-      if (fetchError || !tokenData) {
-        log('error', 'State validation failed - no token record found', { 
-          user_id: userId, 
-          error: fetchError?.message,
+      if (!stateRecord) {
+        log('error', 'State not found in database', {
           received_state_prefix: state.substring(0, 12),
+          received_state_suffix: state.slice(-8),
         });
-        throw new Error('State validation failed - no record');
+        throw new Error('Invalid state - not found');
       }
 
-      const storedState = tokenData.oauth_state;
-      if (storedState !== state) {
-        log('error', 'State mismatch', { 
-          expected_prefix: storedState?.substring(0, 12),
-          expected_suffix: storedState?.slice(-8),
-          expected_length: storedState?.length,
-          received_prefix: state.substring(0, 12),
-          received_suffix: state.slice(-8),
-          received_length: state.length,
-          state_updated_at: tokenData.updated_at,
-          match_prefix: storedState?.substring(0, 12) === state.substring(0, 12),
-          match_suffix: storedState?.slice(-8) === state.slice(-8),
-        });
-        throw new Error('State validation failed - mismatch');
+      // Check if already consumed
+      if (stateRecord.consumed_at) {
+        log('error', 'State already consumed', { consumed_at: stateRecord.consumed_at });
+        throw new Error('State already used');
       }
 
-      log('info', 'State validated successfully', { 
+      // Check if state is expired
+      const stateAge = Date.now() - new Date(stateRecord.created_at).getTime();
+      const maxAge = STATE_VALIDITY_MINUTES * 60 * 1000;
+      if (stateAge > maxAge) {
+        log('error', 'State expired', {
+          created_at: stateRecord.created_at,
+          age_minutes: Math.round(stateAge / 60000),
+        });
+        throw new Error('State expired');
+      }
+
+      const userId = stateRecord.user_id;
+      const storedRedirectUri = stateRecord.redirect_uri;
+
+      log('info', 'State validated successfully', {
         user_id: userId,
-        state_prefix: state.substring(0, 12),
+        state_age_seconds: Math.round(stateAge / 1000),
       });
 
+      // Mark state as consumed (atomically)
+      const { error: consumeError } = await serviceClient
+        .from('whoop_oauth_states')
+        .update({ consumed_at: new Date().toISOString() })
+        .eq('state', state)
+        .is('consumed_at', null);
+
+      if (consumeError) {
+        log('warn', 'Failed to mark state as consumed', { error: consumeError.message });
+        // Continue anyway - the main validation passed
+      }
+
       // Exchange code for tokens
-      log('info', 'Calling Whoop token endpoint', { redirect_uri: redirectUri });
+      log('info', 'Calling Whoop token endpoint', { redirect_uri: storedRedirectUri });
       const tokenResponse = await fetch(WHOOP_TOKEN_URL, {
         method: 'POST',
         headers: {
@@ -279,7 +309,7 @@ serve(async (req) => {
         body: new URLSearchParams({
           grant_type: 'authorization_code',
           code,
-          redirect_uri: redirectUri,
+          redirect_uri: storedRedirectUri,
           client_id: clientId,
           client_secret: clientSecret,
         }),
@@ -314,12 +344,14 @@ serve(async (req) => {
         const profile = await profileResponse.json();
         whoopUserId = profile.user_id?.toString();
         log('info', 'Got Whoop user profile', { whoop_user_id: whoopUserId });
+      } else {
+        log('warn', 'Could not fetch Whoop profile', { status: profileResponse.status });
       }
 
       // Calculate expiration time
       const expiresAt = new Date(Date.now() + tokens.expires_in * 1000).toISOString();
 
-      // Store tokens - use userId from state
+      // Store tokens - use userId from state record
       const { error: upsertError } = await serviceClient
         .from('whoop_tokens')
         .upsert({
@@ -327,16 +359,19 @@ serve(async (req) => {
           access_token: tokens.access_token,
           refresh_token: tokens.refresh_token,
           expires_at: expiresAt,
-          whoop_user_id: whoopUserId,
+          whoop_user_id: whoopUserId || 'unknown',
           is_active: true,
-          oauth_state: null, // Clear state after successful exchange
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         }, { onConflict: 'user_id' });
 
       if (upsertError) {
-        log('error', 'Failed to store tokens', { error: upsertError.message });
-        throw new Error('Failed to store tokens');
+        log('error', 'Failed to store tokens', { 
+          error_code: upsertError.code,
+          error_message: upsertError.message,
+          error_details: upsertError.details,
+        });
+        throw new Error(`Failed to store tokens: ${upsertError.message}`);
       }
 
       log('info', 'Tokens stored successfully', { user_id: userId });
@@ -369,6 +404,9 @@ serve(async (req) => {
       );
     }
 
+    // ============================================================
+    // ACTION: refresh-token
+    // ============================================================
     if (action === 'refresh-token') {
       if (!user) throw new Error('User required');
       
@@ -434,6 +472,9 @@ serve(async (req) => {
       );
     }
 
+    // ============================================================
+    // ACTION: disconnect
+    // ============================================================
     if (action === 'disconnect') {
       if (!user) throw new Error('User required');
       
@@ -455,6 +496,9 @@ serve(async (req) => {
       );
     }
 
+    // ============================================================
+    // ACTION: status
+    // ============================================================
     if (action === 'status') {
       if (!user) throw new Error('User required');
       
@@ -485,7 +529,7 @@ serve(async (req) => {
     throw new Error(`Unknown action: ${action}`);
 
   } catch (error: any) {
-    console.error(`❌ [whoop-auth] Error:`, error.message);
+    log('error', 'Request failed', { error: error.message });
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
