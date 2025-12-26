@@ -13,6 +13,7 @@ import { EditProtocolModal } from './EditProtocolModal';
 import { useProtocolManagementQuery } from '@/features/biostack/hooks/queries/useProtocolsQuery';
 import { useProtocolMutations } from '@/features/biostack/hooks/mutations/useProtocolMutations';
 import { useLogsMutations } from '@/features/biostack/hooks/mutations/useLogsMutations';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ProtocolManagementModalProps {
   isOpen: boolean;
@@ -21,13 +22,14 @@ interface ProtocolManagementModalProps {
 
 export function ProtocolManagementModal({ isOpen, onClose }: ProtocolManagementModalProps) {
   const isMobile = useIsMobile();
+  const { user } = useAuth();
   const [expandedProtocol, setExpandedProtocol] = useState<any>(null);
   const [editingProtocol, setEditingProtocol] = useState<any>(null);
   const [deletingProtocolId, setDeletingProtocolId] = useState<string | null>(null);
 
-  const { data: activeProtocols = [], isLoading } = useProtocolManagementQuery();
+  const { data: activeProtocols = [], isLoading } = useProtocolManagementQuery(user?.id);
   const { toggleProtocol, deleteProtocol } = useProtocolMutations();
-  const { logIntakeForStackItem } = useLogsMutations();
+  const { logIntake } = useLogsMutations();
 
   const handleToggleActive = (protocolId: string) => {
     const protocol = activeProtocols.find((p: any) => p.id === protocolId);
@@ -42,7 +44,13 @@ export function ProtocolManagementModal({ isOpen, onClose }: ProtocolManagementM
   };
 
   const handleLogItem = (itemId: string) => {
-    logIntakeForStackItem.mutate({ stackItemId: itemId });
+    if (!user?.id) return;
+    logIntake.mutate({ 
+      userId: user.id, 
+      stackItemId: itemId,
+      intakeTime: new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
+      intakeDate: new Date().toISOString().split('T')[0]
+    });
   };
 
   const content = (
