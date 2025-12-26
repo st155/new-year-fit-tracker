@@ -1,7 +1,7 @@
 /**
  * AppShell - Adaptive layout component for Desktop and Mobile
  * Desktop: SidebarLayout with DesktopSidebar
- * Mobile: MobileHeader + Content + BottomNavigation + SuperFAB
+ * Mobile: MobileHeader + Content + BottomNavigation + QuickActionMenu
  */
 
 import { ReactNode, memo } from "react";
@@ -10,7 +10,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { DesktopSidebar } from "./DesktopSidebar";
 import { MobileHeader } from "./MobileHeader";
 import { MobileBottomNavNew } from "./MobileBottomNavNew";
-import { SuperFAB } from "./SuperFAB";
+import { QuickActionMenu } from "./QuickActionMenu";
 
 interface AppShellProps {
   children: ReactNode;
@@ -28,7 +28,7 @@ export const AppShell = memo(function AppShell({ children }: AppShellProps) {
           {children}
         </main>
         <MobileBottomNavNew />
-        <SuperFAB />
+        <QuickActionMenu />
       </div>
     );
   }
