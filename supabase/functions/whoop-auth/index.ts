@@ -41,6 +41,9 @@ const SCOPES = [
   'read:body_measurement'
 ].join(' ');
 
+// Actions that require JWT authentication
+const PROTECTED_ACTIONS = ['get-auth-url', 'status', 'refresh-token', 'disconnect'];
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -62,26 +65,16 @@ serve(async (req) => {
   };
 
   try {
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      log('error', 'Missing authorization header');
-      throw new Error('Missing authorization header');
-    }
+    const body = await req.json();
+    const { action, code, state, redirect_uri: requestedRedirectUri } = body;
+    
+    log('info', 'Request received', { action });
 
-    const supabase = createClient(
+    const serviceClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
-      { global: { headers: { Authorization: authHeader } } }
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      log('error', 'Unauthorized', { auth_error: authError?.message });
-      throw new Error('Unauthorized');
-    }
-
-    const { action, code, state, redirect_uri: requestedRedirectUri } = await req.json();
-    const redirectUri = getValidatedRedirectUri(requestedRedirectUri);
     const clientId = Deno.env.get('WHOOP_CLIENT_ID');
     const clientSecret = Deno.env.get('WHOOP_CLIENT_SECRET');
 
@@ -90,21 +83,48 @@ serve(async (req) => {
       throw new Error('Whoop credentials not configured');
     }
 
-    log('info', 'Request received', { 
-      action, 
-      user_id: user.id,
-      user_email: user.email,
-      redirect_uri: redirectUri,
-      requested_redirect_uri: requestedRedirectUri || 'none',
-    });
+    const redirectUri = getValidatedRedirectUri(requestedRedirectUri);
 
-    const serviceClient = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    );
+    // For protected actions, require JWT
+    let user: { id: string; email?: string } | null = null;
+    
+    if (PROTECTED_ACTIONS.includes(action)) {
+      const authHeader = req.headers.get('Authorization');
+      if (!authHeader) {
+        log('error', 'Missing authorization header for protected action', { action });
+        throw new Error('Missing authorization header');
+      }
+
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_ANON_KEY')!,
+        { global: { headers: { Authorization: authHeader } } }
+      );
+
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+      if (authError || !authUser) {
+        log('error', 'Unauthorized', { auth_error: authError?.message });
+        throw new Error('Unauthorized');
+      }
+      user = authUser;
+      log('info', 'Authenticated user', { user_id: user.id, user_email: user.email });
+    }
 
     if (action === 'get-auth-url') {
-      const stateToken = crypto.randomUUID();
+      if (!user) throw new Error('User required');
+      
+      // Generate state token with embedded user_id: {random}:{user_id}
+      const stateToken = `${crypto.randomUUID()}:${user.id}`;
+
+      // Save state to DB for validation during callback
+      await serviceClient
+        .from('whoop_tokens')
+        .upsert({
+          user_id: user.id,
+          oauth_state: stateToken,
+          is_active: false,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id' });
 
       const authUrl = new URL(WHOOP_AUTH_URL);
       authUrl.searchParams.set('client_id', clientId);
@@ -113,12 +133,10 @@ serve(async (req) => {
       authUrl.searchParams.set('scope', SCOPES);
       authUrl.searchParams.set('state', stateToken);
 
-      log('info', 'Generated auth URL', {
-        state_token: stateToken,
+      log('info', 'Generated auth URL with embedded user_id in state', {
+        state_token_preview: stateToken.substring(0, 20) + '...',
         redirect_uri: redirectUri,
-        client_id_preview: clientId.substring(0, 8) + '...',
-        scopes: SCOPES,
-        auth_url_length: authUrl.toString().length,
+        user_id: user.id,
       });
 
       return new Response(
@@ -142,27 +160,45 @@ serve(async (req) => {
         throw new Error('Missing authorization code');
       }
 
-      log('info', 'Starting token exchange', {
-        code_preview: code.substring(0, 10) + '...',
-        has_state: !!state,
-        redirect_uri: redirectUri,
-      });
-
-      // Verify state if provided
-      if (state) {
-        const { data: tokenData } = await serviceClient
-          .from('whoop_tokens')
-          .select('oauth_state')
-          .eq('user_id', user.id)
-          .single();
-
-        if (tokenData?.oauth_state !== state) {
-          log('warn', 'State mismatch', { expected: tokenData?.oauth_state, received: state });
-        }
+      if (!state) {
+        log('error', 'Missing state token');
+        throw new Error('Missing state token');
       }
 
+      // Extract user_id from state: {random}:{user_id}
+      const stateParts = state.split(':');
+      if (stateParts.length < 2) {
+        log('error', 'Invalid state token format', { state_preview: state.substring(0, 20) });
+        throw new Error('Invalid state token format');
+      }
+      
+      const userId = stateParts.slice(1).join(':'); // Handle UUIDs with colons
+      log('info', 'Extracted user_id from state', { user_id: userId });
+
+      // Validate state against stored value
+      const { data: tokenData, error: fetchError } = await serviceClient
+        .from('whoop_tokens')
+        .select('oauth_state')
+        .eq('user_id', userId)
+        .single();
+
+      if (fetchError || !tokenData) {
+        log('error', 'State validation failed - no token record found', { user_id: userId, error: fetchError?.message });
+        throw new Error('State validation failed');
+      }
+
+      if (tokenData.oauth_state !== state) {
+        log('error', 'State mismatch', { 
+          expected_preview: tokenData.oauth_state?.substring(0, 20), 
+          received_preview: state.substring(0, 20) 
+        });
+        throw new Error('State validation failed - mismatch');
+      }
+
+      log('info', 'State validated successfully', { user_id: userId });
+
       // Exchange code for tokens
-      log('info', 'Calling Whoop token endpoint');
+      log('info', 'Calling Whoop token endpoint', { redirect_uri: redirectUri });
       const tokenResponse = await fetch(WHOOP_TOKEN_URL, {
         method: 'POST',
         headers: {
@@ -205,50 +241,49 @@ serve(async (req) => {
       if (profileResponse.ok) {
         const profile = await profileResponse.json();
         whoopUserId = profile.user_id?.toString();
-        console.log(`📋 [whoop-auth] Whoop user ID: ${whoopUserId}`);
+        log('info', 'Got Whoop user profile', { whoop_user_id: whoopUserId });
       }
 
       // Calculate expiration time
       const expiresAt = new Date(Date.now() + tokens.expires_in * 1000).toISOString();
 
-      // Store tokens
+      // Store tokens - use userId from state
       const { error: upsertError } = await serviceClient
         .from('whoop_tokens')
         .upsert({
-          user_id: user.id,
+          user_id: userId,
           access_token: tokens.access_token,
           refresh_token: tokens.refresh_token,
           expires_at: expiresAt,
           whoop_user_id: whoopUserId,
           is_active: true,
-          oauth_state: null,
+          oauth_state: null, // Clear state after successful exchange
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         }, { onConflict: 'user_id' });
 
       if (upsertError) {
-        console.error(`❌ [whoop-auth] Failed to store tokens:`, upsertError);
+        log('error', 'Failed to store tokens', { error: upsertError.message });
         throw new Error('Failed to store tokens');
       }
 
-      console.log(`✅ [whoop-auth] Tokens stored successfully for user ${user.id}`);
+      log('info', 'Tokens stored successfully', { user_id: userId });
 
       // Deactivate Terra WHOOP token to prevent duplicate data
-      // This ensures seamless transition from Terra to direct integration
       const { data: terraToken, error: terraError } = await serviceClient
         .from('terra_tokens')
         .update({ 
           is_active: false, 
           updated_at: new Date().toISOString() 
         })
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .ilike('provider', 'whoop')
         .select('id');
 
       if (terraToken && terraToken.length > 0) {
-        console.log(`🔄 [whoop-auth] Deactivated Terra WHOOP token for seamless transition`);
+        log('info', 'Deactivated Terra WHOOP token for seamless transition');
       } else if (terraError) {
-        console.warn(`⚠️ [whoop-auth] Could not deactivate Terra token:`, terraError.message);
+        log('warn', 'Could not deactivate Terra token', { error: terraError.message });
       }
 
       return new Response(
@@ -263,6 +298,8 @@ serve(async (req) => {
     }
 
     if (action === 'refresh-token') {
+      if (!user) throw new Error('User required');
+      
       // Get current refresh token
       const { data: tokenData, error: fetchError } = await serviceClient
         .from('whoop_tokens')
@@ -275,7 +312,7 @@ serve(async (req) => {
         throw new Error('No active Whoop connection found');
       }
 
-      console.log(`🔄 [whoop-auth] Refreshing token for user ${user.id}...`);
+      log('info', 'Refreshing token', { user_id: user.id });
 
       const tokenResponse = await fetch(WHOOP_TOKEN_URL, {
         method: 'POST',
@@ -292,7 +329,7 @@ serve(async (req) => {
 
       if (!tokenResponse.ok) {
         const errorText = await tokenResponse.text();
-        console.error(`❌ [whoop-auth] Token refresh failed:`, errorText);
+        log('error', 'Token refresh failed', { error: errorText });
         
         // Mark token as inactive
         await serviceClient
@@ -317,7 +354,7 @@ serve(async (req) => {
         })
         .eq('user_id', user.id);
 
-      console.log(`✅ [whoop-auth] Token refreshed successfully`);
+      log('info', 'Token refreshed successfully');
 
       return new Response(
         JSON.stringify({ success: true, expires_at: expiresAt }),
@@ -326,7 +363,9 @@ serve(async (req) => {
     }
 
     if (action === 'disconnect') {
-      console.log(`🔌 [whoop-auth] Disconnecting Whoop for user ${user.id}`);
+      if (!user) throw new Error('User required');
+      
+      log('info', 'Disconnecting Whoop', { user_id: user.id });
 
       await serviceClient
         .from('whoop_tokens')
@@ -345,6 +384,8 @@ serve(async (req) => {
     }
 
     if (action === 'status') {
+      if (!user) throw new Error('User required');
+      
       const { data: tokenData } = await serviceClient
         .from('whoop_tokens')
         .select('is_active, expires_at, whoop_user_id, last_sync_at, last_sync_date, created_at')
