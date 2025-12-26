@@ -33,6 +33,7 @@ import { WeeklyGapAnalysis } from "@/components/wellness/WeeklyGapAnalysis";
 import { GenerateTravelWorkoutDialog } from "@/components/wellness/GenerateTravelWorkoutDialog";
 
 export default function WorkoutV31() {
+  // ALL HOOKS FIRST - before any conditional returns
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("today");
   const [selectedDay, setSelectedDay] = useState<number>(new Date().getDay());
@@ -42,11 +43,6 @@ export default function WorkoutV31() {
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const { user } = useAuth();
   const navigate = useNavigate();
-
-  // Render mobile version
-  if (isMobile) {
-    return <MobileWorkoutCenter />;
-  }
 
   // Calculate date for selected day
   const getDateForDay = (dayOfWeek: number): Date => {
@@ -58,7 +54,7 @@ export default function WorkoutV31() {
 
   const targetDate = getDateForDay(selectedDay);
 
-  // Fetch data
+  // Fetch data - MUST be before conditional return
   const { data: dailyWorkout, isLoading: isDailyLoading } = useDailyWorkout(
     user?.id, 
     format(targetDate, 'yyyy-MM-dd')
@@ -76,6 +72,11 @@ export default function WorkoutV31() {
     setCategory,
     isBodyweightExercise
   } = useProgressMetrics(user?.id);
+
+  // Render mobile version - AFTER all hooks
+  if (isMobile) {
+    return <MobileWorkoutCenter />;
+  }
 
   // Button handlers
   const handleStartWorkout = () => {
