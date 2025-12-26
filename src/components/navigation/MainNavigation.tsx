@@ -45,7 +45,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { GlobalTicker } from "@/components/ui/global-ticker";
 import { supabase } from "@/integrations/supabase/client";
-import { useTranslation } from "@/lib/translations";
+import { useTranslation } from 'react-i18next';
 import { useLifecycleAlerts } from "@/hooks/biostack";
 import { Badge } from "@/components/ui/badge";
 
@@ -164,7 +164,7 @@ export function MainNavigation() {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [isTrainer, setIsTrainer] = useState(false);
-  const { t } = useTranslation();
+  const { t } = useTranslation('navigation');
   const { unreadCount } = useLifecycleAlerts(user?.id);
 
   useEffect(() => {

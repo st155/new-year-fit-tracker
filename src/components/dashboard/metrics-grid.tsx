@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTranslation } from "@/lib/translations";
+import { useTranslation } from 'react-i18next';
 import { useAuth } from "@/hooks/useAuth";
 import { useMetricsView } from "@/contexts/MetricsViewContext";
 import { useLatestMetrics, useDeviceMetrics } from "@/hooks/metrics";
@@ -14,7 +14,7 @@ import { createMetricConfig, MetricKey } from "@/lib/metric-config";
 export function MetricsGrid() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { t } = useTranslation();
+  const { t } = useTranslation('dashboard');
   const { viewMode, deviceFilter } = useMetricsView();
   
   // Unified metrics
@@ -97,8 +97,8 @@ export function MetricsGrid() {
         {viewMode === 'unified' && (
           <div className="lg:hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
             <div className="bg-card border-2 border-primary rounded-full w-20 h-20 flex flex-col items-center justify-center shadow-glow">
-              <div className="text-xs text-muted-foreground uppercase">{t('leaderboard.title')}</div>
-              <div className="text-xs text-muted-foreground uppercase">{t('leaderboard.rank')}</div>
+              <div className="text-xs text-muted-foreground uppercase">{t('dashboard:leaderboard.title')}</div>
+              <div className="text-xs text-muted-foreground uppercase">{t('dashboard:leaderboard.rank')}</div>
               <div className="text-lg font-bold text-primary">#3</div>
             </div>
           </div>

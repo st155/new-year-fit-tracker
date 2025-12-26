@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dumbbell, Users, Trophy, Target, Activity, Heart, TrendingUp, ArrowRight, Star, Brain, Zap } from 'lucide-react';
-import { useTranslation } from '@/lib/translations';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { HoverBorderGradient } from '@/components/aceternity/hover-border-gradient';
 import { StatCard } from '@/components/landing/StatCard';
@@ -22,7 +22,7 @@ const Landing = () => {
   const navigate = useNavigate();
   console.log('🎬 [Landing] After useNavigate hook');
   
-  const { t } = useTranslation();
+  const { t } = useTranslation('landing');
   console.log('🎬 [Landing] After useTranslation hook');
 
   // 🔍 Diagnostic: Component lifecycle logging

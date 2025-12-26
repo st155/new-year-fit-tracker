@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dumbbell, Users, Trophy, Target, AlertCircle } from 'lucide-react';
-import { useTranslation } from '@/lib/translations';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -43,7 +43,7 @@ const Auth = () => {
   const { signIn, signUp, signInWithGoogle, signInWithMagicLink, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useTranslation();
+  const { t } = useTranslation('auth');
   
   const redirectFrom = (location.state as any)?.from;
 
@@ -225,7 +225,7 @@ const Auth = () => {
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
                   <span className="bg-background px-2 text-muted-foreground">
-                    или
+                    {t('or')}
                   </span>
                 </div>
               </div>
@@ -245,7 +245,7 @@ const Auth = () => {
                       <Input
                         id="reset-email"
                         type="email"
-                        placeholder="Введите ваш email"
+                        placeholder={t('enterEmail')}
                         value={resetEmail}
                         onChange={(e) => setResetEmail(e.target.value)}
                         required
@@ -255,8 +255,8 @@ const Auth = () => {
                       type="submit" 
                       className="w-full" 
                       disabled={isResetting}
-                    >
-                      {isResetting ? 'Отправка...' : 'Отправить письмо для сброса'}
+                      >
+                        {isResetting ? t('sending') : t('sendResetEmail')}
                     </Button>
                     <Button
                       type="button"
@@ -264,14 +264,14 @@ const Auth = () => {
                       className="w-full"
                       onClick={() => setShowForgotPassword(false)}
                     >
-                      Назад к входу
+                      {t('backToLogin')}
                     </Button>
                   </form>
                 ) : showMagicLink ? (
                   <form onSubmit={handleMagicLinkSignIn} className="space-y-4">
                     <div className="text-center mb-4">
                       <p className="text-sm text-muted-foreground">
-                        Введите email и мы отправим вам ссылку для входа без пароля
+                        {t('magicLinkDesc')}
                       </p>
                     </div>
                     <div className="space-y-2">
@@ -279,7 +279,7 @@ const Auth = () => {
                       <Input
                         id="magic-link-email"
                         type="email"
-                        placeholder="Введите ваш email"
+                        placeholder={t('enterEmail')}
                         value={magicLinkEmail}
                         onChange={(e) => setMagicLinkEmail(e.target.value)}
                         required
@@ -289,8 +289,8 @@ const Auth = () => {
                       type="submit" 
                       className="w-full" 
                       disabled={isMagicLinkLoading}
-                    >
-                      {isMagicLinkLoading ? 'Отправка...' : 'Отправить magic link'}
+                      >
+                        {isMagicLinkLoading ? t('sending') : t('sendMagicLink')}
                     </Button>
                     <Button
                       type="button"
@@ -298,7 +298,7 @@ const Auth = () => {
                       className="w-full"
                       onClick={() => setShowMagicLink(false)}
                     >
-                      Назад к входу
+                      {t('backToLogin')}
                     </Button>
                   </form>
                 ) : (
@@ -336,7 +336,7 @@ const Auth = () => {
                           htmlFor="remember-me" 
                           className="text-sm font-normal cursor-pointer"
                         >
-                          Запомнить меня
+                          {t('rememberMe')}
                         </Label>
                       </div>
                       <Button
@@ -345,7 +345,7 @@ const Auth = () => {
                         className="px-0 text-sm"
                         onClick={() => setShowForgotPassword(true)}
                       >
-                        Забыли пароль?
+                        {t('forgotPassword')}
                       </Button>
                     </div>
                     <Button
@@ -361,7 +361,7 @@ const Auth = () => {
                       className="w-full"
                       onClick={() => setShowMagicLink(true)}
                     >
-                      Войти без пароля (Magic Link)
+                      {t('magicLink')}
                     </Button>
                   </form>
                 )}

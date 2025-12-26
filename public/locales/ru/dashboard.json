@@ -1,0 +1,68 @@
+{
+  "title": "Дашборд",
+  "myMetrics": "Мои метрики",
+  "refresh": "Обновить",
+  "quickActions": {
+    "title": "Быстрые действия",
+    "aiAnalysis": "AI Анализ",
+    "upload": "Загрузить",
+    "newGoal": "Новая цель",
+    "progress": "Прогресс",
+    "leaderboard": "Рейтинг",
+    "data": "Данные",
+    "tipTitle": "Подсказка",
+    "tipText": "Подключите ваши устройства для автоматического отслеживания"
+  },
+  "trainer": {
+    "messages": "Сообщения клиентов",
+    "plans": "Планы тренировок",
+    "goals": "Управление целями"
+  },
+  "leaderboard": {
+    "title": "Рейтинг",
+    "team": "Командный",
+    "rank": "Место",
+    "points": "очков",
+    "activeDays": "акт. дней",
+    "viewFull": "Смотреть полный рейтинг",
+    "noData": "Нет данных лидерборда",
+    "noDataDesc": "Начните участвовать в челленджах для отображения в таблице",
+    "errorLoading": "Ошибка загрузки лидерборда",
+    "retry": "Повторить"
+  },
+  "metrics": {
+    "recovery": "Восстановление",
+    "fromWhoop": "От Whoop",
+    "noData": "Нет данных"
+  },
+  "extraMetrics": {
+    "sleep": "Сон",
+    "strain": "Нагрузка",
+    "activeMin": "Активные мин",
+    "calories": "Калории",
+    "avgSteps": "Шаги (средн)",
+    "restHr": "Пульс покоя",
+    "hydration": "Гидратация",
+    "workouts": "Тренировки",
+    "subtitles": {
+      "avgPerNight": "в среднем за ночь",
+      "today": "сегодня",
+      "thisWeek": "за неделю",
+      "dailyAvg": "в среднем за день",
+      "morningAvg": "утреннее среднее"
+    },
+    "units": {
+      "hours": "ч",
+      "min": "мин",
+      "kcal": "ккал",
+      "bpm": "уд/мин",
+      "liters": "л",
+      "times": "раз",
+      "steps": "шаг."
+    }
+  },
+  "ai": {
+    "fitnessTitle": "AI Fitness Анализ",
+    "uploadTracker": "Загрузите фото вашего трекера"
+  }
+}

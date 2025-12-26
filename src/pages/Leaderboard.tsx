@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Trophy, Medal, Award, Flame, RefreshCw, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PageLoader } from "@/components/ui/page-loader";
-import { useTranslation } from "@/lib/translations";
+import { useTranslation } from 'react-i18next';
 import { UserHealthDetailDialog } from "@/components/leaderboard/UserHealthDetailDialog";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
 import { useAuth } from "@/hooks/useAuth";
@@ -29,7 +29,7 @@ import { ChallengeSelector } from "@/components/leaderboard/ChallengeSelector";
 import { usePreferredChallengeQuery } from "@/features/challenges";
 
 const Leaderboard = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('leaderboard');
   const { user, loading: authLoading } = useAuth();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedUserName, setSelectedUserName] = useState<string>('');
@@ -74,7 +74,7 @@ const Leaderboard = () => {
   }, [activeTab]);
 
   if (isLoading) {
-    return <PageLoader message="Loading leaderboard..." />;
+    return <PageLoader message={t('loading')} />;
   }
 
   return (
@@ -84,7 +84,7 @@ const Leaderboard = () => {
         <div className="flex flex-col gap-3 w-full sm:w-auto">
           <div className="flex items-center gap-3">
             <Trophy className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold">{t('leaderboard.title')}</h1>
+            <h1 className="text-3xl font-bold">{t('title')}</h1>
           </div>
           
           <ChallengeSelector
@@ -129,11 +129,11 @@ const Leaderboard = () => {
             <Card>
               <CardContent className="p-12 text-center space-y-4">
                 <Trophy className="h-16 w-16 mx-auto mb-4 text-destructive" />
-                <h3 className="text-xl font-semibold mb-2">Ошибка загрузки</h3>
+                <h3 className="text-xl font-semibold mb-2">{t('errorLoading')}</h3>
                 <p className="text-muted-foreground">{error}</p>
                 <Button onClick={() => refresh()} variant="outline">
                   <RefreshCw className="mr-2 h-4 w-4" />
-                  Повторить попытку
+                  {t('retry')}
                 </Button>
               </CardContent>
             </Card>
@@ -141,13 +141,13 @@ const Leaderboard = () => {
             <Card>
               <CardContent className="p-12 text-center space-y-4">
                 <Trophy className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-xl font-semibold mb-2">{t('leaderboard.noChallenge')}</h3>
+                <h3 className="text-xl font-semibold mb-2">{t('noChallenge')}</h3>
                 <p className="text-muted-foreground">
-                  {t('leaderboard.noChallengeDesc')}
+                  {t('noChallengeDesc')}
                 </p>
                 <Button onClick={() => refresh()} variant="outline">
                   <RefreshCw className="mr-2 h-4 w-4" />
-                  Обновить
+                  {t('refresh')}
                 </Button>
               </CardContent>
             </Card>
@@ -215,7 +215,7 @@ const Leaderboard = () => {
                               <span>{leaderboard[1].username}</span>
                             </div>
                             <div className="text-2xl font-bold text-primary">{formatPoints(leaderboard[1].totalPoints)}</div>
-                            <div className="text-xs text-muted-foreground">{t('leaderboard.points')}</div>
+                            <div className="text-xs text-muted-foreground">{t('points')}</div>
                           </div>
                         </div>
                       </HoverBorderGradient>
@@ -247,7 +247,7 @@ const Leaderboard = () => {
                               <span>{leaderboard[0].username}</span>
                             </div>
                             <div className="text-3xl font-bold text-primary">{formatPoints(leaderboard[0].totalPoints)}</div>
-                            <div className="text-xs text-muted-foreground">{t('leaderboard.points')}</div>
+                            <div className="text-xs text-muted-foreground">{t('points')}</div>
                           </div>
                         </div>
                       </HoverBorderGradient>
@@ -280,7 +280,7 @@ const Leaderboard = () => {
                               <span>{leaderboard[2].username}</span>
                             </div>
                             <div className="text-2xl font-bold text-primary">{formatPoints(leaderboard[2].totalPoints)}</div>
-                            <div className="text-xs text-muted-foreground">{t('leaderboard.points')}</div>
+                            <div className="text-xs text-muted-foreground">{t('points')}</div>
                           </div>
                         </div>
                       </HoverBorderGradient>
