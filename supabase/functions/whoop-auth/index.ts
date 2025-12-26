@@ -46,9 +46,25 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const requestId = crypto.randomUUID().substring(0, 8);
+  const startTime = Date.now();
+  
+  const log = (level: string, message: string, data?: Record<string, unknown>) => {
+    const elapsed = Date.now() - startTime;
+    console.log(JSON.stringify({
+      timestamp: new Date().toISOString(),
+      request_id: requestId,
+      level,
+      message,
+      elapsed_ms: elapsed,
+      ...data,
+    }));
+  };
+
   try {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
+      log('error', 'Missing authorization header');
       throw new Error('Missing authorization header');
     }
 
@@ -60,11 +76,9 @@ serve(async (req) => {
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
+      log('error', 'Unauthorized', { auth_error: authError?.message });
       throw new Error('Unauthorized');
     }
-
-    // Eligibility is now checked on the frontend (challenge participant check)
-    // No whitelist needed here - the frontend controls access
 
     const { action, code, state, redirect_uri: requestedRedirectUri } = await req.json();
     const redirectUri = getValidatedRedirectUri(requestedRedirectUri);
@@ -72,10 +86,17 @@ serve(async (req) => {
     const clientSecret = Deno.env.get('WHOOP_CLIENT_SECRET');
 
     if (!clientId || !clientSecret) {
+      log('error', 'Whoop credentials not configured');
       throw new Error('Whoop credentials not configured');
     }
 
-    console.log(`🔐 [whoop-auth] Action: ${action}, User: ${user.id}`);
+    log('info', 'Request received', { 
+      action, 
+      user_id: user.id,
+      user_email: user.email,
+      redirect_uri: redirectUri,
+      requested_redirect_uri: requestedRedirectUri || 'none',
+    });
 
     const serviceClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -83,7 +104,6 @@ serve(async (req) => {
     );
 
     if (action === 'get-auth-url') {
-      // Generate state token (stored in URL, verified on callback via localStorage on client)
       const stateToken = crypto.randomUUID();
 
       const authUrl = new URL(WHOOP_AUTH_URL);
@@ -93,32 +113,18 @@ serve(async (req) => {
       authUrl.searchParams.set('scope', SCOPES);
       authUrl.searchParams.set('state', stateToken);
 
-      // 🔍 DIAGNOSTIC LOGGING for OAuth issues
-      console.log(`═══════════════════════════════════════════════════════`);
-      console.log(`🔐 [whoop-auth] OAUTH DIAGNOSTIC INFO`);
-      console.log(`═══════════════════════════════════════════════════════`);
-      console.log(`📋 User ID: ${user.id}`);
-      console.log(`📋 User Email: ${user.email}`);
-      console.log(`📋 Client ID (first 8 chars): ${clientId.substring(0, 8)}...`);
-      console.log(`📋 Redirect URI: ${redirectUri}`);
-      console.log(`📋 Requested URI: ${requestedRedirectUri || 'none'}`);
-      console.log(`📋 Scopes: ${SCOPES}`);
-      console.log(`📋 State Token: ${stateToken}`);
-      console.log(`📋 Auth URL Base: ${WHOOP_AUTH_URL}`);
-      console.log(`📋 Full Auth URL Length: ${authUrl.toString().length} chars`);
-      console.log(`═══════════════════════════════════════════════════════`);
-      console.log(`⚠️  IF YOU SEE "Session expired" ERROR ON WHOOP:`);
-      console.log(`   1. Check Whoop Developer Portal: https://developer.whoop.com/`);
-      console.log(`   2. Verify Redirect URI matches EXACTLY: ${redirectUri}`);
-      console.log(`   3. If app is in Development mode, add user email to Test Users`);
-      console.log(`   4. Verify Client ID matches: ${clientId.substring(0, 8)}...`);
-      console.log(`═══════════════════════════════════════════════════════`);
+      log('info', 'Generated auth URL', {
+        state_token: stateToken,
+        redirect_uri: redirectUri,
+        client_id_preview: clientId.substring(0, 8) + '...',
+        scopes: SCOPES,
+        auth_url_length: authUrl.toString().length,
+      });
 
       return new Response(
         JSON.stringify({ 
           url: authUrl.toString(), 
           state: stateToken,
-          // Include diagnostic info in response for frontend debugging
           _debug: {
             redirect_uri: redirectUri,
             client_id_preview: clientId.substring(0, 8) + '...',
@@ -132,8 +138,15 @@ serve(async (req) => {
 
     if (action === 'exchange-token') {
       if (!code) {
+        log('error', 'Missing authorization code');
         throw new Error('Missing authorization code');
       }
+
+      log('info', 'Starting token exchange', {
+        code_preview: code.substring(0, 10) + '...',
+        has_state: !!state,
+        redirect_uri: redirectUri,
+      });
 
       // Verify state if provided
       if (state) {
@@ -144,13 +157,12 @@ serve(async (req) => {
           .single();
 
         if (tokenData?.oauth_state !== state) {
-          console.warn(`⚠️ [whoop-auth] State mismatch for user ${user.id}`);
+          log('warn', 'State mismatch', { expected: tokenData?.oauth_state, received: state });
         }
       }
 
-      console.log(`🔄 [whoop-auth] Exchanging code for tokens...`);
-
       // Exchange code for tokens
+      log('info', 'Calling Whoop token endpoint');
       const tokenResponse = await fetch(WHOOP_TOKEN_URL, {
         method: 'POST',
         headers: {
@@ -167,12 +179,20 @@ serve(async (req) => {
 
       if (!tokenResponse.ok) {
         const errorText = await tokenResponse.text();
-        console.error(`❌ [whoop-auth] Token exchange failed:`, errorText);
-        throw new Error(`Token exchange failed: ${errorText}`);
+        log('error', 'Token exchange failed', {
+          status: tokenResponse.status,
+          status_text: tokenResponse.statusText,
+          error_body: errorText,
+        });
+        throw new Error(`Token exchange failed: ${tokenResponse.status} - ${errorText}`);
       }
 
       const tokens = await tokenResponse.json();
-      console.log(`✅ [whoop-auth] Got tokens, expires_in: ${tokens.expires_in}s`);
+      log('info', 'Token exchange successful', {
+        expires_in: tokens.expires_in,
+        has_refresh_token: !!tokens.refresh_token,
+        token_type: tokens.token_type,
+      });
 
       // Get user profile from Whoop
       const profileResponse = await fetch('https://api.prod.whoop.com/developer/v1/user/profile/basic', {

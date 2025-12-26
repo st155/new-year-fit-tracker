@@ -136,26 +136,123 @@ export function WhoopDirectIntegration() {
 
   const connect = async () => {
     setConnecting(true);
+    console.log('🔐 [WhoopConnect] Starting connection flow...');
+    
     try {
       const currentOrigin = window.location.origin;
+      const redirectUri = `${currentOrigin}/auth/whoop/oauth2`;
+      
+      console.log('📋 [WhoopConnect] Request params:', { currentOrigin, redirectUri });
+      
       const { data, error } = await supabase.functions.invoke('whoop-auth', {
         body: { 
           action: 'get-auth-url',
-          redirect_uri: `${currentOrigin}/auth/whoop/oauth2`
+          redirect_uri: redirectUri
         },
       });
 
-      if (error) throw error;
-      if (!data?.url) throw new Error('No auth URL received');
+      if (error) {
+        console.error('❌ [WhoopConnect] Edge function error:', error);
+        throw error;
+      }
+      
+      if (!data?.url) {
+        console.error('❌ [WhoopConnect] No auth URL in response:', data);
+        throw new Error('No auth URL received');
+      }
 
-      // Store return URL and connecting flag for redirect flow
+      console.log('✅ [WhoopConnect] Got auth URL, opening popup...');
+      console.log('📋 [WhoopConnect] Debug info:', data._debug);
+
+      // Store return URL for when popup completes
       sessionStorage.setItem('whoop_return_url', window.location.pathname + window.location.search + window.location.hash);
       sessionStorage.setItem('whoop_connecting', 'true');
 
-      // Redirect to Whoop OAuth (not popup - session issues)
-      window.location.href = data.url;
+      // Open popup window
+      const popupWidth = 600;
+      const popupHeight = 700;
+      const left = window.screenX + (window.outerWidth - popupWidth) / 2;
+      const top = window.screenY + (window.outerHeight - popupHeight) / 2;
+      
+      const popup = window.open(
+        data.url,
+        'whoop-auth',
+        `width=${popupWidth},height=${popupHeight},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes,resizable=yes`
+      );
+
+      if (!popup) {
+        console.error('❌ [WhoopConnect] Popup blocked');
+        toast({
+          title: 'Popup заблокирован',
+          description: 'Пожалуйста, разрешите всплывающие окна для этого сайта',
+          variant: 'destructive',
+        });
+        setConnecting(false);
+        return;
+      }
+
+      console.log('🪟 [WhoopConnect] Popup opened, waiting for result...');
+
+      // Listen for message from popup
+      const handleMessage = async (event: MessageEvent) => {
+        // Verify origin
+        if (event.origin !== window.location.origin) return;
+        
+        if (event.data?.type === 'whoop-auth-result') {
+          console.log('📨 [WhoopConnect] Received result from popup:', event.data);
+          window.removeEventListener('message', handleMessage);
+          
+          if (event.data.success) {
+            console.log('✅ [WhoopConnect] Connection successful!');
+            toast({
+              title: 'Whoop подключен!',
+              description: 'Данные начнут синхронизироваться автоматически',
+            });
+            
+            // Refresh status and queries
+            await checkStatus();
+            queryClient.invalidateQueries({ queryKey: ['unified-metrics'] });
+            queryClient.invalidateQueries({ queryKey: ['device-metrics'] });
+          } else {
+            console.error('❌ [WhoopConnect] Connection failed:', event.data.error);
+            toast({
+              title: 'Ошибка подключения',
+              description: event.data.error || 'Не удалось подключить Whoop',
+              variant: 'destructive',
+            });
+          }
+          
+          sessionStorage.removeItem('whoop_connecting');
+          setConnecting(false);
+        }
+      };
+
+      window.addEventListener('message', handleMessage);
+
+      // Also check if popup was closed manually
+      const checkPopupClosed = setInterval(() => {
+        if (popup.closed) {
+          console.log('🪟 [WhoopConnect] Popup was closed');
+          clearInterval(checkPopupClosed);
+          window.removeEventListener('message', handleMessage);
+          
+          // Only set connecting to false if we didn't get a result
+          setTimeout(() => {
+            setConnecting(false);
+            sessionStorage.removeItem('whoop_connecting');
+          }, 500);
+        }
+      }, 500);
+
+      // Clean up after 5 minutes (safety timeout)
+      setTimeout(() => {
+        clearInterval(checkPopupClosed);
+        window.removeEventListener('message', handleMessage);
+        setConnecting(false);
+      }, 5 * 60 * 1000);
+
     } catch (error: any) {
-      console.error('Failed to get auth URL:', error);
+      console.error('❌ [WhoopConnect] Error:', error);
       toast({
         title: 'Ошибка',
         description: error.message || 'Не удалось начать авторизацию',
