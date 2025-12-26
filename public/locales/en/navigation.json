@@ -23,6 +23,13 @@
   "more": "More",
   "about": "About",
   "privacyPolicy": "Privacy Policy",
+  "myPlan": "My Plan",
+  "trends": "Trends",
+  "groups": {
+    "core": "Core",
+    "actions": "Actions",
+    "data": "Data"
+  },
   "trainer": {
     "dashboard": "Trainer Dashboard",
     "analytics": "Analytics",
