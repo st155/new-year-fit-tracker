@@ -12,7 +12,7 @@ export default function WhoopOAuthCallback() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
-  const [message, setMessage] = useState('Processing Whoop authorization...');
+  const [message, setMessage] = useState('Обработка авторизации Whoop...');
 
   useEffect(() => {
     if (authLoading) return;
@@ -25,35 +25,48 @@ export default function WhoopOAuthCallback() {
     if (error) {
       console.error('❌ [WhoopOAuthCallback] OAuth error:', error, errorDescription);
       setStatus('error');
-      setMessage(errorDescription || 'Authorization was denied or failed');
+      setMessage(errorDescription || 'Авторизация отклонена или произошла ошибка');
       return;
     }
 
     if (!code) {
       setStatus('error');
-      setMessage('No authorization code received');
+      setMessage('Код авторизации не получен');
       return;
     }
 
     if (!user) {
       setStatus('error');
-      setMessage('Please log in first');
+      setMessage('Пожалуйста, войдите в аккаунт');
       return;
     }
 
     exchangeToken(code, state);
   }, [searchParams, user, authLoading]);
 
+  const getReturnUrl = (): string => {
+    const savedUrl = sessionStorage.getItem('whoop_return_url');
+    sessionStorage.removeItem('whoop_return_url');
+    sessionStorage.removeItem('whoop_connecting');
+    
+    // Default to fitness-data with connections tab
+    if (!savedUrl) {
+      return '/fitness-data?tab=connections';
+    }
+    
+    return savedUrl;
+  };
+
   const exchangeToken = async (code: string, state: string | null) => {
     try {
-      setMessage('Exchanging authorization code...');
+      setMessage('Обмен кода авторизации...');
       console.log('🔄 [WhoopOAuthCallback] Exchanging code for tokens...');
 
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData?.session?.access_token;
 
       if (!accessToken) {
-        throw new Error('No active session');
+        throw new Error('Нет активной сессии');
       }
 
       const response = await supabase.functions.invoke('whoop-auth', {
@@ -61,15 +74,14 @@ export default function WhoopOAuthCallback() {
       });
 
       if (response.error) {
-        throw new Error(response.error.message || 'Token exchange failed');
+        throw new Error(response.error.message || 'Ошибка обмена токена');
       }
 
       console.log('✅ [WhoopOAuthCallback] Token exchange successful');
       setStatus('success');
-      setMessage('Whoop connected successfully!');
+      setMessage('Whoop подключен! Запуск синхронизации...');
 
       // Trigger initial sync
-      setMessage('Starting initial data sync...');
       try {
         await supabase.functions.invoke('whoop-sync', {
           body: { days_back: 14 },
@@ -79,31 +91,29 @@ export default function WhoopOAuthCallback() {
         console.warn('⚠️ [WhoopOAuthCallback] Initial sync failed:', syncError);
       }
 
-      // If opened as popup, notify parent and close
-      if (window.opener) {
-        console.log('📤 [WhoopOAuthCallback] Sending success message to parent window');
-        window.opener.postMessage({ type: 'whoop-connected', success: true }, '*');
-        setMessage('Whoop подключен! Окно закроется автоматически...');
-        setTimeout(() => {
-          window.close();
-        }, 1500);
-      } else {
-        // Redirect if not in popup
-        setMessage('Whoop подключен! Перенаправление...');
-        setTimeout(() => {
-          navigate('/fitness-data', { replace: true });
-        }, 2000);
-      }
+      // Redirect back to saved URL
+      const returnUrl = getReturnUrl();
+      setMessage('Whoop подключен! Перенаправление...');
+      console.log('🔀 [WhoopOAuthCallback] Redirecting to:', returnUrl);
+      
+      setTimeout(() => {
+        navigate(returnUrl, { replace: true });
+      }, 1500);
 
     } catch (error: any) {
       console.error('❌ [WhoopOAuthCallback] Error:', error);
       setStatus('error');
-      setMessage(error.message || 'Failed to connect Whoop');
+      setMessage(error.message || 'Не удалось подключить Whoop');
     }
   };
 
+  const handleBackClick = () => {
+    const returnUrl = getReturnUrl();
+    navigate(returnUrl, { replace: true });
+  };
+
   if (authLoading) {
-    return <PageLoader message="Loading..." />;
+    return <PageLoader message="Загрузка..." />;
   }
 
   return (
@@ -114,7 +124,7 @@ export default function WhoopOAuthCallback() {
             {status === 'loading' && <Loader2 className="h-6 w-6 animate-spin text-primary" />}
             {status === 'success' && <CheckCircle className="h-6 w-6 text-green-500" />}
             {status === 'error' && <XCircle className="h-6 w-6 text-destructive" />}
-            Whoop Connection
+            Подключение Whoop
           </CardTitle>
         </CardHeader>
         <CardContent className="text-center space-y-4">
@@ -122,15 +132,15 @@ export default function WhoopOAuthCallback() {
           
           {status === 'error' && (
             <div className="space-y-2">
-              <Button onClick={() => navigate('/fitness-data')} variant="outline">
-                Back to Fitness Data
+              <Button onClick={handleBackClick} variant="outline">
+                Вернуться назад
               </Button>
             </div>
           )}
 
           {status === 'success' && (
             <p className="text-sm text-muted-foreground">
-              Your Whoop data will start syncing automatically.
+              Данные Whoop начнут синхронизироваться автоматически.
             </p>
           )}
         </CardContent>

@@ -106,24 +106,18 @@ export function WhoopDirectIntegration() {
     }
   }, [user, isEligible]);
 
-  // Listen for postMessage from OAuth popup
+  // Check if returning from OAuth redirect
   useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data?.type === 'whoop-connected' && event.data?.success) {
-        console.log('✅ Whoop connected via popup');
-        setConnecting(false);
-        checkStatus();
-        toast({
-          title: 'Whoop подключен!',
-          description: 'Данные начнут синхронизироваться автоматически',
-        });
-        queryClient.invalidateQueries({ queryKey: ['unified-metrics'] });
-      }
-    };
-    
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [toast, queryClient]);
+    const wasConnecting = sessionStorage.getItem('whoop_connecting') === 'true';
+    if (wasConnecting && status?.connected) {
+      sessionStorage.removeItem('whoop_connecting');
+      toast({
+        title: 'Whoop подключен!',
+        description: 'Данные начнут синхронизироваться автоматически',
+      });
+      queryClient.invalidateQueries({ queryKey: ['unified-metrics'] });
+    }
+  }, [status?.connected, toast, queryClient]);
 
   const checkStatus = async () => {
     try {
@@ -150,34 +144,12 @@ export function WhoopDirectIntegration() {
       if (error) throw error;
       if (!data?.url) throw new Error('No auth URL received');
 
-      // Store return URL
-      sessionStorage.setItem('whoop_return_url', window.location.pathname);
+      // Store return URL and connecting flag for redirect flow
+      sessionStorage.setItem('whoop_return_url', window.location.pathname + window.location.search + window.location.hash);
+      sessionStorage.setItem('whoop_connecting', 'true');
 
-      toast({
-        title: 'Открытие Whoop',
-        description: 'Авторизуйтесь в Whoop во всплывающем окне',
-      });
-
-      // Open OAuth in popup window to bypass iframe restrictions
-      const width = 600;
-      const height = 700;
-      const left = window.screenX + (window.outerWidth - width) / 2;
-      const top = window.screenY + (window.outerHeight - height) / 2;
-      
-      const authWindow = window.open(
-        data.url, 
-        'whoop-oauth',
-        `width=${width},height=${height},left=${left},top=${top},popup=yes`
-      );
-      
-      // If popup was blocked, fall back to redirect
-      if (!authWindow || authWindow.closed) {
-        console.log('Popup blocked, falling back to redirect');
-        window.location.href = data.url;
-        return;
-      }
-
-      // Keep connecting state active - will be reset by postMessage
+      // Redirect to Whoop OAuth (not popup - session issues)
+      window.location.href = data.url;
     } catch (error: any) {
       console.error('Failed to get auth URL:', error);
       toast({
