@@ -56,8 +56,14 @@ export default function WhoopCallback() {
         throw new Error('No active session');
       }
 
+      const currentOrigin = window.location.origin;
       const response = await supabase.functions.invoke('whoop-auth', {
-        body: { action: 'exchange-token', code, state },
+        body: { 
+          action: 'exchange-token', 
+          code, 
+          state,
+          redirect_uri: `${currentOrigin}/auth/whoop/oauth2`
+        },
       });
 
       if (response.error) {

@@ -8,7 +8,28 @@ const corsHeaders = {
 
 const WHOOP_AUTH_URL = 'https://api.prod.whoop.com/oauth/oauth2/auth';
 const WHOOP_TOKEN_URL = 'https://api.prod.whoop.com/oauth/oauth2/token';
-const REDIRECT_URI = 'https://elite10.club/auth/whoop/oauth2';
+const DEFAULT_REDIRECT_URI = 'https://elite10.club/auth/whoop/oauth2';
+
+// Allowed origins for redirect URIs
+const ALLOWED_ORIGINS = [
+  'https://elite10.club',
+  'https://1eef6188-774b-4d2c-ab12-3f76f54542b1.lovableproject.com',
+];
+
+// Helper to validate and get redirect URI
+function getValidatedRedirectUri(requestedUri?: string): string {
+  if (!requestedUri) return DEFAULT_REDIRECT_URI;
+  
+  const isAllowed = ALLOWED_ORIGINS.some(origin => requestedUri.startsWith(origin));
+  if (isAllowed) {
+    // Ensure it ends with the correct path
+    const url = new URL(requestedUri);
+    return `${url.origin}/auth/whoop/oauth2`;
+  }
+  
+  console.warn(`⚠️ [whoop-auth] Invalid redirect URI requested: ${requestedUri}, using default`);
+  return DEFAULT_REDIRECT_URI;
+}
 
 const SCOPES = [
   'offline',
@@ -45,7 +66,8 @@ serve(async (req) => {
     // Eligibility is now checked on the frontend (challenge participant check)
     // No whitelist needed here - the frontend controls access
 
-    const { action, code, state } = await req.json();
+    const { action, code, state, redirect_uri: requestedRedirectUri } = await req.json();
+    const redirectUri = getValidatedRedirectUri(requestedRedirectUri);
     const clientId = Deno.env.get('WHOOP_CLIENT_ID');
     const clientSecret = Deno.env.get('WHOOP_CLIENT_SECRET');
 
@@ -66,7 +88,7 @@ serve(async (req) => {
 
       const authUrl = new URL(WHOOP_AUTH_URL);
       authUrl.searchParams.set('client_id', clientId);
-      authUrl.searchParams.set('redirect_uri', REDIRECT_URI);
+      authUrl.searchParams.set('redirect_uri', redirectUri);
       authUrl.searchParams.set('response_type', 'code');
       authUrl.searchParams.set('scope', SCOPES);
       authUrl.searchParams.set('state', stateToken);
@@ -78,7 +100,8 @@ serve(async (req) => {
       console.log(`📋 User ID: ${user.id}`);
       console.log(`📋 User Email: ${user.email}`);
       console.log(`📋 Client ID (first 8 chars): ${clientId.substring(0, 8)}...`);
-      console.log(`📋 Redirect URI: ${REDIRECT_URI}`);
+      console.log(`📋 Redirect URI: ${redirectUri}`);
+      console.log(`📋 Requested URI: ${requestedRedirectUri || 'none'}`);
       console.log(`📋 Scopes: ${SCOPES}`);
       console.log(`📋 State Token: ${stateToken}`);
       console.log(`📋 Auth URL Base: ${WHOOP_AUTH_URL}`);
@@ -86,7 +109,7 @@ serve(async (req) => {
       console.log(`═══════════════════════════════════════════════════════`);
       console.log(`⚠️  IF YOU SEE "Session expired" ERROR ON WHOOP:`);
       console.log(`   1. Check Whoop Developer Portal: https://developer.whoop.com/`);
-      console.log(`   2. Verify Redirect URI matches EXACTLY: ${REDIRECT_URI}`);
+      console.log(`   2. Verify Redirect URI matches EXACTLY: ${redirectUri}`);
       console.log(`   3. If app is in Development mode, add user email to Test Users`);
       console.log(`   4. Verify Client ID matches: ${clientId.substring(0, 8)}...`);
       console.log(`═══════════════════════════════════════════════════════`);
@@ -97,7 +120,7 @@ serve(async (req) => {
           state: stateToken,
           // Include diagnostic info in response for frontend debugging
           _debug: {
-            redirect_uri: REDIRECT_URI,
+            redirect_uri: redirectUri,
             client_id_preview: clientId.substring(0, 8) + '...',
             scopes: SCOPES,
             user_email: user.email
@@ -136,7 +159,7 @@ serve(async (req) => {
         body: new URLSearchParams({
           grant_type: 'authorization_code',
           code,
-          redirect_uri: REDIRECT_URI,
+          redirect_uri: redirectUri,
           client_id: clientId,
           client_secret: clientSecret,
         }),
