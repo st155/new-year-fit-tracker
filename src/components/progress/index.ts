@@ -15,15 +15,5 @@ export { QuickAddMeasurementDialog } from './QuickAddMeasurementDialog';
 // Utils
 export * from './utils/goalCardUtils';
 
-// Deprecated components - use alternatives instead
-/** @deprecated Use CompactProgressSummary instead */
-export { ProgressOverviewCard } from './ProgressOverviewCard';
-
-/** @deprecated Use unified_metrics instead of metric_values */
+// Charts - uses unified_metrics
 export { MetricsTrends } from './MetricsTrends';
-
-/** @deprecated Use EnhancedProgressCard instead */
-export { GoalsProgress } from './GoalsProgress';
-
-/** @deprecated Use DisciplineRadialChart instead */
-export { BodyCompositionTimeline } from './BodyCompositionTimeline';

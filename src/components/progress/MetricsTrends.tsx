@@ -27,12 +27,10 @@ export function MetricsTrends({ userId }: MetricsTrendsProps) {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
+      // Using unified_metrics instead of deprecated metric_values
       const { data, error } = await supabase
-        .from("metric_values")
-        .select(`
-          *,
-          user_metrics(metric_name, unit)
-        `)
+        .from("unified_metrics")
+        .select("*")
         .eq("user_id", userId)
         .gte("measurement_date", thirtyDaysAgo.toISOString().split("T")[0])
         .order("measurement_date", { ascending: true });
@@ -40,11 +38,11 @@ export function MetricsTrends({ userId }: MetricsTrendsProps) {
       if (error) throw error;
 
       // Group by metric name
-      const grouped = data.reduce((acc: any, item: any) => {
-        const name = item.user_metrics?.metric_name || "Unknown";
+      const grouped = data.reduce((acc: Record<string, Array<{ date: string; value: number }>>, item) => {
+        const name = item.metric_name || "Неизвестно";
         if (!acc[name]) acc[name] = [];
         acc[name].push({
-          date: new Date(item.measurement_date).toLocaleDateString("en-US", {
+          date: new Date(item.measurement_date).toLocaleDateString("ru-RU", {
             month: "short",
             day: "numeric",
           }),
@@ -75,15 +73,15 @@ export function MetricsTrends({ userId }: MetricsTrendsProps) {
     return (
       <EmptyState
         icon={<TrendingUp className="h-12 w-12" />}
-        title="No trends data"
-        description="Metrics will appear here as you track your fitness data"
+        title="Нет данных о трендах"
+        description="Метрики появятся здесь по мере отслеживания ваших показателей"
       />
     );
   }
 
   return (
     <div className="space-y-4">
-      {metrics.map((metric: any) => (
+      {metrics.map((metric) => (
         <Card key={metric.name}>
           <CardHeader>
             <CardTitle className="text-lg">{metric.name}</CardTitle>
