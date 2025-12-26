@@ -254,7 +254,7 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.whoop-auth]
-verify_jwt = true
+verify_jwt = false
 
 [functions.whoop-sync]
 verify_jwt = true

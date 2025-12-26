@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
@@ -19,7 +18,6 @@ interface ResultMessage {
 export default function WhoopOAuthCallback() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
   const [status, setStatus] = useState<Status>('loading');
   const [message, setMessage] = useState('Обработка авторизации Whoop...');
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -31,11 +29,6 @@ export default function WhoopOAuthCallback() {
   console.log('🪟 [WhoopCallback] Mounted, isPopup:', isPopup);
 
   useEffect(() => {
-    if (authLoading) {
-      console.log('⏳ [WhoopCallback] Waiting for auth...');
-      return;
-    }
-
     if (processedRef.current) {
       console.log('⏭️ [WhoopCallback] Already processed, skipping');
       return;
@@ -51,7 +44,6 @@ export default function WhoopOAuthCallback() {
       hasState: !!state, 
       error, 
       errorDescription,
-      userId: user?.id 
     });
 
     if (error) {
@@ -66,21 +58,22 @@ export default function WhoopOAuthCallback() {
       return;
     }
 
-    if (!user) {
-      console.error('❌ [WhoopCallback] No user session');
-      handleError('Пожалуйста, войдите в аккаунт');
+    if (!state) {
+      console.error('❌ [WhoopCallback] No state received');
+      handleError('State параметр не получен');
       return;
     }
 
     processedRef.current = true;
     exchangeToken(code, state);
-  }, [searchParams, user, authLoading]);
+  }, [searchParams]);
 
   const sendResultToParent = (result: ResultMessage) => {
     if (isPopup && window.opener) {
       console.log('📨 [WhoopCallback] Sending result to parent:', result);
       try {
-        window.opener.postMessage(result, window.location.origin);
+        // Send to any origin since we might be on a different domain
+        window.opener.postMessage(result, '*');
       } catch (e) {
         console.error('❌ [WhoopCallback] Failed to send message to parent:', e);
       }
@@ -160,46 +153,49 @@ export default function WhoopOAuthCallback() {
     return savedUrl;
   };
 
-  const exchangeToken = async (code: string, state: string | null) => {
+  const exchangeToken = async (code: string, state: string) => {
     try {
       setMessage('Обмен кода авторизации...');
       console.log('🔄 [WhoopCallback] Starting token exchange...');
-
-      const { data: sessionData } = await supabase.auth.getSession();
-      const accessToken = sessionData?.session?.access_token;
-
-      if (!accessToken) {
-        throw new Error('Нет активной сессии');
-      }
 
       const currentOrigin = window.location.origin;
       const redirectUri = `${currentOrigin}/auth/whoop/oauth2`;
       
       console.log('📋 [WhoopCallback] Exchange params:', { 
         codePreview: code.substring(0, 10) + '...', 
-        hasState: !!state,
+        statePreview: state.substring(0, 20) + '...',
         redirectUri 
       });
 
-      const response = await supabase.functions.invoke('whoop-auth', {
-        body: { 
-          action: 'exchange-token', 
-          code, 
-          state,
-          redirect_uri: redirectUri
-        },
-      });
+      // Call edge function directly without auth header - user_id is in state
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/whoop-auth`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({
+            action: 'exchange-token',
+            code,
+            state,
+            redirect_uri: redirectUri,
+          }),
+        }
+      );
 
-      console.log('📋 [WhoopCallback] Exchange response:', response);
+      const data = await response.json();
+      console.log('📋 [WhoopCallback] Exchange response:', { ok: response.ok, data });
 
-      if (response.error) {
-        throw new Error(response.error.message || 'Ошибка обмена токена');
+      if (!response.ok || data.error) {
+        throw new Error(data.error || 'Ошибка обмена токена');
       }
 
       setMessage('Запуск начальной синхронизации...');
       console.log('✅ [WhoopCallback] Token exchange successful, starting sync...');
 
-      // Trigger initial sync (non-blocking)
+      // Trigger initial sync (non-blocking) - this still needs auth
       try {
         await supabase.functions.invoke('whoop-sync', {
           body: { days_back: 14 },
@@ -209,7 +205,7 @@ export default function WhoopOAuthCallback() {
         console.warn('⚠️ [WhoopCallback] Initial sync failed (non-critical):', syncError);
       }
 
-      handleSuccess(response.data?.whoop_user_id);
+      handleSuccess(data.whoop_user_id);
 
     } catch (error: any) {
       console.error('❌ [WhoopCallback] Exchange error:', error);
@@ -225,19 +221,6 @@ export default function WhoopOAuthCallback() {
       navigate(returnUrl, { replace: true });
     }
   };
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <Card className="w-full max-w-md">
-          <CardContent className="flex flex-col items-center justify-center py-8 gap-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">Загрузка...</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
