@@ -630,11 +630,23 @@ async function syncUserData(serviceClient: any, tokenData: any) {
     console.warn(`⚠️ [scheduled-sync] Failed to fetch workouts:`, error);
   }
 
-  // Insert metrics
+  // Insert metrics - deduplicate first
   if (metricsToInsert.length > 0) {
+    // Deduplicate metrics by unique key (metric_name + measurement_date + source)
+    const uniqueMetricsMap = new Map<string, typeof metricsToInsert[0]>();
+    for (const metric of metricsToInsert) {
+      const key = `${metric.metric_name}_${metric.measurement_date}_${metric.source}`;
+      if (!uniqueMetricsMap.has(key) || metric.external_id) {
+        uniqueMetricsMap.set(key, metric);
+      }
+    }
+    const uniqueMetrics = Array.from(uniqueMetricsMap.values());
+    
+    console.log(`💾 [scheduled-sync] Inserting ${uniqueMetrics.length} metrics (deduplicated from ${metricsToInsert.length})`);
+    
     await serviceClient
       .from('unified_metrics')
-      .upsert(metricsToInsert, {
+      .upsert(uniqueMetrics, {
         onConflict: 'user_id,metric_name,measurement_date,source',
         ignoreDuplicates: false,
       });
