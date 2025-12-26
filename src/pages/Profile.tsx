@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { RefreshCw, FlaskConical } from "lucide-react";
 import { ProtocolTestingPanel } from "@/components/protocols/ProtocolTestingPanel";
 import { ProfileHero } from "@/components/profile/ProfileHero";
@@ -12,6 +13,7 @@ import { ProfileEditor } from "@/components/profile/ProfileEditor";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useProfileSummary } from "@/hooks/profile/useProfileSummary";
@@ -21,6 +23,7 @@ import { useNavigate } from "react-router-dom";
 import { CleanupAppleHealthButton } from "@/components/admin/CleanupAppleHealthButton";
 
 const ProfilePage = () => {
+  const { t } = useTranslation();
   const { user, signOut } = useAuth();
   const { profile: contextProfile, refetch: refetchProfile } = useProfile();
   const { data: summary, isLoading: summaryLoading } = useProfileSummary();
@@ -227,22 +230,25 @@ const ProfilePage = () => {
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
-                Профиль
+                {t('profile.title')}
               </h1>
               <p className="text-muted-foreground">
-                Управляйте своими данными и настройками
+                {t('profile.subtitle')}
               </p>
             </div>
-            <Button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              variant="outline"
-              size="sm"
-              className="gap-2"
-            >
-              <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-              Обновить
-            </Button>
+            <div className="flex items-center gap-2">
+              <LanguageSwitcher />
+              <Button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                {t('refresh')}
+              </Button>
+            </div>
           </div>
         </div>
 

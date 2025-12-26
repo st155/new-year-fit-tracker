@@ -1,0 +1,18 @@
+{
+  "welcome": "Welcome",
+  "settings": "Settings",
+  "language": "Language",
+  "refresh": "Refresh",
+  "profile": {
+    "title": "Profile",
+    "subtitle": "Manage your data and settings",
+    "updated": "Profile updated",
+    "updateSuccess": "Data saved successfully",
+    "refreshed": "Refreshed",
+    "refreshSuccess": "Profile updated successfully"
+  },
+  "languages": {
+    "ru": "Русский",
+    "en": "English"
+  }
+}
