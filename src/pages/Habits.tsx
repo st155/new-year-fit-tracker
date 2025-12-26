@@ -21,10 +21,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SmartView, AllHabitsView } from '@/features/habits/components/layouts';
-import { SocialView } from '@/features/habits/components/layouts/SocialView';
 import { HabitsDashboardV4 } from '@/features/habits/components/dashboard';
+import { ViewSwitcher, ViewMode } from '@/features/habits/components/ViewSwitcher';
 import { Button } from '@/components/ui/button';
 import { Plus, ArrowLeft, Trophy, Zap, BarChart3 } from 'lucide-react';
 import { FAB } from '@/components/ui/fab';
@@ -42,8 +41,6 @@ import { NotificationCenter } from '@/features/habits/components/social/Notifica
 
 // Lazy load heavy components
 const CompactListView = lazy(() => import('@/features/habits/components/layouts/CompactListView').then(m => ({ default: m.CompactListView })));
-const FocusMode = lazy(() => import('@/features/habits/components/layouts/FocusMode').then(m => ({ default: m.FocusMode })));
-const TimelineView = lazy(() => import('@/features/habits/components/layouts/TimelineView').then(m => ({ default: m.TimelineView })));
 const AnalyticsView = lazy(() => import('@/features/habits/components/layouts/AnalyticsView').then(m => ({ default: m.AnalyticsView })));
 
 const LoadingSkeleton = () => (
@@ -71,6 +68,7 @@ export default function HabitsV3() {
   const [showAchievements, setShowAchievements] = useState(false);
   const [habitToDelete, setHabitToDelete] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('widgets');
   
   // Get habit insights
   const { all: insights, isLoading: insightsLoading } = useHabitInsights({
@@ -183,6 +181,7 @@ export default function HabitsV3() {
             <h1 className="text-3xl font-bold">Привычки 3.0</h1>
           </div>
           <div className="flex items-center gap-2">
+            <ViewSwitcher value={viewMode} onChange={setViewMode} />
             <NotificationCenter />
             <Button variant="outline" size="icon" onClick={() => setShowAchievements(true)}>
               <Trophy className="w-5 h-5" />
@@ -214,65 +213,18 @@ export default function HabitsV3() {
           />
         )}
 
-        {/* Tabs */}
-        <Tabs defaultValue="bento" className="space-y-6">
-          <TabsList className="flex w-full overflow-x-auto scrollbar-hide gap-1 p-1">
-            <TabsTrigger value="bento" className="flex-shrink-0 text-xs sm:text-sm px-3 py-1.5 whitespace-nowrap">
-              🧩 Виджеты
-            </TabsTrigger>
-            <TabsTrigger value="all" className="flex-shrink-0 text-xs sm:text-sm px-3 py-1.5 whitespace-nowrap">
-              📊 Все
-            </TabsTrigger>
-            <TabsTrigger value="smart" className="flex-shrink-0 text-xs sm:text-sm px-3 py-1.5 whitespace-nowrap">
-              🧠 Умный
-            </TabsTrigger>
-            <TabsTrigger value="compact" className="flex-shrink-0 text-xs sm:text-sm px-3 py-1.5 whitespace-nowrap">
-              📋 Список
-            </TabsTrigger>
-            <TabsTrigger value="social" className="flex-shrink-0 text-xs sm:text-sm px-3 py-1.5 whitespace-nowrap">
-              🤝 Соц
-            </TabsTrigger>
-            <TabsTrigger value="focus" className="flex-shrink-0 text-xs sm:text-sm px-3 py-1.5 whitespace-nowrap">
-              🎯 Фокус
-            </TabsTrigger>
-            <TabsTrigger value="timeline" className="flex-shrink-0 text-xs sm:text-sm px-3 py-1.5 whitespace-nowrap">
-              ⏰ График
-            </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex-shrink-0 text-xs sm:text-sm px-3 py-1.5 whitespace-nowrap">
-              📊 Данные
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="bento">
+        {/* View Content */}
+        <div className="space-y-6">
+          {viewMode === 'widgets' && (
             <HabitsDashboardV4
               habits={habits}
               userId={user?.id}
               onHabitComplete={handleHabitComplete}
               isCompleting={isCompleting}
             />
-          </TabsContent>
+          )}
 
-          <TabsContent value="all">
-            <AllHabitsView
-              habits={habits}
-              onHabitComplete={handleHabitComplete}
-              onHabitClick={handleHabitTap}
-            />
-          </TabsContent>
-
-          <TabsContent value="smart">
-              <SmartView
-                habits={habits}
-                onHabitComplete={handleHabitComplete}
-                onHabitTap={handleHabitTap}
-                onHabitArchive={handleArchive}
-                onHabitDelete={handleDelete}
-                onHabitEdit={(id) => navigate(`/habits/${id}`)}
-                onHabitViewHistory={(id) => navigate(`/habits/${id}`)}
-              />
-          </TabsContent>
-
-          <TabsContent value="compact">
+          {viewMode === 'list' && (
             <Suspense fallback={<LoadingSkeleton />}>
               <CompactListView
                 habits={habits}
@@ -280,40 +232,17 @@ export default function HabitsV3() {
                 onHabitTap={handleHabitTap}
               />
             </Suspense>
-          </TabsContent>
+          )}
 
-          <TabsContent value="focus">
-            <Suspense fallback={<LoadingSkeleton />}>
-              <FocusMode
-                habits={habits.filter(h => !h.completedToday)}
-                onHabitComplete={handleHabitComplete}
-                onExit={() => navigate('/habits-v3')}
-              />
-            </Suspense>
-          </TabsContent>
-
-          <TabsContent value="timeline">
-            <Suspense fallback={<LoadingSkeleton />}>
-              <TimelineView
-                habits={habits}
-                onHabitClick={handleHabitTap}
-              />
-            </Suspense>
-          </TabsContent>
-
-          <TabsContent value="analytics">
+          {viewMode === 'analytics' && (
             <Suspense fallback={<LoadingSkeleton />}>
               <AnalyticsView
                 habits={habits}
                 userId={user?.id}
               />
             </Suspense>
-          </TabsContent>
-
-          <TabsContent value="social">
-            <SocialView />
-          </TabsContent>
-        </Tabs>
+          )}
+        </div>
 
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

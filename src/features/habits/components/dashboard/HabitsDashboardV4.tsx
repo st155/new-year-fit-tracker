@@ -40,13 +40,22 @@ export function HabitsDashboardV4({
       if (type === 'fasting_tracker' || name.includes('голодан') || name.includes('fasting')) {
         fasting.push(habit);
       }
-      // Duration counter (abstinence/streak habits)
+      // Duration counter (abstinence/streak habits) - расширенные keywords
       else if (
         type === 'duration_counter' ||
         name.includes('без ') ||
         name.includes('no ') ||
         name.includes('quit') ||
-        name.includes('free')
+        name.includes('free') ||
+        name.includes('бросить') ||
+        name.includes('не пью') ||
+        name.includes('не ем') ||
+        name.includes('курить') ||
+        name.includes('курени') ||
+        name.includes('алкогол') ||
+        name.includes('smoke') ||
+        name.includes('weed') ||
+        name.includes('sober')
       ) {
         streak.push(habit);
       }
@@ -122,6 +131,7 @@ export function HabitsDashboardV4({
                   habit={habit}
                   onComplete={onHabitComplete}
                   isCompleting={isCompleting}
+                  userId={userId}
                 />
               ))}
             </AnimatePresence>
