@@ -113,18 +113,59 @@ serve(async (req) => {
     if (action === 'get-auth-url') {
       if (!user) throw new Error('User required');
       
-      // Generate state token with embedded user_id: {random}:{user_id}
-      const stateToken = `${crypto.randomUUID()}:${user.id}`;
-
-      // Save state to DB for validation during callback
-      await serviceClient
+      // Check if we have a fresh state already (idempotent - prevent race conditions)
+      const STATE_FRESHNESS_MS = 10 * 60 * 1000; // 10 minutes
+      const { data: existingToken } = await serviceClient
         .from('whoop_tokens')
-        .upsert({
-          user_id: user.id,
-          oauth_state: stateToken,
-          is_active: false,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id' });
+        .select('oauth_state, updated_at')
+        .eq('user_id', user.id)
+        .single();
+
+      let stateToken: string;
+      let isReused = false;
+
+      if (existingToken?.oauth_state && existingToken.updated_at) {
+        const stateAge = Date.now() - new Date(existingToken.updated_at).getTime();
+        if (stateAge < STATE_FRESHNESS_MS) {
+          // Reuse existing fresh state
+          stateToken = existingToken.oauth_state;
+          isReused = true;
+          log('info', 'Reusing existing fresh oauth_state', {
+            state_age_seconds: Math.round(stateAge / 1000),
+            state_prefix: stateToken.substring(0, 12),
+            state_suffix: stateToken.slice(-8),
+            state_length: stateToken.length,
+          });
+        } else {
+          // State is stale, generate new one
+          stateToken = `${crypto.randomUUID()}:${user.id}`;
+          log('info', 'Existing state is stale, generating new one', {
+            old_state_age_seconds: Math.round(stateAge / 1000),
+          });
+        }
+      } else {
+        // No existing state, generate new one
+        stateToken = `${crypto.randomUUID()}:${user.id}`;
+        log('info', 'No existing state, generating new one');
+      }
+
+      // Only save to DB if we generated a new state
+      if (!isReused) {
+        await serviceClient
+          .from('whoop_tokens')
+          .upsert({
+            user_id: user.id,
+            oauth_state: stateToken,
+            is_active: false,
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'user_id' });
+        
+        log('info', 'Saved new oauth_state to DB', {
+          state_prefix: stateToken.substring(0, 12),
+          state_suffix: stateToken.slice(-8),
+          state_length: stateToken.length,
+        });
+      }
 
       const authUrl = new URL(WHOOP_AUTH_URL);
       authUrl.searchParams.set('client_id', clientId);
@@ -133,8 +174,11 @@ serve(async (req) => {
       authUrl.searchParams.set('scope', SCOPES);
       authUrl.searchParams.set('state', stateToken);
 
-      log('info', 'Generated auth URL with embedded user_id in state', {
-        state_token_preview: stateToken.substring(0, 20) + '...',
+      log('info', 'Generated auth URL', {
+        state_prefix: stateToken.substring(0, 12),
+        state_suffix: stateToken.slice(-8),
+        state_length: stateToken.length,
+        state_reused: isReused,
         redirect_uri: redirectUri,
         user_id: user.id,
       });
@@ -147,7 +191,9 @@ serve(async (req) => {
             redirect_uri: redirectUri,
             client_id_preview: clientId.substring(0, 8) + '...',
             scopes: SCOPES,
-            user_email: user.email
+            user_email: user.email,
+            state_reused: isReused,
+            state_prefix: stateToken.substring(0, 12),
           }
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -165,10 +211,21 @@ serve(async (req) => {
         throw new Error('Missing state token');
       }
 
+      log('info', 'Exchange token request received', {
+        state_prefix: state.substring(0, 12),
+        state_suffix: state.slice(-8),
+        state_length: state.length,
+        code_length: code.length,
+      });
+
       // Extract user_id from state: {random}:{user_id}
       const stateParts = state.split(':');
       if (stateParts.length < 2) {
-        log('error', 'Invalid state token format', { state_preview: state.substring(0, 20) });
+        log('error', 'Invalid state token format', { 
+          state_preview: state.substring(0, 20),
+          state_length: state.length,
+          parts_count: stateParts.length,
+        });
         throw new Error('Invalid state token format');
       }
       
@@ -178,24 +235,39 @@ serve(async (req) => {
       // Validate state against stored value
       const { data: tokenData, error: fetchError } = await serviceClient
         .from('whoop_tokens')
-        .select('oauth_state')
+        .select('oauth_state, updated_at')
         .eq('user_id', userId)
         .single();
 
       if (fetchError || !tokenData) {
-        log('error', 'State validation failed - no token record found', { user_id: userId, error: fetchError?.message });
-        throw new Error('State validation failed');
+        log('error', 'State validation failed - no token record found', { 
+          user_id: userId, 
+          error: fetchError?.message,
+          received_state_prefix: state.substring(0, 12),
+        });
+        throw new Error('State validation failed - no record');
       }
 
-      if (tokenData.oauth_state !== state) {
+      const storedState = tokenData.oauth_state;
+      if (storedState !== state) {
         log('error', 'State mismatch', { 
-          expected_preview: tokenData.oauth_state?.substring(0, 20), 
-          received_preview: state.substring(0, 20) 
+          expected_prefix: storedState?.substring(0, 12),
+          expected_suffix: storedState?.slice(-8),
+          expected_length: storedState?.length,
+          received_prefix: state.substring(0, 12),
+          received_suffix: state.slice(-8),
+          received_length: state.length,
+          state_updated_at: tokenData.updated_at,
+          match_prefix: storedState?.substring(0, 12) === state.substring(0, 12),
+          match_suffix: storedState?.slice(-8) === state.slice(-8),
         });
         throw new Error('State validation failed - mismatch');
       }
 
-      log('info', 'State validated successfully', { user_id: userId });
+      log('info', 'State validated successfully', { 
+        user_id: userId,
+        state_prefix: state.substring(0, 12),
+      });
 
       // Exchange code for tokens
       log('info', 'Calling Whoop token endpoint', { redirect_uri: redirectUri });

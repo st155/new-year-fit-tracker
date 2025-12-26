@@ -134,7 +134,23 @@ export function WhoopDirectIntegration() {
     }
   };
 
+  // Track if popup is already open to prevent duplicates
+  const [popupRef, setPopupRef] = useState<Window | null>(null);
+
   const connect = async () => {
+    // Prevent duplicate connection attempts
+    if (connecting) {
+      console.log('⚠️ [WhoopConnect] Already connecting, ignoring duplicate call');
+      return;
+    }
+    
+    // Check if there's already an open popup
+    if (popupRef && !popupRef.closed) {
+      console.log('⚠️ [WhoopConnect] Popup already open, focusing it');
+      popupRef.focus();
+      return;
+    }
+
     setConnecting(true);
     console.log('🔐 [WhoopConnect] Starting connection flow...');
     
@@ -191,6 +207,8 @@ export function WhoopDirectIntegration() {
         return;
       }
 
+      // Store popup reference to prevent duplicates
+      setPopupRef(popup);
       console.log('🪟 [WhoopConnect] Popup opened, waiting for result...');
 
       // Allowed origins for postMessage
@@ -285,6 +303,7 @@ export function WhoopDirectIntegration() {
           console.log('🪟 [WhoopConnect] Popup was closed, messageReceived:', messageReceived);
           clearInterval(checkPopupClosed);
           window.removeEventListener('message', handleMessage);
+          setPopupRef(null); // Clear popup reference
           
           // Run fallback status check after popup closes
           setTimeout(() => {
