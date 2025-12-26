@@ -307,7 +307,7 @@ async function syncUserData(serviceClient: any, tokenData: any) {
 
   // Fetch sleep
   try {
-    const sleeps = await fetchAllWhoopData(accessToken, '/sleep', {
+    const sleeps = await fetchAllWhoopData(accessToken, '/activity/sleep', {
       start: `${startStr}T00:00:00.000Z`,
       end: `${endStr}T23:59:59.999Z`,
     });
@@ -484,7 +484,7 @@ async function syncUserData(serviceClient: any, tokenData: any) {
 
   // Fetch workouts
   try {
-    const workouts = await fetchAllWhoopData(accessToken, '/workout', {
+    const workouts = await fetchAllWhoopData(accessToken, '/activity/workout', {
       start: `${startStr}T00:00:00.000Z`,
       end: `${endStr}T23:59:59.999Z`,
     });
