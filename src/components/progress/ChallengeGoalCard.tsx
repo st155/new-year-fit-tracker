@@ -2,78 +2,28 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { TrendingUp, TrendingDown, Minus, Plus, Target, Dumbbell, Heart, Activity, Scale, Flame, Zap } from "lucide-react";
+import { TrendingUp, TrendingDown, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ChallengeGoal } from "@/features/goals/types";
 import { useState } from "react";
 import { QuickMeasurementDialog } from "@/features/goals/components";
-import { cn, formatTimeDisplay, isTimeUnit } from "@/lib/utils";
+import { cn, formatTimeDisplay } from "@/lib/utils";
 import { useAuth } from '@/hooks/useAuth';
 import { useDataQuality } from '@/hooks/useDataQuality';
 import { DataQualityBadge } from '@/components/data-quality';
+import { 
+  goalThemes, 
+  getGoalIcon, 
+  getSourceBadge, 
+  getMetricNameFromGoal,
+  getTrendColor,
+  isTimeGoal as checkIsTimeGoal
+} from "./utils/goalCardUtils";
 
 interface ChallengeGoalCardProps {
   goal: ChallengeGoal;
   onMeasurementAdded: () => void;
 }
-
-const goalTypeIcons: Record<string, any> = {
-  strength: Dumbbell,
-  cardio: Heart,
-  endurance: Activity,
-  body_composition: Scale,
-  health: Heart,
-};
-
-const goalThemes: Record<string, { color: string; gradient: string }> = {
-  strength: { color: 'hsl(var(--chart-1))', gradient: 'from-chart-1/20 to-chart-1/5' },
-  cardio: { color: 'hsl(var(--chart-2))', gradient: 'from-chart-2/20 to-chart-2/5' },
-  endurance: { color: 'hsl(var(--chart-3))', gradient: 'from-chart-3/20 to-chart-3/5' },
-  body_composition: { color: 'hsl(var(--chart-4))', gradient: 'from-chart-4/20 to-chart-4/5' },
-  health: { color: 'hsl(var(--chart-5))', gradient: 'from-chart-5/20 to-chart-5/5' },
-};
-
-const getGoalIcon = (goalName: string, goalType: string) => {
-  const nameLower = goalName.toLowerCase();
-  
-  if (nameLower.includes('подтяг') || nameLower.includes('pullup')) return TrendingUp;
-  if (nameLower.includes('жим') || nameLower.includes('bench')) return Dumbbell;
-  if (nameLower.includes('вес') || nameLower.includes('weight')) return Scale;
-  if (nameLower.includes('жир') || nameLower.includes('fat')) return Flame;
-  if (nameLower.includes('во2') || nameLower.includes('vo2')) return Zap;
-  if (nameLower.includes('бег') || nameLower.includes('run')) return Activity;
-  if (nameLower.includes('планк') || nameLower.includes('plank')) return Activity;
-  
-  return goalTypeIcons[goalType] || Target;
-};
-
-// Helper: Map goal name to metric name for quality tracking
-const getMetricNameFromGoal = (goalName: string): string | null => {
-  const name = goalName.toLowerCase();
-  if (name.includes('вес') || name.includes('weight')) return 'Weight';
-  if (name.includes('жир') || name.includes('fat') || name.includes('body fat')) return 'Body Fat %';
-  if (name.includes('мышц') || name.includes('muscle')) return 'Skeletal Muscle Mass';
-  if (name.includes('vo2') || name.includes('во2')) return 'VO2 Max';
-  if (name.includes('bmr') || name.includes('калор')) return 'BMR';
-  if (name.includes('шаг') || name.includes('step')) return 'Steps';
-  if (name.includes('сон') || name.includes('sleep')) return 'Sleep Duration';
-  if (name.includes('пульс') || name.includes('heart')) return 'Heart Rate';
-  return null;
-};
-
-const getSourceBadge = (source?: 'inbody' | 'withings' | 'manual' | 'garmin' | 'whoop') => {
-  if (!source) return null;
-  
-  const badges: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' }> = {
-    inbody: { label: 'InBody', variant: 'default' },
-    withings: { label: 'Withings', variant: 'secondary' },
-    manual: { label: 'Ручное', variant: 'outline' },
-    garmin: { label: 'Garmin', variant: 'secondary' },
-    whoop: { label: 'WHOOP', variant: 'secondary' },
-  };
-  
-  return badges[source];
-};
 
 export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCardProps) {
   const { user } = useAuth();
@@ -88,6 +38,8 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
   const theme = goalThemes[goal.goal_type] || goalThemes.strength;
   const Icon = getGoalIcon(goal.goal_name, goal.goal_type);
   const sourceBadge = getSourceBadge(goal.source);
+  const isTimeGoal = checkIsTimeGoal(goal.goal_name, goal.target_unit);
+  const trendColor = getTrendColor(goal.trend, goal.trend_percentage, goal.goal_name);
 
   const handleCardClick = () => {
     navigate(`/goals/${goal.id}`);
@@ -96,30 +48,6 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
   const handleAddClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowQuickAdd(true);
-  };
-
-  const goalNameLower = goal.goal_name.toLowerCase();
-  const isTimeGoal = isTimeUnit(goal.target_unit) ||
-    goalNameLower.includes('время') ||
-    goalNameLower.includes('бег');
-
-  const isDurationGoal = goalNameLower.includes('планка') || 
-    goalNameLower.includes('plank') ||
-    goalNameLower.includes('vo2');
-
-  const isRunningGoal = goalNameLower.includes('бег') || 
-    goalNameLower.includes('run') ||
-    goalNameLower.includes('км');
-
-  const isLowerBetter = (goalNameLower.includes('жир') || 
-    goalNameLower.includes('вес') ||
-    isRunningGoal) && !isDurationGoal;
-
-  const getTrendColor = () => {
-    if (Math.abs(goal.trend_percentage) < 0.5) return 'hsl(var(--muted-foreground))';
-    
-    const isImproving = isLowerBetter ? goal.trend === 'down' : goal.trend === 'up';
-    return isImproving ? 'hsl(var(--success))' : 'hsl(var(--destructive))';
   };
 
   return (
@@ -144,7 +72,7 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
             {goal.trend !== 'stable' && (
               <div 
                 className="flex items-center gap-1"
-                style={{ color: getTrendColor() }}
+                style={{ color: trendColor }}
               >
                 {goal.trend === 'up' ? (
                   <TrendingUp className="h-4 w-4" />
@@ -165,7 +93,7 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
             </div>
           </div>
 
-          {/* Progress Bar - СРАЗУ ПОСЛЕ ИКОНКИ */}
+          {/* Progress Bar */}
           <div className="mb-2">
             <Progress 
               value={Math.min(goal.progress_percentage ?? 0, 100)} 
@@ -187,7 +115,7 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
                 }
               </span>
               {goal.trend !== 'stable' && (
-                <span className="text-xs font-medium" style={{ color: getTrendColor() }}>
+                <span className="text-xs font-medium" style={{ color: trendColor }}>
                   {goal.trend === 'up' ? '↗' : '↘'} {Math.abs(goal.trend_percentage).toFixed(1)}%
                 </span>
               )}
