@@ -267,3 +267,6 @@ schedule = "*/5 * * * *"
 
 [functions.webhook-whoop]
 verify_jwt = false
+
+[functions.populate-dashboards]
+verify_jwt = false
