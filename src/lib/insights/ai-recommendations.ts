@@ -9,11 +9,16 @@ import type { HabitQualityScore } from './habit-quality';
 
 interface Habit {
   id: string;
-  title: string;
+  name?: string;
+  title?: string; // legacy
   category?: string;
   preferred_time?: string;
   difficulty?: string;
   current_streak: number;
+}
+
+function getHabitName(habit: Habit): string {
+  return habit.name || habit.title || 'Привычка';
 }
 
 interface HabitCompletion {
@@ -81,7 +86,7 @@ function suggestOptimalHabitTimes(
         recommendations.push({
           type: 'optimize_time',
           priority: Math.round(optimalTime.confidence),
-          title: `Оптимизируйте время для "${habit.title}"`,
+          title: `Оптимизируйте время для "${getHabitName(habit)}"`,
           description: `Привычка выполняется на ${Math.round(optimalTime.successRate)}% успешнее ${getTimeLabel(optimalTime.time)}`,
           actionable: true,
           data: {
@@ -164,7 +169,7 @@ function suggestDifficultyAdjustments(
       recommendations.push({
         type: 'difficulty_adjust',
         priority: 80,
-        title: `Упростите "${habit.title}"`,
+        title: `Упростите "${getHabitName(habit)}"`,
         description: `Привычка выполняется только в ${score.factors.completionRate}% случаев. Попробуйте уменьшить сложность`,
         actionable: true,
         data: {
@@ -198,7 +203,7 @@ function suggestSynergies(
         type: 'synergy',
         priority: synergy.synergyScore,
         title: 'Объедините привычки в группу',
-        description: `"${habit1.title}" и "${habit2.title}" отлично работают вместе (${synergy.synergyScore}% синергия)`,
+        description: `"${getHabitName(habit1)}" и "${getHabitName(habit2)}" отлично работают вместе (${synergy.synergyScore}% синергия)`,
         actionable: true,
         data: {
           habit1Id: habit1.id,
@@ -236,7 +241,7 @@ function suggestBasedOnSuccess(
           type: 'new_habit',
           priority: 65,
           title: `Добавьте привычку ${getTimeLabel(timeSlot)}`,
-          description: `Вы отлично справляетесь с "${bestHabit.title}" ${getTimeLabel(timeSlot)} - это ваше лучшее время!`,
+          description: `Вы отлично справляетесь с "${getHabitName(bestHabit)}" ${getTimeLabel(timeSlot)} - это ваше лучшее время!`,
           actionable: true,
           data: {
             suggestedTime: timeSlot,
