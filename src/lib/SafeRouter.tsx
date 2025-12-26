@@ -6,29 +6,53 @@ interface SafeRouterProps {
   children: ReactNode;
 }
 
+// OAuth callback paths that must always use BrowserRouter
+const OAUTH_CALLBACK_PATHS = [
+  '/auth/whoop/oauth2',
+  '/whoop-callback',
+  '/terra-callback',
+  '/auth/',
+];
+
 /**
  * SafeRouter: Automatically chooses between BrowserRouter and HashRouter
  * 
  * Uses HashRouter when:
  * - Running in iframe (preview environment)
  * - USE_HASH_ROUTER flag is enabled
- * - Initial route returns 404 (fallback safety)
  * 
- * Uses BrowserRouter in production with proper base path
+ * Uses BrowserRouter:
+ * - In production
+ * - For OAuth callback paths (even in special environments)
  */
 export function SafeRouter({ children }: SafeRouterProps) {
-  const [routerType, setRouterType] = useState<'browser' | 'hash'>(
-    USE_HASH_ROUTER ? 'hash' : 'browser'
-  );
+  const [routerType, setRouterType] = useState<'browser' | 'hash'>(() => {
+    // Check if this is an OAuth callback path - always use BrowserRouter
+    const pathname = window.location.pathname;
+    const isOAuthCallback = OAUTH_CALLBACK_PATHS.some(p => pathname.startsWith(p));
+    
+    if (isOAuthCallback) {
+      console.log('🔀 [SafeRouter] OAuth callback detected, forcing BrowserRouter', { pathname });
+      return 'browser';
+    }
+    
+    return USE_HASH_ROUTER ? 'hash' : 'browser';
+  });
 
   useEffect(() => {
-    // Auto-detect if we need hash router
+    // Only switch to HashRouter if in iframe AND not an OAuth callback
     const isIframe = window.top !== window;
-    const hasNonStandardBase = window.location.pathname !== '/' && 
-                                !window.location.pathname.startsWith('/app');
+    const pathname = window.location.pathname;
+    const isOAuthCallback = OAUTH_CALLBACK_PATHS.some(p => pathname.startsWith(p));
     
-    if (isIframe || hasNonStandardBase) {
-      console.log('🔀 [SafeRouter] Detected special environment, using HashRouter');
+    if (isOAuthCallback) {
+      // Never switch away from BrowserRouter for OAuth callbacks
+      console.log('🔀 [SafeRouter] OAuth callback - keeping BrowserRouter');
+      return;
+    }
+    
+    if (isIframe) {
+      console.log('🔀 [SafeRouter] Detected iframe, using HashRouter');
       setRouterType('hash');
     }
   }, []);
