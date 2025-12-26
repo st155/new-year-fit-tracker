@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, Suspense, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useIsMobile } from '@/hooks';
 import { AnimatedPage } from '@/components/layout/AnimatedPage';
 import { useProgressiveLoad } from '@/hooks/useProgressiveLoad';
 import { motion } from 'framer-motion';
@@ -45,9 +46,11 @@ import { ActiveProtocolsWidget } from '@/components/biostack/ActiveProtocolsWidg
 import { RetestRemindersWidget } from '@/components/dashboard/RetestRemindersWidget';
 import { UnitRecalculationWidget } from '@/components/dashboard/UnitRecalculationWidget';
 import { DailyOverviewWidget } from '@/components/dashboard/DailyOverviewWidget';
+import { MobileDashboardV2 } from '@/components/mobile-dashboard';
 
 const Index = () => {
   const { user, isTrainer, role, loading: authLoading, rolesLoading } = useAuth();
+  const isMobile = useIsMobile();
   const { shouldLoad } = useProgressiveLoad();
   const leaderboardRef = useRef<HTMLDivElement>(null);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
@@ -257,6 +260,11 @@ const Index = () => {
 
   // ✅ Trainer redirect handled by RoleBasedRoute wrapper - no need for duplicate check here
   console.log('✅ [Index] Rendering client dashboard with', processedWidgets.length, 'widgets');
+
+  // 🎯 Mobile Cockpit Dashboard V2
+  if (isMobile) {
+    return <MobileDashboardV2 />;
+  }
 
   return (
     <AnimatedPage>
