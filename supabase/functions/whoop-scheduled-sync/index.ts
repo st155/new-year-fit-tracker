@@ -102,6 +102,7 @@ async function syncUserData(serviceClient: any, tokenData: any) {
   const endStr = new Date().toISOString().split('T')[0];
 
   const metricsToInsert: any[] = [];
+  const workoutsToInsert: any[] = [];
 
   try {
     // Fetch cycles
@@ -127,6 +128,58 @@ async function syncUserData(serviceClient: any, tokenData: any) {
           priority: 1,
           confidence_score: 95,
           external_id: `whoop_cycle_${cycle.id}`,
+        });
+      }
+
+      // Average Heart Rate from cycle
+      if (cycle.score?.average_heart_rate !== undefined) {
+        metricsToInsert.push({
+          user_id: userId,
+          metric_name: 'Average Heart Rate',
+          metric_category: 'heart',
+          value: cycle.score.average_heart_rate,
+          unit: 'bpm',
+          source: 'whoop',
+          provider: 'whoop',
+          measurement_date: measurementDate,
+          priority: 1,
+          confidence_score: 95,
+          external_id: `whoop_avg_hr_${cycle.id}`,
+        });
+      }
+
+      // Max Heart Rate from cycle
+      if (cycle.score?.max_heart_rate !== undefined) {
+        metricsToInsert.push({
+          user_id: userId,
+          metric_name: 'Max Heart Rate',
+          metric_category: 'heart',
+          value: cycle.score.max_heart_rate,
+          unit: 'bpm',
+          source: 'whoop',
+          provider: 'whoop',
+          measurement_date: measurementDate,
+          priority: 1,
+          confidence_score: 95,
+          external_id: `whoop_max_hr_${cycle.id}`,
+        });
+      }
+
+      // Kilojoules (calories) from cycle
+      if (cycle.score?.kilojoule !== undefined) {
+        const kcal = Math.round(cycle.score.kilojoule / 4.184);
+        metricsToInsert.push({
+          user_id: userId,
+          metric_name: 'Calories Burned',
+          metric_category: 'activity',
+          value: kcal,
+          unit: 'kcal',
+          source: 'whoop',
+          provider: 'whoop',
+          measurement_date: measurementDate,
+          priority: 1,
+          confidence_score: 95,
+          external_id: `whoop_kcal_${cycle.id}`,
         });
       }
     }
@@ -188,6 +241,40 @@ async function syncUserData(serviceClient: any, tokenData: any) {
           external_id: `whoop_rhr_${recovery.cycle_id}`,
         });
       }
+
+      // SpO2 from recovery
+      if (recovery.score?.spo2_percentage !== undefined) {
+        metricsToInsert.push({
+          user_id: userId,
+          metric_name: 'SpO2',
+          metric_category: 'vitals',
+          value: recovery.score.spo2_percentage,
+          unit: '%',
+          source: 'whoop',
+          provider: 'whoop',
+          measurement_date: measurementDate,
+          priority: 1,
+          confidence_score: 95,
+          external_id: `whoop_spo2_${recovery.cycle_id}`,
+        });
+      }
+
+      // Skin Temperature from recovery
+      if (recovery.score?.skin_temp_celsius !== undefined) {
+        metricsToInsert.push({
+          user_id: userId,
+          metric_name: 'Skin Temperature',
+          metric_category: 'vitals',
+          value: recovery.score.skin_temp_celsius,
+          unit: '°C',
+          source: 'whoop',
+          provider: 'whoop',
+          measurement_date: measurementDate,
+          priority: 1,
+          confidence_score: 95,
+          external_id: `whoop_skin_temp_${recovery.cycle_id}`,
+        });
+      }
     }
 
     // Fetch sleep
@@ -231,6 +318,280 @@ async function syncUserData(serviceClient: any, tokenData: any) {
           external_id: `whoop_sleep_eff_${sleep.id}`,
         });
       }
+
+      // Respiratory Rate from sleep
+      if (sleep.score?.respiratory_rate !== undefined) {
+        metricsToInsert.push({
+          user_id: userId,
+          metric_name: 'Respiratory Rate',
+          metric_category: 'vitals',
+          value: sleep.score.respiratory_rate,
+          unit: 'breaths/min',
+          source: 'whoop',
+          provider: 'whoop',
+          measurement_date: measurementDate,
+          priority: 1,
+          confidence_score: 95,
+          external_id: `whoop_resp_rate_${sleep.id}`,
+        });
+      }
+
+      // Sleep stage durations
+      if (sleep.score?.stage_summary) {
+        const stages = sleep.score.stage_summary;
+
+        // Total Sleep Duration (hours)
+        if (stages.total_in_bed_time_milli !== undefined) {
+          const totalSleepHours = (stages.total_in_bed_time_milli - (stages.total_awake_time_milli || 0)) / 3600000;
+          metricsToInsert.push({
+            user_id: userId,
+            metric_name: 'Sleep Duration',
+            metric_category: 'sleep',
+            value: Math.round(totalSleepHours * 100) / 100,
+            unit: 'hours',
+            source: 'whoop',
+            provider: 'whoop',
+            measurement_date: measurementDate,
+            priority: 1,
+            confidence_score: 95,
+            external_id: `whoop_sleep_duration_${sleep.id}`,
+          });
+        }
+
+        // Time in Bed
+        if (stages.total_in_bed_time_milli !== undefined) {
+          const timeInBedHours = stages.total_in_bed_time_milli / 3600000;
+          metricsToInsert.push({
+            user_id: userId,
+            metric_name: 'Time in Bed',
+            metric_category: 'sleep',
+            value: Math.round(timeInBedHours * 100) / 100,
+            unit: 'hours',
+            source: 'whoop',
+            provider: 'whoop',
+            measurement_date: measurementDate,
+            priority: 1,
+            confidence_score: 95,
+            external_id: `whoop_time_in_bed_${sleep.id}`,
+          });
+        }
+
+        // Deep Sleep Duration
+        if (stages.total_slow_wave_sleep_time_milli !== undefined) {
+          const deepSleepHours = stages.total_slow_wave_sleep_time_milli / 3600000;
+          metricsToInsert.push({
+            user_id: userId,
+            metric_name: 'Deep Sleep Duration',
+            metric_category: 'sleep',
+            value: Math.round(deepSleepHours * 100) / 100,
+            unit: 'hours',
+            source: 'whoop',
+            provider: 'whoop',
+            measurement_date: measurementDate,
+            priority: 1,
+            confidence_score: 95,
+            external_id: `whoop_deep_sleep_${sleep.id}`,
+          });
+        }
+
+        // REM Sleep Duration
+        if (stages.total_rem_sleep_time_milli !== undefined) {
+          const remSleepHours = stages.total_rem_sleep_time_milli / 3600000;
+          metricsToInsert.push({
+            user_id: userId,
+            metric_name: 'REM Sleep Duration',
+            metric_category: 'sleep',
+            value: Math.round(remSleepHours * 100) / 100,
+            unit: 'hours',
+            source: 'whoop',
+            provider: 'whoop',
+            measurement_date: measurementDate,
+            priority: 1,
+            confidence_score: 95,
+            external_id: `whoop_rem_sleep_${sleep.id}`,
+          });
+        }
+
+        // Light Sleep Duration
+        if (stages.total_light_sleep_time_milli !== undefined) {
+          const lightSleepHours = stages.total_light_sleep_time_milli / 3600000;
+          metricsToInsert.push({
+            user_id: userId,
+            metric_name: 'Light Sleep Duration',
+            metric_category: 'sleep',
+            value: Math.round(lightSleepHours * 100) / 100,
+            unit: 'hours',
+            source: 'whoop',
+            provider: 'whoop',
+            measurement_date: measurementDate,
+            priority: 1,
+            confidence_score: 95,
+            external_id: `whoop_light_sleep_${sleep.id}`,
+          });
+        }
+
+        // Awake Duration
+        if (stages.total_awake_time_milli !== undefined) {
+          const awakeHours = stages.total_awake_time_milli / 3600000;
+          metricsToInsert.push({
+            user_id: userId,
+            metric_name: 'Awake Duration',
+            metric_category: 'sleep',
+            value: Math.round(awakeHours * 100) / 100,
+            unit: 'hours',
+            source: 'whoop',
+            provider: 'whoop',
+            measurement_date: measurementDate,
+            priority: 1,
+            confidence_score: 95,
+            external_id: `whoop_awake_duration_${sleep.id}`,
+          });
+        }
+      }
+    }
+
+    // Fetch workouts
+    const workoutsData = await fetchWhoopData(accessToken, '/workout', {
+      start: `${startStr}T00:00:00.000Z`,
+      end: `${endStr}T23:59:59.999Z`,
+    });
+
+    // Track daily aggregates for workout metrics
+    const dailyWorkoutStats: Record<string, { count: number; totalCalories: number; totalMinutes: number; totalDistance: number }> = {};
+
+    for (const workout of workoutsData.records || []) {
+      const measurementDate = workout.start?.split('T')[0];
+      if (!measurementDate) continue;
+
+      // Initialize daily stats
+      if (!dailyWorkoutStats[measurementDate]) {
+        dailyWorkoutStats[measurementDate] = { count: 0, totalCalories: 0, totalMinutes: 0, totalDistance: 0 };
+      }
+
+      dailyWorkoutStats[measurementDate].count++;
+
+      // Calculate duration
+      if (workout.start && workout.end) {
+        const durationMs = new Date(workout.end).getTime() - new Date(workout.start).getTime();
+        const durationMinutes = durationMs / 60000;
+        dailyWorkoutStats[measurementDate].totalMinutes += durationMinutes;
+      }
+
+      // Workout strain
+      if (workout.score?.strain !== undefined) {
+        metricsToInsert.push({
+          user_id: userId,
+          metric_name: 'Workout Strain',
+          metric_category: 'activity',
+          value: workout.score.strain,
+          unit: 'strain',
+          source: 'whoop',
+          provider: 'whoop',
+          measurement_date: measurementDate,
+          priority: 1,
+          confidence_score: 95,
+          external_id: `whoop_workout_strain_${workout.id}`,
+        });
+      }
+
+      // Workout kilojoules (calories)
+      if (workout.score?.kilojoule !== undefined) {
+        const kcal = Math.round(workout.score.kilojoule / 4.184);
+        dailyWorkoutStats[measurementDate].totalCalories += kcal;
+      }
+
+      // Workout distance
+      if (workout.score?.distance_meter !== undefined) {
+        const distanceKm = workout.score.distance_meter / 1000;
+        dailyWorkoutStats[measurementDate].totalDistance += distanceKm;
+      }
+
+      // Insert individual workout to workouts table
+      workoutsToInsert.push({
+        user_id: userId,
+        workout_type: workout.sport_id?.toString() || 'unknown',
+        workout_name: `Whoop Workout ${workout.id}`,
+        start_time: workout.start,
+        end_time: workout.end,
+        duration_minutes: workout.start && workout.end
+          ? Math.round((new Date(workout.end).getTime() - new Date(workout.start).getTime()) / 60000)
+          : null,
+        calories_burned: workout.score?.kilojoule ? Math.round(workout.score.kilojoule / 4.184) : null,
+        distance_km: workout.score?.distance_meter ? workout.score.distance_meter / 1000 : null,
+        heart_rate_avg: workout.score?.average_heart_rate,
+        heart_rate_max: workout.score?.max_heart_rate,
+        source: 'whoop',
+        external_id: `whoop_workout_${workout.id}`,
+      });
+    }
+
+    // Add daily workout aggregate metrics
+    for (const [date, stats] of Object.entries(dailyWorkoutStats)) {
+      // Workout Count
+      metricsToInsert.push({
+        user_id: userId,
+        metric_name: 'Workout Count',
+        metric_category: 'activity',
+        value: stats.count,
+        unit: 'workouts',
+        source: 'whoop',
+        provider: 'whoop',
+        measurement_date: date,
+        priority: 1,
+        confidence_score: 95,
+        external_id: `whoop_workout_count_${date}`,
+      });
+
+      // Workout Calories
+      if (stats.totalCalories > 0) {
+        metricsToInsert.push({
+          user_id: userId,
+          metric_name: 'Workout Calories',
+          metric_category: 'activity',
+          value: Math.round(stats.totalCalories),
+          unit: 'kcal',
+          source: 'whoop',
+          provider: 'whoop',
+          measurement_date: date,
+          priority: 1,
+          confidence_score: 95,
+          external_id: `whoop_workout_calories_${date}`,
+        });
+      }
+
+      // Workout Time
+      if (stats.totalMinutes > 0) {
+        metricsToInsert.push({
+          user_id: userId,
+          metric_name: 'Workout Time',
+          metric_category: 'activity',
+          value: Math.round(stats.totalMinutes),
+          unit: 'min',
+          source: 'whoop',
+          provider: 'whoop',
+          measurement_date: date,
+          priority: 1,
+          confidence_score: 95,
+          external_id: `whoop_workout_time_${date}`,
+        });
+      }
+
+      // Distance
+      if (stats.totalDistance > 0) {
+        metricsToInsert.push({
+          user_id: userId,
+          metric_name: 'Distance',
+          metric_category: 'activity',
+          value: Math.round(stats.totalDistance * 100) / 100,
+          unit: 'km',
+          source: 'whoop',
+          provider: 'whoop',
+          measurement_date: date,
+          priority: 1,
+          confidence_score: 95,
+          external_id: `whoop_distance_${date}`,
+        });
+      }
     }
 
     // Insert metrics
@@ -239,6 +600,16 @@ async function syncUserData(serviceClient: any, tokenData: any) {
         .from('unified_metrics')
         .upsert(metricsToInsert, {
           onConflict: 'user_id,metric_name,measurement_date,source',
+          ignoreDuplicates: false,
+        });
+    }
+
+    // Insert workouts
+    if (workoutsToInsert.length > 0) {
+      await serviceClient
+        .from('workouts')
+        .upsert(workoutsToInsert, {
+          onConflict: 'user_id,external_id',
           ignoreDuplicates: false,
         });
     }
@@ -252,8 +623,8 @@ async function syncUserData(serviceClient: any, tokenData: any) {
       })
       .eq('user_id', userId);
 
-    console.log(`✅ [scheduled-sync] User ${userId}: ${metricsToInsert.length} metrics synced`);
-    return { success: true, metrics_count: metricsToInsert.length };
+    console.log(`✅ [scheduled-sync] User ${userId}: ${metricsToInsert.length} metrics, ${workoutsToInsert.length} workouts synced`);
+    return { success: true, metrics_count: metricsToInsert.length, workouts_count: workoutsToInsert.length };
 
   } catch (error: any) {
     console.error(`❌ [scheduled-sync] Error for user ${userId}:`, error.message);
@@ -266,7 +637,7 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  console.log(`⏰ [whoop-scheduled-sync] Starting scheduled sync...`);
+  console.log(`⏰ [whoop-scheduled-sync] Starting scheduled sync (every 5 minutes)...`);
 
   try {
     const serviceClient = createClient(

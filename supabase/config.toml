@@ -263,4 +263,4 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.whoop-scheduled-sync.cron]
-schedule = "*/15 * * * *"
+schedule = "*/5 * * * *"
