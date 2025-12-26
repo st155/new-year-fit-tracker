@@ -7,12 +7,15 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log(`🔔 [webhook-whoop] Incoming request: ${req.method} from ${req.headers.get('user-agent') || 'unknown'}`);
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   const startTime = Date.now();
   let eventType = 'unknown';
+  let rawBody = '';
 
   try {
     const supabase = createClient(
@@ -20,11 +23,16 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    const payload = await req.json();
+    // Read raw body for debugging
+    rawBody = await req.text();
+    console.log(`📦 [webhook-whoop] Raw body length: ${rawBody.length}`);
+    console.log(`📦 [webhook-whoop] Raw body preview: ${rawBody.substring(0, 500)}`);
+    
+    const payload = JSON.parse(rawBody);
     eventType = payload.type || payload.event_type || 'unknown';
     const whoopUserId = payload.user_id?.toString();
 
-    console.log(`📥 [webhook-whoop] Received ${eventType} for Whoop user ${whoopUserId}`);
+    console.log(`📥 [webhook-whoop] Parsed event: ${eventType}, user_id: ${whoopUserId}, keys: ${Object.keys(payload).join(', ')}`);
 
     // Log webhook for debugging
     await supabase.from('webhook_logs').insert({
