@@ -137,8 +137,12 @@ export function WhoopDirectIntegration() {
   const connect = async () => {
     setConnecting(true);
     try {
+      const currentOrigin = window.location.origin;
       const { data, error } = await supabase.functions.invoke('whoop-auth', {
-        body: { action: 'get-auth-url' },
+        body: { 
+          action: 'get-auth-url',
+          redirect_uri: `${currentOrigin}/auth/whoop/oauth2`
+        },
       });
 
       if (error) throw error;
