@@ -7,12 +7,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { memo } from "react";
 import { useProfile } from "@/contexts/ProfileContext";
-import { useTranslation } from "@/lib/translations";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { usePrefetch } from "@/hooks/usePrefetch";
 import { TrainerNotifications } from "@/components/trainer/notifications/TrainerNotifications";
 import { useIsMobile } from "@/hooks/primitive";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,25 +38,18 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
   const location = useLocation();
   const prefetch = usePrefetch();
   const isMobile = useIsMobile();
+  const { t } = useTranslation('navigation');
   
   // Safe hooks with fallbacks
   let profile = null;
   let isTrainer = false;
   let user = null;
-  let t = (key: string) => key; // Fallback translation function
   
   try {
     const profileData = useProfile();
     profile = profileData?.profile;
   } catch (error) {
     console.error('💥 [TopNavigation] useProfile error:', error);
-  }
-  
-  try {
-    const translation = useTranslation();
-    t = translation.t;
-  } catch (error) {
-    console.error('💥 [TopNavigation] useTranslation error:', error);
   }
   
   let signOut: () => Promise<any> = async () => {};
@@ -90,52 +84,52 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
 
   // BioStack navigation items
   const biostackItems = [
-    { path: "/supplements", label: 'Добавки', badge: 'New' },
-    { path: "/medical-documents", label: 'Мед. документы' },
+    { path: "/supplements", label: t('supplements'), badge: 'New' },
+    { path: "/medical-documents", label: t('medicalDocuments') },
   ];
 
   // Main navigation items for mobile (4 items)
   const mainNavItems = [
-    { type: 'home' as const, path: "/dashboard", icon: Home, label: 'Главная' },
-    { type: 'recommendations' as const, path: "/recommendations", icon: Sparkles, label: 'Советы' },
-    { type: 'stats' as const, path: "/progress", icon: TrendingUp, label: 'Прогресс' },
-    { type: 'workouts' as const, path: "/workouts", icon: Dumbbell, label: 'Тренировки' },
+    { type: 'home' as const, path: "/dashboard", icon: Home, label: t('home') },
+    { type: 'recommendations' as const, path: "/recommendations", icon: Sparkles, label: t('recommendations') },
+    { type: 'stats' as const, path: "/progress", icon: TrendingUp, label: t('progress') },
+    { type: 'workouts' as const, path: "/workouts", icon: Dumbbell, label: t('workouts') },
   ];
 
   // Secondary navigation items for "More" menu
   const secondaryNavItems = [
-    { path: "/supplements", label: 'Добавки', badge: 'New' },
-    { path: "/medical-documents", label: 'Мед. документы' },
-    { path: "/landing-plain", label: 'О приложении' },
-    { path: "/challenges", label: 'Челленджи' },
-    { path: "/leaderboard", label: 'Рейтинг' },
-    { path: "/body", label: 'Тело' },
-    { path: "/habits", label: 'Привычки' },
-    { path: "/fitness-data", label: 'Фитнес дата' },
+    { path: "/supplements", label: t('supplements'), badge: 'New' },
+    { path: "/medical-documents", label: t('medicalDocuments') },
+    { path: "/landing-plain", label: t('about') },
+    { path: "/challenges", label: t('challenges') },
+    { path: "/leaderboard", label: t('leaderboard') },
+    { path: "/body", label: t('body') },
+    { path: "/habits", label: t('habits') },
+    { path: "/fitness-data", label: t('fitnessData') },
   ];
 
   // Desktop navigation items (full list)
   const userNavItems = [
-    { type: 'home' as const, path: "/", label: 'Главная' },
-    { type: 'recommendations' as const, path: "/recommendations", label: 'Советы', badge: 'New' },
-    { type: 'stats' as const, path: "/progress", label: 'Прогресс' },
-    { type: 'goals' as const, path: "/goals", label: 'Цели' },
-    { type: 'workouts' as const, path: "/workouts", label: 'Тренировки' },
-    { type: 'activity' as const, path: "/supplements", label: 'Добавки' },
-    { type: 'activity' as const, path: "/medical-documents", label: 'Мед. док.' },
-    { type: 'body' as const, path: "/body", label: 'Тело' },
-    { type: 'habits' as const, path: "/habits", label: 'Привычки' },
-    { type: 'leaderboard' as const, path: "/leaderboard", label: 'Рейтинг' },
-    { type: 'challenges' as const, path: "/challenges", label: 'Челленджи' },
-    { type: 'connections' as const, path: "/fitness-data", label: 'Фитнес дата' },
+    { type: 'home' as const, path: "/", label: t('home') },
+    { type: 'recommendations' as const, path: "/recommendations", label: t('recommendations'), badge: 'New' },
+    { type: 'stats' as const, path: "/progress", label: t('progress') },
+    { type: 'goals' as const, path: "/goals", label: t('goals') },
+    { type: 'workouts' as const, path: "/workouts", label: t('workouts') },
+    { type: 'activity' as const, path: "/supplements", label: t('supplements') },
+    { type: 'activity' as const, path: "/medical-documents", label: t('medicalDocuments') },
+    { type: 'body' as const, path: "/body", label: t('body') },
+    { type: 'habits' as const, path: "/habits", label: t('habits') },
+    { type: 'leaderboard' as const, path: "/leaderboard", label: t('leaderboard') },
+    { type: 'challenges' as const, path: "/challenges", label: t('challenges') },
+    { type: 'connections' as const, path: "/fitness-data", label: t('fitnessData') },
   ];
 
   const trainerNavItems = [
-    { type: 'home' as const, path: "/trainer-dashboard", label: 'Тренерский кабинет' },
-    { type: 'workouts' as const, path: "/workouts", label: 'Тренировки' },
-    { type: 'stats' as const, path: "/progress", label: 'Мой прогресс' },
-    { type: 'goals' as const, path: "/goals", label: 'Мои цели' },
-    { type: 'settings' as const, path: "/admin", label: 'Админ' },
+    { type: 'home' as const, path: "/trainer-dashboard", label: t('trainer.dashboard') },
+    { type: 'workouts' as const, path: "/workouts", label: t('workouts') },
+    { type: 'stats' as const, path: "/progress", label: t('trainer.myProgress') },
+    { type: 'goals' as const, path: "/goals", label: t('trainer.myGoals') },
+    { type: 'settings' as const, path: "/admin", label: t('trainer.admin') },
   ];
 
   const navItems = isTrainer ? trainerNavItems : userNavItems;
@@ -189,11 +183,16 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
                   className="flex flex-col items-center gap-1 h-auto py-2 px-2 min-w-[60px]"
                 >
                   <Menu className="h-6 w-6" />
-                  <span className="text-[10px] font-medium">Ещё</span>
+                  <span className="text-[10px] font-medium">{t('more')}</span>
                 </Button>
               </SheetTrigger>
               <SheetContent side="bottom" className="h-auto rounded-t-2xl">
                 <div className="space-y-2 py-4">
+                  {/* Language Switcher */}
+                  <div className="flex justify-end px-4 pb-2">
+                    <LanguageSwitcher />
+                  </div>
+                  
                   {/* Profile */}
                   <Button
                     variant="ghost"
@@ -209,7 +208,7 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
                         {getInitials(profile?.username || profile?.full_name || userName || 'U')}
                       </AvatarFallback>
                     </Avatar>
-                    Профиль
+                    {t('profile')}
                   </Button>
                   
                    {/* Secondary nav items */}
@@ -253,7 +252,7 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
                     className="w-full justify-start text-lg h-14"
                     onClick={() => navigate('/privacy-policy')}
                   >
-                    Политика конфиденциальности
+                    {t('privacyPolicy')}
                   </Button>
                 </div>
               </SheetContent>
@@ -328,7 +327,10 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
             </nav>
 
             {/* Settings & Profile - Right */}
-            <div className="flex items-center gap-2 min-w-[120px] justify-end">
+            <div className="flex items-center gap-2 min-w-[160px] justify-end">
+              {/* Language Switcher */}
+              <LanguageSwitcher />
+              
               {/* Trainer Notifications */}
               {isTrainer && <TrainerNotifications />}
               
@@ -349,24 +351,24 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 bg-card border border-border">
-                  <DropdownMenuLabel>{t('navigation.settings')}</DropdownMenuLabel>
+                  <DropdownMenuLabel>{t('settings')}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {isTrainer && (
                     <DropdownMenuItem onClick={() => navigate('/admin')} className="cursor-pointer flex items-center gap-2">
                       <ShieldCheck className="h-4 w-4" />
-                      <span>Администрирование</span>
+                      <span>{t('trainer.admin')}</span>
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem onClick={() => navigate('/fitness-data')} className="cursor-pointer flex items-center gap-2">
                     <Link className="h-4 w-4" />
-                    <span>{t('navigation.connections')}</span>
+                    <span>{t('connections')}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer">
-                    <span>{t('navigation.profile')}</span>
+                    <span>{t('profile')}</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => navigate('/privacy-policy')} className="cursor-pointer">
-                    <span>{t('dashboard.privacyPolicy')}</span>
+                    <span>{t('privacyPolicy')}</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem 
@@ -374,7 +376,7 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
                     className="cursor-pointer text-destructive focus:text-destructive"
                   >
                     <LogOut className="h-4 w-4 mr-2" />
-                    <span>{t('navigation.logout')}</span>
+                    <span>{t('logout')}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

@@ -1,0 +1,37 @@
+{
+  "menu": "Menu",
+  "navigation": "Navigation",
+  "home": "Home",
+  "dashboard": "Dashboard",
+  "recommendations": "Tips",
+  "progress": "Progress",
+  "goals": "Goals",
+  "habits": "Habits",
+  "body": "Body",
+  "workouts": "Workouts",
+  "challenges": "Challenges",
+  "feed": "Feed",
+  "leaderboard": "Leaderboard",
+  "supplements": "Supplements",
+  "medicalDocuments": "Medical Documents",
+  "fitnessData": "Fitness Data",
+  "integrations": "Integrations",
+  "connections": "Connections",
+  "profile": "Profile",
+  "settings": "Settings",
+  "logout": "Log out",
+  "more": "More",
+  "about": "About",
+  "privacyPolicy": "Privacy Policy",
+  "trainer": {
+    "dashboard": "Trainer Dashboard",
+    "analytics": "Analytics",
+    "admin": "Admin",
+    "myProgress": "My Progress",
+    "myGoals": "My Goals"
+  },
+  "roles": {
+    "trainer": "Trainer",
+    "user": "User"
+  }
+}
