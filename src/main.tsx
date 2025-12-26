@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 import "./index-inbody-styles.css";
+import "./i18n"; // i18n initialization
 import { SMOKE_MODE, enableSafeMode } from "./lib/safe-flags";
 
 // Smoke mode is now managed via safe-flags.ts
