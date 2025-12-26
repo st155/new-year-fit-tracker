@@ -6,7 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const WHOOP_API_BASE = 'https://api.prod.whoop.com/developer/v1';
+// V2 API base URL
+const WHOOP_API_BASE = 'https://api.prod.whoop.com/developer/v2';
 const WHOOP_TOKEN_URL = 'https://api.prod.whoop.com/oauth/oauth2/token';
 
 // Direct Whoop integration is now available for all users with valid tokens
