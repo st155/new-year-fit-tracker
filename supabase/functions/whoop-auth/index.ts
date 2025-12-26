@@ -71,10 +71,38 @@ serve(async (req) => {
       authUrl.searchParams.set('scope', SCOPES);
       authUrl.searchParams.set('state', stateToken);
 
-      console.log(`✅ [whoop-auth] Generated auth URL for user ${user.id}`);
+      // 🔍 DIAGNOSTIC LOGGING for OAuth issues
+      console.log(`═══════════════════════════════════════════════════════`);
+      console.log(`🔐 [whoop-auth] OAUTH DIAGNOSTIC INFO`);
+      console.log(`═══════════════════════════════════════════════════════`);
+      console.log(`📋 User ID: ${user.id}`);
+      console.log(`📋 User Email: ${user.email}`);
+      console.log(`📋 Client ID (first 8 chars): ${clientId.substring(0, 8)}...`);
+      console.log(`📋 Redirect URI: ${REDIRECT_URI}`);
+      console.log(`📋 Scopes: ${SCOPES}`);
+      console.log(`📋 State Token: ${stateToken}`);
+      console.log(`📋 Auth URL Base: ${WHOOP_AUTH_URL}`);
+      console.log(`📋 Full Auth URL Length: ${authUrl.toString().length} chars`);
+      console.log(`═══════════════════════════════════════════════════════`);
+      console.log(`⚠️  IF YOU SEE "Session expired" ERROR ON WHOOP:`);
+      console.log(`   1. Check Whoop Developer Portal: https://developer.whoop.com/`);
+      console.log(`   2. Verify Redirect URI matches EXACTLY: ${REDIRECT_URI}`);
+      console.log(`   3. If app is in Development mode, add user email to Test Users`);
+      console.log(`   4. Verify Client ID matches: ${clientId.substring(0, 8)}...`);
+      console.log(`═══════════════════════════════════════════════════════`);
 
       return new Response(
-        JSON.stringify({ url: authUrl.toString(), state: stateToken }),
+        JSON.stringify({ 
+          url: authUrl.toString(), 
+          state: stateToken,
+          // Include diagnostic info in response for frontend debugging
+          _debug: {
+            redirect_uri: REDIRECT_URI,
+            client_id_preview: clientId.substring(0, 8) + '...',
+            scopes: SCOPES,
+            user_email: user.email
+          }
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
