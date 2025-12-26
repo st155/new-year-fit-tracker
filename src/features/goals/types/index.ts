@@ -131,8 +131,10 @@ export interface UnifiedMetric {
 // ============= Query Result Types =============
 
 export interface GoalsQueryResult {
-  personal: Goal[];
-  challenge: Goal[];
+  personalGoals: Goal[] | undefined;
+  challengeGoals: Goal[] | undefined;
+  isLoading: boolean;
+  error: Error | null;
 }
 
 // ============= Component Props Types =============
