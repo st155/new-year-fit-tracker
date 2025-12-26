@@ -13,8 +13,13 @@ interface HabitCompletion {
 
 interface Habit {
   id: string;
-  title: string;
+  name?: string;
+  title?: string; // legacy
   category?: string;
+}
+
+function getHabitName(habit: Habit): string {
+  return habit.name || habit.title || 'Привычка';
 }
 
 export interface HabitDependency {
@@ -144,7 +149,7 @@ export function findHabitSynergies(
           habit1: dep.sourceHabit,
           habit2: dep.dependentHabit,
           synergyScore: Math.round(avgStrength),
-          reason: `${habit1.title} и ${habit2.title} отлично работают вместе`,
+          reason: `${getHabitName(habit1)} и ${getHabitName(habit2)} отлично работают вместе`,
         });
       }
     }

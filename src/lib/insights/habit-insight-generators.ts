@@ -15,6 +15,10 @@ import { detectTriggerHabits, findHabitSynergies } from './analyzers/habit-corre
 import { calculateHabitsQuality, getHabitsNeedingAttention, getTopPerformingHabits } from './habit-quality';
 import { generateHabitRecommendations } from './ai-recommendations';
 
+function getHabitName(habit: any): string {
+  return habit?.name || habit?.title || 'Привычка';
+}
+
 /**
  * Generate pattern-based insights
  */
@@ -36,7 +40,7 @@ export function generatePatternInsights(context: InsightGeneratorContext): Smart
         id: `pattern-optimal-time-${habit.id}`,
         type: 'habit_pattern',
         emoji: '⏰',
-        message: `"${habit.title}" на ${Math.round(optimalTime.successRate)}% успешнее ${timeLabel}`,
+        message: `"${getHabitName(habit)}" на ${Math.round(optimalTime.successRate)}% успешнее ${timeLabel}`,
         priority: Math.round(optimalTime.confidence),
         action: {
           type: 'modal',
@@ -59,7 +63,7 @@ export function generatePatternInsights(context: InsightGeneratorContext): Smart
         id: `pattern-chain-${chain.habit1}-${chain.habit2}`,
         type: 'habit_pattern',
         emoji: '🔗',
-        message: `"${habit1.title}" и "${habit2.title}" выполняются вместе в ${Math.round(chain.coOccurrenceRate)}% случаев`,
+        message: `"${getHabitName(habit1)}" и "${getHabitName(habit2)}" выполняются вместе в ${Math.round(chain.coOccurrenceRate)}% случаев`,
         priority: Math.round(chain.coOccurrenceRate),
         action: {
           type: 'modal',
@@ -93,7 +97,7 @@ export function generateRiskInsights(context: InsightGeneratorContext): SmartIns
         id: `risk-streak-${habit.id}`,
         type: 'habit_risk',
         emoji: '⚠️',
-        message: `Стрейк "${habit.title}" (${habit.current_streak} дней) под угрозой`,
+        message: `Стрейк "${getHabitName(habit)}" (${habit.current_streak} дней) под угрозой`,
         priority: Math.round(risk),
         action: {
           type: 'navigate',
@@ -110,7 +114,7 @@ export function generateRiskInsights(context: InsightGeneratorContext): SmartIns
         id: `risk-quality-${habit.id}`,
         type: 'habit_risk',
         emoji: '📉',
-        message: `Качество выполнения "${habit.title}" снижается`,
+        message: `Качество выполнения "${getHabitName(habit)}" снижается`,
         priority: 65,
         action: {
           type: 'modal',
@@ -145,7 +149,7 @@ export function generateOptimizationInsights(context: InsightGeneratorContext): 
         id: `optimize-consistency-${habit.id}`,
         type: 'habit_optimization',
         emoji: '🎯',
-        message: `Улучшите регулярность "${habit.title}" (сейчас ${Math.round(consistency)}%)`,
+        message: `Улучшите регулярность "${getHabitName(habit)}" (сейчас ${Math.round(consistency)}%)`,
         priority: 70 - Math.round(consistency / 2),
         action: {
           type: 'modal',
@@ -168,7 +172,7 @@ export function generateOptimizationInsights(context: InsightGeneratorContext): 
         id: `optimize-synergy-${synergy.habit1}-${synergy.habit2}`,
         type: 'habit_optimization',
         emoji: '⚡',
-        message: `Объедините "${habit1.title}" и "${habit2.title}" для лучших результатов`,
+        message: `Объедините "${getHabitName(habit1)}" и "${getHabitName(habit2)}" для лучших результатов`,
         priority: Math.round(synergy.synergyScore * 0.7),
         action: {
           type: 'modal',
@@ -204,7 +208,7 @@ export function generateHabitAchievementInsights(context: InsightGeneratorContex
           id: `achievement-milestone-${habit.id}`,
           type: 'achievement',
           emoji: '🏆',
-          message: `Новый рекорд: ${habit.current_streak} дней подряд "${habit.title}"!`,
+          message: `Новый рекорд: ${habit.current_streak} дней подряд "${getHabitName(habit)}"!`,
           priority: 85,
           action: {
             type: 'modal',
@@ -227,7 +231,7 @@ export function generateHabitAchievementInsights(context: InsightGeneratorContex
         id: `achievement-quality-${habit.id}`,
         type: 'achievement',
         emoji: '⭐',
-        message: `"${habit.title}" - оценка качества ${best.grade} (${best.overallScore}/100)`,
+        message: `"${getHabitName(habit)}" - оценка качества ${best.grade} (${best.overallScore}/100)`,
         priority: 75,
         action: {
           type: 'modal',
