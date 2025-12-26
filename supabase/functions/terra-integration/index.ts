@@ -1218,7 +1218,7 @@ async function processTerraData(supabase: any, payload: any) {
               start_time: workout.start_time,
               end_time: workout.end_time,
               duration_minutes: Math.round((new Date(workout.end_time).getTime() - new Date(workout.start_time).getTime()) / 60000),
-              calories_burned: activity.calories_data?.total_burned_calories,
+              calories_burned: activity.calories_data?.total_burned_calories ? Math.round(activity.calories_data.total_burned_calories) : null,
               distance_km: distanceKm,
               heart_rate_avg: activity.heart_rate_data?.avg_hr_bpm,
               heart_rate_max: activity.heart_rate_data?.max_hr_bpm,

@@ -215,7 +215,7 @@ async function processTerraWebhookData(
           start_time: metadata.start_time,
           end_time: metadata.end_time,
           duration_minutes: durationMinutes,
-          calories_burned: activity.calories_data?.total_burned_calories,
+          calories_burned: activity.calories_data?.total_burned_calories ? Math.round(activity.calories_data.total_burned_calories) : null,
           distance_km: distanceKm,
           heart_rate_avg: activity.heart_rate_data?.avg_hr_bpm,
           heart_rate_max: activity.heart_rate_data?.max_hr_bpm,
