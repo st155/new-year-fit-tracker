@@ -15,43 +15,82 @@ export function useUserWeeklyStrain(userId: string | undefined) {
 
       const endDate = new Date();
       const startDate = subDays(endDate, 7);
+      const dateRange = {
+        start: format(startDate, 'yyyy-MM-dd'),
+        end: format(endDate, 'yyyy-MM-dd'),
+      };
 
-      // Day Strain (WHOOP only)
-      const { data: dayStrainData, error: dayError } = await supabase
+      // Priority 1: Day Strain (any source)
+      const { data: dayStrainData } = await supabase
         .from('unified_metrics')
         .select('measurement_date, value')
         .eq('user_id', userId)
         .eq('metric_name', 'Day Strain')
-        .ilike('source', 'WHOOP')
-        .gte('measurement_date', format(startDate, 'yyyy-MM-dd'))
-        .lt('measurement_date', format(endDate, 'yyyy-MM-dd'))
+        .gte('measurement_date', dateRange.start)
+        .lt('measurement_date', dateRange.end)
         .order('measurement_date', { ascending: true });
 
-      if (!dayError && dayStrainData && dayStrainData.length > 0) {
+      if (dayStrainData && dayStrainData.length > 0) {
         return dayStrainData.map(item => ({
           date: item.measurement_date,
           value: item.value
         })) as StrainDataPoint[];
       }
 
-      // Fallback to Workout Strain
-      const { data: workoutStrainData, error: workoutError } = await supabase
+      // Priority 2: Workout Strain
+      const { data: workoutStrainData } = await supabase
         .from('unified_metrics')
         .select('measurement_date, value')
         .eq('user_id', userId)
         .eq('metric_name', 'Workout Strain')
-        .gte('measurement_date', format(startDate, 'yyyy-MM-dd'))
-        .lt('measurement_date', format(endDate, 'yyyy-MM-dd'))
+        .gte('measurement_date', dateRange.start)
+        .lt('measurement_date', dateRange.end)
         .order('measurement_date', { ascending: true });
 
-      if (workoutError) return [];
+      if (workoutStrainData && workoutStrainData.length > 0) {
+        return workoutStrainData.map(item => ({
+          date: item.measurement_date,
+          value: item.value
+        })) as StrainDataPoint[];
+      }
 
-      return (workoutStrainData || []).map(item => ({
-        date: item.measurement_date,
-        value: item.value
-      })) as StrainDataPoint[];
+      // Priority 3: Active Calories (Garmin) → normalized to 0-21 strain scale
+      const { data: caloriesData } = await supabase
+        .from('unified_metrics')
+        .select('measurement_date, value')
+        .eq('user_id', userId)
+        .eq('metric_name', 'Active Calories')
+        .gte('measurement_date', dateRange.start)
+        .lt('measurement_date', dateRange.end)
+        .order('measurement_date', { ascending: true });
+
+      if (caloriesData && caloriesData.length > 0) {
+        return caloriesData.map(item => ({
+          date: item.measurement_date,
+          value: Math.min(21, item.value / 150) // 2100 kcal ≈ 14 strain, 3150+ = 21
+        })) as StrainDataPoint[];
+      }
+
+      // Priority 4: Workout Time (minutes) → normalized to 0-21 strain scale
+      const { data: workoutTimeData } = await supabase
+        .from('unified_metrics')
+        .select('measurement_date, value')
+        .eq('user_id', userId)
+        .eq('metric_name', 'Workout Time')
+        .gte('measurement_date', dateRange.start)
+        .lt('measurement_date', dateRange.end)
+        .order('measurement_date', { ascending: true });
+
+      if (workoutTimeData && workoutTimeData.length > 0) {
+        return workoutTimeData.map(item => ({
+          date: item.measurement_date,
+          value: Math.min(21, item.value / 5) // 60 min = 12 strain, 105 min = 21
+        })) as StrainDataPoint[];
+      }
+
+      return [];
     },
     enabled: !!userId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 }
