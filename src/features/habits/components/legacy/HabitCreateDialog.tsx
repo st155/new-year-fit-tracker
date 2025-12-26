@@ -31,7 +31,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { DEFAULT_HABIT_TEMPLATES } from "@/lib/habit-templates";
-import { useGoals } from "@/hooks/useGoals";
+import { useGoalsQuery } from "@/features/goals/hooks";
 import { useIsMobile } from "@/hooks/primitive";
 import { cn } from "@/lib/utils";
 
@@ -67,7 +67,7 @@ const habitTypes = [
 
 export function HabitCreateDialog({ open, onOpenChange, linkedGoalId, prefilledName, onHabitCreated }: HabitCreateDialogProps) {
   const { user } = useAuth();
-  const { personalGoals } = useGoals(user?.id);
+  const { personalGoals } = useGoalsQuery(user?.id);
   const isMobile = useIsMobile();
   
   const [name, setName] = useState(prefilledName || "");
