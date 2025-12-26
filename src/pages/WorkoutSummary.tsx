@@ -10,6 +10,7 @@ import { FeelingSlider } from "@/components/workout/summary/FeelingSlider";
 import { AIInsightCard } from "@/components/workout/summary/AIInsightCard";
 import { CompletionButton } from "@/components/workout/summary/CompletionButton";
 import { PageLoader } from "@/components/ui/page-loader";
+import { syncTodayToEcho11, mapDurationToIntensity } from "@/utils/elite10Connector";
 
 interface WorkoutStats {
   duration: number;
@@ -119,6 +120,30 @@ export default function WorkoutSummary() {
           volume: stats.totalVolume,
           feeling: overallFeeling,
         });
+      }
+
+      // 🔗 Sync to Echo11 after successful save
+      if (stats && user) {
+        const syncSecret = import.meta.env.VITE_ELITE10_SYNC_SECRET;
+        if (syncSecret && syncSecret !== 'your-elite10-sync-secret-here') {
+          const result = await syncTodayToEcho11(
+            user.id,
+            {
+              sleep_quality: 70, // TODO: get from health data
+              recovery_score: overallFeeling * 20, // 1-5 → 20-100
+              workout_type: summaryData.planName || 'Workout',
+              workout_intensity: mapDurationToIntensity(stats.duration),
+              nutrition_status: 'Maintenance', // TODO: get from nutrition data
+            },
+            syncSecret
+          );
+          
+          if (result.success) {
+            console.log('✅ Synced to Echo11:', result.ai_strategy);
+          } else {
+            console.warn('⚠️ Echo11 sync failed:', result.error);
+          }
+        }
       }
 
       // Clear session storage

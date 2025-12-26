@@ -100,9 +100,9 @@ export default function HabitDetail() {
     // Create CSV content
     const headers = ['Дата', 'Выполнено', 'Серия'];
     const rows = progressData.map(day => [
-      format(day.date, 'yyyy-MM-dd'),
+      day.date,
       day.completed ? 'Да' : 'Нет',
-      day.streak || 0
+      day.streak_day || 0
     ]);
     
     const csvContent = [
@@ -129,7 +129,11 @@ export default function HabitDetail() {
         name: habit.name,
         description: habit.description || undefined,
         stats,
-        progressData,
+        progressData: progressData?.map(d => ({
+          date: new Date(d.date),
+          completed: d.completed,
+          streak: d.streak_day,
+        })),
         longestStreak,
       });
       toast.success('PDF отчет создан');
@@ -289,16 +293,16 @@ export default function HabitDetail() {
                 >
                   <div className="flex items-center gap-3">
                     <Badge variant="secondary" className="bg-habit-positive/20">
-                      {format(day.date, 'd MMM yyyy', { locale: ru })}
+                      {format(new Date(day.date), 'd MMM yyyy', { locale: ru })}
                     </Badge>
                     <span className="text-sm text-muted-foreground">
-                      {format(day.date, 'EEEE', { locale: ru })}
+                      {format(new Date(day.date), 'EEEE', { locale: ru })}
                     </span>
                   </div>
-                  {day.streak && day.streak > 1 && (
+                  {day.streak_day && day.streak_day > 1 && (
                     <Badge variant="outline" className="border-habit-negative/50">
                       <Flame className="mr-1 h-3 w-3 text-habit-negative" />
-                      {day.streak} дней подряд
+                      {day.streak_day} дней подряд
                     </Badge>
                   )}
                 </div>
