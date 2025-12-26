@@ -1,4 +1,4 @@
-import { useChallengeDetail } from "@/hooks/useChallengeDetail";
+import { useChallengeDetailQuery } from "@/features/challenges";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,7 +23,7 @@ const difficultyLevels = [
 ];
 
 export function ChallengeInfoBlock({ challengeId, onJoinClick, isJoining }: ChallengeInfoBlockProps) {
-  const { challenge, isLoading: challengeLoading } = useChallengeDetail(challengeId);
+  const { challenge, isLoading: challengeLoading } = useChallengeDetailQuery(challengeId);
 
   const { data: disciplines = [], isLoading: disciplinesLoading } = useQuery({
     queryKey: ["challenge-disciplines", challengeId],

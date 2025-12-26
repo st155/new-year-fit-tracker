@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useWidgetsQuery } from '@/hooks/useWidgetsQuery';
 import { useSmartWidgetsData } from '@/hooks/metrics';
 import { useHabits } from '@/hooks/useHabits';
-import { useChallenges } from '@/hooks/useChallenges';
+import { useChallengesQuery } from '@/features/challenges';
 import { useMetricsRealtime } from '@/hooks/composite/realtime/useRealtimeSubscription';
 
 /**
@@ -37,7 +37,7 @@ export function useDashboard(options?: DashboardOptions) {
   );
   
   const { habits: habitsData, isLoading: habitsLoading } = useHabits(user?.id);
-  const { challenges, isLoading: challengesLoading } = useChallenges(user?.id);
+  const { challenges, isLoading: challengesLoading } = useChallengesQuery(user?.id);
 
   // ===== Realtime subscriptions =====
   useMetricsRealtime(enableRealtime && !!user);

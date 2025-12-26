@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { calculateBadges, MetricsBadge, PointsBreakdown } from "@/lib/challenge-scoring-v3";
+import { calculateBadges, type MetricsBadge, type PointsBreakdown } from "@/features/challenges/utils";
 
 export interface GoalReport {
   id: string;

@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { enrichLeaderboardEntry, type LeaderboardEntry } from '@/lib/challenge-scoring-v3';
+import { enrichLeaderboardEntry, type LeaderboardEntry } from '@/features/challenges/utils';
 
 export const leaderboardQueryKeys = {
   all: ['leaderboard'] as const,

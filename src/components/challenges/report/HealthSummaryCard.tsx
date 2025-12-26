@@ -3,7 +3,7 @@ import { Heart, Moon, Brain, Activity, Gauge, BatteryCharging } from "lucide-rea
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import type { HealthReport } from "@/hooks/useChallengeReport";
+import type { HealthReport } from "@/features/challenges/types";
 
 interface HealthSummaryCardProps {
   health: HealthReport;

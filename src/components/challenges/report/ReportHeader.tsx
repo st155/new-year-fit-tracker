@@ -4,8 +4,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
-import { getRankDisplay } from "@/lib/challenge-scoring-v3";
-import type { ChallengeReport } from "@/hooks/useChallengeReport";
+import { getRankDisplay } from "@/features/challenges/utils";
+import type { ChallengeReport } from "@/features/challenges/types";
 
 interface ReportHeaderProps {
   report: ChallengeReport;

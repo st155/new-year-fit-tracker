@@ -35,7 +35,7 @@ import {
   applyPersonalization,
 } from '@/lib/insights/insight-prioritizer';
 import { useInsightPersonalization } from './useInsightPersonalization';
-import { useChallengeProgress } from './useChallengeProgress';
+import { useChallengeProgressQuery } from '@/features/challenges';
 import { useTrainerMessages } from './useTrainerMessages';
 
 interface UseSmartInsightsOptions {
@@ -65,7 +65,7 @@ export function useSmartInsights(options: UseSmartInsightsOptions = {}) {
   });
 
   // Fetch advanced data sources
-  const { data: challengeData } = useChallengeProgress(user?.id);
+  const { data: challengeData } = useChallengeProgressQuery(user?.id);
   const { data: trainerData } = useTrainerMessages(user?.id);
   const { preferences } = useInsightPersonalization();
 

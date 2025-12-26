@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useTrainerChallenges } from "@/hooks/useTrainerChallenges";
+import { useTrainerChallengesQuery } from "@/features/challenges";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -37,7 +37,7 @@ import { toast as sonnerToast } from "sonner";
 export function TrainerChallengesManager() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { challenges, isLoading, refetch } = useTrainerChallenges(user?.id);
+  const { challenges, isLoading, refetch } = useTrainerChallengesQuery(user?.id);
   const [selectedChallenge, setSelectedChallenge] = useState<string | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createAIDialogOpen, setCreateAIDialogOpen] = useState(false);

@@ -5,8 +5,7 @@ import { TrendingUp, Flame, Activity, Zap, Info } from "lucide-react";
 import { UserLevel } from "./UserLevel";
 import { BalanceIndicator } from "./BalanceIndicator";
 import { PointsBreakdownDialog } from "./PointsBreakdownDialog";
-import { formatPoints } from "@/lib/challenge-scoring-v3";
-import type { LeaderboardEntry } from "@/lib/challenge-scoring-v3";
+import { formatPoints, type LeaderboardEntry } from "@/features/challenges/utils";
 import { useState } from "react";
 
 interface PersonalStatsCardProps {

@@ -62,9 +62,8 @@ export { useProfileQuery, profileQueryKeys } from './core/useProfileQuery';
 export { useLeaderboardQuery, leaderboardQueryKeys } from './core/useLeaderboardQuery';
 export { useWidgetsQuery, widgetKeys } from './useWidgetsQuery';
 export { useWidgetsBatch } from './useWidgetsBatch';
-// useGoals moved to @/features/goals/hooks as useGoalsQuery
-export { useChallenges } from './useChallenges';
-export { useChallengeDetail } from './useChallengeDetail';
+// Challenge hooks moved to @/features/challenges/hooks
+export { useChallengesQuery as useChallenges, useChallengeDetailQuery as useChallengeDetail } from '@/features/challenges';
 // useChallengeGoals moved to @/features/goals/hooks
 export { useChallengeGoalsQuery as useChallengeGoals } from '@/features/goals/hooks';
 export { useHabits } from './useHabits';
@@ -82,7 +81,7 @@ export { useSwipeNavigation } from './useSwipeNavigation';
 export { useClientDetailData } from './useClientDetailData';
 export { useClientAliases } from './useClientAliases';
 export { useTrainerChat } from './useTrainerChat';
-export { useTrainerChallenges } from './useTrainerChallenges';
+export { useTrainerChallengesQuery as useTrainerChallenges } from '@/features/challenges';
 export { useAIConversations } from './useAIConversations';
 export { useAIPendingActions } from './useAIPendingActions';
 export { useFastingWindow } from './useFastingWindow';

@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Activity, Footprints, Flame, Dumbbell, Calendar, Zap } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { ActivityReport } from "@/hooks/useChallengeReport";
+import type { ActivityReport } from "@/features/challenges/types";
 
 interface ActivitySummaryCardProps {
   activity: ActivityReport;

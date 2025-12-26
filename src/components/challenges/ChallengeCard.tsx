@@ -15,10 +15,10 @@ import { cn } from "@/lib/utils";
 interface Challenge {
   id: string;
   title: string;
-  description: string;
+  description: string | null;
   start_date: string;
   end_date: string;
-  challenge_participants: any[];
+  challenge_participants?: any[] | null;
   isParticipant?: boolean;
   isFeatured?: boolean;
   completedGoals?: number;

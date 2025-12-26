@@ -26,13 +26,13 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import {
-  ChallengeTemplate,
+  type ChallengeTemplate,
   fetchUserTemplates,
   fetchPublicTemplates,
   deleteTemplate,
   exportTemplateAsJSON,
   updateTemplate,
-} from "@/lib/challenge-templates";
+} from "@/features/challenges/utils";
 import { ImportTemplateDialog } from "./ImportTemplateDialog";
 import { CreateFromTemplateDialog } from "./CreateFromTemplateDialog";
 

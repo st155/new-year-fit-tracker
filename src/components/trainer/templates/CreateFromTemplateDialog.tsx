@@ -10,7 +10,7 @@ import { Slider } from "@/components/ui/slider";
 import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { ChallengeTemplate, incrementTemplateUseCount } from "@/lib/challenge-templates";
+import { type ChallengeTemplate, incrementTemplateUseCount } from "@/features/challenges/utils";
 import { calculateStandardBenchmark, BENCHMARK_STANDARDS } from "@/lib/benchmark-standards";
 
 interface CreateFromTemplateDialogProps {

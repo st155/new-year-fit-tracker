@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Sparkles, FileText } from 'lucide-react';
-import { CHALLENGE_PRESETS, ChallengePreset } from '@/lib/challenge-presets';
+import { CHALLENGE_PRESETS, type ChallengePreset } from '@/features/challenges/utils';
 import { PresetCard } from './challenge-ai/PresetCard';
 import { SettingsPanel } from './challenge-ai/SettingsPanel';
 import { PreviewPanel } from './challenge-ai/PreviewPanel';

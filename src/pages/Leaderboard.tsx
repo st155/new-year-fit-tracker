@@ -14,7 +14,7 @@ import { useTranslation } from "@/lib/translations";
 import { UserHealthDetailDialog } from "@/components/leaderboard/UserHealthDetailDialog";
 import { useLeaderboard } from "@/hooks/useLeaderboard";
 import { useAuth } from "@/hooks/useAuth";
-import { formatPoints, getRankColorClass } from "@/lib/challenge-scoring-v3";
+import { formatPoints, getRankColorClass } from "@/features/challenges/utils";
 import { PersonalStatsCard } from "@/components/leaderboard/PersonalStatsCard";
 import { LeaderboardTabs } from "@/components/leaderboard/LeaderboardTabs";
 import { AchievementsGallery } from "@/components/leaderboard/AchievementsGallery";
@@ -26,7 +26,7 @@ import { LeaderboardUserCard } from "@/components/leaderboard/LeaderboardUserCar
 import { getUserLevel } from "@/lib/gamification";
 import { LeaveOtherChallengesButton } from "@/components/leaderboard/LeaveOtherChallengesButton";
 import { ChallengeSelector } from "@/components/leaderboard/ChallengeSelector";
-import { usePreferredChallenge } from "@/hooks/usePreferredChallenge";
+import { usePreferredChallengeQuery } from "@/features/challenges";
 
 const Leaderboard = () => {
   const { t } = useTranslation();
@@ -44,7 +44,7 @@ const Leaderboard = () => {
     challenges, 
     setPreferredChallenge,
     isLoading: challengesLoading 
-  } = usePreferredChallenge(user?.id);
+  } = usePreferredChallengeQuery(user?.id);
 
   const { 
     leaderboard, 

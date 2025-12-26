@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { useChallengeDetail } from "@/hooks/useChallengeDetail";
-import { useIsParticipant } from "@/hooks/useIsParticipant";
+import { useChallengeDetailQuery, useParticipantQuery } from "@/features/challenges";
+import { captureBaseline } from "@/features/challenges/utils";
 import { useDifficultyLevel } from "@/hooks/useDifficultyLevel";
 import { ChallengeFeed } from "@/components/challenge/ChallengeFeed";
 import { ChallengeChat } from "@/components/challenge/ChallengeChat";
@@ -24,15 +24,15 @@ import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { enUS } from "date-fns/locale";
-import { captureBaseline } from "@/lib/challenge-baseline";
+
 
 export default function ChallengeDetail() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { challenge, isLoading } = useChallengeDetail(id);
-  const { data: isParticipant = false, refetch: refetchParticipation } = useIsParticipant(id, user?.id);
+  const { challenge, isLoading } = useChallengeDetailQuery(id);
+  const { data: isParticipant = false, refetch: refetchParticipation } = useParticipantQuery(id, user?.id);
   const { data: difficultyLevel = 0 } = useDifficultyLevel(id, user?.id);
   const [showDifficultyDialog, setShowDifficultyDialog] = useState(false);
 

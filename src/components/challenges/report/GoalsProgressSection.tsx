@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import type { GoalReport } from "@/hooks/useChallengeReport";
+import type { GoalReport } from "@/features/challenges/types";
 import { ResponsiveContainer, LineChart, Line, YAxis } from "recharts";
 
 interface GoalsProgressSectionProps {

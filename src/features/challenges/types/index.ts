@@ -16,7 +16,7 @@ type ChallengeDisciplineRow = Database['public']['Tables']['challenge_discipline
 
 export interface Challenge extends ChallengeRow {
   isParticipant?: boolean;
-  challenge_participants?: Array<{ user_id: string }>;
+  challenge_participants?: Array<{ user_id: string }> | null;
 }
 
 export interface ChallengeWithDetails extends Challenge {
@@ -28,7 +28,7 @@ export interface ChallengeWithDetails extends Challenge {
 export interface ChallengeParticipant extends ChallengeParticipantRow {}
 
 export interface ChallengeParticipantWithProfile extends ChallengeParticipant {
-  profiles?: {
+  profiles: {
     username: string | null;
     full_name: string | null;
     avatar_url: string | null;
@@ -54,31 +54,29 @@ export interface MetricsBadge {
 
 export interface PointsBreakdown {
   performance: {
-    steps: number;
-    calories: number;
-    workouts: number;
-    goals: number;
+    strain_score: number;
+    activity_volume: number;
+    consistency: number;
+    total: number;
   };
   recovery: {
-    sleep: number;
-    hrv: number;
-    restingHr: number;
-    recoveryScore: number;
+    recovery_quality: number;
+    sleep_quality: number;
+    heart_health: number;
+    total: number;
   };
   synergy: {
-    streak: number;
-    consistency: number;
-    improvement: number;
-  };
-  bonus: {
-    badges: number;
-    milestones: number;
+    balance_bonus: number;
+    streak_bonus: number;
+    badge_bonus: number;
+    total: number;
   };
 }
 
 export interface LeaderboardEntry {
   userId: string;
   username: string;
+  fullName?: string | null;
   avatarUrl?: string | null;
   rank: number;
   totalPoints: number;
@@ -88,19 +86,28 @@ export interface LeaderboardEntry {
   streakDays: number;
   lastActivityDate: string | null;
   badges: MetricsBadge[];
+  pointsBreakdown?: PointsBreakdown;
+  isUser?: boolean;
   // Metrics
   activeDays: number;
-  avgRecovery: number;
-  avgStrain: number;
-  avgSleep: number;
-  avgSleepEfficiency: number;
-  avgRestingHr: number;
-  avgHrv: number;
-  totalSteps: number;
-  totalActiveCalories: number;
+  avgRecovery: number | null;
+  avgStrain: number | null;
+  avgSleep: number | null;
+  avgSleepEfficiency: number | null;
+  avgRestingHr: number | null;
+  avgHrv: number | null;
+  totalSteps: number | null;
+  totalActiveCalories: number | null;
   totalGoals: number;
   goalsWithBaseline: number;
   trackableGoals: number;
+  // Weekly metrics
+  steps_last_7d?: number | null;
+  avg_strain_last_7d?: number | null;
+  avg_sleep_last_7d?: number | null;
+  avg_recovery_last_7d?: number | null;
+  workouts_last_7d?: number | null;
+  weekly_consistency?: number | null;
 }
 
 // ============ Report Types ============
