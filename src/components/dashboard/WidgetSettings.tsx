@@ -10,7 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Settings, Plus, Trash2, Info } from 'lucide-react';
+import { Settings, Plus, Trash2, Info, Sparkles, Loader2 } from 'lucide-react';
 import { Widget } from '@/hooks/useWidgetsQuery';
 import {
   Select,
@@ -23,6 +23,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { widgetKeys } from '@/hooks/useWidgetsQuery';
+import { useAIWidgetSuggestions } from '@/hooks/useAIWidgetSuggestions';
+import { useAuth } from '@/hooks/useAuth';
 
 interface WidgetSettingsProps {
   widgets: Widget[];
@@ -68,8 +70,12 @@ export function WidgetSettings({
 }: WidgetSettingsProps) {
   const [open, setOpen] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState<string>('');
+  const [addingAI, setAddingAI] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  
+  const { data: aiSuggestions = [], isLoading: aiLoading } = useAIWidgetSuggestions(user?.id, widgets);
 
   const updateDisplayModeMutation = useMutation({
     mutationFn: async ({ widgetId, mode }: { widgetId: string; mode: 'single' | 'multi' }) => {
@@ -129,6 +135,35 @@ export function WidgetSettings({
     setSelectedMetric('');
   };
 
+  const handleAddAllAI = async () => {
+    if (aiSuggestions.length === 0) return;
+    
+    setAddingAI(true);
+    try {
+      const availableSlots = 20 - widgets.length;
+      const toAdd = aiSuggestions.slice(0, availableSlots);
+      
+      for (const suggestion of toAdd) {
+        onAdd(suggestion.metric_name);
+        // Небольшая задержка между добавлениями для корректной работы
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      toast({
+        title: 'Виджеты добавлены',
+        description: `Добавлено ${toAdd.length} рекомендуемых виджетов`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось добавить виджеты',
+        variant: 'destructive',
+      });
+    } finally {
+      setAddingAI(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -151,9 +186,59 @@ export function WidgetSettings({
         </DialogHeader>
 
         <div className="space-y-6">
+          {/* AI Suggestions Section */}
+          {aiSuggestions.length > 0 && widgets.length < 20 && (
+            <div className="border rounded-lg p-4 bg-gradient-to-r from-purple-500/10 to-blue-500/10">
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles className="h-5 w-5 text-purple-500" />
+                <h3 className="font-medium">AI рекомендации</h3>
+                <Badge variant="secondary">{aiSuggestions.length}</Badge>
+              </div>
+              
+              <p className="text-sm text-muted-foreground mb-4">
+                На основе данных с ваших устройств рекомендуем добавить:
+              </p>
+              
+              <div className="flex flex-wrap gap-2 mb-4">
+                {aiSuggestions.map((suggestion) => (
+                  <Badge 
+                    key={suggestion.metric_name} 
+                    variant="outline" 
+                    className="py-1.5 px-3 bg-background/50"
+                  >
+                    {suggestion.metric_name}
+                    <span className="ml-1.5 text-xs text-muted-foreground">
+                      ({suggestion.dataPoints})
+                    </span>
+                  </Badge>
+                ))}
+              </div>
+              
+              <Button 
+                onClick={handleAddAllAI} 
+                disabled={addingAI || widgets.length >= 20}
+                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+              >
+                {addingAI ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Sparkles className="w-4 h-4 mr-2" />
+                )}
+                Добавить все рекомендуемые ({Math.min(aiSuggestions.length, 20 - widgets.length)})
+              </Button>
+            </div>
+          )}
+          
+          {aiLoading && (
+            <div className="border rounded-lg p-4 flex items-center justify-center gap-2 text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span className="text-sm">Анализируем ваши данные...</span>
+            </div>
+          )}
+
           {/* Add Widget Section */}
           <div className="border rounded-lg p-4 space-y-4">
-            <h3 className="font-medium">Добавить виджет</h3>
+            <h3 className="font-medium">Добавить виджет вручную</h3>
             
             <div className="space-y-4">
               <div className="grid gap-2">
@@ -183,6 +268,7 @@ export function WidgetSettings({
                 onClick={handleAdd} 
                 disabled={!selectedMetric || widgets.length >= 20}
                 className="w-full"
+                variant="outline"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Добавить виджет
