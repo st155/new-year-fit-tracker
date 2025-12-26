@@ -74,7 +74,7 @@ export function HabitCardV3({
 
   // Hook for reset functionality - ALWAYS call unconditionally to follow React hooks rules
   const isDurationCounter = habit.habit_type === 'duration_counter';
-  const habitAttempts = useHabitAttempts(
+  const habitAttempts = useHabitAttemptsQuery(
     isDurationCounter ? habit.id : '', 
     isDurationCounter ? user?.id : undefined
   );
