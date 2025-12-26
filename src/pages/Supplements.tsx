@@ -11,6 +11,8 @@ import { SupplementLibrary } from "@/components/biostack/SupplementLibrary";
 import { useAuth } from "@/hooks/useAuth";
 import { useCheckCompletedProtocols } from "@/hooks/biostack";
 import { useNewLabAlerts } from "@/hooks/biostack/useNewLabAlerts";
+import { useIsMobile } from "@/hooks";
+import { MobileSupplementsTracker } from "@/components/mobile-supplements";
 
 type ViewMode = "dashboard" | "correlation" | "history" | "import" | "library";
 
@@ -26,6 +28,7 @@ const tabToViewMode: Record<string, ViewMode> = {
 
 export default function Supplements() {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [searchParams] = useSearchParams();
   
   // Auto-check for completed protocols on mount
@@ -46,6 +49,11 @@ export default function Supplements() {
       setViewMode(tabToViewMode[tab]);
     }
   }, [searchParams]);
+
+  // Mobile view
+  if (isMobile) {
+    return <MobileSupplementsTracker />;
+  }
 
   return (
     <div className="container mx-auto py-8 space-y-8">
