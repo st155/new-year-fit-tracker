@@ -53,6 +53,7 @@ const TerraCallback = lazy(() => import("@/pages/TerraCallback"));
 const WhoopCallback = lazy(() => import("@/pages/WhoopCallback"));
 const WhoopOAuthCallback = lazy(() => import("@/pages/WhoopOAuthCallback"));
 const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
+const Privacy = lazy(() => import("@/pages/Privacy"));
 const Health = lazy(() => import("@/pages/Health"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const WithingsDebug = lazy(() => import("@/pages/WithingsDebug"));
@@ -405,6 +406,7 @@ export const AppRoutes = () => {
         
         {/* Static pages */}
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/privacy" element={<Privacy />} />
         <Route path="/health" element={<Health />} />
         
         {/* Debug pages - dev/admin only */}
