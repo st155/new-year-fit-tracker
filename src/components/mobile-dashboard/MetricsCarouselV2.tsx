@@ -33,7 +33,7 @@ export function MetricsCarouselV2() {
   const { user } = useAuth();
   const { metrics } = useTodayMetrics(user?.id);
   const { data: weeklySleep = [] } = useUserWeeklySleep(user?.id);
-  const { weight, bodyFat } = useAggregatedBodyMetrics();
+  const { weight, bodyFat } = useAggregatedBodyMetrics(user?.id);
 
   const sleepValues = weeklySleep.map(d => d.value);
   
