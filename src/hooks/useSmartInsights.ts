@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 import { useAuth } from './useAuth';
 import { useDataQuality } from './useDataQuality';
 import { useGoalsQuery } from '@/features/goals/hooks';
-import { useHabits } from './useHabits';
+import { useHabitsQuery } from '@/features/habits';
 import { useTodayMetrics } from './metrics/useTodayMetrics';
 import { useMetrics } from './composite/data/useMetrics';
 import type { SmartInsight } from '@/lib/insights/types';
@@ -51,7 +51,7 @@ export function useSmartInsights(options: UseSmartInsightsOptions = {}) {
   // Fetch data from all sources
   const qualityData = useDataQuality();
   const { personalGoals, challengeGoals, isLoading: goalsLoading } = useGoalsQuery(user?.id);
-  const { habits } = useHabits(user?.id);
+  const { data: habits } = useHabitsQuery({ enabled: !!user?.id });
   const { metrics: todayMetrics, loading: todayLoading } = useTodayMetrics(user?.id);
   const { 
     latest: latestMetrics, 
