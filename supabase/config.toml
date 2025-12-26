@@ -264,3 +264,6 @@ verify_jwt = false
 
 [functions.whoop-scheduled-sync.cron]
 schedule = "*/5 * * * *"
+
+[functions.webhook-whoop]
+verify_jwt = false
