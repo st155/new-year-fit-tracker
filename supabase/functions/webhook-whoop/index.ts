@@ -6,6 +6,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// V2 API base URL
+const WHOOP_API_BASE = 'https://api.prod.whoop.com/developer/v2';
+
 serve(async (req) => {
   console.log(`🔔 [webhook-whoop] Incoming request: ${req.method} from ${req.headers.get('user-agent') || 'unknown'}`);
   
@@ -69,19 +72,23 @@ serve(async (req) => {
 
     console.log(`👤 [webhook-whoop] Matched to user ${userId}`);
 
+    // V2 webhook data structure - ID is now UUID string
+    const dataId = payload.data?.id?.toString();
+
     // Process based on event type
     switch (eventType) {
       case 'recovery.updated':
-        await processRecovery(supabase, userId, accessToken, payload.data);
+        // V2: recovery.updated now contains sleep_id in data.id
+        await processRecoveryV2(supabase, userId, accessToken, payload.data);
         break;
       case 'sleep.updated':
-        await processSleep(supabase, userId, accessToken, payload.data);
+        await processSleepV2(supabase, userId, accessToken, payload.data);
         break;
       case 'workout.updated':
-        await processWorkout(supabase, userId, accessToken, payload.data);
+        await processWorkoutV2(supabase, userId, accessToken, payload.data);
         break;
       case 'cycle.updated':
-        await processCycle(supabase, userId, accessToken, payload.data);
+        await processCycleV2(supabase, userId, accessToken, payload.data);
         break;
       default:
         console.log(`ℹ️ [webhook-whoop] Unhandled event type: ${eventType}`);
@@ -103,21 +110,40 @@ serve(async (req) => {
   }
 });
 
-async function processRecovery(supabase: any, userId: string, accessToken: string, data: any) {
+// V2: Recovery - fetched via collection endpoint since V2 doesn't have direct recovery/{id}
+async function processRecoveryV2(supabase: any, userId: string, accessToken: string, data: any) {
   if (!data?.id) return;
 
   try {
-    // Fetch full recovery data from Whoop API
-    const response = await fetch(`https://api.prod.whoop.com/developer/v1/recovery/${data.id}`, {
-      headers: { 'Authorization': `Bearer ${accessToken}` },
-    });
+    // V2: Fetch recent recovery data - recovery is linked to sleep in V2
+    // The webhook data.id is the sleep_id in V2
+    console.log(`🔄 [webhook-whoop] Processing recovery for sleep_id: ${data.id}`);
+    
+    // Fetch recovery collection for today
+    const today = new Date().toISOString().split('T')[0];
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    
+    const response = await fetch(
+      `${WHOOP_API_BASE}/recovery?start=${yesterday}T00:00:00.000Z&end=${today}T23:59:59.999Z`,
+      { headers: { 'Authorization': `Bearer ${accessToken}` } }
+    );
 
     if (!response.ok) {
-      console.error(`❌ [webhook-whoop] Failed to fetch recovery ${data.id}`);
+      console.error(`❌ [webhook-whoop] Failed to fetch recovery collection: ${response.status}`);
       return;
     }
 
-    const recovery = await response.json();
+    const recoveryData = await response.json();
+    const records = recoveryData.records || [];
+    
+    // Find the most recent recovery
+    const recovery = records.find((r: any) => r.sleep_id === data.id) || records[0];
+    
+    if (!recovery) {
+      console.warn(`⚠️ [webhook-whoop] No recovery found for sleep_id: ${data.id}`);
+      return;
+    }
+
     const score = recovery.score;
     const date = recovery.created_at?.split('T')[0] || new Date().toISOString().split('T')[0];
 
@@ -139,8 +165,11 @@ async function processRecovery(supabase: any, userId: string, accessToken: strin
       metrics.push({ name: 'Skin Temperature', value: score.skin_temp_celsius, unit: '°C', category: 'recovery' });
     }
 
+    // Use sleep_id as external_id in V2
+    const externalId = recovery.sleep_id || recovery.cycle_id || data.id;
+
     for (const m of metrics) {
-      await upsertMetric(supabase, userId, m.name, m.value, m.unit, m.category, date, recovery.id);
+      await upsertMetric(supabase, userId, m.name, m.value, m.unit, m.category, date, externalId);
     }
 
     console.log(`✅ [webhook-whoop] Processed recovery: ${metrics.length} metrics`);
@@ -149,16 +178,18 @@ async function processRecovery(supabase: any, userId: string, accessToken: strin
   }
 }
 
-async function processSleep(supabase: any, userId: string, accessToken: string, data: any) {
+// V2: Sleep - ID is now UUID string
+async function processSleepV2(supabase: any, userId: string, accessToken: string, data: any) {
   if (!data?.id) return;
 
   try {
-    const response = await fetch(`https://api.prod.whoop.com/developer/v1/activity/sleep/${data.id}`, {
+    // V2: Fetch sleep by UUID
+    const response = await fetch(`${WHOOP_API_BASE}/activity/sleep/${data.id}`, {
       headers: { 'Authorization': `Bearer ${accessToken}` },
     });
 
     if (!response.ok) {
-      console.error(`❌ [webhook-whoop] Failed to fetch sleep ${data.id}`);
+      console.error(`❌ [webhook-whoop] Failed to fetch sleep ${data.id}: ${response.status}`);
       return;
     }
 
@@ -205,6 +236,7 @@ async function processSleep(supabase: any, userId: string, accessToken: string, 
       }
     }
 
+    // V2: sleep.id is UUID string
     for (const m of metrics) {
       await upsertMetric(supabase, userId, m.name, m.value, m.unit, m.category, date, sleep.id);
     }
@@ -215,16 +247,18 @@ async function processSleep(supabase: any, userId: string, accessToken: string, 
   }
 }
 
-async function processWorkout(supabase: any, userId: string, accessToken: string, data: any) {
+// V2: Workout - ID is now UUID string
+async function processWorkoutV2(supabase: any, userId: string, accessToken: string, data: any) {
   if (!data?.id) return;
 
   try {
-    const response = await fetch(`https://api.prod.whoop.com/developer/v1/activity/workout/${data.id}`, {
+    // V2: Fetch workout by UUID
+    const response = await fetch(`${WHOOP_API_BASE}/activity/workout/${data.id}`, {
       headers: { 'Authorization': `Bearer ${accessToken}` },
     });
 
     if (!response.ok) {
-      console.error(`❌ [webhook-whoop] Failed to fetch workout ${data.id}`);
+      console.error(`❌ [webhook-whoop] Failed to fetch workout ${data.id}: ${response.status}`);
       return;
     }
 
@@ -232,7 +266,7 @@ async function processWorkout(supabase: any, userId: string, accessToken: string
     const score = workout.score;
     const date = workout.start?.split('T')[0] || new Date().toISOString().split('T')[0];
 
-    // Insert/update workout record
+    // Insert/update workout record - V2 ID is UUID string
     await supabase.from('workouts').upsert({
       user_id: userId,
       external_id: workout.id.toString(),
@@ -240,7 +274,7 @@ async function processWorkout(supabase: any, userId: string, accessToken: string
       workout_type: getSportName(workout.sport_id),
       start_time: workout.start,
       end_time: workout.end,
-      duration_minutes: score?.kilojoule ? null : null, // Calculate if needed
+      duration_minutes: score?.kilojoule ? null : null,
       calories: score?.kilojoule ? Math.round(score.kilojoule / 4.184) : null,
       strain: score?.strain,
       average_heart_rate: score?.average_heart_rate,
@@ -277,16 +311,18 @@ async function processWorkout(supabase: any, userId: string, accessToken: string
   }
 }
 
-async function processCycle(supabase: any, userId: string, accessToken: string, data: any) {
+// V2: Cycle - ID is now UUID string
+async function processCycleV2(supabase: any, userId: string, accessToken: string, data: any) {
   if (!data?.id) return;
 
   try {
-    const response = await fetch(`https://api.prod.whoop.com/developer/v1/cycle/${data.id}`, {
+    // V2: Fetch cycle by UUID
+    const response = await fetch(`${WHOOP_API_BASE}/cycle/${data.id}`, {
       headers: { 'Authorization': `Bearer ${accessToken}` },
     });
 
     if (!response.ok) {
-      console.error(`❌ [webhook-whoop] Failed to fetch cycle ${data.id}`);
+      console.error(`❌ [webhook-whoop] Failed to fetch cycle ${data.id}: ${response.status}`);
       return;
     }
 
@@ -309,6 +345,7 @@ async function processCycle(supabase: any, userId: string, accessToken: string, 
       metrics.push({ name: 'Max Heart Rate', value: score.max_heart_rate, unit: 'bpm', category: 'activity' });
     }
 
+    // V2: cycle.id is UUID string
     for (const m of metrics) {
       await upsertMetric(supabase, userId, m.name, m.value, m.unit, m.category, date, cycle.id);
     }
@@ -352,93 +389,93 @@ function getSportName(sportId: number): string {
   const sports: Record<string, string> = {
     '-1': 'Activity',
     '0': 'Running',
-    1: 'Cycling',
-    16: 'Baseball',
-    17: 'Basketball',
-    18: 'Rowing',
-    19: 'Fencing',
-    20: 'Field Hockey',
-    21: 'Football',
-    22: 'Golf',
-    24: 'Ice Hockey',
-    25: 'Lacrosse',
-    27: 'Rugby',
-    28: 'Sailing',
-    29: 'Skiing',
-    30: 'Soccer',
-    31: 'Softball',
-    32: 'Squash',
-    33: 'Swimming',
-    34: 'Tennis',
-    35: 'Track & Field',
-    36: 'Volleyball',
-    37: 'Water Polo',
-    38: 'Wrestling',
-    39: 'Boxing',
-    42: 'Dance',
-    43: 'Pilates',
-    44: 'Yoga',
-    45: 'Weightlifting',
-    47: 'CrossFit',
-    48: 'Functional Fitness',
-    49: 'Duathlon',
-    51: 'Gymnastics',
-    52: 'Hiking/Rucking',
-    53: 'Horseback Riding',
-    55: 'Kayaking',
-    56: 'Martial Arts',
-    57: 'Mountain Biking',
-    59: 'Powerlifting',
-    60: 'Rock Climbing',
-    61: 'Paddleboarding',
-    62: 'Triathlon',
-    63: 'Walking',
-    64: 'Surfing',
-    65: 'Elliptical',
-    66: 'Stairmaster',
-    70: 'Meditation',
-    71: 'Other',
-    73: 'Diving',
-    74: 'Operations - Loss',
-    75: 'Operations - Tactical',
-    76: 'Operations - Medical',
-    77: 'Operations - Flying',
-    82: 'Ultimate',
-    83: 'Climber',
-    84: 'Jumping Rope',
-    85: 'Australian Football',
-    86: 'Skateboarding',
-    87: 'Coaching',
-    88: 'Ice Bath',
-    89: 'Commuting',
-    90: 'Gaming',
-    91: 'Snowboarding',
-    92: 'Motocross',
-    93: 'Caddying',
-    94: 'Obstacle Course Racing',
-    95: 'Motor Racing',
-    96: 'HIIT',
-    97: 'Spin',
-    98: 'Jiu Jitsu',
-    99: 'Manual Labor',
-    100: 'Cricket',
-    101: 'Pickleball',
-    102: 'Inline Skating',
-    103: 'Box Fitness',
-    104: 'Spikeball',
-    105: 'Wheelchair Pushing',
-    106: 'Paddle Tennis',
-    107: 'Barre',
-    108: 'Stage Performance',
-    109: 'High Stress Work',
-    110: 'Parkour',
-    111: 'Gaelic Football',
-    112: 'Hurling/Camogie',
-    113: 'Circus Arts',
-    116: 'Massage Therapy',
-    121: 'Netball',
-    126: 'Assault Bike',
-    260: 'Stretching',
+    '1': 'Cycling',
+    '16': 'Baseball',
+    '17': 'Basketball',
+    '18': 'Rowing',
+    '19': 'Fencing',
+    '20': 'Field Hockey',
+    '21': 'Football',
+    '22': 'Golf',
+    '24': 'Ice Hockey',
+    '25': 'Lacrosse',
+    '27': 'Rugby',
+    '28': 'Sailing',
+    '29': 'Skiing',
+    '30': 'Soccer',
+    '31': 'Softball',
+    '32': 'Squash',
+    '33': 'Swimming',
+    '34': 'Tennis',
+    '35': 'Track & Field',
+    '36': 'Volleyball',
+    '37': 'Water Polo',
+    '38': 'Wrestling',
+    '39': 'Boxing',
+    '42': 'Dance',
+    '43': 'Pilates',
+    '44': 'Yoga',
+    '45': 'Weightlifting',
+    '47': 'CrossFit',
+    '48': 'Functional Fitness',
+    '49': 'Duathlon',
+    '51': 'Gymnastics',
+    '52': 'Hiking/Rucking',
+    '53': 'Horseback Riding',
+    '55': 'Kayaking',
+    '56': 'Martial Arts',
+    '57': 'Mountain Biking',
+    '59': 'Powerlifting',
+    '60': 'Rock Climbing',
+    '61': 'Paddleboarding',
+    '62': 'Triathlon',
+    '63': 'Walking',
+    '64': 'Surfing',
+    '65': 'Elliptical',
+    '66': 'Stairmaster',
+    '70': 'Meditation',
+    '71': 'Other',
+    '73': 'Diving',
+    '74': 'Operations - Loss',
+    '75': 'Operations - Tactical',
+    '76': 'Operations - Medical',
+    '77': 'Operations - Flying',
+    '82': 'Ultimate',
+    '83': 'Climber',
+    '84': 'Jumping Rope',
+    '85': 'Australian Football',
+    '86': 'Skateboarding',
+    '87': 'Coaching',
+    '88': 'Ice Bath',
+    '89': 'Commuting',
+    '90': 'Gaming',
+    '91': 'Snowboarding',
+    '92': 'Motocross',
+    '93': 'Caddying',
+    '94': 'Obstacle Course Racing',
+    '95': 'Motor Racing',
+    '96': 'HIIT',
+    '97': 'Spin',
+    '98': 'Jiu Jitsu',
+    '99': 'Manual Labor',
+    '100': 'Cricket',
+    '101': 'Pickleball',
+    '102': 'Inline Skating',
+    '103': 'Box Fitness',
+    '104': 'Spikeball',
+    '105': 'Wheelchair Pushing',
+    '106': 'Paddle Tennis',
+    '107': 'Barre',
+    '108': 'Stage Performance',
+    '109': 'High Stress Work',
+    '110': 'Parkour',
+    '111': 'Gaelic Football',
+    '112': 'Hurling/Camogie',
+    '113': 'Circus Arts',
+    '116': 'Massage Therapy',
+    '121': 'Netball',
+    '126': 'Assault Bike',
+    '260': 'Stretching',
   };
-  return sports[sportId.toString()] || 'Activity';
+  return sports[sportId?.toString()] || 'Activity';
 }
