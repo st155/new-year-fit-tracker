@@ -24,6 +24,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SmartView, AllHabitsView } from '@/features/habits/components/layouts';
 import { SocialView } from '@/features/habits/components/layouts/SocialView';
+import { HabitsDashboardV4 } from '@/features/habits/components/dashboard';
 import { Button } from '@/components/ui/button';
 import { Plus, ArrowLeft, Trophy, Zap, BarChart3 } from 'lucide-react';
 import { FAB } from '@/components/ui/fab';
@@ -214,8 +215,11 @@ export default function HabitsV3() {
         )}
 
         {/* Tabs */}
-        <Tabs defaultValue="all" className="space-y-6">
+        <Tabs defaultValue="bento" className="space-y-6">
           <TabsList className="flex w-full overflow-x-auto scrollbar-hide gap-1 p-1">
+            <TabsTrigger value="bento" className="flex-shrink-0 text-xs sm:text-sm px-3 py-1.5 whitespace-nowrap">
+              🧩 Виджеты
+            </TabsTrigger>
             <TabsTrigger value="all" className="flex-shrink-0 text-xs sm:text-sm px-3 py-1.5 whitespace-nowrap">
               📊 Все
             </TabsTrigger>
@@ -238,6 +242,15 @@ export default function HabitsV3() {
               📊 Данные
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="bento">
+            <HabitsDashboardV4
+              habits={habits}
+              userId={user?.id}
+              onHabitComplete={handleHabitComplete}
+              isCompleting={isCompleting}
+            />
+          </TabsContent>
 
           <TabsContent value="all">
             <AllHabitsView
