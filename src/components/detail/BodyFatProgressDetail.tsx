@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { format, subDays, addDays, isToday, isSameDay } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { QuickMeasurementDialog } from '@/components/goals/QuickMeasurementDialog';
+import { QuickMeasurementDialog } from '@/features/goals/components';
 import { formatForDB } from '@/lib/datetime-utils';
 interface BodyFatData {
   date: string;

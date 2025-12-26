@@ -12,7 +12,7 @@ import { CalendarIcon, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { cn, formatTimeDisplay, isTimeUnit } from '@/lib/utils';
-import { ChallengeGoal } from '@/hooks/useChallengeGoals';
+import { ChallengeGoal } from '@/features/goals/types';
 
 interface QuickAddMeasurementDialogProps {
   goal: ChallengeGoal;

@@ -12,5 +12,5 @@ export * from "./hooks";
 // Utils
 export * from "./utils/goalCalculations";
 
-// Components (will be added in next phase)
-// export * from "./components";
+// Components
+export * from "./components";

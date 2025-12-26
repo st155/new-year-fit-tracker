@@ -1,29 +1,33 @@
 import { useState, useEffect } from "react";
 import { Target, Trophy, Plus, RefreshCw, Search, Filter } from "lucide-react";
 import { FAB } from '@/components/ui/fab';
-import { QuickMeasurementDialog } from "@/components/goals/QuickMeasurementDialog";
 import { useAuth } from "@/hooks/useAuth";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { motion } from "framer-motion";
 import { staggerContainer, staggerItem } from "@/lib/animations";
-import { useChallengeGoals } from "@/hooks/useChallengeGoals";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyStateV3 } from "@/components/ui/empty-state-v3";
-import { EnhancedGoalCard } from "@/components/goals/EnhancedGoalCard";
-import { GoalCreateDialog } from "@/components/goals/GoalCreateDialog";
-import { FirstMeasurementDialog } from "@/components/goals/FirstMeasurementDialog";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+
+// New imports from features/goals
+import { useChallengeGoalsQuery } from "@/features/goals/hooks";
+import { 
+  EnhancedGoalCard, 
+  GoalCreateDialog, 
+  FirstMeasurementDialog,
+  QuickMeasurementDialog 
+} from "@/features/goals/components";
 
 type FilterType = 'all' | 'personal' | 'challenges';
 
 export default function Goals() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { data: goals, isLoading, refetch } = useChallengeGoals(user?.id);
+  const { data: goals, isLoading, refetch } = useChallengeGoalsQuery(user?.id);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [showFirstMeasurement, setShowFirstMeasurement] = useState(false);
   const [goalsNeedingBaseline, setGoalsNeedingBaseline] = useState<any[]>([]);

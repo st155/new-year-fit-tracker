@@ -1,4 +1,4 @@
-import { useChallengeGoals } from "@/hooks/useChallengeGoals";
+import { useChallengeGoalsQuery as useChallengeGoals } from "@/features/goals/hooks";
 import { useAuth } from "@/hooks/useAuth";
 import { useDifficultyLevel } from "@/hooks/useDifficultyLevel";
 import { ChallengeGoalCard } from "@/components/progress/ChallengeGoalCard";

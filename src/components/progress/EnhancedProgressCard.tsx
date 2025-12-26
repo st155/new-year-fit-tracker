@@ -4,7 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { LineChart, Line, ResponsiveContainer, Tooltip, YAxis } from "recharts";
 import { TrendingUp, TrendingDown, Target, Dumbbell, Heart, Activity, Scale, Flame, Zap, Plus } from "lucide-react";
-import { ChallengeGoal } from "@/hooks/useChallengeGoals";
+import { ChallengeGoal } from "@/features/goals/types";
 import { cn, formatTimeDisplay, isTimeUnit } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
 import { ru } from "date-fns/locale";

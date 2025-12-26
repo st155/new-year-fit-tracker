@@ -8,8 +8,7 @@ import { Target, Trophy, Timer, Zap, Edit2, Activity } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { GoalCreateDialog } from "@/components/goals/GoalCreateDialog";
-import { GoalEditDialog } from "@/components/goals/GoalEditDialog";
+import { GoalCreateDialog, GoalEditDialog } from "@/features/goals/components";
 
 interface Goal {
   id: string;
