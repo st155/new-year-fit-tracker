@@ -15,6 +15,15 @@ export interface Elite10DailyData {
   nutrition_status: 'Fasting' | 'Surplus' | 'Deficit' | 'Maintenance';
 }
 
+export interface HistoricalDayData {
+  date: string; // YYYY-MM-DD format
+  sleep_quality: number; // 0-100
+  recovery_score: number; // 0-100
+  workout_type: string;
+  workout_intensity: 'Low' | 'Medium' | 'High' | 'Extreme';
+  nutrition_status?: 'Fasting' | 'Surplus' | 'Deficit' | 'Maintenance';
+}
+
 export interface PushResult {
   success: boolean;
   cognitive_load_capacity?: number;
@@ -22,6 +31,13 @@ export interface PushResult {
   physical_energy_tag?: string;
   ai_strategy?: string;
   error?: string;
+}
+
+export interface HistoricalSyncResult {
+  success: number;
+  failed: number;
+  errors: string[];
+  results: Array<{ date: string; success: boolean; error?: string }>;
 }
 
 // Echo11 Sync Endpoint
@@ -145,4 +161,81 @@ export function mapDurationToIntensity(durationMinutes: number): 'Low' | 'Medium
   if (durationMinutes < 60) return 'Medium';
   if (durationMinutes < 90) return 'High';
   return 'Extreme';
+}
+
+/**
+ * Sync historical data (multiple days) to Echo11
+ */
+export async function syncHistoricalToEcho11(
+  userId: string,
+  days: HistoricalDayData[],
+  syncSecret: string,
+  onProgress?: (current: number, total: number) => void
+): Promise<HistoricalSyncResult> {
+  const results: HistoricalSyncResult['results'] = [];
+  const errors: string[] = [];
+  let successCount = 0;
+  let failedCount = 0;
+
+  for (let i = 0; i < days.length; i++) {
+    const day = days[i];
+    
+    try {
+      const response = await fetch(ECHO11_SYNC_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Elite10-Secret": syncSecret,
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          date: day.date,
+          sleep_quality: day.sleep_quality,
+          recovery_score: day.recovery_score,
+          workout_type: day.workout_type,
+          workout_intensity: day.workout_intensity,
+          nutrition_status: day.nutrition_status || 'Maintenance',
+        }),
+      });
+
+      if (response.ok) {
+        successCount++;
+        results.push({ date: day.date, success: true });
+      } else {
+        failedCount++;
+        const errorText = await response.text();
+        let errorMessage: string;
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.error || errorJson.message || errorText;
+        } catch {
+          errorMessage = errorText;
+        }
+        errors.push(`${day.date}: ${errorMessage}`);
+        results.push({ date: day.date, success: false, error: errorMessage });
+      }
+    } catch (error) {
+      failedCount++;
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      errors.push(`${day.date}: ${errorMessage}`);
+      results.push({ date: day.date, success: false, error: errorMessage });
+    }
+
+    // Report progress
+    if (onProgress) {
+      onProgress(i + 1, days.length);
+    }
+
+    // Small delay to avoid rate limiting
+    if (i < days.length - 1) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+  }
+
+  return {
+    success: successCount,
+    failed: failedCount,
+    errors,
+    results,
+  };
 }

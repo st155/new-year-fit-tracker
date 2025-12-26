@@ -9,6 +9,7 @@ import { DisciplineRadialChart } from '@/components/progress/DisciplineRadialCha
 import { BaselineComparisonCard } from '@/components/progress/BaselineComparisonCard';
 import { PointsImpactCard } from '@/components/progress/PointsImpactCard';
 import { QuickAddMeasurementDialog } from '@/components/progress/QuickAddMeasurementDialog';
+import { Echo11SyncCard } from '@/components/progress/Echo11SyncCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Trophy, BarChart3, Users } from 'lucide-react';
@@ -212,6 +213,22 @@ export default function Progress() {
 
             {/* Collapsible Analytics */}
             <Accordion type="multiple" className="space-y-2">
+              {/* Echo11 Sync */}
+              <AccordionItem value="echo11-sync" className="border rounded-lg px-4">
+                <AccordionTrigger className="text-sm hover:no-underline py-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">🤖</span>
+                    <span>Echo11 AI Sync</span>
+                    <span className="text-xs text-muted-foreground">
+                      (отправить данные в Echo11)
+                    </span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pt-2 pb-4">
+                  <Echo11SyncCard />
+                </AccordionContent>
+              </AccordionItem>
+
               <AccordionItem value="analytics" className="border rounded-lg px-4">
                 <AccordionTrigger className="text-sm hover:no-underline py-3">
                   <div className="flex items-center gap-2">
