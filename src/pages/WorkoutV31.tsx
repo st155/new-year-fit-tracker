@@ -26,6 +26,7 @@ import { CreateWellnessPlanDialog } from "@/components/wellness/CreateWellnessPl
 import { QuickActivityLogger } from "@/components/wellness/QuickActivityLogger";
 import { WellnessWeekView } from "@/components/wellness/WellnessWeekView";
 import { TodayActivitiesCard } from "@/components/wellness/TodayActivitiesCard";
+import { TodayCompletedWorkoutsCard } from "@/components/wellness/TodayCompletedWorkoutsCard";
 import { WeeklyGapAnalysis } from "@/components/wellness/WeeklyGapAnalysis";
 import { GenerateTravelWorkoutDialog } from "@/components/wellness/GenerateTravelWorkoutDialog";
 
@@ -219,6 +220,9 @@ export default function WorkoutV31() {
                   {/* Today's scheduled activities */}
                   <TodayActivitiesCard />
 
+                  {/* Completed workouts today */}
+                  <TodayCompletedWorkoutsCard />
+
                   {/* Quick activity logger */}
                   <QuickActivityLogger />
                 </div>
@@ -310,6 +314,7 @@ export default function WorkoutV31() {
               </Card>
 
               <TodayActivitiesCard />
+              <TodayCompletedWorkoutsCard />
               <QuickActivityLogger />
               <WellnessWeekView compact />
             </TabsContent>
