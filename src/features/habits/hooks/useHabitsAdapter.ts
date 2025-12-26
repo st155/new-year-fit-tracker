@@ -8,7 +8,7 @@
  */
 
 import { useMemo } from 'react';
-import { useHabitsQuery } from './useHabitsQuery';
+import { useHabitsQuery } from './queries';
 
 interface LegacyHabitsResult {
   habits: any[];

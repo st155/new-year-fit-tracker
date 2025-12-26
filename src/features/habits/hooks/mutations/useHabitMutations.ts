@@ -11,14 +11,14 @@ import {
   type CreateHabitDTO,
   type HabitDTO,
 } from '@/services/habits.service';
-import { habitQueryKeys } from './useHabitsQuery';
+import { habitKeys } from '../keys';
 
 export function useHabitMutations() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const invalidateHabits = () => {
-    queryClient.invalidateQueries({ queryKey: habitQueryKeys.all });
+    queryClient.invalidateQueries({ queryKey: habitKeys.all });
   };
 
   // Create habit mutation

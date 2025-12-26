@@ -1,6 +1,5 @@
 /**
  * Hook for completing habits with XP, streaks, and achievements
- * Extracted from useHabitCompletion.tsx
  */
 
 import { useState } from 'react';
@@ -19,7 +18,7 @@ import {
 } from '@/lib/gamification/achievement-checker';
 import { AchievementUnlockedToast } from '@/features/habits/components/gamification/AchievementUnlockedToast';
 import { isNewMilestone } from '@/lib/gamification/streak-rewards';
-import { habitQueryKeys } from './useHabitsQuery';
+import { habitKeys } from '../keys';
 
 export interface HabitCompletionResult {
   success: boolean;
@@ -290,7 +289,7 @@ export function useCompleteHabit() {
           description,
         });
 
-        queryClient.invalidateQueries({ queryKey: habitQueryKeys.all });
+        queryClient.invalidateQueries({ queryKey: habitKeys.all });
       }
     },
     onError: (error) => {

@@ -67,8 +67,7 @@ export { useChallengesQuery as useChallenges, useChallengeDetailQuery as useChal
 // useChallengeGoals moved to @/features/goals/hooks
 export { useChallengeGoalsQuery as useChallengeGoals } from '@/features/goals/hooks';
 export { useHabitsQuery as useHabits } from '@/features/habits';
-export { useHabitAttempts } from './useHabitAttempts';
-export { useHabitMeasurements } from './useHabitMeasurements';
+export { useHabitAttemptsQuery as useHabitAttempts, useHabitMeasurementsQuery as useHabitMeasurements, useHabitProgressQuery as useHabitProgress, useDeleteHabit, useCompleteHabit as useHabitCompletion } from '@/features/habits/hooks';
 export { useActivityFeed } from './useActivityFeed';
 export { useActivityReactions } from './useActivityReactions';
 export { useBodyComposition as useBodyCompositionOld } from './useBodyComposition';

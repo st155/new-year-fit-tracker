@@ -1,4 +1,4 @@
-import { useHabitGrouping } from '@/hooks/useHabitGrouping';
+import { useHabitGrouping } from '@/features/habits/hooks';
 import { TimeSection } from './TimeSection';
 import { OverviewStats } from './OverviewStats';
 import { Alert, AlertDescription } from '@/components/ui/alert';
