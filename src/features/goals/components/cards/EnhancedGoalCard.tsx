@@ -5,8 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Plus, TrendingUp, TrendingDown, Target, Dumbbell, Heart, 
-  Activity, Scale, Flame, Zap, Pencil, Lock, Trash2, Repeat 
+  Plus, TrendingUp, TrendingDown, Pencil, Lock, Trash2, Repeat 
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { QuickMeasurementDialog } from "../dialogs/QuickMeasurementDialog";
@@ -29,50 +28,12 @@ import {
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from "recharts";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
-
-const goalTypeIcons: Record<string, any> = {
-  strength: Dumbbell,
-  cardio: Heart,
-  endurance: Activity,
-  body_composition: Scale,
-  health: Heart,
-};
-
-const goalThemes: Record<string, { color: string; gradient: string }> = {
-  strength: { color: 'hsl(var(--chart-1))', gradient: 'from-chart-1/20 to-chart-1/5' },
-  cardio: { color: 'hsl(var(--chart-2))', gradient: 'from-chart-2/20 to-chart-2/5' },
-  endurance: { color: 'hsl(var(--chart-3))', gradient: 'from-chart-3/20 to-chart-3/5' },
-  body_composition: { color: 'hsl(var(--chart-4))', gradient: 'from-chart-4/20 to-chart-4/5' },
-  health: { color: 'hsl(var(--chart-5))', gradient: 'from-chart-5/20 to-chart-5/5' },
-};
-
-const getGoalIcon = (goalName: string, goalType: string) => {
-  const nameLower = goalName.toLowerCase();
-  
-  if (nameLower.includes('подтяг') || nameLower.includes('pullup')) return TrendingUp;
-  if (nameLower.includes('жим') || nameLower.includes('bench')) return Dumbbell;
-  if (nameLower.includes('вес') || nameLower.includes('weight')) return Scale;
-  if (nameLower.includes('жир') || nameLower.includes('fat')) return Flame;
-  if (nameLower.includes('vo2') || nameLower.includes('во2')) return Zap;
-  if (nameLower.includes('бег') || nameLower.includes('run')) return Activity;
-  if (nameLower.includes('планк') || nameLower.includes('plank')) return Activity;
-  
-  return goalTypeIcons[goalType] || Target;
-};
-
-const getSourceBadge = (source?: 'inbody' | 'withings' | 'manual' | 'garmin' | 'whoop') => {
-  if (!source) return null;
-  
-  const badges: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' }> = {
-    inbody: { label: 'InBody', variant: 'default' },
-    withings: { label: 'Withings', variant: 'secondary' },
-    manual: { label: 'Ручное', variant: 'outline' },
-    garmin: { label: 'Garmin', variant: 'secondary' },
-    whoop: { label: 'WHOOP', variant: 'secondary' },
-  };
-  
-  return badges[source];
-};
+import { 
+  goalThemes, 
+  getGoalIcon, 
+  getSourceBadge,
+  isLowerBetterGoal 
+} from "@/lib/goalUtils";
 
 interface EnhancedGoalCardProps {
   goal: ChallengeGoal;

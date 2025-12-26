@@ -1,7 +1,6 @@
 // Goals Components - Public API
 
 // Cards
-export { GoalCard } from "./cards/GoalCard";
 export { EnhancedGoalCard } from "./cards/EnhancedGoalCard";
 
 // Dialogs
