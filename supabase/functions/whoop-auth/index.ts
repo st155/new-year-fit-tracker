@@ -277,11 +277,14 @@ serve(async (req) => {
     if (action === 'status') {
       const { data: tokenData } = await serviceClient
         .from('whoop_tokens')
-        .select('is_active, expires_at, whoop_user_id, last_sync_at, created_at')
+        .select('is_active, expires_at, whoop_user_id, last_sync_at, last_sync_date, created_at')
         .eq('user_id', user.id)
         .single();
 
       const isExpired = tokenData?.expires_at && new Date(tokenData.expires_at) < new Date();
+
+      // Use last_sync_at if available, otherwise fall back to last_sync_date
+      const lastSyncAt = tokenData?.last_sync_at || tokenData?.last_sync_date;
 
       return new Response(
         JSON.stringify({
@@ -289,7 +292,7 @@ serve(async (req) => {
           whoop_user_id: tokenData?.whoop_user_id,
           expires_at: tokenData?.expires_at,
           is_expired: isExpired,
-          last_sync_at: tokenData?.last_sync_at,
+          last_sync_at: lastSyncAt,
           connected_at: tokenData?.created_at,
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
