@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,7 +16,9 @@ import {
   Unlink,
   Zap,
   ExternalLink,
-  Clock
+  Clock,
+  Download,
+  History
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -36,6 +39,19 @@ interface WhoopStatus {
   connected_at?: string;
 }
 
+interface SyncResult {
+  metrics_count: number;
+  workouts_count: number;
+  days_synced: number;
+}
+
+const SYNC_PERIODS = [
+  { value: '7', label: '7 дней', description: 'Неделя' },
+  { value: '14', label: '14 дней', description: '2 недели' },
+  { value: '28', label: '28 дней', description: '4 недели' },
+  { value: '90', label: '90 дней', description: '3 месяца' },
+];
+
 export function WhoopDirectIntegration() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -44,7 +60,10 @@ export function WhoopDirectIntegration() {
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [syncingHistory, setSyncingHistory] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
+  const [selectedPeriod, setSelectedPeriod] = useState('28');
+  const [lastSyncResult, setLastSyncResult] = useState<SyncResult | null>(null);
 
   // Check if user is whitelisted
   const isWhitelisted = user && WHOOP_DIRECT_USERS.includes(user.id);
@@ -103,18 +122,30 @@ export function WhoopDirectIntegration() {
     }
   };
 
-  const sync = async () => {
-    setSyncing(true);
+  const sync = async (daysBack: number = 7, isHistorySync: boolean = false) => {
+    if (isHistorySync) {
+      setSyncingHistory(true);
+    } else {
+      setSyncing(true);
+    }
+    
     try {
       const { data, error } = await supabase.functions.invoke('whoop-sync', {
-        body: { days_back: 7 },
+        body: { days_back: daysBack },
       });
 
       if (error) throw error;
 
+      const result: SyncResult = {
+        metrics_count: data.metrics_count || 0,
+        workouts_count: data.workouts_count || 0,
+        days_synced: daysBack,
+      };
+      setLastSyncResult(result);
+
       toast({
         title: 'Синхронизация завершена',
-        description: `Получено ${data.metrics_count} метрик и ${data.workouts_count} тренировок`,
+        description: `${result.metrics_count} метрик, ${result.workouts_count} тренировок за ${daysBack} дней`,
       });
 
       // Refresh queries
@@ -131,6 +162,7 @@ export function WhoopDirectIntegration() {
       });
     } finally {
       setSyncing(false);
+      setSyncingHistory(false);
     }
   };
 
@@ -152,6 +184,7 @@ export function WhoopDirectIntegration() {
       });
 
       setStatus({ connected: false });
+      setLastSyncResult(null);
       queryClient.invalidateQueries({ queryKey: ['unified-metrics'] });
     } catch (error: any) {
       console.error('Disconnect failed:', error);
@@ -247,10 +280,20 @@ export function WhoopDirectIntegration() {
               )}
             </div>
 
+            {lastSyncResult && (
+              <Alert className="bg-green-500/10 border-green-500/30">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                <AlertDescription className="text-green-600 dark:text-green-400">
+                  Загружено: {lastSyncResult.metrics_count} метрик, {lastSyncResult.workouts_count} тренировок за {lastSyncResult.days_synced} дней
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Quick sync buttons */}
             <div className="flex gap-2">
               <Button 
-                onClick={sync} 
-                disabled={syncing || status.is_expired}
+                onClick={() => sync(7)} 
+                disabled={syncing || syncingHistory || status.is_expired}
                 className="flex-1"
               >
                 {syncing ? (
@@ -261,14 +304,14 @@ export function WhoopDirectIntegration() {
                 ) : (
                   <>
                     <RefreshCw className="h-4 w-4 mr-2" />
-                    Синхронизировать
+                    Синхронизировать (7 дней)
                   </>
                 )}
               </Button>
               <Button 
                 onClick={disconnect} 
                 variant="outline" 
-                disabled={disconnecting}
+                disabled={disconnecting || syncing || syncingHistory}
               >
                 {disconnecting ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -276,6 +319,54 @@ export function WhoopDirectIntegration() {
                   <Unlink className="h-4 w-4" />
                 )}
               </Button>
+            </div>
+
+            {/* History load section */}
+            <div className="border-t border-border pt-4 space-y-3">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <History className="h-4 w-4" />
+                Загрузить историю
+              </div>
+              
+              <div className="flex gap-2">
+                <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SYNC_PERIODS.map((period) => (
+                      <SelectItem key={period.value} value={period.value}>
+                        {period.label} ({period.description})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                <Button 
+                  onClick={() => sync(parseInt(selectedPeriod), true)} 
+                  variant="secondary"
+                  disabled={syncing || syncingHistory || status.is_expired}
+                  className="flex-1"
+                >
+                  {syncingHistory ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Загрузка данных...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-4 w-4 mr-2" />
+                      Загрузить данные
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {parseInt(selectedPeriod) >= 90 && (
+                <p className="text-xs text-muted-foreground">
+                  ⚠️ Загрузка за 3 месяца может занять несколько минут
+                </p>
+              )}
             </div>
           </>
         ) : (
