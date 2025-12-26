@@ -9,16 +9,110 @@ const corsHeaders = {
 // V2 API base URL
 const WHOOP_API_BASE = 'https://api.prod.whoop.com/developer/v2';
 
-serve(async (req) => {
-  console.log(`🔔 [webhook-whoop] Incoming request: ${req.method} from ${req.headers.get('user-agent') || 'unknown'}`);
+// Structured logging helper
+function log(level: 'info' | 'warn' | 'error' | 'debug', message: string, metadata?: Record<string, any>) {
+  const logEntry = {
+    timestamp: new Date().toISOString(),
+    level,
+    function: 'webhook-whoop',
+    message,
+    ...metadata,
+  };
   
+  if (level === 'error') {
+    console.error(JSON.stringify(logEntry));
+  } else if (level === 'warn') {
+    console.warn(JSON.stringify(logEntry));
+  } else {
+    console.log(JSON.stringify(logEntry));
+  }
+}
+
+serve(async (req) => {
+  const requestId = crypto.randomUUID();
+  const startTime = Date.now();
+  const url = new URL(req.url);
+  
+  log('info', 'Incoming request', {
+    requestId,
+    method: req.method,
+    path: url.pathname,
+    userAgent: req.headers.get('user-agent') || 'unknown',
+    contentType: req.headers.get('content-type'),
+  });
+  
+  // CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const startTime = Date.now();
+  // Health check endpoint
+  if (req.method === 'GET' || url.pathname.includes('/health')) {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
+
+    // Check database connectivity
+    const { count: tokenCount, error: tokenError } = await supabase
+      .from('whoop_tokens')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_active', true);
+
+    // Get recent webhook stats
+    const { data: recentWebhooks, error: webhookError } = await supabase
+      .from('webhook_logs')
+      .select('event_type, processed_at')
+      .eq('provider', 'WHOOP')
+      .order('processed_at', { ascending: false })
+      .limit(10);
+
+    const lastWebhookTime = recentWebhooks?.[0]?.processed_at;
+    const webhookTypes = [...new Set(recentWebhooks?.map(w => w.event_type) || [])];
+
+    const healthStatus = {
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      requestId,
+      service: 'webhook-whoop',
+      version: '2.0',
+      checks: {
+        database: tokenError ? 'error' : 'ok',
+        activeUsers: tokenCount || 0,
+        lastWebhook: lastWebhookTime || 'never',
+        recentEventTypes: webhookTypes,
+      },
+      endpoints: {
+        webhook: 'POST /',
+        health: 'GET /',
+      },
+      expectedEvents: [
+        'recovery.updated',
+        'sleep.updated',
+        'workout.updated',
+        'cycle.updated',
+      ],
+    };
+
+    log('info', 'Health check completed', { requestId, healthStatus: healthStatus.checks });
+
+    return new Response(JSON.stringify(healthStatus, null, 2), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  // Webhook processing (POST only)
+  if (req.method !== 'POST') {
+    log('warn', 'Invalid method', { requestId, method: req.method });
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
   let eventType = 'unknown';
   let rawBody = '';
+  let whoopUserId = '';
 
   try {
     const supabase = createClient(
@@ -26,28 +120,54 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // Read raw body for debugging
+    // Read and parse body
     rawBody = await req.text();
-    console.log(`📦 [webhook-whoop] Raw body length: ${rawBody.length}`);
-    console.log(`📦 [webhook-whoop] Raw body preview: ${rawBody.substring(0, 500)}`);
     
+    log('debug', 'Raw body received', {
+      requestId,
+      bodyLength: rawBody.length,
+      bodyPreview: rawBody.substring(0, 200),
+    });
+    
+    if (!rawBody || rawBody.trim() === '') {
+      log('warn', 'Empty body received', { requestId });
+      return new Response(JSON.stringify({ ok: true, message: 'Empty body' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const payload = JSON.parse(rawBody);
     eventType = payload.type || payload.event_type || 'unknown';
-    const whoopUserId = payload.user_id?.toString();
+    whoopUserId = payload.user_id?.toString() || '';
 
-    console.log(`📥 [webhook-whoop] Parsed event: ${eventType}, user_id: ${whoopUserId}, keys: ${Object.keys(payload).join(', ')}`);
+    log('info', 'Webhook parsed', {
+      requestId,
+      eventType,
+      whoopUserId,
+      payloadKeys: Object.keys(payload),
+      dataKeys: payload.data ? Object.keys(payload.data) : [],
+      dataId: payload.data?.id,
+    });
 
-    // Log webhook for debugging
-    await supabase.from('webhook_logs').insert({
+    // Log webhook to database with detailed info
+    const { error: logError } = await supabase.from('webhook_logs').insert({
       provider: 'WHOOP',
       event_type: eventType,
       payload,
       processed_at: new Date().toISOString(),
     });
 
+    if (logError) {
+      log('error', 'Failed to log webhook', { requestId, error: logError.message });
+    }
+
     if (!whoopUserId) {
-      console.warn('⚠️ [webhook-whoop] No user_id in payload');
-      return new Response(JSON.stringify({ ok: true }), {
+      log('warn', 'No user_id in payload', {
+        requestId,
+        eventType,
+        payload: JSON.stringify(payload).substring(0, 500),
+      });
+      return new Response(JSON.stringify({ ok: true, message: 'No user_id' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -55,14 +175,20 @@ serve(async (req) => {
     // Find our user by whoop_user_id
     const { data: tokenData, error: tokenError } = await supabase
       .from('whoop_tokens')
-      .select('user_id, access_token')
+      .select('user_id, access_token, whoop_user_id')
       .eq('whoop_user_id', whoopUserId)
       .eq('is_active', true)
       .single();
 
     if (tokenError || !tokenData) {
-      console.warn(`⚠️ [webhook-whoop] No active token for Whoop user ${whoopUserId}`);
-      return new Response(JSON.stringify({ ok: true }), {
+      log('warn', 'No active token found', {
+        requestId,
+        whoopUserId,
+        error: tokenError?.message,
+      });
+      
+      // Still acknowledge webhook to prevent retries
+      return new Response(JSON.stringify({ ok: true, message: 'User not found' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -70,78 +196,130 @@ serve(async (req) => {
     const userId = tokenData.user_id;
     const accessToken = tokenData.access_token;
 
-    console.log(`👤 [webhook-whoop] Matched to user ${userId}`);
-
-    // V2 webhook data structure - ID is now UUID string
-    const dataId = payload.data?.id?.toString();
+    log('info', 'User matched', {
+      requestId,
+      userId,
+      whoopUserId,
+      eventType,
+    });
 
     // Process based on event type
+    let metricsCount = 0;
+    
     switch (eventType) {
       case 'recovery.updated':
-        // V2: recovery.updated now contains sleep_id in data.id
-        await processRecoveryV2(supabase, userId, accessToken, payload.data);
+        metricsCount = await processRecoveryV2(supabase, userId, accessToken, payload.data, requestId);
         break;
       case 'sleep.updated':
-        await processSleepV2(supabase, userId, accessToken, payload.data);
+        metricsCount = await processSleepV2(supabase, userId, accessToken, payload.data, requestId);
         break;
       case 'workout.updated':
-        await processWorkoutV2(supabase, userId, accessToken, payload.data);
+        metricsCount = await processWorkoutV2(supabase, userId, accessToken, payload.data, requestId);
         break;
       case 'cycle.updated':
-        await processCycleV2(supabase, userId, accessToken, payload.data);
+        metricsCount = await processCycleV2(supabase, userId, accessToken, payload.data, requestId);
         break;
       default:
-        console.log(`ℹ️ [webhook-whoop] Unhandled event type: ${eventType}`);
+        log('info', 'Unhandled event type', { requestId, eventType });
     }
 
     const duration = Date.now() - startTime;
-    console.log(`✅ [webhook-whoop] Processed ${eventType} in ${duration}ms`);
+    
+    log('info', 'Webhook processed successfully', {
+      requestId,
+      eventType,
+      userId,
+      whoopUserId,
+      metricsCount,
+      durationMs: duration,
+    });
 
-    return new Response(JSON.stringify({ ok: true }), {
+    return new Response(JSON.stringify({ 
+      ok: true, 
+      processed: true,
+      eventType,
+      metricsCount,
+      durationMs: duration,
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error: any) {
-    console.error(`❌ [webhook-whoop] Error:`, error);
+    const duration = Date.now() - startTime;
+    
+    log('error', 'Webhook processing failed', {
+      requestId,
+      eventType,
+      whoopUserId,
+      error: error.message,
+      stack: error.stack,
+      durationMs: duration,
+      rawBodyPreview: rawBody.substring(0, 500),
+    });
+
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        requestId,
+        eventType,
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
 
-// V2: Recovery - fetched via collection endpoint since V2 doesn't have direct recovery/{id}
-async function processRecoveryV2(supabase: any, userId: string, accessToken: string, data: any) {
-  if (!data?.id) return;
+// V2: Recovery processing
+async function processRecoveryV2(
+  supabase: any, 
+  userId: string, 
+  accessToken: string, 
+  data: any,
+  requestId: string
+): Promise<number> {
+  if (!data?.id) {
+    log('warn', 'No data.id for recovery', { requestId, data });
+    return 0;
+  }
 
   try {
-    // V2: Fetch recent recovery data - recovery is linked to sleep in V2
-    // The webhook data.id is the sleep_id in V2
-    console.log(`🔄 [webhook-whoop] Processing recovery for sleep_id: ${data.id}`);
+    log('debug', 'Processing recovery', { requestId, dataId: data.id });
     
-    // Fetch recovery collection for today
+    // Fetch recent recovery data
     const today = new Date().toISOString().split('T')[0];
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
     
-    const response = await fetch(
-      `${WHOOP_API_BASE}/recovery?start=${yesterday}T00:00:00.000Z&end=${today}T23:59:59.999Z`,
-      { headers: { 'Authorization': `Bearer ${accessToken}` } }
-    );
+    const url = `${WHOOP_API_BASE}/recovery?start=${yesterday}T00:00:00.000Z&end=${today}T23:59:59.999Z`;
+    log('debug', 'Fetching recovery collection', { requestId, url });
+    
+    const response = await fetch(url, { 
+      headers: { 'Authorization': `Bearer ${accessToken}` } 
+    });
 
     if (!response.ok) {
-      console.error(`❌ [webhook-whoop] Failed to fetch recovery collection: ${response.status}`);
-      return;
+      const errorText = await response.text();
+      log('error', 'Failed to fetch recovery collection', { 
+        requestId, 
+        status: response.status, 
+        error: errorText 
+      });
+      return 0;
     }
 
     const recoveryData = await response.json();
     const records = recoveryData.records || [];
     
-    // Find the most recent recovery
+    log('debug', 'Recovery collection fetched', { 
+      requestId, 
+      recordCount: records.length,
+      targetSleepId: data.id,
+    });
+    
+    // Find the matching recovery or use most recent
     const recovery = records.find((r: any) => r.sleep_id === data.id) || records[0];
     
     if (!recovery) {
-      console.warn(`⚠️ [webhook-whoop] No recovery found for sleep_id: ${data.id}`);
-      return;
+      log('warn', 'No recovery found', { requestId, sleepId: data.id });
+      return 0;
     }
 
     const score = recovery.score;
@@ -165,37 +343,69 @@ async function processRecoveryV2(supabase: any, userId: string, accessToken: str
       metrics.push({ name: 'Skin Temperature', value: score.skin_temp_celsius, unit: '°C', category: 'recovery' });
     }
 
-    // Use sleep_id as external_id in V2
     const externalId = recovery.sleep_id || recovery.cycle_id || data.id;
 
     for (const m of metrics) {
-      await upsertMetric(supabase, userId, m.name, m.value, m.unit, m.category, date, externalId);
+      await upsertMetric(supabase, userId, m.name, m.value, m.unit, m.category, date, externalId, requestId);
     }
 
-    console.log(`✅ [webhook-whoop] Processed recovery: ${metrics.length} metrics`);
-  } catch (error) {
-    console.error(`❌ [webhook-whoop] Error processing recovery:`, error);
+    log('info', 'Recovery processed', { 
+      requestId, 
+      metricsCount: metrics.length,
+      recoveryScore: score?.recovery_score,
+      hrv: score?.hrv_rmssd_milli,
+    });
+    
+    return metrics.length;
+  } catch (error: any) {
+    log('error', 'Error processing recovery', { requestId, error: error.message, stack: error.stack });
+    return 0;
   }
 }
 
-// V2: Sleep - ID is now UUID string
-async function processSleepV2(supabase: any, userId: string, accessToken: string, data: any) {
-  if (!data?.id) return;
+// V2: Sleep processing
+async function processSleepV2(
+  supabase: any, 
+  userId: string, 
+  accessToken: string, 
+  data: any,
+  requestId: string
+): Promise<number> {
+  if (!data?.id) {
+    log('warn', 'No data.id for sleep', { requestId, data });
+    return 0;
+  }
 
   try {
-    // V2: Fetch sleep by UUID
-    const response = await fetch(`${WHOOP_API_BASE}/activity/sleep/${data.id}`, {
+    const url = `${WHOOP_API_BASE}/activity/sleep/${data.id}`;
+    log('debug', 'Fetching sleep', { requestId, url });
+    
+    const response = await fetch(url, {
       headers: { 'Authorization': `Bearer ${accessToken}` },
     });
 
     if (!response.ok) {
-      console.error(`❌ [webhook-whoop] Failed to fetch sleep ${data.id}: ${response.status}`);
-      return;
+      const errorText = await response.text();
+      log('error', 'Failed to fetch sleep', { 
+        requestId, 
+        sleepId: data.id, 
+        status: response.status,
+        error: errorText,
+      });
+      return 0;
     }
 
     const sleep = await response.json();
     const score = sleep.score;
     const date = sleep.start?.split('T')[0] || new Date().toISOString().split('T')[0];
+
+    log('debug', 'Sleep data fetched', { 
+      requestId, 
+      sleepId: sleep.id,
+      start: sleep.start,
+      end: sleep.end,
+      scoreState: sleep.score_state,
+    });
 
     const metrics = [];
 
@@ -236,42 +446,74 @@ async function processSleepV2(supabase: any, userId: string, accessToken: string
       }
     }
 
-    // V2: sleep.id is UUID string
     for (const m of metrics) {
-      await upsertMetric(supabase, userId, m.name, m.value, m.unit, m.category, date, sleep.id);
+      await upsertMetric(supabase, userId, m.name, m.value, m.unit, m.category, date, sleep.id, requestId);
     }
 
-    console.log(`✅ [webhook-whoop] Processed sleep: ${metrics.length} metrics`);
-  } catch (error) {
-    console.error(`❌ [webhook-whoop] Error processing sleep:`, error);
+    log('info', 'Sleep processed', { 
+      requestId, 
+      metricsCount: metrics.length,
+      sleepPerformance: score?.sleep_performance_percentage,
+    });
+    
+    return metrics.length;
+  } catch (error: any) {
+    log('error', 'Error processing sleep', { requestId, error: error.message, stack: error.stack });
+    return 0;
   }
 }
 
-// V2: Workout - ID is now UUID string
-async function processWorkoutV2(supabase: any, userId: string, accessToken: string, data: any) {
-  if (!data?.id) return;
+// V2: Workout processing
+async function processWorkoutV2(
+  supabase: any, 
+  userId: string, 
+  accessToken: string, 
+  data: any,
+  requestId: string
+): Promise<number> {
+  if (!data?.id) {
+    log('warn', 'No data.id for workout', { requestId, data });
+    return 0;
+  }
 
   try {
-    // V2: Fetch workout by UUID
-    const response = await fetch(`${WHOOP_API_BASE}/activity/workout/${data.id}`, {
+    const url = `${WHOOP_API_BASE}/activity/workout/${data.id}`;
+    log('debug', 'Fetching workout', { requestId, url });
+    
+    const response = await fetch(url, {
       headers: { 'Authorization': `Bearer ${accessToken}` },
     });
 
     if (!response.ok) {
-      console.error(`❌ [webhook-whoop] Failed to fetch workout ${data.id}: ${response.status}`);
-      return;
+      const errorText = await response.text();
+      log('error', 'Failed to fetch workout', { 
+        requestId, 
+        workoutId: data.id, 
+        status: response.status,
+        error: errorText,
+      });
+      return 0;
     }
 
     const workout = await response.json();
     const score = workout.score;
     const date = workout.start?.split('T')[0] || new Date().toISOString().split('T')[0];
 
-    // Insert/update workout record - V2 ID is UUID string
-    await supabase.from('workouts').upsert({
+    log('debug', 'Workout data fetched', { 
+      requestId, 
+      workoutId: workout.id,
+      sportId: workout.sport_id,
+      sportName: workout.sport_name || getSportName(workout.sport_id),
+      start: workout.start,
+      end: workout.end,
+    });
+
+    // Insert/update workout record
+    const { error: workoutError } = await supabase.from('workouts').upsert({
       user_id: userId,
       external_id: workout.id.toString(),
       source: 'whoop',
-      workout_type: getSportName(workout.sport_id),
+      workout_type: workout.sport_name || getSportName(workout.sport_id),
       start_time: workout.start,
       end_time: workout.end,
       duration_minutes: score?.kilojoule ? null : null,
@@ -281,6 +523,10 @@ async function processWorkoutV2(supabase: any, userId: string, accessToken: stri
       max_heart_rate: score?.max_heart_rate,
       distance_meters: score?.distance_meter,
     }, { onConflict: 'user_id,external_id' });
+
+    if (workoutError) {
+      log('error', 'Failed to upsert workout', { requestId, error: workoutError.message });
+    }
 
     // Also save as metrics
     const metrics = [];
@@ -302,33 +548,66 @@ async function processWorkoutV2(supabase: any, userId: string, accessToken: stri
     }
 
     for (const m of metrics) {
-      await upsertMetric(supabase, userId, m.name, m.value, m.unit, m.category, date, workout.id);
+      await upsertMetric(supabase, userId, m.name, m.value, m.unit, m.category, date, workout.id, requestId);
     }
 
-    console.log(`✅ [webhook-whoop] Processed workout: ${workout.id}`);
-  } catch (error) {
-    console.error(`❌ [webhook-whoop] Error processing workout:`, error);
+    log('info', 'Workout processed', { 
+      requestId, 
+      workoutId: workout.id,
+      sportName: workout.sport_name || getSportName(workout.sport_id),
+      strain: score?.strain,
+      metricsCount: metrics.length,
+    });
+    
+    return metrics.length;
+  } catch (error: any) {
+    log('error', 'Error processing workout', { requestId, error: error.message, stack: error.stack });
+    return 0;
   }
 }
 
-// V2: Cycle - ID is now UUID string
-async function processCycleV2(supabase: any, userId: string, accessToken: string, data: any) {
-  if (!data?.id) return;
+// V2: Cycle processing
+async function processCycleV2(
+  supabase: any, 
+  userId: string, 
+  accessToken: string, 
+  data: any,
+  requestId: string
+): Promise<number> {
+  if (!data?.id) {
+    log('warn', 'No data.id for cycle', { requestId, data });
+    return 0;
+  }
 
   try {
-    // V2: Fetch cycle by UUID
-    const response = await fetch(`${WHOOP_API_BASE}/cycle/${data.id}`, {
+    const url = `${WHOOP_API_BASE}/cycle/${data.id}`;
+    log('debug', 'Fetching cycle', { requestId, url });
+    
+    const response = await fetch(url, {
       headers: { 'Authorization': `Bearer ${accessToken}` },
     });
 
     if (!response.ok) {
-      console.error(`❌ [webhook-whoop] Failed to fetch cycle ${data.id}: ${response.status}`);
-      return;
+      const errorText = await response.text();
+      log('error', 'Failed to fetch cycle', { 
+        requestId, 
+        cycleId: data.id, 
+        status: response.status,
+        error: errorText,
+      });
+      return 0;
     }
 
     const cycle = await response.json();
     const score = cycle.score;
     const date = cycle.start?.split('T')[0] || new Date().toISOString().split('T')[0];
+
+    log('debug', 'Cycle data fetched', { 
+      requestId, 
+      cycleId: cycle.id,
+      start: cycle.start,
+      end: cycle.end,
+    });
 
     const metrics = [];
 
@@ -345,14 +624,21 @@ async function processCycleV2(supabase: any, userId: string, accessToken: string
       metrics.push({ name: 'Max Heart Rate', value: score.max_heart_rate, unit: 'bpm', category: 'activity' });
     }
 
-    // V2: cycle.id is UUID string
     for (const m of metrics) {
-      await upsertMetric(supabase, userId, m.name, m.value, m.unit, m.category, date, cycle.id);
+      await upsertMetric(supabase, userId, m.name, m.value, m.unit, m.category, date, cycle.id, requestId);
     }
 
-    console.log(`✅ [webhook-whoop] Processed cycle: ${metrics.length} metrics`);
-  } catch (error) {
-    console.error(`❌ [webhook-whoop] Error processing cycle:`, error);
+    log('info', 'Cycle processed', { 
+      requestId, 
+      cycleId: cycle.id,
+      strain: score?.strain,
+      metricsCount: metrics.length,
+    });
+    
+    return metrics.length;
+  } catch (error: any) {
+    log('error', 'Error processing cycle', { requestId, error: error.message, stack: error.stack });
+    return 0;
   }
 }
 
@@ -364,10 +650,11 @@ async function upsertMetric(
   unit: string,
   category: string,
   date: string,
-  externalId: string
+  externalId: string,
+  requestId: string
 ) {
   try {
-    await supabase.from('unified_metrics').upsert({
+    const { error } = await supabase.from('unified_metrics').upsert({
       user_id: userId,
       metric_name: metricName,
       value,
@@ -380,8 +667,12 @@ async function upsertMetric(
       priority: 1,
       confidence_score: 95,
     }, { onConflict: 'user_id,metric_name,measurement_date,source' });
-  } catch (error) {
-    console.error(`❌ [webhook-whoop] Failed to upsert metric ${metricName}:`, error);
+    
+    if (error) {
+      log('error', 'Failed to upsert metric', { requestId, metricName, error: error.message });
+    }
+  } catch (error: any) {
+    log('error', 'Exception upserting metric', { requestId, metricName, error: error.message });
   }
 }
 
