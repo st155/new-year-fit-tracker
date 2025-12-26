@@ -340,15 +340,20 @@ async function syncUserData(serviceClient: any, tokenData: WhoopToken, daysBack:
       const endTime = workout.end;
       if (!startTime) continue;
 
+      // Calculate calories (convert from kJ to kcal) and round to integer
+      const caloriesKcal = workout.score?.kilojoule 
+        ? Math.round(workout.score.kilojoule / 4.184) 
+        : null;
+
       workoutsToInsert.push({
         user_id: userId,
         sport_name: workout.sport_id?.toString() || 'Unknown',
         start_time: startTime,
         end_time: endTime,
         strain: workout.score?.strain,
-        average_heart_rate: workout.score?.average_heart_rate,
-        max_heart_rate: workout.score?.max_heart_rate,
-        calories: workout.score?.kilojoule ? Math.round(workout.score.kilojoule / 4.184) : null,
+        average_heart_rate: workout.score?.average_heart_rate ? Math.round(workout.score.average_heart_rate) : null,
+        max_heart_rate: workout.score?.max_heart_rate ? Math.round(workout.score.max_heart_rate) : null,
+        calories: caloriesKcal,
         source: 'whoop',
         external_id: `whoop_workout_${workout.id}`,
       });
