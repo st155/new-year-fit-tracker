@@ -1,12 +1,11 @@
 /**
  * Hook for undoing habit completions
- * Extracted from useHabitCompletion.tsx
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { habitQueryKeys } from './useHabitsQuery';
+import { habitKeys } from '../keys';
 
 export function useUndoCompletion() {
   const queryClient = useQueryClient();
@@ -47,7 +46,7 @@ export function useUndoCompletion() {
           title: 'Отменено',
           description: 'Выполнение привычки отменено',
         });
-        queryClient.invalidateQueries({ queryKey: habitQueryKeys.all });
+        queryClient.invalidateQueries({ queryKey: habitKeys.all });
       }
     },
     onError: (error) => {

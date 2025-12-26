@@ -5,7 +5,7 @@ import { HabitMiniChart } from '../charts/HabitMiniChart';
 import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { CheckCircle2, RotateCcw, Filter, ArrowUpDown } from 'lucide-react';
-import { useHabitAttempts } from '@/hooks/useHabitAttempts';
+import { useHabitAttemptsQuery } from '@/features/habits/hooks';
 import { useAuth } from '@/hooks/useAuth';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -225,7 +225,7 @@ interface HabitCompactCardProps {
 }
 
 function HabitCompactCard({ habit, index, onComplete, onClick, userId }: HabitCompactCardProps) {
-  const { resetHabit, isResetting } = useHabitAttempts(habit.id, userId);
+  const { resetHabit, isResetting } = useHabitAttemptsQuery(habit.id, userId);
   const [elapsedTime, setElapsedTime] = useState<{ days: number; hours: number; minutes: number } | null>(null);
   
   const isDurationCounter = habit.habit_type === 'duration_counter';

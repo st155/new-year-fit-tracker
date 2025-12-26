@@ -4,8 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { TrendingUp, Zap, Target, Calendar, Lightbulb, Trophy } from 'lucide-react';
-import { useHabitAnalytics } from '@/hooks/useHabitAnalytics';
-import { useHabitInsights } from '@/hooks/useHabitInsights';
+import { useHabitAnalytics, useHabitInsights } from '@/features/habits/hooks';
 import { 
   calculateAnalytics, 
   calculateCompletionTrend, 

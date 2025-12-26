@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { ChevronDown, ChevronUp, Clock, Play } from 'lucide-react';
 import { HabitCardV3 } from '../core/HabitCardV3';
 import { formatDuration } from '@/lib/habit-utils-v3';
-import { HabitGroup } from '@/hooks/useHabitGrouping';
+import { type HabitGroup } from '@/features/habits/hooks';
 
 interface TimeSectionProps {
   group: HabitGroup;

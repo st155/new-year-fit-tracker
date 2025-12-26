@@ -1,3 +1,7 @@
+/**
+ * Manages state and interactions for HabitCardV3
+ */
+
 import { useState, useCallback, useEffect } from 'react';
 import { CardState, calculateCardState } from '@/lib/habit-utils-v3';
 
@@ -11,9 +15,6 @@ export interface HabitCardStateReturn {
   setAnimating: (value: boolean) => void;
 }
 
-/**
- * Manages state and interactions for HabitCardV3
- */
 export function useHabitCardState(habit: any): HabitCardStateReturn {
   const [state, setState] = useState<CardState>('not_started');
   const [expanded, setExpanded] = useState(false);

@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { getTimeBasedTheme, getStateStyles, formatDuration, getDifficultyBadge, TimeOfDay } from '@/lib/habit-utils-v3';
 import { haptics } from '@/lib/haptics';
-import { useHabitCardState } from '@/hooks/useHabitCardState';
+import { useHabitCardState } from '@/features/habits/hooks';
 import { HabitCelebration } from '../legacy/HabitCelebration';
 import { HabitOptionsMenu } from '../legacy/HabitOptionsMenu';
 import { Flame, Calendar, Target, Clock, Coins, ChevronDown, ChevronUp, Check } from 'lucide-react';
@@ -20,7 +20,7 @@ import { calculateElapsedTime, formatElapsedTime, getMilestoneProgress, calculat
 import { FastingInlineWidget, DurationCounterInlineWidget, NumericCounterInlineWidget, DailyMeasurementInlineWidget } from '../widgets';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { useHabitAttempts } from '@/hooks/useHabitAttempts';
+import { useHabitAttemptsQuery } from '@/features/habits/hooks';
 import { 
   AlertDialog, 
   AlertDialogAction, 

@@ -1,3 +1,7 @@
+/**
+ * Groups habits by time of day with stats
+ */
+
 import { useMemo } from 'react';
 import { TimeOfDay } from '@/lib/habit-utils-v3';
 
@@ -20,9 +24,6 @@ export interface GroupedHabits {
   atRisk: any[];
 }
 
-/**
- * Groups habits by time of day with stats
- */
 export function useHabitGrouping(habits: any[]): GroupedHabits {
   return useMemo(() => {
     const groups: GroupedHabits = {
@@ -81,19 +82,25 @@ export function useHabitGrouping(habits: any[]): GroupedHabits {
       if (group) {
         group.habits.push(habit);
         group.totalCount++;
-        
-        if (habit.completed_today) {
+
+        // Support both camelCase and snake_case for backwards compatibility
+        const completedToday = habit.completedToday ?? habit.completed_today;
+        if (completedToday) {
           group.completedCount++;
         }
-        
-        if (habit.estimated_duration_minutes) {
-          group.estimatedDuration += habit.estimated_duration_minutes;
+
+        const duration = habit.estimatedDurationMinutes ?? habit.estimated_duration_minutes;
+        if (duration) {
+          group.estimatedDuration += duration;
         }
       }
 
       // Check if at risk (low completion rate)
       const completionRate = habit.stats?.completion_rate || 0;
-      if (completionRate < 50 && habit.stats?.total_completions > 5 && !habit.completed_today) {
+      const totalCompletions = habit.stats?.total_completions || 0;
+      const completedToday = habit.completedToday ?? habit.completed_today;
+      
+      if (completionRate < 50 && totalCompletions > 5 && !completedToday) {
         groups.atRisk.push(habit);
       }
     });

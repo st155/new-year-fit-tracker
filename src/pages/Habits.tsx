@@ -2,11 +2,9 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useHabitsQuery } from '@/features/habits';
-import { useHabitCompletion } from '@/hooks/useHabitCompletion';
-import { useHabitInsights } from '@/hooks/useHabitInsights';
+import { useCompleteHabit, useHabitInsights, useDeleteHabit } from '@/features/habits/hooks';
 import { useUserLevel } from '@/hooks/useUserLevel';
 import { useSocialNotifications } from '@/hooks/useSocialNotifications';
-import { useDeleteHabit } from '@/hooks/useDeleteHabit';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -60,7 +58,7 @@ export default function HabitsV3() {
   const navigate = useNavigate();
   const { data: habitsData = [], isLoading, error, refetch } = useHabitsQuery({ enabled: !!user?.id });
   const habits = Array.isArray(habitsData) ? habitsData : [];
-  const { completeHabit, isCompleting } = useHabitCompletion();
+  const { completeHabit, isCompleting } = useCompleteHabit();
   const { levelInfo } = useUserLevel();
   const { deleteHabit, archiveHabit, isDeleting, isArchiving } = useDeleteHabit();
   

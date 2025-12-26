@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useHabitsQuery } from '@/features/habits';
-import { useHabitProgress } from '@/hooks/useHabitProgress';
+import { useHabitProgressQuery } from '@/features/habits/hooks';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -34,7 +34,7 @@ export default function HabitDetail() {
     return { start, end };
   }, []);
 
-  const { data: progressData, isLoading: isProgressLoading } = useHabitProgress(
+  const { data: progressData, isLoading: isProgressLoading } = useHabitProgressQuery(
     id || '',
     dateRange
   );
