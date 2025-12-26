@@ -50,6 +50,7 @@ const TrainingPlanDetail = lazy(() => import("@/pages/TrainingPlanDetail"));
 const TrainerAnalyticsDashboard = lazy(() => import("@/pages/TrainerAnalyticsDashboard"));
 const Admin = lazy(() => import("@/pages/Admin"));
 const TerraCallback = lazy(() => import("@/pages/TerraCallback"));
+const WhoopCallback = lazy(() => import("@/pages/WhoopCallback"));
 const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
 const Health = lazy(() => import("@/pages/Health"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
@@ -397,6 +398,7 @@ export const AppRoutes = () => {
         
         {/* OAuth callbacks */}
         <Route path="/terra-callback" element={<TerraCallback />} />
+        <Route path="/whoop-callback" element={<WhoopCallback />} />
         <Route path="/terra-widget-loader" element={<TerraWidgetLoader />} />
         
         {/* Static pages */}

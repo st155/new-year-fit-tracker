@@ -32,6 +32,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { chartColors, sleepColors } from '@/lib/chart-colors';
 import { rechartsTooltipStyle, rechartsTooltipLabelStyle } from '@/lib/chart-styles';
 import { TerraIntegration } from '@/components/integrations/TerraIntegration';
+import { WhoopDirectIntegration } from '@/components/integrations/WhoopDirectIntegration';
 import { TerraHealthMonitor } from '@/components/integrations/TerraHealthMonitor';
 import { IntegrationsDataDisplay } from '@/components/integrations/IntegrationsDataDisplay';
 import { WithingsConnectionWidget } from '@/components/withings/WithingsConnectionWidget';
@@ -767,7 +768,8 @@ export default function FitnessData() {
         </TabsContent>
 
         {/* Tab 2: Connections */}
-        <TabsContent value="connections" className="mt-6">
+        <TabsContent value="connections" className="mt-6 space-y-6">
+          <WhoopDirectIntegration />
           <TerraIntegration key={`connections-${refreshKey}`} />
         </TabsContent>
 
