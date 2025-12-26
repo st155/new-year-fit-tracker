@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
+import { useIsMobile } from '@/hooks/primitive';
 import { 
   Loader2, 
   CheckCircle, 
@@ -49,6 +50,7 @@ export function WhoopDirectIntegration() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const [status, setStatus] = useState<WhoopStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(false);
@@ -177,14 +179,29 @@ export function WhoopDirectIntegration() {
         throw new Error('No auth URL received');
       }
 
-      console.log('✅ [WhoopConnect] Got auth URL, opening popup...');
+      console.log('✅ [WhoopConnect] Got auth URL, isMobile:', isMobile);
       console.log('📋 [WhoopConnect] Debug info:', data._debug);
 
-      // Store return URL for when popup completes
+      // Store return URL for when OAuth completes
       sessionStorage.setItem('whoop_return_url', window.location.pathname + window.location.search + window.location.hash);
       sessionStorage.setItem('whoop_connecting', 'true');
 
-      // Open popup window
+      // Mobile: use redirect in same window (popups are blocked)
+      if (isMobile) {
+        console.log('📱 [WhoopConnect] Mobile detected, using redirect flow...');
+        toast({
+          title: 'Переход на страницу авторизации',
+          description: 'Завершите авторизацию Whoop и вернитесь автоматически',
+        });
+        
+        // Small delay to show toast
+        setTimeout(() => {
+          window.location.assign(data.url);
+        }, 500);
+        return;
+      }
+
+      // Desktop: Open popup window
       const popupWidth = 600;
       const popupHeight = 700;
       const left = window.screenX + (window.outerWidth - popupWidth) / 2;
