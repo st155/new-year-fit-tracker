@@ -23,8 +23,19 @@ export function ActivityRings({ steps, strain, calories, className }: ActivityRi
   ];
 
   const size = 120;
-  const strokeWidth = 10;
-  const gap = 14;
+  const strokeWidth = 8; // Thinner rings
+  const gap = 12;
+
+  // Format value with goal context
+  const formatValue = (ring: RingData) => {
+    if (ring.label === 'Steps') {
+      return `${Math.round(ring.value).toLocaleString()} / ${ring.max.toLocaleString()}`;
+    } else if (ring.label === 'Cal') {
+      return `${Math.round(ring.value)} / ${ring.max}`;
+    } else {
+      return `${ring.value.toFixed(1)} / ${ring.max}`;
+    }
+  };
 
   return (
     <div className={cn("flex items-center justify-center gap-6", className)}>
@@ -62,7 +73,7 @@ export function ActivityRings({ steps, strain, calories, className }: ActivityRi
                   animate={{ strokeDashoffset: circumference - progress }}
                   transition={{ duration: 1, ease: "easeOut", delay: 0.2 + index * 0.15 }}
                   transform={`rotate(-90 ${size / 2} ${size / 2})`}
-                  style={{ filter: `drop-shadow(0 0 6px ${ring.color})` }}
+                  style={{ filter: `drop-shadow(0 0 3px ${ring.color})` }}
                 />
               </g>
             );
@@ -70,7 +81,7 @@ export function ActivityRings({ steps, strain, calories, className }: ActivityRi
         </svg>
       </div>
       
-      {/* Legend */}
+      {/* Legend with goal context */}
       <div className="flex flex-col gap-2">
         {rings.map((ring) => (
           <div key={ring.label} className="flex items-center gap-2">
@@ -79,12 +90,8 @@ export function ActivityRings({ steps, strain, calories, className }: ActivityRi
               style={{ backgroundColor: ring.color }}
             />
             <span className="text-xs text-muted-foreground">{ring.label}</span>
-            <span className="text-sm font-medium text-foreground">
-              {ring.label === 'Steps' 
-                ? ring.value.toLocaleString() 
-                : ring.label === 'Strain'
-                ? ring.value.toFixed(1)
-                : ring.value}
+            <span className="text-xs font-medium text-foreground">
+              {formatValue(ring)}
             </span>
           </div>
         ))}

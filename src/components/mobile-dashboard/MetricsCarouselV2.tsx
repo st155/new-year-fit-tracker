@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Moon, Activity, Scale } from 'lucide-react';
+import { Moon, Activity, Scale, TrendingDown, TrendingUp, Minus } from 'lucide-react';
 import { useTodayMetrics } from '@/hooks/metrics/useTodayMetrics';
 import { useUserWeeklySleep } from '@/hooks/useUserWeeklySleep';
 import { useUserWeeklySteps } from '@/hooks/useUserWeeklySteps';
+import { useAggregatedBodyMetrics } from '@/hooks/useAggregatedBodyMetrics';
 import { useAuth } from '@/hooks/useAuth';
 import { ActivityRings } from './ActivityRings';
 import { cn } from '@/lib/utils';
@@ -31,17 +32,32 @@ export function MetricsCarouselV2() {
   const { metrics } = useTodayMetrics(user?.id);
   const { data: weeklySleep = [] } = useUserWeeklySleep(user?.id);
   const { data: weeklySteps = [] } = useUserWeeklySteps(user?.id);
+  const { weight, bodyFat } = useAggregatedBodyMetrics();
   
   const totalSlides = 3;
-  
-  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % totalSlides);
-  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
 
   const sleepValues = weeklySleep.map(d => d.value);
-  const stepsValues = weeklySteps.map(d => d.value);
   
   // Calculate sleep efficiency approximation
   const sleepEfficiency = metrics?.sleepHours ? Math.min(95, Math.round(85 + (metrics.sleepHours - 6) * 2)) : 0;
+
+  // Weight data with trend
+  const currentWeight = weight?.value || 0;
+  const weightTrend = weight?.trend || 0;
+  const weightSparkline = weight?.sparklineData?.map(d => d.value) || [];
+  
+  // Determine trend color and icon
+  const getTrendDisplay = () => {
+    if (!weightTrend || Math.abs(weightTrend) < 0.1) {
+      return { icon: <Minus className="h-3 w-3" />, color: 'text-muted-foreground', text: 'stable' };
+    }
+    if (weightTrend < 0) {
+      return { icon: <TrendingDown className="h-3 w-3" />, color: 'text-success', text: `${weightTrend.toFixed(1)} kg` };
+    }
+    return { icon: <TrendingUp className="h-3 w-3" />, color: 'text-warning', text: `+${weightTrend.toFixed(1)} kg` };
+  };
+  
+  const trendDisplay = getTrendDisplay();
 
   const slides = [
     // Sleep Slide
@@ -83,7 +99,7 @@ export function MetricsCarouselV2() {
       />
     </Slide>,
     
-    // Body Slide
+    // Body Slide with real data and trend
     <Slide key="body">
       <div className="flex items-center gap-2 mb-3">
         <Scale className="h-4 w-4 text-warning" />
@@ -92,17 +108,32 @@ export function MetricsCarouselV2() {
       <div className="flex items-end justify-between">
         <div>
           <p className="text-4xl font-bold text-foreground">
-            78.5
+            {currentWeight ? currentWeight.toFixed(1) : '--'}
             <span className="text-lg font-normal text-muted-foreground ml-1">kg</span>
           </p>
-          <p className="text-sm text-success mt-1">
-            ↓ 0.3 kg this week
-          </p>
+          {currentWeight > 0 && (
+            <div className={cn("flex items-center gap-1 text-sm mt-1", trendDisplay.color)}>
+              {trendDisplay.icon}
+              <span>{trendDisplay.text}</span>
+              <span className="text-muted-foreground ml-1">this week</span>
+            </div>
+          )}
+          {bodyFat?.value && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Body fat: <span className="text-foreground">{bodyFat.value.toFixed(1)}%</span>
+            </p>
+          )}
         </div>
         <div className="w-24 h-12">
-          <Sparklines data={[79.2, 79.0, 78.8, 78.7, 78.6, 78.5, 78.5]} width={100} height={40} margin={2}>
-            <SparklinesLine color="hsl(38, 92%, 50%)" style={{ strokeWidth: 2 }} />
-          </Sparklines>
+          {weightSparkline.length > 0 ? (
+            <Sparklines data={weightSparkline} width={100} height={40} margin={2}>
+              <SparklinesLine color="hsl(38, 92%, 50%)" style={{ strokeWidth: 2 }} />
+            </Sparklines>
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
+              No trend
+            </div>
+          )}
         </div>
       </div>
     </Slide>,
