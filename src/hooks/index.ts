@@ -62,7 +62,7 @@ export { useProfileQuery, profileQueryKeys } from './core/useProfileQuery';
 export { useLeaderboardQuery, leaderboardQueryKeys } from './core/useLeaderboardQuery';
 export { useWidgetsQuery, widgetKeys } from './useWidgetsQuery';
 export { useWidgetsBatch } from './useWidgetsBatch';
-export { useGoals } from './useGoals';
+// useGoals moved to @/features/goals/hooks as useGoalsQuery
 export { useChallenges } from './useChallenges';
 export { useChallengeDetail } from './useChallengeDetail';
 // useChallengeGoals moved to @/features/goals/hooks

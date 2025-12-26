@@ -6,7 +6,7 @@
 import { useMemo } from 'react';
 import { useAuth } from './useAuth';
 import { useDataQuality } from './useDataQuality';
-import { useGoals } from './useGoals';
+import { useGoalsQuery } from '@/features/goals/hooks';
 import { useHabits } from './useHabits';
 import { useTodayMetrics } from './metrics/useTodayMetrics';
 import { useMetrics } from './composite/data/useMetrics';
@@ -50,7 +50,7 @@ export function useSmartInsights(options: UseSmartInsightsOptions = {}) {
 
   // Fetch data from all sources
   const qualityData = useDataQuality();
-  const { personalGoals, challengeGoals } = useGoals(user?.id);
+  const { personalGoals, challengeGoals, isLoading: goalsLoading } = useGoalsQuery(user?.id);
   const { habits } = useHabits(user?.id);
   const { metrics: todayMetrics, loading: todayLoading } = useTodayMetrics(user?.id);
   const { 
@@ -69,7 +69,7 @@ export function useSmartInsights(options: UseSmartInsightsOptions = {}) {
   const { data: trainerData } = useTrainerMessages(user?.id);
   const { preferences } = useInsightPersonalization();
 
-  const isLoading = todayLoading || metricsLoading || qualityData.isLoading;
+  const isLoading = todayLoading || metricsLoading || qualityData.isLoading || goalsLoading;
 
   // Generate insights
   const insights = useMemo(() => {
