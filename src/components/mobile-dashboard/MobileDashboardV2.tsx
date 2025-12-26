@@ -25,8 +25,8 @@ export function MobileDashboardV2() {
         <ActionStrip />
       </div>
       
-      {/* Metrics Carousel */}
-      <div className="mt-4">
+      {/* Metrics Carousel - closer to hero */}
+      <div className="mt-2">
         <MetricsCarouselV2 />
       </div>
       
