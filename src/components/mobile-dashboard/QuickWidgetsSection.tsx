@@ -1,6 +1,7 @@
 import { IntegrationsCard } from './IntegrationsCard';
 import { ActiveProtocolsMiniCard } from './ActiveProtocolsMiniCard';
 import { LeaderboardMiniCard } from './LeaderboardMiniCard';
+import { WeeklyGoalsMiniCard } from './WeeklyGoalsMiniCard';
 
 export function QuickWidgetsSection() {
   return (
@@ -10,6 +11,7 @@ export function QuickWidgetsSection() {
         <IntegrationsCard />
         <ActiveProtocolsMiniCard />
         <LeaderboardMiniCard />
+        <WeeklyGoalsMiniCard />
       </div>
     </div>
   );

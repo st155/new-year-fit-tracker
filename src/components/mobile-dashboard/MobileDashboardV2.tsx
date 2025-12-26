@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { CockpitHeader } from './CockpitHeader';
 import { ReadinessDial } from './ReadinessDial';
 import { ActionStrip } from './ActionStrip';
+import { AIInsightsStrip } from './AIInsightsStrip';
 import { MetricsCarouselV2 } from './MetricsCarouselV2';
 import { HabitsBentoCompact } from './HabitsBentoCompact';
 import { QuickWidgetsSection } from './QuickWidgetsSection';
@@ -27,8 +28,13 @@ export function MobileDashboardV2() {
         <ActionStrip />
       </div>
       
+      {/* AI Insights Strip */}
+      <div className="mt-3">
+        <AIInsightsStrip />
+      </div>
+      
       {/* Metrics Carousel - closer to hero */}
-      <div className="mt-2">
+      <div className="mt-3">
         <MetricsCarouselV2 />
       </div>
       
