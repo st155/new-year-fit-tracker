@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useWidgetsQuery } from '@/hooks/useWidgetsQuery';
 import { useSmartWidgetsData } from '@/hooks/metrics';
-import { useHabits } from '@/hooks/useHabits';
+import { useHabitsQuery } from '@/features/habits';
 import { useChallengesQuery } from '@/features/challenges';
 import { useMetricsRealtime } from '@/hooks/composite/realtime/useRealtimeSubscription';
 
@@ -36,7 +36,7 @@ export function useDashboard(options?: DashboardOptions) {
     widgetConfigs ?? []
   );
   
-  const { habits: habitsData, isLoading: habitsLoading } = useHabits(user?.id);
+  const { data: habitsData, isLoading: habitsLoading } = useHabitsQuery({ enabled: !!user?.id });
   const { challenges, isLoading: challengesLoading } = useChallengesQuery(user?.id);
 
   // ===== Realtime subscriptions =====
@@ -69,7 +69,7 @@ export function useDashboard(options?: DashboardOptions) {
 
   // ===== Stats =====
   const stats = useMemo(() => {
-    const activeHabits = (habitsData ?? []).filter(h => h.is_active).length;
+    const activeHabits = (habitsData ?? []).filter(h => h.isActive).length;
     const activeChallenges = (challenges ?? []).filter(c => c.isParticipant).length;
     
     return {

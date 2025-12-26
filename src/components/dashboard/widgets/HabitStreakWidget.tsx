@@ -1,13 +1,13 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
-import { useHabits } from "@/hooks/useHabits";
+import { useHabitsQuery } from '@/features/habits';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Flame, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export function HabitStreakWidget() {
   const { user } = useAuth();
-  const { habits, isLoading } = useHabits(user?.id);
+  const { data: habits, isLoading } = useHabitsQuery({ enabled: !!user?.id });
   const navigate = useNavigate();
 
   if (isLoading) {
@@ -22,7 +22,7 @@ export function HabitStreakWidget() {
 
   // Calculate streak stats
   const activeStreaks = habits?.filter(h => 
-    (h.habit_type === "duration_counter" || h.habit_type === "daily") && 
+    (h.habitType === "duration_counter" || h.habitType === "daily") && 
     (h as any).current_streak && (h as any).current_streak > 0
   ) || [];
 
@@ -31,7 +31,7 @@ export function HabitStreakWidget() {
     : 0;
 
   const totalStreaks = activeStreaks.length;
-  const completedToday = habits?.filter(h => h.completed_today).length || 0;
+  const completedToday = habits?.filter(h => h.completedToday).length || 0;
   const totalHabits = habits?.length || 0;
 
   return (
@@ -79,7 +79,7 @@ export function HabitStreakWidget() {
                 <div
                   key={habit.id}
                   className={`h-8 flex-1 rounded ${
-                    habit.completed_today
+                    habit.completedToday
                       ? 'bg-orange-500/30 border border-orange-500/50'
                       : 'bg-muted border border-border'
                   }`}

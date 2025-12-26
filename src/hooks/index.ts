@@ -66,7 +66,7 @@ export { useWidgetsBatch } from './useWidgetsBatch';
 export { useChallengesQuery as useChallenges, useChallengeDetailQuery as useChallengeDetail } from '@/features/challenges';
 // useChallengeGoals moved to @/features/goals/hooks
 export { useChallengeGoalsQuery as useChallengeGoals } from '@/features/goals/hooks';
-export { useHabits } from './useHabits';
+export { useHabitsQuery as useHabits } from '@/features/habits';
 export { useHabitAttempts } from './useHabitAttempts';
 export { useHabitMeasurements } from './useHabitMeasurements';
 export { useActivityFeed } from './useActivityFeed';

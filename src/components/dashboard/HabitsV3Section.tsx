@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import { useHabits } from "@/hooks/useHabits";
+import { useHabitsQuery } from '@/features/habits';
 import { useUserLevel } from "@/hooks/useUserLevel";
 import { HabitCardV3 } from "@/features/habits/components/core/HabitCardV3";
 import { LevelProgressBar } from "@/features/habits/components/gamification/LevelProgressBar";
@@ -17,7 +17,7 @@ import { useMemo } from "react";
 export function HabitsV3Section() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { habits, isLoading: habitsLoading, error, refetch } = useHabits(user?.id);
+  const { data: habits, isLoading: habitsLoading, error, refetch } = useHabitsQuery({ enabled: !!user?.id });
   const { levelInfo, isLoading: levelLoading } = useUserLevel();
   const { data: feedEvents = [] } = useHabitFeed();
 
@@ -35,12 +35,12 @@ export function HabitsV3Section() {
     return habits
       .sort((a, b) => {
         // 1. Incomplete habits first
-        if (!a.completed_today && b.completed_today) return -1;
-        if (a.completed_today && !b.completed_today) return 1;
+        if (!a.completedToday && b.completedToday) return -1;
+        if (a.completedToday && !b.completedToday) return 1;
         
         // 2. Duration counters higher (always active)
-        if (a.habit_type === 'duration_counter' && b.habit_type !== 'duration_counter') return -1;
-        if (a.habit_type !== 'duration_counter' && b.habit_type === 'duration_counter') return 1;
+        if (a.habitType === 'duration_counter' && b.habitType !== 'duration_counter') return -1;
+        if (a.habitType !== 'duration_counter' && b.habitType === 'duration_counter') return 1;
         
         // 3. By streak (higher = higher priority)
         const streakA = (a as any).current_streak || (a as any).streak || 0;
@@ -103,10 +103,10 @@ export function HabitsV3Section() {
   }
 
   // Calculate quick stats
-  const completedToday = habits?.filter(h => h.completed_today).length || 0;
+  const completedToday = habits?.filter(h => h.completedToday).length || 0;
   const totalActive = habits?.length || 0;
   const activeStreaks = habits?.filter(h => 
-    (h.habit_type === "duration_counter" || h.habit_type === "daily") && 
+    (h.habitType === "duration_counter" || h.habitType === "daily") && 
     (h as any).current_streak && (h as any).current_streak > 0
   ).length || 0;
 

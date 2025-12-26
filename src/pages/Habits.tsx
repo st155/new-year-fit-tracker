@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { useHabits } from '@/hooks/useHabits';
+import { useHabitsQuery } from '@/features/habits';
 import { useHabitCompletion } from '@/hooks/useHabitCompletion';
 import { useHabitInsights } from '@/hooks/useHabitInsights';
 import { useUserLevel } from '@/hooks/useUserLevel';
@@ -58,7 +58,7 @@ const LoadingSkeleton = () => (
 export default function HabitsV3() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { habits: habitsData = [], isLoading, error, refetch } = useHabits(user?.id || '');
+  const { data: habitsData = [], isLoading, error, refetch } = useHabitsQuery({ enabled: !!user?.id });
   const habits = Array.isArray(habitsData) ? habitsData : [];
   const { completeHabit, isCompleting } = useHabitCompletion();
   const { levelInfo } = useUserLevel();
@@ -274,7 +274,7 @@ export default function HabitsV3() {
           <TabsContent value="focus">
             <Suspense fallback={<LoadingSkeleton />}>
               <FocusMode
-                habits={habits.filter(h => !h.completed_today)}
+                habits={habits.filter(h => !h.completedToday)}
                 onHabitComplete={handleHabitComplete}
                 onExit={() => navigate('/habits-v3')}
               />
@@ -350,12 +350,12 @@ export default function HabitsV3() {
             label: 'Быстрое выполнение',
             icon: Zap,
             onClick: () => {
-              const firstUncompleted = habits.find(h => !h.completed_today);
+              const firstUncompleted = habits.find(h => !h.completedToday);
               if (firstUncompleted) {
                 handleHabitComplete(firstUncompleted.id);
               }
             },
-            badge: habits.filter(h => !h.completed_today).length,
+            badge: habits.filter(h => !h.completedToday).length,
             color: 'text-warning'
           },
           {

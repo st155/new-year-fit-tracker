@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { useHabits } from '@/hooks/useHabits';
+import { useHabitsQuery } from '@/features/habits';
 import { useHabitProgress } from '@/hooks/useHabitProgress';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -21,7 +21,7 @@ export default function HabitDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { habits, isLoading } = useHabits(user?.id);
+  const { data: habits, isLoading } = useHabitsQuery({ enabled: !!user?.id });
   const [isExporting, setIsExporting] = useState(false);
 
   const habit = useMemo(() => {
@@ -70,9 +70,9 @@ export default function HabitDetail() {
   const sentiment = getHabitSentiment(habit);
   const IconComponent = getHabitIcon(habit);
 
-  const stats = habit.stats || {
-    current_streak: 0,
-    total_completions: 0,
+  const stats = {
+    current_streak: habit.currentStreak || 0,
+    total_completions: habit.totalCompletions || 0,
     completion_rate: 0,
   };
 
@@ -121,14 +121,14 @@ export default function HabitDetail() {
   };
 
   const handleExportPDF = async () => {
-    if (!progressData || !habit.stats) return;
+    if (!progressData) return;
     
     setIsExporting(true);
     try {
       await exportHabitToPDF({
         name: habit.name,
         description: habit.description || undefined,
-        stats: habit.stats,
+        stats,
         progressData,
         longestStreak,
       });
@@ -251,7 +251,7 @@ export default function HabitDetail() {
           <HabitProgressChart
             habitId={habit.id}
             habitName={habit.name}
-            habitType={habit.habit_type || 'daily_check'}
+            habitType={habit.habitType || 'daily_check'}
             data={progressData}
           />
         ) : (

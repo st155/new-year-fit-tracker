@@ -4,7 +4,7 @@ import { motion, useInView } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { useSmartInsights } from '@/hooks/useSmartInsights';
 import { useDataQuality } from '@/hooks/useDataQuality';
-import { useHabits } from '@/hooks/useHabits';
+import { useHabitsQuery } from '@/features/habits';
 import { useMetrics } from '@/hooks/composite/data/useMetrics';
 import { useBodyComposition } from '@/hooks/composite/data/useBodyComposition';
 import { SparklesCore } from '@/components/aceternity/sparkles';
@@ -147,7 +147,7 @@ export default function LandingAI() {
   // Fetch all data
   const { insights, isLoading: insightsLoading } = useSmartInsights({ maxInsights: 6 });
   const { averageConfidence, isLoading: qualityLoading } = useDataQuality();
-  const { habits } = useHabits(user?.id);
+  const { data: habits } = useHabitsQuery({ enabled: !!user?.id });
   const { latest: metrics, history: metricsHistory } = useMetrics({
     metricTypes: ['weight'],
     dateRange: {
@@ -204,10 +204,10 @@ export default function LandingAI() {
   const displayConfidence = averageConfidence || 0;
 
   const bestHabit = useMemo(() => {
-    const habitsWithStreaks = habits.filter(h => h.stats?.current_streak && h.stats.current_streak > 0);
-    return habitsWithStreaks.sort((a, b) => (b.stats?.current_streak || 0) - (a.stats?.current_streak || 0))[0] || {
+    const habitsWithStreaks = (habits || []).filter(h => h.currentStreak && h.currentStreak > 0);
+    return habitsWithStreaks.sort((a, b) => (b.currentStreak || 0) - (a.currentStreak || 0))[0] || {
       name: 'Создайте первую привычку',
-      stats: { current_streak: 0 },
+      currentStreak: 0,
     };
   }, [habits]);
 
@@ -364,7 +364,7 @@ export default function LandingAI() {
                 <p className="text-sm text-muted-foreground mb-2">{bestHabit.name}</p>
                 <div className="flex items-baseline gap-2">
                   <span className="text-2xl">🔥</span>
-                  <span className="text-3xl font-bold text-orange-400">{bestHabit.stats?.current_streak || 0}</span>
+                  <span className="text-3xl font-bold text-orange-400">{bestHabit.currentStreak || 0}</span>
                   <span className="text-muted-foreground text-sm">дней</span>
                 </div>
               </motion.div>
