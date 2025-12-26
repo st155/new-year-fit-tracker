@@ -50,7 +50,7 @@ const TrainingPlanDetail = lazy(() => import("@/pages/TrainingPlanDetail"));
 const TrainerAnalyticsDashboard = lazy(() => import("@/pages/TrainerAnalyticsDashboard"));
 const Admin = lazy(() => import("@/pages/Admin"));
 const TerraCallback = lazy(() => import("@/pages/TerraCallback"));
-const WhoopCallback = lazy(() => import("@/pages/WhoopCallback"));
+// WhoopCallback removed - using WhoopOAuthCallback for all Whoop OAuth flows
 const WhoopOAuthCallback = lazy(() => import("@/pages/WhoopOAuthCallback"));
 const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
 const Privacy = lazy(() => import("@/pages/Privacy"));
@@ -400,7 +400,7 @@ export const AppRoutes = () => {
         
         {/* OAuth callbacks */}
         <Route path="/terra-callback" element={<TerraCallback />} />
-        <Route path="/whoop-callback" element={<WhoopCallback />} />
+        <Route path="/whoop-callback" element={<WhoopOAuthCallback />} />
         <Route path="/auth/whoop/oauth2" element={<WhoopOAuthCallback />} />
         <Route path="/terra-widget-loader" element={<TerraWidgetLoader />} />
         
