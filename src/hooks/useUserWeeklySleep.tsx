@@ -93,6 +93,24 @@ export function useUserWeeklySleep(userId: string | undefined) {
         })) as SleepDataPoint[];
       }
 
+      // Priority 5: Resting Heart Rate → proxy for rest quality (lower = better rested)
+      const { data: rhrData } = await supabase
+        .from('unified_metrics')
+        .select('measurement_date, value, source')
+        .eq('user_id', userId)
+        .eq('metric_name', 'Resting Heart Rate')
+        .gte('measurement_date', dateRange.start)
+        .lt('measurement_date', dateRange.end)
+        .order('measurement_date', { ascending: true });
+
+      if (rhrData && rhrData.length > 0) {
+        return rhrData.map(item => ({
+          date: item.measurement_date,
+          value: Math.max(0, Math.min(100, 100 - ((item.value - 40) * 2.5))), // 40 bpm = 100%, 80 bpm = 0%
+          source: item.source,
+        })) as SleepDataPoint[];
+      }
+
       return [];
     },
     enabled: !!userId,
