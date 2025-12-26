@@ -50,10 +50,12 @@ export function StreakCard({ habit, userId, onReset }: StreakCardProps) {
   const { currentAttempt, resetHabit, isResetting } = useHabitAttempts(habit.id, userId);
   const [isOpen, setIsOpen] = useState(false);
 
-  // Calculate days since start
-  const daysCount = currentAttempt?.start_date
+  // Calculate days since start (minimum 1 if started today)
+  const rawDays = currentAttempt?.start_date
     ? differenceInDays(new Date(), parseISO(currentAttempt.start_date))
     : 0;
+  // If started today (0 days difference), show 1 day
+  const daysCount = currentAttempt?.start_date ? Math.max(1, rawDays) : 0;
 
   const hasStreak = daysCount > 0;
   const iconData = getHabitIcon(habit.name);
