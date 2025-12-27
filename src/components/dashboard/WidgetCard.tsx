@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Progress } from '@/components/ui/progress';
-import { TrendingUp, TrendingDown, Minus, Activity, Footprints, Zap, Scale, Heart, Flame, Moon, Droplet, AlertCircle, RefreshCw, Link as LinkIcon, Info } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Activity, Footprints, Zap, Scale, Heart, Flame, Moon, Droplet, AlertCircle, RefreshCw, Link as LinkIcon, Info, User } from 'lucide-react';
 import { widgetKeys, type Widget } from '@/hooks/useWidgetsQuery';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -24,6 +24,12 @@ import { ru } from 'date-fns/locale';
 import { HabitLevelWidget } from './widgets/HabitLevelWidget';
 import { HabitStreakWidget } from './widgets/HabitStreakWidget';
 import { HabitSocialWidget } from './widgets/HabitSocialWidget';
+import { 
+  usePersonalBaselines, 
+  getPersonalizedQualityColor, 
+  getPersonalizedQualityLabel,
+  type PersonalBaseline 
+} from '@/hooks/metrics/usePersonalBaselines';
 
 interface WidgetCardProps {
   widget: Widget;
@@ -370,9 +376,18 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
+  // Load personal baselines for personalized quality assessment
+  const { data: personalBaselines } = usePersonalBaselines();
+  
   const metricName = widget.metric_name;
   const source = data?.source || 'unknown';
   const isMultiMode = widget.display_mode === 'multi' && multiSourceData;
+  
+  // Get personal baseline for this metric
+  const personalBaseline = useMemo(() => {
+    if (!personalBaselines) return undefined;
+    return personalBaselines[metricName.toLowerCase()];
+  }, [personalBaselines, metricName]);
 
   // ✅ ALL hooks BEFORE any early returns (React Rules of Hooks)
   const handleCardClick = useCallback(() => {
@@ -381,6 +396,28 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
 
   const Icon = useMemo(() => getMetricIcon(metricName), [metricName]);
   const color = useMemo(() => getMetricColor(metricName), [metricName]);
+  
+  // Helper to get quality color with personalization
+  const getQualityColorWithPersonalization = useCallback((name: string, value: number) => {
+    // Try personalized first
+    const personalized = getPersonalizedQualityColor(name, value, personalBaseline);
+    if (personalized) {
+      return { color: personalized.color, isPersonalized: true };
+    }
+    // Fallback to population-based
+    const populationColor = getMetricQualityColor(name, value);
+    return { color: populationColor, isPersonalized: false };
+  }, [personalBaseline]);
+  
+  // Helper to get quality label with personalization
+  const getQualityLabelWithPersonalization = useCallback((name: string, value: number) => {
+    // Try personalized first
+    const personalized = getPersonalizedQualityLabel(name, value, personalBaseline);
+    if (personalized) return personalized;
+    // Fallback to population-based
+    const populationLabel = getQualityLabel(name, value);
+    return populationLabel ? { ...populationLabel, isPersonalized: false } : null;
+  }, [personalBaseline]);
 
   // Render special Habits 3.0 widgets (after hooks)
   if (metricName === '🏆 Habit Level') {
@@ -407,8 +444,9 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
     const Icon = getMetricIcon(metricName);
     const color = getMetricColor(metricName);
     
-    // Вычислить качество для первого источника (приоритетный)
-    const primarySourceQuality = getMetricQualityColor(metricName, multiSourceData.sources[0].value);
+    // Вычислить качество для первого источника (приоритетный) - с персонализацией
+    const primaryQuality = getQualityColorWithPersonalization(metricName, multiSourceData.sources[0].value);
+    const primarySourceQuality = primaryQuality.color;
     
     // Проверить свежесть для первого источника
     const daysDiff = Math.floor(multiSourceData.sources[0].age_hours / 24);
@@ -459,7 +497,8 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
               const isStale = daysDiff >= 3;
               const isWarning = daysDiff === 2;
               
-              const qualityColor = getMetricQualityColor(metricName, src.value);
+              const qualityResult = getQualityColorWithPersonalization(metricName, src.value);
+              const qualityColor = qualityResult.color;
               
               return (
                 <div 
@@ -570,9 +609,11 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
   // Check if this is Body Fat metric for dual-column display
   const isBodyFatMetric = metricName.toLowerCase().includes('body') && metricName.toLowerCase().includes('fat');
   
-  // Качество метрики (цвет рамки по значению)
-  const qualityColor = getMetricQualityColor(metricName, data.value);
-  const qualityLabel = getQualityLabel(metricName, data.value);
+  // Качество метрики (цвет рамки по значению) - с персонализацией
+  const qualityResult = getQualityColorWithPersonalization(metricName, data.value);
+  const qualityColor = qualityResult.color;
+  const isPersonalizedQuality = qualityResult.isPersonalized;
+  const qualityLabel = getQualityLabelWithPersonalization(metricName, data.value);
   const metricTooltip = getMetricTooltip(metricName);
   
   // Проверка на устаревшие данные с двумя уровнями (на основе дней)
@@ -752,6 +793,19 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
               <span className="text-sm md:text-xs font-medium" style={{ color: qualityLabel.color }}>
                 {qualityLabel.text}
               </span>
+              {/* Индикатор персонализированной оценки */}
+              {'isPersonalized' in qualityLabel && qualityLabel.isPersonalized && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <User className="h-3 w-3 text-primary/60 ml-1" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p className="text-xs">Персональная оценка на основе твоих данных за {personalBaseline?.days_of_data || 30}+ дней</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
             </div>
           )}
           
