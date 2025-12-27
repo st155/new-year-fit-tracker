@@ -7,13 +7,14 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Download, Calendar as CalendarIcon, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import { DateRange } from 'react-day-picker';
 import { cn } from '@/lib/utils';
 import { generateClientReport, ClientReportData } from '@/lib/exporters/client-report-exporter';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 
 interface ClientReportExportProps {
   client: {
@@ -39,6 +40,7 @@ export function ClientReportExport({
 }: ClientReportExportProps) {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t, i18n } = useTranslation('trainer');
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -54,11 +56,13 @@ export function ClientReportExport({
     includeNotes: true,
   });
 
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
+
   const handleExport = async () => {
     if (!dateRange?.from || !dateRange?.to) {
       toast({
-        title: 'Ошибка',
-        description: 'Выберите период для отчета',
+        title: t('reportExport.error'),
+        description: t('reportExport.selectPeriodError'),
         variant: 'destructive',
       });
       return;
@@ -134,16 +138,16 @@ export function ClientReportExport({
       }
 
       toast({
-        title: 'Отчет сгенерирован',
-        description: `PDF файл "${fileName}" успешно скачан`,
+        title: t('reportExport.success'),
+        description: t('reportExport.successDesc', { fileName }),
       });
 
       setOpen(false);
     } catch (error) {
       console.error('Export error:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось сгенерировать отчет',
+        title: t('reportExport.error'),
+        description: t('reportExport.generateError'),
         variant: 'destructive',
       });
     } finally {
@@ -156,18 +160,18 @@ export function ClientReportExport({
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           <Download className="h-4 w-4 mr-2" />
-          Экспорт в PDF
+          {t('reportExport.button')}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Экспорт отчета клиента</DialogTitle>
+          <DialogTitle>{t('reportExport.title')}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
           {/* Date Range Picker */}
           <div className="space-y-2">
-            <Label>Период</Label>
+            <Label>{t('reportExport.periodLabel')}</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -181,14 +185,14 @@ export function ClientReportExport({
                   {dateRange?.from ? (
                     dateRange.to ? (
                       <>
-                        {format(dateRange.from, 'd MMM yyyy', { locale: ru })} -{' '}
-                        {format(dateRange.to, 'd MMM yyyy', { locale: ru })}
+                        {format(dateRange.from, 'd MMM yyyy', { locale: dateLocale })} -{' '}
+                        {format(dateRange.to, 'd MMM yyyy', { locale: dateLocale })}
                       </>
                     ) : (
-                      format(dateRange.from, 'd MMM yyyy', { locale: ru })
+                      format(dateRange.from, 'd MMM yyyy', { locale: dateLocale })
                     )
                   ) : (
-                    <span>Выберите период</span>
+                    <span>{t('reportExport.selectPeriod')}</span>
                   )}
                 </Button>
               </PopoverTrigger>
@@ -200,7 +204,7 @@ export function ClientReportExport({
                   selected={dateRange}
                   onSelect={setDateRange}
                   numberOfMonths={2}
-                  locale={ru}
+                  locale={dateLocale}
                 />
               </PopoverContent>
             </Popover>
@@ -208,7 +212,7 @@ export function ClientReportExport({
 
           {/* Sections Checkboxes */}
           <div className="space-y-3">
-            <Label>Включить в отчет</Label>
+            <Label>{t('reportExport.includeLabel')}</Label>
             
             <div className="flex items-center space-x-2">
               <Checkbox
@@ -219,7 +223,7 @@ export function ClientReportExport({
                 }
               />
               <Label htmlFor="goals" className="font-normal cursor-pointer">
-                Цели и прогресс ({goals.length})
+                {t('reportExport.goals')} ({goals.length})
               </Label>
             </div>
 
@@ -232,7 +236,7 @@ export function ClientReportExport({
                 }
               />
               <Label htmlFor="health" className="font-normal cursor-pointer">
-                Метрики здоровья ({unifiedMetrics.length})
+                {t('reportExport.healthMetrics')} ({unifiedMetrics.length})
               </Label>
             </div>
 
@@ -246,7 +250,7 @@ export function ClientReportExport({
                   }
                 />
                 <Label htmlFor="whoop" className="font-normal cursor-pointer">
-                  Whoop данные
+                  {t('reportExport.whoopData')}
                 </Label>
               </div>
             )}
@@ -261,7 +265,7 @@ export function ClientReportExport({
                   }
                 />
                 <Label htmlFor="oura" className="font-normal cursor-pointer">
-                  Oura данные
+                  {t('reportExport.ouraData')}
                 </Label>
               </div>
             )}
@@ -275,7 +279,7 @@ export function ClientReportExport({
                 }
               />
               <Label htmlFor="notes" className="font-normal cursor-pointer">
-                Заметки тренера
+                {t('reportExport.trainerNotes')}
               </Label>
             </div>
           </div>
@@ -284,12 +288,12 @@ export function ClientReportExport({
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Генерация PDF...
+                {t('reportExport.generating')}
               </>
             ) : (
               <>
                 <Download className="mr-2 h-4 w-4" />
-                Скачать PDF
+                {t('reportExport.download')}
               </>
             )}
           </Button>

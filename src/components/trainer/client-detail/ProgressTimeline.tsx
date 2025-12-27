@@ -3,8 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, TrendingUp, AlertTriangle, Target, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 interface Goal {
   id: string;
@@ -41,6 +42,8 @@ interface ProgressTimelineProps {
 }
 
 export function ProgressTimeline({ goals, measurements, recoveryScore }: ProgressTimelineProps) {
+  const { t, i18n } = useTranslation('trainer');
+  
   const timelineEvents = useMemo((): TimelineEvent[] => {
     const events: TimelineEvent[] = [];
 
@@ -51,7 +54,7 @@ export function ProgressTimeline({ goals, measurements, recoveryScore }: Progres
         events.push({
           id: `achievement-${goal.id}`,
           type: 'achievement',
-          title: 'Цель достигнута!',
+          title: t('timeline.goalAchieved'),
           description: `${goal.goal_name}: ${goal.target_value} ${goal.target_unit}`,
           date: goal.created_at || new Date().toISOString(),
           icon: <Trophy className="h-5 w-5" />,
@@ -78,7 +81,7 @@ export function ProgressTimeline({ goals, measurements, recoveryScore }: Progres
       events.push({
         id: `record-${goalId}`,
         type: 'record',
-        title: 'Новый рекорд!',
+        title: t('timeline.newRecord'),
         description: `${record.name}: ${record.value} ${record.unit}`,
         date: record.date,
         icon: <TrendingUp className="h-5 w-5" />,
@@ -96,8 +99,8 @@ export function ProgressTimeline({ goals, measurements, recoveryScore }: Progres
         events.push({
           id: `milestone-${milestone}`,
           type: 'milestone',
-          title: `${milestone} измерений`,
-          description: `Достигнут важный рубеж: ${milestone} замеров прогресса`,
+          title: t('timeline.measurements', { count: milestone }),
+          description: t('timeline.milestoneTip', { count: milestone }),
           date: milestoneDate,
           icon: <Target className="h-5 w-5" />,
           color: 'text-purple-600 bg-purple-100 dark:bg-purple-900/30'
@@ -112,8 +115,8 @@ export function ProgressTimeline({ goals, measurements, recoveryScore }: Progres
         events.push({
           id: 'issue-low-recovery',
           type: 'issue',
-          title: 'Низкий Recovery',
-          description: `Средний показатель: ${avgRecovery.toFixed(0)}%. Рекомендуется отдых`,
+          title: t('timeline.lowRecovery'),
+          description: t('timeline.lowRecoveryDesc', { value: avgRecovery.toFixed(0) }),
           date: new Date().toISOString(),
           icon: <AlertTriangle className="h-5 w-5" />,
           color: 'text-orange-600 bg-orange-100 dark:bg-orange-900/30'
@@ -123,7 +126,7 @@ export function ProgressTimeline({ goals, measurements, recoveryScore }: Progres
 
     // Sort by date (newest first)
     return events.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [goals, measurements, recoveryScore]);
+  }, [goals, measurements, recoveryScore, t]);
 
   if (timelineEvents.length === 0) {
     return (
@@ -131,13 +134,13 @@ export function ProgressTimeline({ goals, measurements, recoveryScore }: Progres
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Timeline прогресса
+            {t('timeline.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
             <Calendar className="h-12 w-12 mb-2 opacity-50" />
-            <p className="text-sm">История достижений появится здесь</p>
+            <p className="text-sm">{t('timeline.empty')}</p>
           </div>
         </CardContent>
       </Card>
@@ -150,9 +153,9 @@ export function ProgressTimeline({ goals, measurements, recoveryScore }: Progres
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Timeline прогресса
+            {t('timeline.title')}
           </CardTitle>
-          <Badge variant="outline">{timelineEvents.length} событий</Badge>
+          <Badge variant="outline">{timelineEvents.length} {t('timeline.events')}</Badge>
         </div>
       </CardHeader>
       <CardContent>
@@ -183,16 +186,16 @@ export function ProgressTimeline({ goals, measurements, recoveryScore }: Progres
                     }
                     className="text-xs"
                   >
-                    {event.type === 'achievement' ? 'Достижение' :
-                     event.type === 'record' ? 'Рекорд' :
-                     event.type === 'milestone' ? 'Milestone' :
-                     'Внимание'}
+                    {event.type === 'achievement' ? t('timeline.achievement') :
+                     event.type === 'record' ? t('timeline.record') :
+                     event.type === 'milestone' ? t('timeline.milestone') :
+                     t('timeline.attention')}
                   </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground">{event.description}</p>
                 <p className="text-xs text-muted-foreground flex items-center gap-1">
                   <Calendar className="h-3 w-3" />
-                  {format(new Date(event.date), 'dd MMMM yyyy', { locale: ru })}
+                  {format(new Date(event.date), 'dd MMMM yyyy', { locale: i18n.language === 'ru' ? ru : enUS })}
                 </p>
               </div>
             </div>

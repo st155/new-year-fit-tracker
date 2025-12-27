@@ -117,5 +117,32 @@
     "completed": "Голодание завершено! {{hours}}ч",
     "interrupted": "Голодание прервано",
     "endError": "Ошибка при завершении голодания"
+  },
+  "documents": {
+    "uploadTitle": "Загрузить документ",
+    "uploadDesc": "Загрузите медицинские документы, анализы или фотографии прогресса",
+    "fileLabel": "Файл",
+    "typeLabel": "Тип документа",
+    "dateLabel": "Дата документа",
+    "tagsLabel": "Теги (через запятую)",
+    "tagsPlaceholder": "например: анализ, важно, контроль",
+    "notesLabel": "Заметки",
+    "notesPlaceholder": "Дополнительная информация о документе",
+    "hideFromTrainer": "Скрыть от тренера",
+    "uploading": "Загрузка...",
+    "uploadButton": "Загрузить документ",
+    "fileTooLarge": "Файл слишком большой",
+    "maxFileSize": "Максимальный размер файла — 150 МБ"
+  },
+  "documentTypes": {
+    "inbody": "InBody анализ",
+    "blood_test": "Анализ крови",
+    "fitness_report": "Медицинское заключение",
+    "progress_photo": "Фото прогресса",
+    "vo2max": "VO2max тест",
+    "caliper": "Калипер",
+    "prescription": "Рецепт",
+    "training_program": "Программа тренировок",
+    "other": "Другое"
   }
 }
