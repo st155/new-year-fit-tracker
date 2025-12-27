@@ -1,0 +1,89 @@
+{
+  "loading": "Loading your AI demo...",
+  "hero": {
+    "title": "Elite10: Your AI Coach",
+    "subtitle": "Rest smarter. Train more efficiently. Achieve more.",
+    "greeting": "Hello, {{name}}! 👋",
+    "defaultName": "Athlete"
+  },
+  "floatingStats": {
+    "accuracy": "Accuracy",
+    "monitoring": "Monitoring",
+    "data": "Data"
+  },
+  "dashboard": {
+    "aiAdvice": "AI Advice",
+    "dataQuality": "Data Quality",
+    "bestHabit": "Best Habit",
+    "weightDynamics": "Weight Dynamics",
+    "createFirstHabit": "Create your first habit",
+    "days": "days",
+    "addFirstMetric": "Add your first metric",
+    "connectDataForAI": "Connect data for AI analysis"
+  },
+  "stats": {
+    "activeChallenges": "Active Challenges",
+    "workoutsCompleted": "Workouts Completed",
+    "metricsSynced": "Metrics Synced",
+    "aiAdvicesGenerated": "AI Advices Generated"
+  },
+  "insights": {
+    "title": "AI that sees patterns, not just numbers",
+    "subtitle": "Personalized insights based on your data in real-time"
+  },
+  "features": {
+    "title": "Full control over your progress",
+    "bodyAnalysis": "3D Body Analysis",
+    "muscleMass": "Muscle Mass",
+    "aiWorkouts": {
+      "title": "AI Workouts",
+      "desc": "Automatic workout generation based on your recovery and goals"
+    },
+    "healthAssessment": {
+      "title": "Health Assessment",
+      "desc": "Biomarker monitoring and overtraining risk warnings"
+    },
+    "smartGoals": {
+      "title": "Smart Goals",
+      "desc": "Adaptive goals that adjust based on your progress"
+    },
+    "predictiveAnalytics": {
+      "title": "Predictive Analytics",
+      "desc": "Goal achievement forecasts and potential problem warnings"
+    }
+  },
+  "testimonials": {
+    "title": "What users say",
+    "items": [
+      {
+        "name": "Alex M.",
+        "role": "Triathlete",
+        "quote": "AI accurately predicted my overtraining 2 days before injury. Thanks!"
+      },
+      {
+        "name": "Maria K.",
+        "role": "Fitness Trainer",
+        "quote": "Clients now receive personalized plans automatically. Revolution!"
+      },
+      {
+        "name": "Dmitry S.",
+        "role": "Bodybuilder",
+        "quote": "3D body analysis showed an imbalance I didn't know about. Results improved!"
+      }
+    ]
+  },
+  "cta": {
+    "title": "Ready to go from data to action?",
+    "subtitle": "Activate AI Juggernaut Engine and get a personalized training plan in 2 minutes",
+    "button": "Start AI Onboarding",
+    "trial": "Free 14-day trial. Cancel anytime."
+  },
+  "insightTypes": {
+    "critical": "Critical",
+    "warning": "Warning",
+    "correlation": "Correlation",
+    "achievement": "Achievement",
+    "recommendation": "Recommendation",
+    "info": "Info"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "header": {
+    "title": "Recommendations",
+    "subtitle": "Personal recommendations based on data and doctor prescriptions"
+  },
+  "tabs": {
+    "all": "All",
+    "protocols": "Protocols",
+    "sleep": "Sleep",
+    "exercise": "Workouts",
+    "supplement": "Supplements",
+    "checkup": "Checkups"
+  },
+  "stats": {
+    "pending": "Pending",
+    "completed": "Completed",
+    "highPriority": "Important",
+    "total": "Total"
+  },
+  "empty": {
+    "title": "No active recommendations",
+    "subtitle": "Upload medical documents or connect devices to get personal recommendations."
+  }
+}

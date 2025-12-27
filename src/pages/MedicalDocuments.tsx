@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BulkDocumentUpload } from '@/components/medical-documents/BulkDocumentUpload';
 import { DocumentsGrid } from '@/components/medical-documents/DocumentsGrid';
@@ -15,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import '@/components/medical-documents/medical-documents.css';
 
 const MedicalDocuments = () => {
+  const { t } = useTranslation('medicalDocs');
   const [filterType, setFilterType] = useState<string>('all');
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
   const [showBatchDialog, setShowBatchDialog] = useState(false);
@@ -42,19 +44,19 @@ const MedicalDocuments = () => {
         <TabsList className="glass-card grid w-full grid-cols-4 h-auto p-1">
           <TabsTrigger value="documents" className="gap-2 data-[state=active]:bg-primary/20">
             <FileText className="h-4 w-4" />
-            <span className="hidden sm:inline">Документы</span>
+            <span className="hidden sm:inline">{t('tabs.documents')}</span>
           </TabsTrigger>
           <TabsTrigger value="trends" className="gap-2 data-[state=active]:bg-primary/20">
             <TrendingUp className="h-4 w-4" />
-            <span className="hidden sm:inline">Тренды</span>
+            <span className="hidden sm:inline">{t('tabs.trends')}</span>
           </TabsTrigger>
           <TabsTrigger value="upload" className="gap-2 data-[state=active]:bg-primary/20">
             <Upload className="h-4 w-4" />
-            <span className="hidden sm:inline">Загрузка</span>
+            <span className="hidden sm:inline">{t('tabs.upload')}</span>
           </TabsTrigger>
           <TabsTrigger value="migration" className="gap-2 data-[state=active]:bg-primary/20">
             <Database className="h-4 w-4" />
-            <span className="hidden sm:inline">Миграция</span>
+            <span className="hidden sm:inline">{t('tabs.migration')}</span>
           </TabsTrigger>
         </TabsList>
 

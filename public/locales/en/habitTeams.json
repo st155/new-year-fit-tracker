@@ -1,0 +1,32 @@
+{
+  "loginRequired": {
+    "title": "Sign in to join teams",
+    "subtitle": "Create teams, invite friends and compete together!"
+  },
+  "header": {
+    "title": "Teams",
+    "subtitle": "Compete together with friends"
+  },
+  "createTeam": "Create Team",
+  "tabs": {
+    "myTeams": "My Teams",
+    "publicTeams": "Public Teams"
+  },
+  "search": "Search teams...",
+  "emptyMyTeams": {
+    "title": "Create your first team! 🚀",
+    "subtitle": "Build a team of like-minded people, compete together and achieve goals faster",
+    "hint": "or find an existing team in the \"Public Teams\" tab"
+  },
+  "emptyPublicTeams": {
+    "notFound": "Teams not found",
+    "noTeams": "No public teams yet",
+    "notFoundHint": "Try changing your search or create your own team",
+    "noTeamsHint": "Be the first to create a public team and invite members!",
+    "createPublic": "Create Public Team"
+  },
+  "toast": {
+    "joinSuccess": "You successfully joined the team!",
+    "joinError": "Failed to join team"
+  }
+}

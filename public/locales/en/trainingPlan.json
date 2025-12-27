@@ -1,0 +1,10 @@
+{
+  "notFound": "Training plan not found",
+  "loading": "Loading plan...",
+  "tabs": {
+    "workouts": "Workouts",
+    "clients": "Clients",
+    "analytics": "Analytics",
+    "overview": "Overview"
+  }
+}

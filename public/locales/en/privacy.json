@@ -1,0 +1,98 @@
+{
+  "back": "Back",
+  "title": "Privacy Policy",
+  "lastUpdated": "Last updated:",
+  "nav": {
+    "home": "Home"
+  },
+  "languageSwitch": {
+    "ru": "Русский",
+    "en": "English"
+  },
+  "sections": {
+    "intro": {
+      "title": "1. Introduction",
+      "content": "Welcome to Elite10.club (\"Service\", \"we\", \"us\"). We respect your privacy and are committed to protecting your personal data. This Privacy Policy explains how we collect, use, store, and protect your information."
+    },
+    "dataCollection": {
+      "title": "2. Information We Collect",
+      "personalInfo": {
+        "title": "2.1 Personal Information",
+        "items": [
+          "Email address for registration and authorization",
+          "Profile information (name, age, gender)",
+          "Fitness goals and preferences"
+        ]
+      },
+      "fitnessData": {
+        "title": "2.2 Fitness Data",
+        "items": [
+          "Physical activity data (workouts, steps, calories)",
+          "Biometric indicators (weight, body fat percentage, VO2 Max)",
+          "Recovery and sleep data",
+          "Progress photos (with your consent)"
+        ]
+      },
+      "deviceIntegration": {
+        "title": "2.3 Device Integration",
+        "items": [
+          "Data from Garmin, Apple Health, Whoop, Withings devices",
+          "Synchronized workout and health information"
+        ]
+      }
+    },
+    "dataUsage": {
+      "title": "3. How We Use Information",
+      "intro": "We use the collected information to:",
+      "items": [
+        "Provide personalized fitness experience",
+        "Track progress towards your goals",
+        "Analyze and visualize your fitness data",
+        "Improve the quality of our services",
+        "Ensure security and prevent fraud",
+        "Communicate with you regarding service matters"
+      ]
+    },
+    "dataSecurity": {
+      "title": "4. Data Security",
+      "content": "We implement modern technical and organizational security measures to protect your personal data from unauthorized access, alteration, disclosure, or destruction. All data is transmitted and stored in encrypted form."
+    },
+    "dataSharing": {
+      "title": "5. Data Sharing with Third Parties",
+      "intro": "We do NOT sell, rent, or transfer your personal data to third parties, except for:",
+      "items": [
+        "Integrations with fitness platforms (with your explicit consent)",
+        "Cases required by law",
+        "Protection of our rights and user security"
+      ]
+    },
+    "userRights": {
+      "title": "6. Your Rights",
+      "intro": "You have the right to:",
+      "items": [
+        "Access your personal data",
+        "Correct inaccurate or incomplete data",
+        "Delete your personal data",
+        "Restrict processing of your data",
+        "Port data to another service",
+        "Withdraw consent for data processing"
+      ]
+    },
+    "cookies": {
+      "title": "7. Cookies",
+      "content": "We use cookies to improve app functionality, remember your preferences, and ensure security. You can manage cookie settings in your browser."
+    },
+    "policyChanges": {
+      "title": "8. Policy Changes",
+      "content": "We may update this Privacy Policy from time to time. We will notify you of material changes via email or through app notifications."
+    },
+    "contact": {
+      "title": "9. Contact Information",
+      "content": "If you have questions about this Privacy Policy or wish to exercise your rights, contact us at: privacy@fitnessapp.com"
+    },
+    "dataRetention": {
+      "title": "10. Data Retention",
+      "content": "We retain your personal data only for the time necessary to fulfill the purposes outlined in this policy or as required by law."
+    }
+  }
+}

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { useHabitTeams, usePublicTeams, useJoinTeam } from '@/hooks/useHabitTeams';
 import { TeamCard } from '@/features/habits/components/social/TeamCard';
@@ -12,6 +13,7 @@ import { ArrowLeft, Plus, Search, Users } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function HabitTeams() {
+  const { t } = useTranslation('habitTeams');
   const navigate = useNavigate();
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
@@ -24,9 +26,9 @@ export default function HabitTeams() {
   const handleJoinTeam = async (teamId: string) => {
     try {
       await joinTeam.mutateAsync(teamId);
-      toast.success('Вы успешно присоединились к команде!');
+      toast.success(t('toast.joinSuccess'));
     } catch (error: any) {
-      toast.error(error.message || 'Не удалось присоединиться к команде');
+      toast.error(error.message || t('toast.joinError'));
     }
   };
 
@@ -49,9 +51,9 @@ export default function HabitTeams() {
         <div className="max-w-4xl mx-auto">
           <Card className="p-8 text-center">
             <Users className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-            <h2 className="text-2xl font-bold mb-2">Войдите, чтобы присоединиться к командам</h2>
+            <h2 className="text-2xl font-bold mb-2">{t('loginRequired.title')}</h2>
             <p className="text-muted-foreground">
-              Создавайте команды, приглашайте друзей и соревнуйтесь вместе!
+              {t('loginRequired.subtitle')}
             </p>
           </Card>
         </div>
@@ -72,22 +74,22 @@ export default function HabitTeams() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-3xl font-bold">Команды</h1>
-              <p className="text-muted-foreground">Соревнуйтесь вместе с друзьями</p>
+              <h1 className="text-3xl font-bold">{t('header.title')}</h1>
+              <p className="text-muted-foreground">{t('header.subtitle')}</p>
             </div>
           </div>
           <Button onClick={() => setShowCreateDialog(true)}>
             <Plus className="h-4 w-4 mr-2" />
-            Создать команду
+            {t('createTeam')}
           </Button>
         </div>
 
         <Tabs defaultValue="my" className="space-y-4">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="my">
-              Мои команды {myTeams && `(${myTeams.length})`}
+              {t('tabs.myTeams')} {myTeams && `(${myTeams.length})`}
             </TabsTrigger>
-            <TabsTrigger value="public">Публичные команды</TabsTrigger>
+            <TabsTrigger value="public">{t('tabs.publicTeams')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="my" className="space-y-3">
@@ -109,17 +111,17 @@ export default function HabitTeams() {
             ) : (
               <Card className="p-8 text-center bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20">
                 <Users className="h-16 w-16 mx-auto mb-4 text-primary" />
-                <h3 className="text-xl font-bold mb-2">Создайте свою первую команду! 🚀</h3>
+                <h3 className="text-xl font-bold mb-2">{t('emptyMyTeams.title')}</h3>
                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                  Соберите команду единомышленников, соревнуйтесь вместе и достигайте целей быстрее
+                  {t('emptyMyTeams.subtitle')}
                 </p>
                 <div className="flex flex-col gap-3 max-w-sm mx-auto">
                   <Button size="lg" onClick={() => setShowCreateDialog(true)}>
                     <Plus className="h-5 w-5 mr-2" />
-                    Создать команду
+                    {t('createTeam')}
                   </Button>
                   <p className="text-xs text-muted-foreground">
-                    или найдите существующую команду во вкладке "Публичные команды"
+                    {t('emptyMyTeams.hint')}
                   </p>
                 </div>
               </Card>
@@ -130,7 +132,7 @@ export default function HabitTeams() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Поиск команд..."
+                placeholder={t('search')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -155,17 +157,17 @@ export default function HabitTeams() {
               <Card className="p-8 text-center bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20">
                 <Users className="h-12 w-12 mx-auto mb-4 text-primary" />
                 <h3 className="text-lg font-semibold mb-2">
-                  {searchQuery ? 'Команды не найдены' : 'Пока нет публичных команд'}
+                  {searchQuery ? t('emptyPublicTeams.notFound') : t('emptyPublicTeams.noTeams')}
                 </h3>
                 <p className="text-muted-foreground mb-4">
                   {searchQuery
-                    ? 'Попробуйте изменить поисковый запрос или создайте свою команду'
-                    : 'Будьте первым, кто создаст публичную команду и пригласит участников!'}
+                    ? t('emptyPublicTeams.notFoundHint')
+                    : t('emptyPublicTeams.noTeamsHint')}
                 </p>
                 {!searchQuery && (
                   <Button onClick={() => setShowCreateDialog(true)} variant="outline">
                     <Plus className="h-4 w-4 mr-2" />
-                    Создать публичную команду
+                    {t('emptyPublicTeams.createPublic')}
                   </Button>
                 )}
               </Card>

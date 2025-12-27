@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -23,15 +24,6 @@ import { RecommendationCard } from '@/components/recommendations/RecommendationC
 import { useAddSupplementToLibrary } from '@/hooks/biostack/useDoctorProtocol';
 import { useDismissActionItem } from '@/hooks/biostack/useDoctorActionItems';
 import { cn } from '@/lib/utils';
-
-const CATEGORY_TABS: { value: RecommendationCategory | 'all' | 'protocols'; icon: React.ElementType; label: string }[] = [
-  { value: 'all', icon: Sparkles, label: 'Все' },
-  { value: 'protocols', icon: FileText, label: 'Протоколы' },
-  { value: 'sleep', icon: Moon, label: 'Сон' },
-  { value: 'exercise', icon: Dumbbell, label: 'Тренировки' },
-  { value: 'supplement', icon: Pill, label: 'Добавки' },
-  { value: 'checkup', icon: FlaskConical, label: 'Чекапы' },
-];
 
 function StatsCard({ 
   icon: Icon, 
@@ -62,11 +54,21 @@ function StatsCard({
 }
 
 const Recommendations = () => {
+  const { t } = useTranslation('recommendations');
   const [activeTab, setActiveTab] = useState<string>('all');
   const { recommendations, groupedByCategory, stats, isLoading } = useAllRecommendations();
   const addToLibrary = useAddSupplementToLibrary();
   const dismissItem = useDismissActionItem();
   const [actionPendingId, setActionPendingId] = useState<string | null>(null);
+
+  const CATEGORY_TABS: { value: RecommendationCategory | 'all' | 'protocols'; icon: React.ElementType; label: string }[] = [
+    { value: 'all', icon: Sparkles, label: t('tabs.all') },
+    { value: 'protocols', icon: FileText, label: t('tabs.protocols') },
+    { value: 'sleep', icon: Moon, label: t('tabs.sleep') },
+    { value: 'exercise', icon: Dumbbell, label: t('tabs.exercise') },
+    { value: 'supplement', icon: Pill, label: t('tabs.supplement') },
+    { value: 'checkup', icon: FlaskConical, label: t('tabs.checkup') },
+  ];
 
   const handleAction = async (recommendation: MergedRecommendation) => {
     if (recommendation.action?.type === 'add_to_stack' && recommendation.metadata.originalItem) {
@@ -122,9 +124,9 @@ const Recommendations = () => {
           <Sparkles className="h-6 w-6 text-primary" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold">Рекомендации</h1>
+          <h1 className="text-2xl font-bold">{t('header.title')}</h1>
           <p className="text-sm text-muted-foreground">
-            Персональные рекомендации на основе данных и назначений врачей
+            {t('header.subtitle')}
           </p>
         </div>
       </div>
@@ -133,28 +135,28 @@ const Recommendations = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatsCard 
           icon={Clock} 
-          label="Ожидают" 
+          label={t('stats.pending')} 
           value={stats.pending} 
           color="text-yellow-500"
           bgColor="bg-yellow-500/10"
         />
         <StatsCard 
           icon={CheckCircle2} 
-          label="Выполнено" 
+          label={t('stats.completed')} 
           value={stats.completed} 
           color="text-green-500"
           bgColor="bg-green-500/10"
         />
         <StatsCard 
           icon={AlertCircle} 
-          label="Важных" 
+          label={t('stats.highPriority')} 
           value={stats.highPriority} 
           color="text-red-500"
           bgColor="bg-red-500/10"
         />
         <StatsCard 
           icon={Sparkles} 
-          label="Всего" 
+          label={t('stats.total')} 
           value={stats.total} 
           color="text-primary"
           bgColor="bg-primary/10"
@@ -206,9 +208,9 @@ const Recommendations = () => {
             <Card className="glass-card">
               <CardContent className="p-8 text-center">
                 <Sparkles className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">Нет активных рекомендаций</h3>
+                <h3 className="text-lg font-medium mb-2">{t('empty.title')}</h3>
                 <p className="text-sm text-muted-foreground">
-                  Загрузите медицинские документы или подключите устройства для получения персональных рекомендаций.
+                  {t('empty.subtitle')}
                 </p>
               </CardContent>
             </Card>
