@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { memo } from "react";
+import { memo, useState } from "react";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
@@ -39,6 +39,7 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
   const prefetch = usePrefetch();
   const isMobile = useIsMobile();
   const { t } = useTranslation('navigation');
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   
   // Safe hooks with fallbacks
   let profile = null;
@@ -175,7 +176,7 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
             ))}
             
             {/* More menu with Sheet */}
-            <Sheet>
+            <Sheet open={moreMenuOpen} onOpenChange={setMoreMenuOpen}>
               <SheetTrigger asChild>
                 <Button 
                   variant="ghost" 
@@ -200,7 +201,10 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
                       "w-full justify-start text-lg h-14 gap-3",
                       isActive('/profile') && "bg-accent/30 text-primary"
                     )}
-                    onClick={() => navigate('/profile')}
+                    onClick={() => {
+                      navigate('/profile');
+                      setMoreMenuOpen(false);
+                    }}
                   >
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={profile?.avatar_url} />
@@ -220,7 +224,10 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
                         "w-full justify-start text-lg h-14 relative",
                         isActive(item.path) && "bg-accent/30 text-primary"
                       )}
-                      onClick={() => navigate(item.path)}
+                      onClick={() => {
+                        navigate(item.path);
+                        setMoreMenuOpen(false);
+                      }}
                     >
                       {item.label}
                       {item.badge && (
@@ -250,7 +257,10 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
                   <Button
                     variant="ghost"
                     className="w-full justify-start text-lg h-14"
-                    onClick={() => navigate('/privacy-policy')}
+                    onClick={() => {
+                      navigate('/privacy-policy');
+                      setMoreMenuOpen(false);
+                    }}
                   >
                     {t('privacyPolicy')}
                   </Button>
