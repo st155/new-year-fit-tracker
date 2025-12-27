@@ -730,5 +730,25 @@
     "broadcastSent": "Рассылка отправлена {{count}} получателям",
     "broadcastSendFailed": "Ошибка отправки рассылки",
     "loadError": "Ошибка загрузки рассылок"
+  },
+  "measurement": {
+    "title": "Добавить измерение",
+    "goalLabel": "цель",
+    "weightKg": "Вес (кг)",
+    "valueUnit": "Значение ({{unit}})",
+    "exampleWeight": "Например: 100",
+    "enterValue": "Введите значение в {{unit}}",
+    "reps": "Повторения",
+    "goalReps": "Цель: {{reps}}",
+    "date": "Дата измерения",
+    "currentProgress": "Текущий прогресс",
+    "cancel": "Отмена",
+    "add": "Добавить",
+    "adding": "Добавление...",
+    "done": "Готово",
+    "added": "Измерение добавлено: {{value}}",
+    "error": "Ошибка",
+    "enterValidValue": "Введите корректное значение",
+    "addFailed": "Не удалось добавить измерение"
   }
 }
