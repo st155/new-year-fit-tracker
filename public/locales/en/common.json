@@ -14,5 +14,101 @@
   "languages": {
     "ru": "Русский",
     "en": "English"
+  },
+  "errors": {
+    "generic": "Error",
+    "loading": "Loading error",
+    "saving": "Saving error",
+    "deleting": "Deletion error",
+    "notAuthorized": "User not authorized",
+    "notFound": "Not found",
+    "tryAgain": "Try again",
+    "uploadFailed": "Failed to upload file",
+    "invalidImage": "Please select an image",
+    "fileTooLarge": "File size must not exceed {{size}}MB",
+    "authRequired": "Login required",
+    "loginRequired": "Authorization required",
+    "loginToComment": "Log in to leave comments",
+    "loadComments": "Failed to load comments",
+    "addComment": "Failed to add comment",
+    "invalidDate": "Invalid date",
+    "futureDateError": "Cannot add measurements that far in the future. Check the year!",
+    "enterValue": "Enter a value",
+    "goalNotFound": "Goal not found",
+    "saveFailed": "Failed to save",
+    "fkError": "Goal link error. Try reloading the page.",
+    "permissionDenied": "Permission denied"
+  },
+  "success": {
+    "saved": "Saved",
+    "deleted": "Deleted",
+    "updated": "Updated",
+    "created": "Created",
+    "uploaded": "Uploaded",
+    "photoUploaded": "Photo uploaded",
+    "weightAdded": "Weight added",
+    "commentAdded": "Comment added",
+    "commentPublished": "Your comment has been published",
+    "postCreated": "Post created",
+    "postPublished": "Your post has been published",
+    "measurementAdded": "Measurement added",
+    "measurementUpdated": "Measurement updated",
+    "workoutSaved": "Workout saved!"
+  },
+  "actions": {
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "deleting": "Deleting...",
+    "add": "Add",
+    "adding": "Adding...",
+    "edit": "Edit",
+    "close": "Close",
+    "confirm": "Confirm",
+    "retry": "Retry",
+    "back": "Back",
+    "next": "Next",
+    "send": "Send",
+    "replace": "Replace",
+    "choose": "Choose",
+    "chooseFile": "Choose file",
+    "upload": "Upload",
+    "publish": "Publish",
+    "publishing": "Publishing...",
+    "hideOptional": "Hide",
+    "showOptional": "Add"
+  },
+  "states": {
+    "loading": "Loading...",
+    "noData": "No data",
+    "empty": "Empty",
+    "uploading": "Uploading your photo...",
+    "processing": "Processing..."
+  },
+  "photoUpload": {
+    "label": "Add progress photo",
+    "dragHint": "Drag photo here or click to select",
+    "formats": "Supported formats: JPG, PNG, WebP (up to 5MB)"
+  },
+  "comments": {
+    "title": "Comments",
+    "placeholder": "Write a comment...",
+    "empty": "No comments yet",
+    "beFirst": "Be the first!",
+    "enterHint": "Enter to send • Shift+Enter for new line",
+    "user": "User"
+  },
+  "time": {
+    "today": "Today",
+    "selectDate": "Select date",
+    "currentYear": "✓ Current year",
+    "checkYear": "⚠️ Check the year!",
+    "lastMeasurement": "since last measurement"
+  },
+  "units": {
+    "kg": "kg",
+    "minutes": "min",
+    "format": "Format: MM:SS (e.g., 4:40 = 4 min 40 sec)"
   }
 }

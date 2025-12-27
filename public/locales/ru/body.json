@@ -69,7 +69,8 @@
     "analysisComplete": "Анализ успешно завершен!",
     "analysisError": "Ошибка анализа",
     "cannotGetPdfAccess": "Не удалось получить доступ к PDF файлу",
-    "cannotConvertPdf": "Не удалось конвертировать PDF в изображения"
+    "cannotConvertPdf": "Не удалось конвертировать PDF в изображения",
+    "measurementHistory": "История измерений"
   },
   
   "detail": {
@@ -135,5 +136,33 @@
   "metricsCard": {
     "lastMeasured": "Последнее измерение",
     "noMeasurements": "Нет измерений. Добавьте первое измерение, чтобы начать!"
+  },
+  
+  "weightTracker": {
+    "title": "Контроль веса",
+    "addWeight": "Добавить вес",
+    "addMeasurement": "Добавить измерение веса",
+    "addMeasurementDesc": "Введите вес вручную или загрузите фото весов для автоматического распознавания",
+    "manualInput": "Ручной ввод",
+    "aiPhoto": "ИИ-анализ фото",
+    "progressPhoto": "Фото прогресса",
+    "weight": "Вес (кг)",
+    "saveWeight": "Сохранить вес",
+    "weightRecognized": "Вес распознан!",
+    "foundWeight": "Найден вес: {{weight}} кг",
+    "recognizedWeight": "Распознанный вес: {{weight}} кг",
+    "photoScale": "Сфотографируйте весы",
+    "addProgressPhoto": "Добавьте фото для отслеживания прогресса",
+    "addFirstMeasurement": "Добавьте первое измерение веса",
+    "lastMeasurement": "за последнее измерение",
+    "progressToGoal": "Прогресс к цели",
+    "weightLoss": "Снижение",
+    "weightGain": "Набор",
+    "current": "Текущий",
+    "target": "Цель",
+    "remaining": "Осталось",
+    "loadError": "Не удалось загрузить данные о весе",
+    "enterWeight": "Введите значение веса",
+    "addError": "Не удалось добавить вес"
   }
 }

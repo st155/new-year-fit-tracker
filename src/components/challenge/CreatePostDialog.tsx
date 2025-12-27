@@ -6,6 +6,7 @@ import { Plus, Image as ImageIcon, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 interface CreatePostDialogProps {
   challengeId: string;
@@ -15,6 +16,7 @@ interface CreatePostDialogProps {
 export const CreatePostDialog = ({ challengeId, onPostCreated }: CreatePostDialogProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation('challenges');
   const [open, setOpen] = useState(false);
   const [content, setContent] = useState("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -36,8 +38,8 @@ export const CreatePostDialog = ({ challengeId, onPostCreated }: CreatePostDialo
   const handleSubmit = async () => {
     if (!user || !content.trim()) {
       toast({
-        title: "Ошибка",
-        description: "Напишите что-нибудь",
+        title: t('errors.loadError'),
+        description: t('posts.writeSmth'),
         variant: "destructive"
       });
       return;
@@ -78,8 +80,8 @@ export const CreatePostDialog = ({ challengeId, onPostCreated }: CreatePostDialo
       if (error) throw error;
 
       toast({
-        title: "Успешно!",
-        description: "Пост опубликован"
+        title: t('success', { ns: 'common', defaultValue: 'Success!' }),
+        description: t('posts.publish')
       });
 
       setContent("");
@@ -90,8 +92,8 @@ export const CreatePostDialog = ({ challengeId, onPostCreated }: CreatePostDialo
     } catch (error) {
       console.error('Error creating post:', error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось создать пост",
+        title: t('errors.loadError'),
+        description: t('posts.createError'),
         variant: "destructive"
       });
     } finally {
@@ -104,16 +106,16 @@ export const CreatePostDialog = ({ challengeId, onPostCreated }: CreatePostDialo
       <DialogTrigger asChild>
         <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:opacity-90 text-white shadow-lg">
           <Plus className="h-4 w-4 mr-2" />
-          Создать пост
+          {t('posts.createPost')}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Поделитесь прогрессом</DialogTitle>
+          <DialogTitle>{t('posts.shareProgress')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 mt-4">
           <Textarea
-            placeholder="Расскажите о своих достижениях, поделитесь опытом..."
+            placeholder={t('posts.placeholder')}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             className="min-h-[120px]"
@@ -135,7 +137,7 @@ export const CreatePostDialog = ({ challengeId, onPostCreated }: CreatePostDialo
                   setPhotoPreview(null);
                 }}
               >
-                Удалить
+                {t('actions.delete', { ns: 'common' })}
               </Button>
             </div>
           )}
@@ -147,7 +149,7 @@ export const CreatePostDialog = ({ challengeId, onPostCreated }: CreatePostDialo
               onClick={() => document.getElementById('photo-upload')?.click()}
             >
               <ImageIcon className="h-4 w-4 mr-2" />
-              {photoFile ? "Изменить фото" : "Добавить фото"}
+              {photoFile ? t('posts.changePhoto') : t('posts.addPhoto')}
             </Button>
             <input
               id="photo-upload"
@@ -166,10 +168,10 @@ export const CreatePostDialog = ({ challengeId, onPostCreated }: CreatePostDialo
             {isSubmitting ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Публикация...
+                {t('posts.publishing')}
               </>
             ) : (
-              "Опубликовать"
+              t('posts.publish')
             )}
           </Button>
         </div>
