@@ -1,26 +1,28 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-
-const PROGRESS_MESSAGES = [
-  "Твой AI-тренер анализирует 1ПМ, цели и восстановление...",
-  "Создание персонализированного 12-недельного макроцикла...",
-  "Оптимизация объема тренировок под твой уровень...",
-  "Подбор упражнений на основе доступного оборудования...",
-  "Расчет прогрессии нагрузок для максимальных результатов...",
-  "Настройка периодизации для избежания перетренированности...",
-  "Финальная корректировка на основе твоих предпочтений..."
-];
 
 interface DynamicProgressTextProps {
   currentStep: number;
 }
 
 export function DynamicProgressText({ currentStep }: DynamicProgressTextProps) {
+  const { t } = useTranslation('workouts');
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  const PROGRESS_MESSAGES = [
+    t('planGeneration.analyzing'),
+    t('planGeneration.creatingMacrocycle'),
+    t('planGeneration.optimizingVolume'),
+    t('planGeneration.selectingExercises'),
+    t('planGeneration.calculatingProgression'),
+    t('planGeneration.settingPeriodization'),
+    t('planGeneration.finalAdjustments')
+  ];
 
   useEffect(() => {
     setCurrentIndex(currentStep % PROGRESS_MESSAGES.length);
-  }, [currentStep]);
+  }, [currentStep, PROGRESS_MESSAGES.length]);
 
   return (
     <div className="h-16 flex items-center justify-center">

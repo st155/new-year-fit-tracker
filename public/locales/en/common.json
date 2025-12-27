@@ -327,6 +327,9 @@
     "completed": "Completed",
     "missed": "Missed"
   },
+  "streak": {
+    "daysInRow": "{{count}} days in a row!"
+  },
   "validation": {
     "required": "This field is required",
     "minLength": "Minimum {{min}} characters",

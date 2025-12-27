@@ -63,5 +63,12 @@
     "last30days": "Last 30 days",
     "last90days": "Last 90 days",
     "allTime": "All time"
+  },
+  "heatmap": {
+    "title": "Activity Heatmap",
+    "selectMetric": "Select metric",
+    "noData": "No data",
+    "less": "Less",
+    "more": "More"
   }
 }

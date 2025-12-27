@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Settings, Eye, Calendar, ChevronRight } from "lucide-react";
@@ -16,9 +17,7 @@ interface TodaysPlanCardProps {
   weeklySchedule?: Array<{ day: number; name: string }>;
 }
 
-const DAY_NAMES_SHORT = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
-
-export function TodaysPlanCard({ 
+export function TodaysPlanCard({
   exercises, 
   workoutName,
   planId,
@@ -28,7 +27,18 @@ export function TodaysPlanCard({
   weeklySchedule = []
 }: TodaysPlanCardProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation('workouts');
   const [showPlanViewer, setShowPlanViewer] = useState(false);
+  
+  const DAY_NAMES_SHORT = [
+    t('dayNames.sun'),
+    t('dayNames.mon'),
+    t('dayNames.tue'),
+    t('dayNames.wed'),
+    t('dayNames.thu'),
+    t('dayNames.fri'),
+    t('dayNames.sat')
+  ];
   
   const today = new Date().getDay();
   
@@ -38,9 +48,9 @@ export function TodaysPlanCard({
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg">
-              {workoutName || "План на сегодня"} 
+              {workoutName || t('planViewer.defaultTitle')} 
               {exercises.length > 0 && (
-                <span className="text-sm text-cyan-400 ml-2">(AI Скорректирован)</span>
+                <span className="text-sm text-cyan-400 ml-2">({t('todaysPlan.aiAdjusted')})</span>
               )}
             </CardTitle>
             <div className="flex gap-2">
@@ -52,7 +62,7 @@ export function TodaysPlanCard({
                   className="border-cyan-500/30 hover:border-cyan-500 text-cyan-400"
                 >
                   <Eye className="w-4 h-4 mr-2" />
-                  План
+                  {t('todaysPlan.plan')}
                 </Button>
               )}
               <Button 
@@ -62,7 +72,7 @@ export function TodaysPlanCard({
                 className="border-neutral-700 hover:border-neutral-600"
               >
                 <Settings className="w-4 h-4 mr-2" />
-                Управить
+                {t('todaysPlan.manage')}
               </Button>
             </div>
           </div>
@@ -75,7 +85,7 @@ export function TodaysPlanCard({
                 <div className="bg-neutral-800/50 rounded-lg p-4 mb-4">
                   <div className="flex items-center gap-2 mb-3 text-sm text-muted-foreground">
                     <Calendar className="w-4 h-4" />
-                    <span>Расписание недели</span>
+                    <span>{t('todaysPlan.weekSchedule')}</span>
                   </div>
                   <div className="flex gap-2 flex-wrap">
                     {DAY_NAMES_SHORT.map((day, idx) => {
@@ -112,7 +122,7 @@ export function TodaysPlanCard({
               
               <div className="text-center py-4">
                 <p className="text-muted-foreground mb-4">
-                  {weeklySchedule.length > 0 ? 'Сегодня день отдыха' : 'План не назначен'}
+                  {weeklySchedule.length > 0 ? t('todaysPlan.restDay') : t('todaysPlan.noPlan')}
                 </p>
                 {planId ? (
                   <Button 
@@ -122,7 +132,7 @@ export function TodaysPlanCard({
                     className="border-cyan-500/30 hover:border-cyan-500 text-cyan-400"
                   >
                     <Eye className="w-4 h-4 mr-2" />
-                    Посмотреть весь план
+                    {t('todaysPlan.viewFullPlan')}
                     <ChevronRight className="w-4 h-4 ml-1" />
                   </Button>
                 ) : (
@@ -132,7 +142,7 @@ export function TodaysPlanCard({
                     onClick={() => navigate('/workouts/manage')}
                     className="border-neutral-700 hover:border-cyan-500"
                   >
-                    Создать план
+                    {t('todaysPlan.createPlan')}
                   </Button>
                 )}
               </div>
@@ -143,7 +153,7 @@ export function TodaysPlanCard({
                 <div key={idx} className="border-l-2 border-neutral-700 pl-4 py-2">
                   <div className="font-semibold text-foreground">{exercise.name}</div>
                   <div className="text-sm text-muted-foreground mt-1">
-                    {exercise.sets} x {exercise.reps} повторений
+                    {exercise.sets} x {exercise.reps} {t('todaysPlan.reps')}
                     {exercise.weight && (
                       <span className={exercise.was_modified ? "text-cyan-400 ml-2 font-medium" : "ml-2"}>
                         @ {exercise.weight} кг

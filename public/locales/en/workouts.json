@@ -76,5 +76,25 @@
     "time": "Time",
     "minAbbr": "min",
     "hint": "Heart rate zones show workout intensity"
+  },
+  "todaysPlan": {
+    "aiAdjusted": "AI Adjusted",
+    "plan": "Plan",
+    "manage": "Manage",
+    "weekSchedule": "Weekly schedule",
+    "restDay": "Today is a rest day",
+    "noPlan": "No plan assigned",
+    "viewFullPlan": "View full plan",
+    "createPlan": "Create plan",
+    "reps": "reps"
+  },
+  "planGeneration": {
+    "analyzing": "Your AI trainer is analyzing 1RM, goals and recovery...",
+    "creatingMacrocycle": "Creating personalized 12-week macrocycle...",
+    "optimizingVolume": "Optimizing training volume for your level...",
+    "selectingExercises": "Selecting exercises based on available equipment...",
+    "calculatingProgression": "Calculating load progression for maximum results...",
+    "settingPeriodization": "Setting periodization to avoid overtraining...",
+    "finalAdjustments": "Final adjustments based on your preferences..."
   }
 }
