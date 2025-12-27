@@ -209,12 +209,25 @@ export function ProfileHero({
                   {userInitials}
                 </AvatarFallback>
               </Avatar>
-              {levelInfo && (
+              {(levelInfo || trainerMode) && (
                 <Badge 
-                  className={`absolute -bottom-2 left-1/2 -translate-x-1/2 bg-gradient-to-r ${getLevelColor(levelInfo.level)} text-white border-0 shadow-lg px-3 py-1`}
+                  className={`absolute -bottom-2 left-1/2 -translate-x-1/2 bg-gradient-to-r ${
+                    trainerMode 
+                      ? 'from-green-500 to-emerald-600' 
+                      : getLevelColor(levelInfo?.level || 1)
+                  } text-white border-0 shadow-lg px-3 py-1`}
                 >
-                  <Trophy className="h-3 w-3 mr-1" />
-                  Lvl {levelInfo.level}
+                  {trainerMode ? (
+                    <>
+                      <Target className="h-3 w-3 mr-1" />
+                      Тренер
+                    </>
+                  ) : (
+                    <>
+                      <Trophy className="h-3 w-3 mr-1" />
+                      Lvl {levelInfo?.level}
+                    </>
+                  )}
                 </Badge>
               )}
             </div>
@@ -235,14 +248,26 @@ export function ProfileHero({
             <div className="flex flex-wrap gap-2 items-center justify-center md:justify-start">
               {levelInfo && !isLoading && (
                 <>
-                  <Badge variant="outline" className="gap-1.5 px-3 py-1.5 text-sm font-semibold">
-                    <Zap className="h-3.5 w-3.5 text-yellow-500" />
-                    {levelInfo.totalXP} XP
-                  </Badge>
-                  <Badge variant="outline" className="gap-1.5 px-3 py-1.5 text-sm font-semibold">
-                    <Trophy className="h-3.5 w-3.5 text-purple-500" />
-                    {getLevelTitle(levelInfo.level)}
-                  </Badge>
+                  {trainerMode ? (
+                    <Badge 
+                      variant="outline" 
+                      className="gap-1.5 px-3 py-1.5 text-sm font-semibold border-green-500/50 bg-green-500/10"
+                    >
+                      <Target className="h-3.5 w-3.5 text-green-500" />
+                      Тренер
+                    </Badge>
+                  ) : (
+                    <>
+                      <Badge variant="outline" className="gap-1.5 px-3 py-1.5 text-sm font-semibold">
+                        <Zap className="h-3.5 w-3.5 text-yellow-500" />
+                        {levelInfo.totalXP} XP
+                      </Badge>
+                      <Badge variant="outline" className="gap-1.5 px-3 py-1.5 text-sm font-semibold">
+                        <Trophy className="h-3.5 w-3.5 text-purple-500" />
+                        {getLevelTitle(levelInfo.level)}
+                      </Badge>
+                    </>
+                  )}
                 </>
               )}
               {streakDays > 0 && (
