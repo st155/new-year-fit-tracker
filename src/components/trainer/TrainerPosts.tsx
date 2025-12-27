@@ -12,6 +12,7 @@ import { Plus, Edit, Eye, Send, Calendar, Target, MessageSquare, Award, AlertTri
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "react-i18next";
 
 interface TrainerPost {
   id: string;
@@ -34,6 +35,7 @@ interface Challenge {
 }
 
 export function TrainerPosts() {
+  const { t } = useTranslation('trainerDashboard');
   const { user } = useAuth();
   const [posts, setPosts] = useState<TrainerPost[]>([]);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
@@ -74,7 +76,7 @@ export function TrainerPosts() {
       setPosts(data as TrainerPost[] || []);
     } catch (error: any) {
       console.error('Error loading posts:', error);
-      toast.error('Ошибка загрузки постов');
+      toast.error(t('posts.loadError'));
     } finally {
       setLoading(false);
     }
@@ -99,7 +101,7 @@ export function TrainerPosts() {
 
   const handleCreatePost = async () => {
     if (!user || !newPost.title.trim() || !newPost.content.trim()) {
-      toast.error('Заполните все обязательные поля');
+      toast.error(t('posts.fillRequired'));
       return;
     }
 
@@ -123,13 +125,13 @@ export function TrainerPosts() {
 
       if (error) throw error;
 
-      toast.success('Пост создан');
+      toast.success(t('posts.created'));
       setIsCreateDialogOpen(false);
       resetForm();
       loadPosts();
     } catch (error: any) {
       console.error('Error creating post:', error);
-      toast.error('Ошибка создания поста');
+      toast.error(t('posts.createError'));
     }
   };
 
@@ -148,12 +150,12 @@ export function TrainerPosts() {
 
       if (error) throw error;
 
-      toast.success('Пост обновлён');
+      toast.success(t('posts.updated'));
       setEditingPost(null);
       loadPosts();
     } catch (error: any) {
       console.error('Error updating post:', error);
-      toast.error('Ошибка обновления поста');
+      toast.error(t('posts.updateError'));
     }
   };
 
@@ -166,11 +168,11 @@ export function TrainerPosts() {
 
       if (error) throw error;
 
-      toast.success(published ? 'Пост опубликован' : 'Пост снят с публикации');
+      toast.success(published ? t('posts.published') : t('posts.unpublished'));
       loadPosts();
     } catch (error: any) {
       console.error('Error toggling post:', error);
-      toast.error('Ошибка изменения статуса поста');
+      toast.error(t('posts.statusError'));
     }
   };
 
@@ -200,10 +202,10 @@ export function TrainerPosts() {
 
   const getPostTypeLabel = (type: string) => {
     switch (type) {
-      case 'weekly_task': return 'Задание на неделю';
-      case 'daily_tip': return 'Совет дня';
-      case 'announcement': return 'Объявление';
-      case 'motivation': return 'Мотивация';
+      case 'weekly_task': return t('posts.types.weekly_task');
+      case 'daily_tip': return t('posts.types.daily_tip');
+      case 'announcement': return t('posts.types.announcement');
+      case 'motivation': return t('posts.types.motivation');
       default: return type;
     }
   };
@@ -222,46 +224,46 @@ export function TrainerPosts() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Посты и объявления</h2>
-          <p className="text-muted-foreground">Создавайте задания, советы и объявления для подопечных</p>
+          <h2 className="text-2xl font-bold">{t('posts.title')}</h2>
+          <p className="text-muted-foreground">{t('posts.subtitle')}</p>
         </div>
         
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
-              Создать пост
+              {t('posts.createPost')}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Создать новый пост</DialogTitle>
+              <DialogTitle>{t('posts.createNewPost')}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="title">Заголовок *</Label>
+                <Label htmlFor="title">{t('posts.form.titleLabel')}</Label>
                 <Input
                   id="title"
                   value={newPost.title}
                   onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
-                  placeholder="Например: Задание на эту неделю"
+                  placeholder={t('posts.form.titlePlaceholder')}
                 />
               </div>
 
               <div>
-                <Label htmlFor="content">Содержание *</Label>
+                <Label htmlFor="content">{t('posts.form.contentLabel')}</Label>
                 <Textarea
                   id="content"
                   value={newPost.content}
                   onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
-                  placeholder="Введите текст поста..."
+                  placeholder={t('posts.form.contentPlaceholder')}
                   className="min-h-32"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="post_type">Тип поста</Label>
+                  <Label htmlFor="post_type">{t('posts.form.postType')}</Label>
                   <Select
                     value={newPost.post_type}
                     onValueChange={(value: any) => setNewPost({ ...newPost, post_type: value })}
@@ -270,16 +272,16 @@ export function TrainerPosts() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="weekly_task">Задание на неделю</SelectItem>
-                      <SelectItem value="daily_tip">Совет дня</SelectItem>
-                      <SelectItem value="announcement">Объявление</SelectItem>
-                      <SelectItem value="motivation">Мотивация</SelectItem>
+                      <SelectItem value="weekly_task">{t('posts.types.weekly_task')}</SelectItem>
+                      <SelectItem value="daily_tip">{t('posts.types.daily_tip')}</SelectItem>
+                      <SelectItem value="announcement">{t('posts.types.announcement')}</SelectItem>
+                      <SelectItem value="motivation">{t('posts.types.motivation')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
-                  <Label htmlFor="priority">Приоритет</Label>
+                  <Label htmlFor="priority">{t('posts.form.priority')}</Label>
                   <Select
                     value={newPost.priority}
                     onValueChange={(value: any) => setNewPost({ ...newPost, priority: value })}
@@ -288,17 +290,17 @@ export function TrainerPosts() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="low">Низкий</SelectItem>
-                      <SelectItem value="normal">Обычный</SelectItem>
-                      <SelectItem value="high">Высокий</SelectItem>
-                      <SelectItem value="urgent">Срочный</SelectItem>
+                      <SelectItem value="low">{t('posts.priorities.low')}</SelectItem>
+                      <SelectItem value="normal">{t('posts.priorities.normal')}</SelectItem>
+                      <SelectItem value="high">{t('posts.priorities.high')}</SelectItem>
+                      <SelectItem value="urgent">{t('posts.priorities.urgent')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="target_audience">Аудитория</Label>
+                <Label htmlFor="target_audience">{t('posts.form.audience')}</Label>
                 <Select
                   value={newPost.target_audience}
                   onValueChange={(value: any) => setNewPost({ ...newPost, target_audience: value })}
@@ -307,21 +309,21 @@ export function TrainerPosts() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Все подопечные</SelectItem>
-                    <SelectItem value="specific_challenge">Участники челленджа</SelectItem>
+                    <SelectItem value="all">{t('posts.audiences.all')}</SelectItem>
+                    <SelectItem value="specific_challenge">{t('posts.audiences.specific_challenge')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {newPost.target_audience === 'specific_challenge' && (
                 <div>
-                  <Label htmlFor="challenge_id">Челлендж</Label>
+                  <Label htmlFor="challenge_id">{t('posts.form.challenge')}</Label>
                   <Select
                     value={newPost.challenge_id}
                     onValueChange={(value) => setNewPost({ ...newPost, challenge_id: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Выберите челлендж" />
+                      <SelectValue placeholder={t('posts.form.challengePlaceholder')} />
                     </SelectTrigger>
                     <SelectContent>
                       {challenges.map((challenge) => (
@@ -340,11 +342,11 @@ export function TrainerPosts() {
                   checked={newPost.published}
                   onCheckedChange={(checked) => setNewPost({ ...newPost, published: checked })}
                 />
-                <Label htmlFor="published">Опубликовать сразу</Label>
+                <Label htmlFor="published">{t('posts.form.publishNow')}</Label>
               </div>
 
               <Button onClick={handleCreatePost} className="w-full">
-                Создать пост
+                {t('posts.createPost')}
               </Button>
             </div>
           </DialogContent>
@@ -368,9 +370,9 @@ export function TrainerPosts() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-8">
             <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium">Нет постов</h3>
+            <h3 className="text-lg font-medium">{t('posts.empty.title')}</h3>
             <p className="text-muted-foreground text-center">
-              Создайте первый пост для ваших подопечных
+              {t('posts.empty.description')}
             </p>
           </CardContent>
         </Card>
@@ -387,9 +389,9 @@ export function TrainerPosts() {
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge variant={getPriorityColor(post.priority) as any}>
-                        {post.priority === 'urgent' ? 'Срочно' : 
-                         post.priority === 'high' ? 'Высокий' :
-                         post.priority === 'normal' ? 'Обычный' : 'Низкий'}
+                        {post.priority === 'urgent' ? t('posts.priorities.urgent') : 
+                         post.priority === 'high' ? t('posts.priorities.high') :
+                         post.priority === 'normal' ? t('posts.priorities.normal') : t('posts.priorities.low')}
                       </Badge>
                       <Badge variant="outline">
                         {getPostTypeLabel(post.post_type)}
@@ -397,10 +399,10 @@ export function TrainerPosts() {
                       {post.published ? (
                         <Badge variant="default">
                           <Eye className="h-3 w-3 mr-1" />
-                          Опубликован
+                          {t('posts.status.published')}
                         </Badge>
                       ) : (
-                        <Badge variant="secondary">Черновик</Badge>
+                        <Badge variant="secondary">{t('posts.status.draft')}</Badge>
                       )}
                     </div>
                   </div>
@@ -424,7 +426,7 @@ export function TrainerPosts() {
                 <p className="text-muted-foreground mb-4">{post.content}</p>
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>
-                    {post.target_audience === 'all' ? 'Для всех' : 'Для участников челленджа'}
+                    {post.target_audience === 'all' ? t('posts.audienceLabels.all') : t('posts.audienceLabels.challenge')}
                   </span>
                   <span>
                     <Calendar className="h-3 w-3 inline mr-1" />
@@ -442,7 +444,7 @@ export function TrainerPosts() {
         <Dialog open={!!editingPost} onOpenChange={() => setEditingPost(null)}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Редактировать пост</DialogTitle>
+              <DialogTitle>{t('posts.editPost')}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <Input
@@ -456,10 +458,10 @@ export function TrainerPosts() {
               />
               <div className="flex gap-2">
                 <Button onClick={() => handleUpdatePost(editingPost)}>
-                  Сохранить
+                  {t('posts.form.save')}
                 </Button>
                 <Button variant="outline" onClick={() => setEditingPost(null)}>
-                  Отмена
+                  {t('posts.form.cancel')}
                 </Button>
               </div>
             </div>

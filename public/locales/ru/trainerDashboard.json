@@ -70,5 +70,63 @@
     "noData": "Нет данных",
     "less": "Меньше",
     "more": "Больше"
+  },
+  "posts": {
+    "title": "Посты и объявления",
+    "subtitle": "Создавайте задания, советы и объявления для подопечных",
+    "createPost": "Создать пост",
+    "createNewPost": "Создать новый пост",
+    "editPost": "Редактировать пост",
+    "loadError": "Ошибка загрузки постов",
+    "createError": "Ошибка создания поста",
+    "updateError": "Ошибка обновления поста",
+    "statusError": "Ошибка изменения статуса поста",
+    "fillRequired": "Заполните все обязательные поля",
+    "created": "Пост создан",
+    "updated": "Пост обновлён",
+    "published": "Пост опубликован",
+    "unpublished": "Пост снят с публикации",
+    "form": {
+      "titleLabel": "Заголовок *",
+      "titlePlaceholder": "Например: Задание на эту неделю",
+      "contentLabel": "Содержание *",
+      "contentPlaceholder": "Введите текст поста...",
+      "postType": "Тип поста",
+      "priority": "Приоритет",
+      "audience": "Аудитория",
+      "challenge": "Челлендж",
+      "challengePlaceholder": "Выберите челлендж",
+      "publishNow": "Опубликовать сразу",
+      "save": "Сохранить",
+      "cancel": "Отмена"
+    },
+    "types": {
+      "weekly_task": "Задание на неделю",
+      "daily_tip": "Совет дня",
+      "announcement": "Объявление",
+      "motivation": "Мотивация"
+    },
+    "priorities": {
+      "low": "Низкий",
+      "normal": "Обычный",
+      "high": "Высокий",
+      "urgent": "Срочный"
+    },
+    "audiences": {
+      "all": "Все подопечные",
+      "specific_challenge": "Участники челленджа"
+    },
+    "status": {
+      "published": "Опубликован",
+      "draft": "Черновик"
+    },
+    "audienceLabels": {
+      "all": "Для всех",
+      "challenge": "Для участников челленджа"
+    },
+    "empty": {
+      "title": "Нет постов",
+      "description": "Создайте первый пост для ваших подопечных"
+    }
   }
 }

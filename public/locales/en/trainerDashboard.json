@@ -70,5 +70,63 @@
     "noData": "No data",
     "less": "Less",
     "more": "More"
+  },
+  "posts": {
+    "title": "Posts & Announcements",
+    "subtitle": "Create tasks, tips and announcements for your clients",
+    "createPost": "Create Post",
+    "createNewPost": "Create New Post",
+    "editPost": "Edit Post",
+    "loadError": "Error loading posts",
+    "createError": "Error creating post",
+    "updateError": "Error updating post",
+    "statusError": "Error changing post status",
+    "fillRequired": "Fill in all required fields",
+    "created": "Post created",
+    "updated": "Post updated",
+    "published": "Post published",
+    "unpublished": "Post unpublished",
+    "form": {
+      "titleLabel": "Title *",
+      "titlePlaceholder": "E.g.: This week's task",
+      "contentLabel": "Content *",
+      "contentPlaceholder": "Enter post text...",
+      "postType": "Post Type",
+      "priority": "Priority",
+      "audience": "Audience",
+      "challenge": "Challenge",
+      "challengePlaceholder": "Select challenge",
+      "publishNow": "Publish immediately",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "types": {
+      "weekly_task": "Weekly Task",
+      "daily_tip": "Daily Tip",
+      "announcement": "Announcement",
+      "motivation": "Motivation"
+    },
+    "priorities": {
+      "low": "Low",
+      "normal": "Normal",
+      "high": "High",
+      "urgent": "Urgent"
+    },
+    "audiences": {
+      "all": "All clients",
+      "specific_challenge": "Challenge participants"
+    },
+    "status": {
+      "published": "Published",
+      "draft": "Draft"
+    },
+    "audienceLabels": {
+      "all": "For everyone",
+      "challenge": "For challenge participants"
+    },
+    "empty": {
+      "title": "No posts",
+      "description": "Create your first post for your clients"
+    }
   }
 }

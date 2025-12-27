@@ -38,5 +38,10 @@
     "title": "Dev Tools",
     "createDemoTeams": "Create demo teams",
     "createDemoEvents": "Create demo events"
+  },
+  "fasting": {
+    "eatingStarted": "Eating window started! 🍽️",
+    "fastingStarted": "Fasting started! 💪",
+    "error": "Error: {{message}}"
   }
 }
