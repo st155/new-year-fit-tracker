@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { FormValidation, validationRules, useFormValidation } from "@/components/ui/form-validation";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useGoalMutations } from "../../hooks";
+import { useTranslation } from "react-i18next";
 
 interface GoalTemplate {
   name: string;
@@ -19,26 +20,20 @@ interface GoalTemplate {
   unit: string;
 }
 
-const goalTemplates: GoalTemplate[] = [
-  { name: "Гребля 2 км", type: "endurance", value: 8.5, unit: "мин" },
-  { name: "Бег 1 км", type: "endurance", value: 4.0, unit: "мин" },
-  { name: "Подтягивания", type: "strength", value: 17, unit: "раз" },
-  { name: "Жим лёжа", type: "strength", value: 90, unit: "кг" },
-  { name: "Выпады назад со штангой", type: "strength", value: 50, unit: "кг ×8" },
-  { name: "Планка", type: "endurance", value: 4, unit: "мин" },
-  { name: "Отжимания", type: "strength", value: 60, unit: "раз" },
-  { name: "Подъём ног в висе до перекладины", type: "strength", value: 17, unit: "раз" },
-  { name: "VO2max", type: "cardio", value: 52, unit: "мл/кг/мин" },
-  { name: "Процент жира", type: "body_composition", value: 11, unit: "%" }
+const goalTemplateKeys = [
+  { key: 'rowing2km', type: "endurance", value: 8.5, unit: "мин" },
+  { key: 'run1km', type: "endurance", value: 4.0, unit: "мин" },
+  { key: 'pullups', type: "strength", value: 17, unit: "раз" },
+  { key: 'benchPress', type: "strength", value: 90, unit: "кг" },
+  { key: 'lunges', type: "strength", value: 50, unit: "кг ×8" },
+  { key: 'plank', type: "endurance", value: 4, unit: "мин" },
+  { key: 'pushups', type: "strength", value: 60, unit: "раз" },
+  { key: 'legRaises', type: "strength", value: 17, unit: "раз" },
+  { key: 'vo2max', type: "cardio", value: 52, unit: "мл/кг/мин" },
+  { key: 'bodyFat', type: "body_composition", value: 11, unit: "%" }
 ];
 
-const goalTypeLabels: Record<string, string> = {
-  strength: 'Сила',
-  cardio: 'Кардио',
-  endurance: 'Выносливость',
-  body_composition: 'Состав тела',
-  flexibility: 'Гибкость'
-};
+const goalTypeKeys = ['strength', 'cardio', 'endurance', 'body_composition', 'flexibility'] as const;
 
 interface GoalCreateDialogProps {
   open?: boolean;
@@ -51,6 +46,7 @@ export function GoalCreateDialog({
   onOpenChange: controlledOnOpenChange,
   onGoalCreated 
 }: GoalCreateDialogProps) {
+  const { t } = useTranslation('goals');
   const [internalOpen, setInternalOpen] = useState(false);
   
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
@@ -63,6 +59,14 @@ export function GoalCreateDialog({
 
   const { createGoal } = useGoalMutations();
 
+  // Get translated templates
+  const goalTemplates = goalTemplateKeys.map(tmpl => ({
+    name: t(`templates.${tmpl.key}`),
+    key: tmpl.key,
+    type: tmpl.type,
+    value: tmpl.value,
+    unit: tmpl.unit
+  }));
   // Fetch user's active challenges
   useEffect(() => {
     const fetchChallenges = async () => {
@@ -99,14 +103,14 @@ export function GoalCreateDialog({
     { name: "", type: "", value: 0, unit: "" },
     {
       name: [validationRules.required(), validationRules.minLength(2)],
-      type: [validationRules.required("Выберите тип цели")],
-      value: [validationRules.required("Укажите целевое значение"), validationRules.positiveNumber()],
-      unit: [validationRules.required("Укажите единицу измерения")]
+      type: [validationRules.required(t('createDialog.validation.selectType'))],
+      value: [validationRules.required(t('createDialog.validation.enterTarget')), validationRules.positiveNumber()],
+      unit: [validationRules.required(t('createDialog.validation.enterUnit'))]
     }
   );
 
-  const handleTemplateSelect = (templateName: string) => {
-    const template = goalTemplates.find(t => t.name === templateName);
+  const handleTemplateSelect = (templateKey: string) => {
+    const template = goalTemplates.find(tmpl => tmpl.key === templateKey);
     if (template) {
       setValue('name', template.name);
       setValue('type', template.type);
@@ -118,7 +122,7 @@ export function GoalCreateDialog({
       setFieldTouched('value');
       setFieldTouched('unit');
       
-      setSelectedTemplate(templateName);
+      setSelectedTemplate(templateKey);
     }
   };
 
@@ -152,34 +156,34 @@ export function GoalCreateDialog({
       <DialogTrigger asChild>
         <Button variant="fitness" size="sm">
           <Plus className="w-4 h-4 mr-1" />
-          Добавить
+          {t('createDialog.add')}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Создать цель</DialogTitle>
+          <DialogTitle>{t('createDialog.title')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label>Тип цели</Label>
+            <Label>{t('createDialog.scopeLabel')}</Label>
             <RadioGroup value={goalScope} onValueChange={(v) => setGoalScope(v as 'personal' | 'challenge')}>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="personal" id="personal" />
-                <Label htmlFor="personal" className="font-normal">Личная цель</Label>
+                <Label htmlFor="personal" className="font-normal">{t('createDialog.personal')}</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="challenge" id="challenge" />
-                <Label htmlFor="challenge" className="font-normal">Цель челленджа</Label>
+                <Label htmlFor="challenge" className="font-normal">{t('createDialog.challenge')}</Label>
               </div>
             </RadioGroup>
           </div>
 
           {goalScope === 'challenge' && (
             <div>
-              <Label>Выберите челлендж</Label>
+              <Label>{t('createDialog.selectChallenge')}</Label>
               <Select value={selectedChallengeId} onValueChange={setSelectedChallengeId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Выберите челлендж" />
+                  <SelectValue placeholder={t('createDialog.selectChallenge')} />
                 </SelectTrigger>
                 <SelectContent>
                   {challenges.map((challenge) => (
@@ -194,16 +198,16 @@ export function GoalCreateDialog({
 
           <div>
             <Label className="text-muted-foreground text-sm">
-              Быстрый выбор шаблона (необязательно)
+              {t('createDialog.templateLabel')}
             </Label>
             <div className="flex gap-2">
               <Select value={selectedTemplate} onValueChange={handleTemplateSelect}>
                 <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Выберите готовую цель" />
+                  <SelectValue placeholder={t('createDialog.templatePlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {goalTemplates.map((template) => (
-                    <SelectItem key={template.name} value={template.name}>
+                    <SelectItem key={template.key} value={template.key}>
                       {template.name} - {template.value} {template.unit}
                     </SelectItem>
                   ))}
@@ -227,17 +231,17 @@ export function GoalCreateDialog({
 
           <Separator className="my-4" />
           <p className="text-sm text-muted-foreground -mt-2 mb-2">
-            или заполните вручную:
+            {t('createDialog.orManual')}
           </p>
 
           <div>
-            <Label htmlFor="goal_name">Название цели</Label>
+            <Label htmlFor="goal_name">{t('createDialog.nameLabel')}</Label>
             <Input
               id="goal_name"
               value={customGoal.name}
               onChange={(e) => setValue('name', e.target.value)}
               onBlur={() => setFieldTouched('name')}
-              placeholder="Введите название цели"
+              placeholder={t('createDialog.namePlaceholder')}
               className={errors.name?.length > 0 ? 'border-destructive' : ''}
             />
             <FormValidation
@@ -248,7 +252,7 @@ export function GoalCreateDialog({
           </div>
 
           <div>
-            <Label htmlFor="goal_type">Тип цели</Label>
+            <Label htmlFor="goal_type">{t('createDialog.typeLabel')}</Label>
             <Select
               value={customGoal.type}
               onValueChange={(value) => {
@@ -257,24 +261,24 @@ export function GoalCreateDialog({
               }}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Выберите тип" />
+                <SelectValue placeholder={t('createDialog.typePlaceholder')} />
               </SelectTrigger>
               <SelectContent>
-                {Object.entries(goalTypeLabels).map(([value, label]) => (
-                  <SelectItem key={value} value={value}>{label}</SelectItem>
+                {goalTypeKeys.map((typeKey) => (
+                  <SelectItem key={typeKey} value={typeKey}>{t(`types.${typeKey}`)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <FormValidation
               value={customGoal.type}
-              rules={[validationRules.required("Выберите тип цели")]}
+              rules={[validationRules.required(t('createDialog.validation.selectType'))]}
               showValidation={touched.type}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="target_value">Целевое значение</Label>
+              <Label htmlFor="target_value">{t('createDialog.targetLabel')}</Label>
               <Input
                 id="target_value"
                 type="number"
@@ -286,23 +290,23 @@ export function GoalCreateDialog({
               />
               <FormValidation
                 value={customGoal.value}
-                rules={[validationRules.required("Укажите целевое значение"), validationRules.positiveNumber()]}
+                rules={[validationRules.required(t('createDialog.validation.enterTarget')), validationRules.positiveNumber()]}
                 showValidation={touched.value}
               />
             </div>
             <div>
-              <Label htmlFor="target_unit">Единица</Label>
+              <Label htmlFor="target_unit">{t('createDialog.unitLabel')}</Label>
               <Input
                 id="target_unit"
                 value={customGoal.unit}
                 onChange={(e) => setValue('unit', e.target.value)}
                 onBlur={() => setFieldTouched('unit')}
-                placeholder="кг, раз, мин"
+                placeholder={t('createDialog.unitPlaceholder')}
                 className={errors.unit?.length > 0 ? 'border-destructive' : ''}
               />
               <FormValidation
                 value={customGoal.unit}
-                rules={[validationRules.required("Укажите единицу измерения")]}
+                rules={[validationRules.required(t('createDialog.validation.enterUnit'))]}
                 showValidation={touched.unit}
               />
             </div>
@@ -311,16 +315,16 @@ export function GoalCreateDialog({
           <div className="flex gap-2 pt-4">
             <Button onClick={handleCreate} disabled={createGoal.isPending || !isFormValid} className="flex-1">
               {createGoal.isPending ? (
-                'Создание...'
+                t('createDialog.creating')
               ) : (
                 <>
                   <Check className="h-4 w-4 mr-2" />
-                  Создать
+                  {t('createDialog.create')}
                 </>
               )}
             </Button>
             <Button variant="outline" onClick={() => setOpen(false)} className="flex-1">
-              Отмена
+              {t('createDialog.cancel')}
             </Button>
           </div>
         </div>

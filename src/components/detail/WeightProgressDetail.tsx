@@ -6,9 +6,9 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { format, subDays } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import { QuickMeasurementDialog } from '@/features/goals/components';
-
+import { useTranslation } from 'react-i18next';
 interface WeightData {
   date: string;
   weight: number;
@@ -21,13 +21,15 @@ interface WeightProgressDetailProps {
 
 export function WeightProgressDetail({ onBack }: WeightProgressDetailProps) {
   const { user } = useAuth();
+  const { t, i18n } = useTranslation('goals');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
+
   const [weightData, setWeightData] = useState<WeightData[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentWeight, setCurrentWeight] = useState<number | null>(null);
   const [weeklyChange, setWeeklyChange] = useState<number | null>(null);
   const [weightGoal, setWeightGoal] = useState<any>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-
   useEffect(() => {
     if (user) {
       fetchWeightData();
@@ -129,7 +131,7 @@ export function WeightProgressDetail({ onBack }: WeightProgressDetailProps) {
   };
 
   const formatTooltipDate = (dateStr: string) => {
-    return format(new Date(dateStr), 'd MMM', { locale: ru });
+    return format(new Date(dateStr), 'd MMM', { locale: dateLocale });
   };
 
   if (loading) {
@@ -138,7 +140,7 @@ export function WeightProgressDetail({ onBack }: WeightProgressDetailProps) {
         <CardHeader>
           <Button variant="ghost" onClick={onBack} className="w-fit">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Назад
+            {t('weightProgress.back')}
           </Button>
         </CardHeader>
         <CardContent>
@@ -164,7 +166,7 @@ export function WeightProgressDetail({ onBack }: WeightProgressDetailProps) {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Прогресс веса</h1>
+            <h1 className="text-2xl font-bold text-foreground">{t('weightProgress.title')}</h1>
           </div>
         </div>
         {weightGoal && (
@@ -188,11 +190,11 @@ export function WeightProgressDetail({ onBack }: WeightProgressDetailProps) {
             boxShadow: "0 0 20px rgba(16, 185, 129, 0.3)",
           }}
         >
-          <div className="text-sm text-muted-foreground mb-1">Текущий вес</div>
+          <div className="text-sm text-muted-foreground mb-1">{t('weightProgress.currentWeight')}</div>
           <div className="text-4xl font-bold text-[#10B981]">
             {currentWeight ? `${currentWeight.toFixed(1)}` : '—'}
           </div>
-          {currentWeight && <div className="text-sm text-muted-foreground">кг</div>}
+          {currentWeight && <div className="text-sm text-muted-foreground">{t('weightProgress.kg')}</div>}
         </div>
 
         <div 
@@ -202,7 +204,7 @@ export function WeightProgressDetail({ onBack }: WeightProgressDetailProps) {
             borderColor: "rgba(255, 255, 255, 0.1)",
           }}
         >
-          <div className="text-sm text-muted-foreground mb-1">За неделю</div>
+          <div className="text-sm text-muted-foreground mb-1">{t('weightProgress.weeklyChange')}</div>
           <div className="flex items-center gap-2 text-2xl font-bold">
             {weeklyChange !== null ? (
               <>
@@ -223,8 +225,8 @@ export function WeightProgressDetail({ onBack }: WeightProgressDetailProps) {
             boxShadow: "0 0 20px rgba(255, 107, 44, 0.3)",
           }}
         >
-          <div className="text-sm text-muted-foreground mb-1">Целевой вес</div>
-          <div className="text-3xl font-bold text-[#FF6B2C]">72 кг</div>
+          <div className="text-sm text-muted-foreground mb-1">{t('weightProgress.targetWeight')}</div>
+          <div className="text-3xl font-bold text-[#FF6B2C]">72 {t('weightProgress.kg')}</div>
         </div>
       </div>
 
@@ -263,7 +265,7 @@ export function WeightProgressDetail({ onBack }: WeightProgressDetailProps) {
                   stroke="rgba(255, 255, 255, 0.3)"
                   tick={{ fill: 'rgba(255, 255, 255, 0.5)', fontSize: 12 }}
                   axisLine={{ stroke: 'rgba(255, 255, 255, 0.1)' }}
-                  tickFormatter={(value) => `${value}кг`}
+                  tickFormatter={(value) => `${value}${t('weightProgress.kg')}`}
                 />
                 <Tooltip 
                   contentStyle={{
@@ -275,7 +277,7 @@ export function WeightProgressDetail({ onBack }: WeightProgressDetailProps) {
                   labelStyle={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 12 }}
                   itemStyle={{ color: '#10B981', fontSize: 14, fontWeight: 'bold' }}
                   labelFormatter={(value) => formatTooltipDate(value as string)}
-                  formatter={(value: number) => [`${value.toFixed(1)} кг`, 'Вес']}
+                  formatter={(value: number) => [`${value.toFixed(1)} ${t('weightProgress.kg')}`, t('weightProgress.weight')]}
                 />
                 <Line 
                   type="monotone" 
@@ -299,14 +301,14 @@ export function WeightProgressDetail({ onBack }: WeightProgressDetailProps) {
           }}
         >
           <Target className="w-12 h-12 mx-auto mb-4 opacity-30" />
-          <p className="text-muted-foreground">Нет данных о весе</p>
-          <p className="text-sm text-muted-foreground">Добавьте измерения для отслеживания прогресса</p>
+          <p className="text-muted-foreground">{t('weightProgress.noData')}</p>
+          <p className="text-sm text-muted-foreground">{t('weightProgress.noDataHint')}</p>
         </div>
       )}
 
       {/* History */}
       <div>
-        <h3 className="text-lg font-semibold mb-3 text-foreground">История изменений</h3>
+        <h3 className="text-lg font-semibold mb-3 text-foreground">{t('weightProgress.history')}</h3>
         <div className="space-y-2">
           {weightData.slice(-10).reverse().map((item) => (
             <div 
@@ -319,10 +321,10 @@ export function WeightProgressDetail({ onBack }: WeightProgressDetailProps) {
             >
               <div>
                 <div className="font-semibold text-foreground text-lg">
-                  {item.weight.toFixed(1)} кг
+                  {item.weight.toFixed(1)} {t('weightProgress.kg')}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  {format(new Date(item.date), 'd MMMM yyyy', { locale: ru })}
+                  {format(new Date(item.date), 'd MMMM yyyy', { locale: dateLocale })}
                 </div>
               </div>
               {item.change !== 0 && (
@@ -335,7 +337,7 @@ export function WeightProgressDetail({ onBack }: WeightProgressDetailProps) {
                 >
                   {getTrendIcon(item.change)}
                   <span>
-                    {item.change > 0 ? '+' : ''}{item.change.toFixed(1)} кг
+                    {item.change > 0 ? '+' : ''}{item.change.toFixed(1)} {t('weightProgress.kg')}
                   </span>
                 </div>
               )}

@@ -27,13 +27,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from "recharts";
 import { format } from "date-fns";
-import { ru } from "date-fns/locale";
+import { ru, enUS } from "date-fns/locale";
 import { 
   goalThemes, 
   getGoalIcon, 
   getSourceBadge,
   isLowerBetterGoal 
 } from "@/lib/goalUtils";
+import { useTranslation } from "react-i18next";
 
 interface EnhancedGoalCardProps {
   goal: ChallengeGoal;
@@ -42,11 +43,13 @@ interface EnhancedGoalCardProps {
 }
 
 export function EnhancedGoalCard({ goal, onMeasurementAdded, readonly = false }: EnhancedGoalCardProps) {
+  const { t, i18n } = useTranslation('goals');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
+
   const [measurementOpen, setMeasurementOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [habitDialogOpen, setHabitDialogOpen] = useState(false);
-
   const { deleteGoal } = useGoalMutations();
 
   const handleDelete = () => {
@@ -84,9 +87,9 @@ export function EnhancedGoalCard({ goal, onMeasurementAdded, readonly = false }:
       .map(m => ({
         date: m.measurement_date,
         value: m.value,
-        formattedDate: format(new Date(m.measurement_date), 'dd MMM', { locale: ru })
+        formattedDate: format(new Date(m.measurement_date), 'dd MMM', { locale: dateLocale })
       }));
-  }, [goal.measurements]);
+  }, [goal.measurements, dateLocale]);
 
   // Statistics calculation
   const stats = useMemo(() => {
@@ -158,7 +161,7 @@ export function EnhancedGoalCard({ goal, onMeasurementAdded, readonly = false }:
                             <Repeat className="h-3.5 w-3.5" />
                           </Button>
                         </TooltipTrigger>
-                        <TooltipContent>Создать привычку</TooltipContent>
+                        <TooltipContent>{t('card.createHabit')}</TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
                     <TooltipProvider>
@@ -173,7 +176,7 @@ export function EnhancedGoalCard({ goal, onMeasurementAdded, readonly = false }:
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         </TooltipTrigger>
-                        <TooltipContent>Удалить</TooltipContent>
+                        <TooltipContent>{t('card.delete')}</TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
                   </>
@@ -190,7 +193,7 @@ export function EnhancedGoalCard({ goal, onMeasurementAdded, readonly = false }:
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>Редактировать</TooltipContent>
+                    <TooltipContent>{t('card.edit')}</TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
                 {hasTarget && (
@@ -206,7 +209,7 @@ export function EnhancedGoalCard({ goal, onMeasurementAdded, readonly = false }:
                           <Plus className="h-3.5 w-3.5" />
                         </Button>
                       </TooltipTrigger>
-                      <TooltipContent>Добавить замер</TooltipContent>
+                      <TooltipContent>{t('card.addMeasurement')}</TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 )}
@@ -217,7 +220,7 @@ export function EnhancedGoalCard({ goal, onMeasurementAdded, readonly = false }:
           {/* Badges */}
           <div className="flex items-center gap-2 flex-wrap mb-4">
             {goal.is_personal ? (
-              <Badge variant="outline" className="text-xs">Личная</Badge>
+              <Badge variant="outline" className="text-xs">{t('card.personal')}</Badge>
             ) : (
               <TooltipProvider>
                 <Tooltip>
@@ -228,7 +231,7 @@ export function EnhancedGoalCard({ goal, onMeasurementAdded, readonly = false }:
                     </Badge>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p className="text-xs">Цель челленджа - редактируется только тренером</p>
+                    <p className="text-xs">{t('card.challengeTooltip')}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -243,8 +246,8 @@ export function EnhancedGoalCard({ goal, onMeasurementAdded, readonly = false }:
           {!hasTarget ? (
             <div className="text-muted-foreground flex-1 flex items-center justify-center">
               <div className="text-center">
-                <p className="text-sm mb-1">Цель не установлена</p>
-                <p className="text-xs">Нажмите на карандаш, чтобы установить цель</p>
+                <p className="text-sm mb-1">{t('card.noTarget')}</p>
+                <p className="text-xs">{t('card.noTargetHint')}</p>
               </div>
             </div>
           ) : (
@@ -257,7 +260,7 @@ export function EnhancedGoalCard({ goal, onMeasurementAdded, readonly = false }:
                     : `${goal.current_value.toFixed(1)} ${goal.target_unit}`}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  Цель: {goal.target_reps && (goal.target_unit === 'кг' || goal.target_unit === 'kg')
+                  {t('card.target')}: {goal.target_reps && (goal.target_unit === 'кг' || goal.target_unit === 'kg')
                     ? (goal.target_reps === 1 
                         ? `${goal.target_value} кг (1RM)` 
                         : `${goal.target_value} кг × ${goal.target_reps}`)
@@ -269,7 +272,7 @@ export function EnhancedGoalCard({ goal, onMeasurementAdded, readonly = false }:
               <div className="mb-3">
                 <Progress value={goal.progress_percentage} autoColor className="h-2 mb-1" />
                 <div className="text-xs text-muted-foreground">
-                  {goal.progress_percentage.toFixed(0)}% выполнено
+                  {t('card.completed', { percent: goal.progress_percentage.toFixed(0) })}
                 </div>
               </div>
 
@@ -302,17 +305,17 @@ export function EnhancedGoalCard({ goal, onMeasurementAdded, readonly = false }:
               {/* Statistics */}
               <div className="grid grid-cols-3 gap-2 text-xs mt-auto pt-3 border-t border-border">
                 <div>
-                  <div className="text-muted-foreground mb-0.5">Базовая</div>
+                  <div className="text-muted-foreground mb-0.5">{t('card.baseline')}</div>
                   <div className="font-semibold">{stats.baseline.toFixed(1)}</div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground mb-0.5">Текущая</div>
+                  <div className="text-muted-foreground mb-0.5">{t('card.current')}</div>
                   <div className="font-semibold" style={{ color: theme.color }}>
                     {goal.current_value.toFixed(1)}
                   </div>
                 </div>
                 <div>
-                  <div className="text-muted-foreground mb-0.5">Цель</div>
+                  <div className="text-muted-foreground mb-0.5">{t('card.goal')}</div>
                   <div className="font-semibold">{goal.target_value.toFixed(1)}</div>
                 </div>
               </div>
@@ -378,19 +381,19 @@ export function EnhancedGoalCard({ goal, onMeasurementAdded, readonly = false }:
           <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Удалить цель?</AlertDialogTitle>
+                <AlertDialogTitle>{t('card.deleteTitle')}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Вы уверены, что хотите удалить цель "{goal.goal_name}"? Это действие нельзя отменить, и все связанные измерения также будут удалены.
+                  {t('card.deleteDescription', { name: goal.goal_name })}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel disabled={deleteGoal.isPending}>Отмена</AlertDialogCancel>
+                <AlertDialogCancel disabled={deleteGoal.isPending}>{t('edit.cancel')}</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={handleDelete}
                   disabled={deleteGoal.isPending}
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 >
-                  {deleteGoal.isPending ? "Удаление..." : "Удалить"}
+                  {deleteGoal.isPending ? t('card.deleting') : t('card.delete')}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -400,7 +403,7 @@ export function EnhancedGoalCard({ goal, onMeasurementAdded, readonly = false }:
             open={habitDialogOpen}
             onOpenChange={setHabitDialogOpen}
             linkedGoalId={goal.id}
-            prefilledName={`Привычка: ${goal.goal_name}`}
+            prefilledName={t('card.habitPrefix', { name: goal.goal_name })}
           />
         </>
       )}
