@@ -258,23 +258,40 @@ function mapActionType(actionType: string): ActivityItem['type'] {
 }
 
 async function calculateStreak(userId: string): Promise<number> {
-  // Get activity dates for the last 30 days
+  // Get activity dates for the last 30 days from multiple sources
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   
-  const { data } = await supabase
-    .from('activity_feed')
-    .select('created_at')
-    .eq('user_id', userId)
-    .gte('created_at', thirtyDaysAgo.toISOString())
-    .order('created_at', { ascending: false });
+  // Fetch from activity_feed AND workouts in parallel
+  const [activityResult, workoutsResult] = await Promise.all([
+    supabase
+      .from('activity_feed')
+      .select('created_at')
+      .eq('user_id', userId)
+      .gte('created_at', thirtyDaysAgo.toISOString())
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('workouts')
+      .select('start_time')
+      .eq('user_id', userId)
+      .gte('start_time', thirtyDaysAgo.toISOString())
+      .order('start_time', { ascending: false })
+  ]);
   
-  if (!data || data.length === 0) return 0;
+  // Combine dates from both sources
+  const dates = new Set<string>();
   
-  // Get unique dates
-  const dates = new Set(
-    data.map(a => new Date(a.created_at).toISOString().split('T')[0])
-  );
+  // Add activity_feed dates
+  activityResult.data?.forEach(a => {
+    dates.add(new Date(a.created_at).toISOString().split('T')[0]);
+  });
+  
+  // Add workout dates
+  workoutsResult.data?.forEach(w => {
+    dates.add(new Date(w.start_time).toISOString().split('T')[0]);
+  });
+  
+  if (dates.size === 0) return 0;
   
   // Calculate consecutive days from today
   let streak = 0;
