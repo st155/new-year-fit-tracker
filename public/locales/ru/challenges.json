@@ -56,5 +56,19 @@
     "stepsPerDay": "Шаги: {{value}} в день",
     "sleepHours": "Сон: {{value}} часов",
     "recoveryPercent": "Recovery: {{value}}%"
+  },
+  "report": {
+    "resultsOf": "Итоги {{name}}",
+    "shareText": "Я занял {{rank}} место в челлендже {{name}} с {{points}} очками!",
+    "linkCopied": "Ссылка скопирована",
+    "loading": "Загрузка отчёта...",
+    "unavailable": "Отчёт недоступен",
+    "unavailableDesc": "Не удалось загрузить отчёт челленджа",
+    "toChallenges": "К челленджам",
+    "back": "Назад",
+    "share": "Поделиться",
+    "previewAlert": "Это предварительный отчёт. Челлендж ещё продолжается, финальные результаты будут доступны после завершения.",
+    "thankYou": "Спасибо за участие в челлендже!",
+    "findNewChallenge": "Найти новый челлендж"
   }
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { FileText, Download, Trash2, Eye, EyeOff, Calendar, Tag, Sparkles, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,19 +12,8 @@ import { toast } from '@/hooks/use-toast';
 import { DocumentComparison } from './DocumentComparison';
 import { documentsApi } from '@/lib/api';
 
-const documentTypeLabels: Record<DocumentType, string> = {
-  inbody: 'InBody',
-  blood_test: 'Анализ крови',
-  fitness_report: 'Мед. заключение',
-  progress_photo: 'Фото прогресса',
-  vo2max: 'VO2max',
-  caliper: 'Калипер',
-  prescription: 'Рецепт',
-  training_program: 'Программа',
-  other: 'Другое',
-};
-
 export const DocumentsList = () => {
+  const { t } = useTranslation('medicalDocs');
   const navigate = useNavigate();
   const [filterType, setFilterType] = useState<DocumentType | 'all'>('all');
   const [analyzingDoc, setAnalyzingDoc] = useState<string | null>(null);
@@ -61,8 +51,8 @@ export const DocumentsList = () => {
       if (error) throw error;
 
       toast({
-        title: 'Анализ завершён',
-        description: 'AI обработал документ и добавил insights',
+        title: t('list.analysisComplete'),
+        description: t('list.analysisCompleteDesc'),
       });
 
       // Refresh documents list
@@ -70,8 +60,8 @@ export const DocumentsList = () => {
     } catch (error: any) {
       console.error('Analysis error:', error);
       toast({
-        title: 'Ошибка анализа',
-        description: error.message || 'Не удалось проанализировать документ',
+        title: t('list.analysisError'),
+        description: error.message || t('list.analysisErrorDesc'),
         variant: 'destructive',
       });
     } finally {
@@ -83,7 +73,7 @@ export const DocumentsList = () => {
     return (
       <Card>
         <CardContent className="py-8">
-          <p className="text-center text-muted-foreground">Загрузка документов...</p>
+          <p className="text-center text-muted-foreground">{t('list.loading')}</p>
         </CardContent>
       </Card>
     );
@@ -94,9 +84,9 @@ export const DocumentsList = () => {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Мои документы</CardTitle>
+            <CardTitle>{t('list.title')}</CardTitle>
             <CardDescription>
-              {documents?.length || 0} документов
+              {documents?.length || 0} {t('list.documents')}
             </CardDescription>
           </div>
           <div className="flex gap-2">
@@ -105,19 +95,19 @@ export const DocumentsList = () => {
             )}
             <Select value={filterType} onValueChange={(value) => setFilterType(value as DocumentType | 'all')}>
               <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Все типы" />
+                <SelectValue placeholder={t('filters.allTypes')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Все типы</SelectItem>
-                <SelectItem value="inbody">InBody анализы</SelectItem>
-                <SelectItem value="blood_test">Анализы крови</SelectItem>
-                <SelectItem value="fitness_report">Мед. заключения</SelectItem>
-                <SelectItem value="progress_photo">Фото прогресса</SelectItem>
-                <SelectItem value="vo2max">VO2max тесты</SelectItem>
-                <SelectItem value="caliper">Калипер</SelectItem>
-                <SelectItem value="prescription">Рецепты</SelectItem>
-                <SelectItem value="training_program">Программы</SelectItem>
-                <SelectItem value="other">Другое</SelectItem>
+                <SelectItem value="all">{t('filters.allTypes')}</SelectItem>
+                <SelectItem value="inbody">{t('filters.inbody')}</SelectItem>
+                <SelectItem value="blood_test">{t('filters.bloodTest')}</SelectItem>
+                <SelectItem value="fitness_report">{t('filters.fitnessReport')}</SelectItem>
+                <SelectItem value="progress_photo">{t('filters.progressPhoto')}</SelectItem>
+                <SelectItem value="vo2max">{t('filters.vo2max')}</SelectItem>
+                <SelectItem value="caliper">{t('filters.caliper')}</SelectItem>
+                <SelectItem value="prescription">{t('filters.prescription')}</SelectItem>
+                <SelectItem value="training_program">{t('filters.trainingProgram')}</SelectItem>
+                <SelectItem value="other">{t('filters.other')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -127,7 +117,7 @@ export const DocumentsList = () => {
         {!documents || documents.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Нет загруженных документов</p>
+            <p>{t('list.noDocuments')}</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -143,7 +133,7 @@ export const DocumentsList = () => {
                       <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                       <h3 className="font-medium truncate">{doc.file_name}</h3>
                       {doc.hidden_from_trainer && (
-                        <span title="Скрыто от тренера">
+                        <span title={t('status.hiddenFromTrainer')}>
                           <EyeOff className="h-4 w-4 text-muted-foreground" />
                         </span>
                       )}
@@ -151,17 +141,17 @@ export const DocumentsList = () => {
                     
                     <div className="flex flex-wrap gap-2 mb-2">
                       <Badge variant="secondary">
-                        {documentTypeLabels[doc.document_type]}
+                        {t(`types.${doc.document_type}`)}
                       </Badge>
                       {doc.document_type === 'blood_test' && !doc.ai_processed && (
                         <Badge variant="outline" className="gap-1 text-yellow-600 bg-yellow-50 border-yellow-300">
                           <Loader2 className="h-3 w-3 animate-spin" />
-                          Обрабатывается...
+                          {t('status.processing')}
                         </Badge>
                       )}
                       {doc.ai_processed && (
                         <Badge variant="outline" className="text-green-600 bg-green-50 border-green-300">
-                          ✓ AI обработан
+                          ✓ {t('status.aiProcessed')}
                         </Badge>
                       )}
                       {doc.tags?.map((tag) => (
@@ -190,7 +180,7 @@ export const DocumentsList = () => {
 
                     {doc.ai_summary && (
                       <div className="mt-2 p-2 bg-accent/30 rounded text-sm">
-                        <p className="font-medium mb-1">AI Резюме:</p>
+                        <p className="font-medium mb-1">{t('list.aiSummary')}:</p>
                         <p className="text-muted-foreground line-clamp-3">{doc.ai_summary}</p>
                       </div>
                     )}
@@ -208,7 +198,7 @@ export const DocumentsList = () => {
                         disabled={analyzingDoc === doc.id}
                       >
                         <Sparkles className="h-4 w-4 mr-1" />
-                        {analyzingDoc === doc.id ? 'Анализ...' : 'AI'}
+                        {analyzingDoc === doc.id ? t('list.analyzing') : 'AI'}
                       </Button>
                     )}
                     
@@ -219,33 +209,33 @@ export const DocumentsList = () => {
                         e.stopPropagation();
                         handleDownload(doc.storage_path, doc.file_name);
                       }}
-                      title="Скачать"
+                      title={t('actions.download')}
                     >
                       <Download className="h-4 w-4" />
                     </Button>
                     
                     <AlertDialog>
                       <AlertDialogTrigger asChild onClick={(e) => e.stopPropagation()}>
-                        <Button variant="ghost" size="icon" title="Удалить">
+                        <Button variant="ghost" size="icon" title={t('actions.delete')}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent onClick={(e) => e.stopPropagation()}>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Удалить документ?</AlertDialogTitle>
+                          <AlertDialogTitle>{t('dialog.deleteTitle')}</AlertDialogTitle>
                           <AlertDialogDescription>
-                            Это действие необратимо. Документ будет удалён навсегда.
+                            {t('dialog.deleteDescription')}
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel>Отмена</AlertDialogCancel>
+                          <AlertDialogCancel>{t('dialog.cancel')}</AlertDialogCancel>
                           <AlertDialogAction
                             onClick={(e) => {
                               e.stopPropagation();
                               deleteDocument.mutate(doc.id);
                             }}
                           >
-                            Удалить
+                            {t('dialog.delete')}
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>

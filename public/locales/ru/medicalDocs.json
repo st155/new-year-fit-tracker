@@ -4,5 +4,66 @@
     "trends": "Тренды",
     "upload": "Загрузка",
     "migration": "Миграция"
+  },
+  "types": {
+    "inbody": "InBody",
+    "blood_test": "Анализ крови",
+    "fitness_report": "Мед. заключение",
+    "progress_photo": "Фото прогресса",
+    "vo2max": "VO2max",
+    "caliper": "Калипер",
+    "prescription": "Рецепт",
+    "training_program": "Программа",
+    "other": "Другое"
+  },
+  "filters": {
+    "allTypes": "Все типы",
+    "inbody": "InBody анализы",
+    "bloodTest": "Анализы крови",
+    "fitnessReport": "Мед. заключения",
+    "progressPhoto": "Фото прогресса",
+    "vo2max": "VO2max тесты",
+    "caliper": "Калипер",
+    "prescription": "Рецепты",
+    "trainingProgram": "Программы",
+    "other": "Другое"
+  },
+  "status": {
+    "pending": "Ожидает обработки",
+    "processing": "Обрабатывается...",
+    "processingAI": "Обрабатывается AI",
+    "error": "Ошибка обработки",
+    "errorDefault": "Произошла ошибка при обработке",
+    "aiProcessed": "AI обработан",
+    "hiddenFromTrainer": "Скрыто от тренера"
+  },
+  "list": {
+    "loading": "Загрузка документов...",
+    "title": "Мои документы",
+    "documents": "документов",
+    "noDocuments": "Нет загруженных документов",
+    "aiSummary": "AI Резюме",
+    "analyzing": "Анализ...",
+    "analysisComplete": "Анализ завершён",
+    "analysisCompleteDesc": "AI обработал документ и добавил insights",
+    "analysisError": "Ошибка анализа",
+    "analysisErrorDesc": "Не удалось проанализировать документ"
+  },
+  "card": {
+    "aiAnalysis": "AI Анализ",
+    "aiAnalysisDocument": "AI Анализ документа"
+  },
+  "actions": {
+    "download": "Скачать",
+    "delete": "Удалить",
+    "extractRecommendations": "Извлечь рекомендации врача",
+    "retryProcessing": "Повторить обработку",
+    "reprocessDocument": "Переобработать документ"
+  },
+  "dialog": {
+    "deleteTitle": "Удалить документ?",
+    "deleteDescription": "Это действие необратимо. Документ будет удалён навсегда.",
+    "cancel": "Отмена",
+    "delete": "Удалить"
   }
 }

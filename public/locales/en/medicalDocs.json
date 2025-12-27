@@ -4,5 +4,66 @@
     "trends": "Trends",
     "upload": "Upload",
     "migration": "Migration"
+  },
+  "types": {
+    "inbody": "InBody",
+    "blood_test": "Blood Test",
+    "fitness_report": "Medical Report",
+    "progress_photo": "Progress Photo",
+    "vo2max": "VO2max",
+    "caliper": "Caliper",
+    "prescription": "Prescription",
+    "training_program": "Program",
+    "other": "Other"
+  },
+  "filters": {
+    "allTypes": "All Types",
+    "inbody": "InBody Analysis",
+    "bloodTest": "Blood Tests",
+    "fitnessReport": "Medical Reports",
+    "progressPhoto": "Progress Photos",
+    "vo2max": "VO2max Tests",
+    "caliper": "Caliper",
+    "prescription": "Prescriptions",
+    "trainingProgram": "Programs",
+    "other": "Other"
+  },
+  "status": {
+    "pending": "Pending",
+    "processing": "Processing...",
+    "processingAI": "AI Processing",
+    "error": "Processing Error",
+    "errorDefault": "An error occurred during processing",
+    "aiProcessed": "AI Processed",
+    "hiddenFromTrainer": "Hidden from Trainer"
+  },
+  "list": {
+    "loading": "Loading documents...",
+    "title": "My Documents",
+    "documents": "documents",
+    "noDocuments": "No uploaded documents",
+    "aiSummary": "AI Summary",
+    "analyzing": "Analyzing...",
+    "analysisComplete": "Analysis Complete",
+    "analysisCompleteDesc": "AI processed the document and added insights",
+    "analysisError": "Analysis Error",
+    "analysisErrorDesc": "Could not analyze the document"
+  },
+  "card": {
+    "aiAnalysis": "AI Analysis",
+    "aiAnalysisDocument": "AI Document Analysis"
+  },
+  "actions": {
+    "download": "Download",
+    "delete": "Delete",
+    "extractRecommendations": "Extract Doctor Recommendations",
+    "retryProcessing": "Retry Processing",
+    "reprocessDocument": "Reprocess Document"
+  },
+  "dialog": {
+    "deleteTitle": "Delete Document?",
+    "deleteDescription": "This action is irreversible. The document will be permanently deleted.",
+    "cancel": "Cancel",
+    "delete": "Delete"
   }
 }
