@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Scale, Plus, TrendingUp, TrendingDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { ru } from "date-fns/locale";
+import { ru, enUS } from "date-fns/locale";
 import { todayDateString } from "@/lib/datetime-utils";
 
 interface WeightData {
@@ -24,10 +25,12 @@ export function QuickWeightTracker() {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation('common');
   const [weightData, setWeightData] = useState<WeightData[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentWeight, setCurrentWeight] = useState('');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
 
   useEffect(() => {
     if (user) {
@@ -114,8 +117,8 @@ export function QuickWeightTracker() {
   const addWeight = async () => {
     if (!currentWeight || !user) {
       toast({
-        title: "Ошибка",
-        description: "Введите значение веса",
+        title: t('errors.generic'),
+        description: t('weightTracker.enterWeight'),
         variant: "destructive",
       });
       return;
@@ -154,8 +157,8 @@ export function QuickWeightTracker() {
       }
 
       toast({
-        title: "Успешно!",
-        description: "Вес добавлен",
+        title: t('weightTracker.success'),
+        description: t('success.weightAdded'),
       });
 
       setIsDialogOpen(false);
@@ -164,8 +167,8 @@ export function QuickWeightTracker() {
     } catch (error) {
       console.error('Error adding weight:', error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось добавить вес",
+        title: t('errors.generic'),
+        description: t('weightTracker.failedToAdd'),
         variant: "destructive",
       });
     }
@@ -205,13 +208,13 @@ export function QuickWeightTracker() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Scale className="h-5 w-5 text-primary" />
-            <CardTitle className="text-lg">Вес</CardTitle>
+            <CardTitle className="text-lg">{t('weightTracker.title')}</CardTitle>
           </div>
           <ResponsiveDialog
             open={isDialogOpen}
             onOpenChange={setIsDialogOpen}
-            title="Добавить вес"
-            description="Введите текущий вес или загрузите фото весов"
+            title={t('weightTracker.addWeight')}
+            description={t('weightTracker.dialogDesc')}
             snapPoints={[65, 90]}
             trigger={
               <Button 
@@ -225,8 +228,8 @@ export function QuickWeightTracker() {
           >
             <Tabs defaultValue="manual" className="space-y-4 pt-2">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="manual">Ручной ввод</TabsTrigger>
-                <TabsTrigger value="photo">Фото весов</TabsTrigger>
+                <TabsTrigger value="manual">{t('weightTracker.manualInput')}</TabsTrigger>
+                <TabsTrigger value="photo">{t('weightTracker.scalePhoto')}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="manual" className="space-y-4">
@@ -240,7 +243,7 @@ export function QuickWeightTracker() {
                   />
                 </div>
                 <Button onClick={addWeight} className="w-full">
-                  Сохранить вес
+                  {t('weightTracker.saveWeight')}
                 </Button>
               </TabsContent>
 
@@ -250,21 +253,21 @@ export function QuickWeightTracker() {
                     if (result.success && result.extractedData?.weight) {
                       setCurrentWeight(result.extractedData.weight.toString());
                       toast({
-                        title: "Вес распознан!",
-                        description: `Найден вес: ${result.extractedData.weight} кг`,
+                        title: t('weightTracker.weightRecognized'),
+                        description: t('weightTracker.foundWeight', { weight: result.extractedData.weight }),
                       });
                     }
                   }}
-                  label="Сфотографируйте весы"
+                  label={t('weightTracker.photoScales')}
                 />
                 
                 {currentWeight && (
                   <div className="p-4 bg-green-50 dark:bg-green-950 rounded-lg">
                     <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                      Распознанный вес: {currentWeight} кг
+                      {t('weightTracker.recognizedWeight', { weight: currentWeight })}
                     </p>
                     <Button onClick={addWeight} className="mt-2 w-full">
-                      Сохранить вес
+                      {t('weightTracker.saveWeight')}
                     </Button>
                   </div>
                 )}
@@ -280,10 +283,10 @@ export function QuickWeightTracker() {
               <div>
                 <div className="flex items-baseline gap-2">
                   <span className="text-2xl font-bold">{weightData[0].weight}</span>
-                  <span className="text-sm text-muted-foreground">кг</span>
+                  <span className="text-sm text-muted-foreground">{t('units.kg')}</span>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {format(new Date(weightData[0].date), 'd MMM', { locale: ru })}
+                  {format(new Date(weightData[0].date), 'd MMM', { locale: dateLocale })}
                 </p>
               </div>
               
@@ -302,7 +305,7 @@ export function QuickWeightTracker() {
                     </span>
                   </div>
                   <Badge variant={trend.direction === 'up' ? 'destructive' : 'default'} className="text-xs">
-                    {trend.direction === 'up' ? 'Рост' : 'Снижение'}
+                    {trend.direction === 'up' ? t('weightTracker.trendUp') : t('weightTracker.trendDown')}
                   </Badge>
                 </div>
               )}
@@ -310,11 +313,11 @@ export function QuickWeightTracker() {
 
             {weightData.length > 1 && (
               <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">Недавние измерения:</div>
+                <div className="text-xs text-muted-foreground">{t('weightTracker.recentMeasurements')}</div>
                 <div className="flex gap-2 text-xs">
                   {weightData.slice(1, 4).map((entry, index) => (
                     <span key={index} className="bg-muted px-2 py-1 rounded">
-                      {entry.weight} кг
+                      {entry.weight} {t('units.kg')}
                     </span>
                   ))}
                 </div>
@@ -324,7 +327,7 @@ export function QuickWeightTracker() {
         ) : (
           <div className="text-center py-4">
             <Scale className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">Добавьте первое измерение</p>
+            <p className="text-sm text-muted-foreground">{t('weightTracker.addFirst')}</p>
           </div>
         )}
       </CardContent>

@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from "react"
+import { useTranslation } from "react-i18next"
 import { Camera, Upload, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -28,6 +29,7 @@ export function AvatarUpload({ currentAvatarUrl, onAvatarUpdate, userInitials, c
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
   const { user } = useAuth()
+  const { t } = useTranslation('common')
 
   const onCropComplete = useCallback((croppedArea: Area, croppedAreaPixels: Area) => {
     setCroppedAreaPixels(croppedAreaPixels)
@@ -83,8 +85,8 @@ export function AvatarUpload({ currentAvatarUrl, onAvatarUpdate, userInitials, c
     // Validate file type
     if (!file.type.startsWith('image/')) {
       toast({
-        title: "Ошибка",
-        description: "Пожалуйста, выберите изображение",
+        title: t('errors.generic'),
+        description: t('errors.invalidImage'),
         variant: "destructive",
       })
       return
@@ -93,8 +95,8 @@ export function AvatarUpload({ currentAvatarUrl, onAvatarUpdate, userInitials, c
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast({
-        title: "Ошибка",
-        description: "Размер файла не должен превышать 5MB",
+        title: t('errors.generic'),
+        description: t('errors.fileTooLarge', { size: 5 }),
         variant: "destructive",
       })
       return
@@ -127,8 +129,8 @@ export function AvatarUpload({ currentAvatarUrl, onAvatarUpdate, userInitials, c
     } catch (error) {
       console.error('Error cropping image:', error)
       toast({
-        title: "Ошибка",
-        description: "Не удалось обрезать изображение",
+        title: t('errors.generic'),
+        description: t('avatarUpload.cropError'),
         variant: "destructive",
       })
     } finally {
@@ -175,8 +177,8 @@ export function AvatarUpload({ currentAvatarUrl, onAvatarUpdate, userInitials, c
       setPreviewUrl(null)
 
       toast({
-        title: "Успешно!",
-        description: "Аватар обновлен",
+        title: t('avatarUpload.success'),
+        description: t('avatarUpload.avatarUpdated'),
       })
 
       // Reload page to show updated avatar from DB
@@ -186,8 +188,8 @@ export function AvatarUpload({ currentAvatarUrl, onAvatarUpdate, userInitials, c
     } catch (error) {
       console.error('Error uploading avatar:', error)
       toast({
-        title: "Ошибка",
-        description: "Не удалось загрузить аватар",
+        title: t('errors.generic'),
+        description: t('avatarUpload.uploadError'),
         variant: "destructive",
       })
       setPreviewUrl(null)
@@ -200,19 +202,19 @@ export function AvatarUpload({ currentAvatarUrl, onAvatarUpdate, userInitials, c
     onAvatarUpdate('')
     setPreviewUrl(null)
     toast({
-      title: "Аватар удален",
-      description: "Изображение профиля удалено",
+      title: t('avatarUpload.avatarRemoved'),
+      description: t('avatarUpload.avatarRemovedDesc'),
     })
   }
 
   return (
     <>
       <div className={cn("flex flex-col items-center gap-4", className)}>
-        <div className="relative">
+      <div className="relative">
           <Avatar className="h-24 w-24">
             <AvatarImage 
               src={previewUrl || currentAvatarUrl} 
-              alt="Аватар"
+              alt={t('avatarUpload.alt')}
               className="object-cover"
             />
             <AvatarFallback className="text-lg">{userInitials}</AvatarFallback>
@@ -244,7 +246,7 @@ export function AvatarUpload({ currentAvatarUrl, onAvatarUpdate, userInitials, c
             ) : (
               <Camera className="h-4 w-4" />
             )}
-            {uploading ? "Загрузка..." : "Изменить"}
+            {uploading ? t('avatarUpload.uploading') : t('avatarUpload.change')}
           </Button>
         </div>
 
@@ -260,7 +262,7 @@ export function AvatarUpload({ currentAvatarUrl, onAvatarUpdate, userInitials, c
       <Dialog open={cropDialogOpen} onOpenChange={setCropDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Обрезать фото</DialogTitle>
+            <DialogTitle>{t('avatarUpload.cropTitle')}</DialogTitle>
           </DialogHeader>
           <div className="relative h-[400px] bg-muted rounded-lg overflow-hidden">
             {imageSrc && (
@@ -278,7 +280,7 @@ export function AvatarUpload({ currentAvatarUrl, onAvatarUpdate, userInitials, c
             )}
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium">Масштаб</label>
+            <label className="text-sm font-medium">{t('avatarUpload.scale')}</label>
             <input
               type="range"
               min={1}
@@ -298,10 +300,10 @@ export function AvatarUpload({ currentAvatarUrl, onAvatarUpdate, userInitials, c
               }}
               disabled={uploading}
             >
-              Отмена
+              {t('actions.cancel')}
             </Button>
             <Button onClick={handleCropConfirm} disabled={uploading}>
-              {uploading ? "Загрузка..." : "Сохранить"}
+              {uploading ? t('avatarUpload.uploading') : t('actions.save')}
             </Button>
           </div>
         </DialogContent>

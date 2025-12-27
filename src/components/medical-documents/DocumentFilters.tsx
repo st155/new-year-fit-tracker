@@ -1,6 +1,7 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Settings, Zap, RotateCcw, Sparkles } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { DocumentType } from '@/hooks/useMedicalDocuments';
 import { supabase } from '@/integrations/supabase/client';
 import { healthApi } from '@/lib/api/client';
@@ -28,6 +29,7 @@ export const DocumentFilters = ({
   onBatchProcess 
 }: DocumentFiltersProps) => {
   const { toast } = useToast();
+  const { t } = useTranslation('common');
   const [isResetting, setIsResetting] = useState(false);
   const [isPopulating, setIsPopulating] = useState(false);
 
@@ -55,14 +57,14 @@ export const DocumentFilters = ({
       if (error) throw error;
 
       toast({
-        title: 'Документы сброшены',
-        description: `Сброшено ${data?.length || 0} застрявших документов`,
+        title: t('docFilters.documentsReset'),
+        description: t('docFilters.documentsResetDesc', { count: data?.length || 0 }),
       });
 
       if (onRefresh) onRefresh();
     } catch (error: any) {
       toast({
-        title: 'Ошибка',
+        title: t('errors.generic'),
         description: error.message,
         variant: 'destructive'
       });
@@ -75,8 +77,8 @@ export const DocumentFilters = ({
     setIsPopulating(true);
     try {
       toast({
-        title: "Запуск заполнения",
-        description: "Заполнение корреляций добавок и биомаркеров...",
+        title: t('docFilters.populatingStart'),
+        description: t('docFilters.populatingDesc'),
       });
 
       const { error } = await healthApi.populateBiomarkerCorrelations();
@@ -84,14 +86,14 @@ export const DocumentFilters = ({
       if (error) throw error;
 
       toast({
-        title: "Успешно",
-        description: "Корреляции биомаркеров заполнены",
+        title: t('success.saved'),
+        description: t('docFilters.populatingSuccess'),
       });
     } catch (error: any) {
       console.error('Failed to populate correlations:', error);
       toast({
-        title: "Ошибка",
-        description: error.message || "Не удалось заполнить корреляции",
+        title: t('errors.generic'),
+        description: error.message || t('docFilters.populatingError'),
         variant: "destructive",
       });
     } finally {
@@ -102,7 +104,7 @@ export const DocumentFilters = ({
   return (
     <div className="glass-card p-4 mb-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h2 className="text-xl font-bold text-foreground">🔍 Медицинские документы</h2>
+        <h2 className="text-xl font-bold text-foreground">🔍 {t('docFilters.title')}</h2>
         
         <div className="flex items-center gap-2">
           {pendingCount > 0 && onBatchProcess && (
@@ -112,7 +114,7 @@ export const DocumentFilters = ({
               className="gap-2"
             >
               <Zap className="h-4 w-4" />
-              Обработать все ({pendingCount})
+              {t('docFilters.processAll', { count: pendingCount })}
             </Button>
           )}
 
@@ -123,10 +125,10 @@ export const DocumentFilters = ({
             onClick={handleResetStuck}
             disabled={isResetting}
             className="gap-2 glass-subtle"
-            title="Сбросить застрявшие документы в обработке"
+            title={t('docFilters.resetTitle')}
           >
             <RotateCcw className={`h-4 w-4 ${isResetting ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">Сбросить</span>
+            <span className="hidden sm:inline">{t('docFilters.reset')}</span>
           </Button>
 
           <Button
@@ -134,15 +136,15 @@ export const DocumentFilters = ({
             onClick={handlePopulateCorrelations}
             disabled={isPopulating}
             className="gap-2 border-purple-500/50 text-purple-300 hover:bg-purple-500/10"
-            title="Заполнить базу корреляций добавок и биомаркеров"
+            title={t('docFilters.correlationsTitle')}
           >
             <Sparkles className={`h-4 w-4 ${isPopulating ? 'animate-pulse' : ''}`} />
-            <span className="hidden sm:inline">Корреляции</span>
+            <span className="hidden sm:inline">{t('docFilters.correlations')}</span>
           </Button>
 
           {filterCategory && onFilterCategoryChange && (
             <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-md text-sm">
-              <span>Категория: {filterCategory}</span>
+              <span>{t('docFilters.category', { name: filterCategory })}</span>
               <Button
                 variant="ghost"
                 size="sm"
@@ -156,19 +158,19 @@ export const DocumentFilters = ({
 
           <Select value={filterType} onValueChange={onFilterChange}>
             <SelectTrigger className="w-[200px] glass-subtle">
-              <SelectValue placeholder="Все типы" />
+              <SelectValue placeholder={t('docFilters.allTypes')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">📊 Все типы</SelectItem>
-              <SelectItem value="blood_test">🩸 Анализы крови</SelectItem>
+              <SelectItem value="all">📊 {t('docFilters.allTypes')}</SelectItem>
+              <SelectItem value="blood_test">🩸 {t('docFilters.bloodTests')}</SelectItem>
               <SelectItem value="inbody">💪 InBody</SelectItem>
-              <SelectItem value="progress_photo">📸 Фото прогресса</SelectItem>
+              <SelectItem value="progress_photo">📸 {t('documentTypes.progress_photo')}</SelectItem>
               <SelectItem value="vo2max">🫁 VO2max</SelectItem>
-              <SelectItem value="fitness_report">📋 Мед. заключения</SelectItem>
-              <SelectItem value="caliper">📏 Калипер</SelectItem>
-              <SelectItem value="prescription">💊 Рецепты</SelectItem>
-              <SelectItem value="training_program">🏋️ Программы</SelectItem>
-              <SelectItem value="other">📄 Другое</SelectItem>
+              <SelectItem value="fitness_report">📋 {t('docFilters.medReports')}</SelectItem>
+              <SelectItem value="caliper">📏 {t('documentTypes.caliper')}</SelectItem>
+              <SelectItem value="prescription">💊 {t('documentTypes.prescription')}</SelectItem>
+              <SelectItem value="training_program">🏋️ {t('docFilters.programs')}</SelectItem>
+              <SelectItem value="other">📄 {t('documentTypes.other')}</SelectItem>
             </SelectContent>
           </Select>
 

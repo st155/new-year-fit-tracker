@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Heart, MessageCircle, Activity, Dumbbell, Footprints, TrendingUp, Trophy, Zap, Timer, Wind, Target, Flame, Moon, CheckCircle, BookOpen, Cigarette } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
-import { ru } from "date-fns/locale";
+import { ru, enUS } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { CommentDialog } from "./CommentDialog";
 import { useToast } from "@/hooks/use-toast";
@@ -53,6 +54,8 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
   const borderStyle = borderColors[index % borderColors.length];
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t, i18n } = useTranslation('common');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
   
   const [likeCount, setLikeCount] = useState(0);
   const [commentCount, setCommentCount] = useState(0);
@@ -104,8 +107,8 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
     try {
       if (!user) {
         toast({
-          title: "Требуется авторизация",
-          description: "Войдите в систему, чтобы ставить лайки",
+          title: t('errors.loginRequired'),
+          description: t('likes.loginToLike'),
           variant: "destructive",
         });
         return;
@@ -152,8 +155,8 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
     } catch (error) {
       console.error('Error toggling like:', error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось изменить статус лайка",
+        title: t('errors.generic'),
+        description: t('likes.toggleError'),
         variant: "destructive",
       });
       setIsAnimating(false);
@@ -289,7 +292,7 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
       .trim();
   };
 
-  const displayName = profiles?.full_name?.split(' ')[0] || profiles?.username || 'Пользователь';
+  const displayName = profiles?.full_name?.split(' ')[0] || profiles?.username || t('activityFeed.defaultUser');
   
   const getFormattedDate = () => {
     try {
@@ -301,17 +304,17 @@ export function ActivityCard({ activity, onActivityUpdate, index }: ActivityCard
       measurementDate.setHours(0, 0, 0, 0);
       
       if (measurementDate.getTime() === today.getTime()) {
-        return 'Today';
+        return t('activityFeed.today');
       }
       
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
       
       if (measurementDate.getTime() === yesterday.getTime()) {
-        return 'Yesterday';
+        return t('activityFeed.yesterday');
       }
       
-      return format(date, 'd MMM', { locale: ru });
+      return format(date, 'd MMM', { locale: dateLocale });
     } catch {
       return '';
     }
