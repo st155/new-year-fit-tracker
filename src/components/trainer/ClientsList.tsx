@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +9,6 @@ import {
   Plus, 
   Search, 
   User, 
-  Target, 
   ArrowUpDown, 
   Filter, 
   Activity, 
@@ -52,6 +52,7 @@ interface ClientsListProps {
 }
 
 export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, loading }: ClientsListProps) {
+  const { t } = useTranslation('trainer');
   const [searchEmail, setSearchEmail] = useState("");
   const [searching, setSearching] = useState(false);
   const [foundUsers, setFoundUsers] = useState<any[]>([]);
@@ -80,7 +81,7 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
       setShowAllUsers(true);
     } catch (error: any) {
       console.error('Error loading users:', error);
-      toast.error('Ошибка загрузки пользователей');
+      toast.error(t('clients.errorLoadingUsers'));
     } finally {
       setLoadingUsers(false);
     }
@@ -108,7 +109,7 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
       setShowAllUsers(false);
     } catch (error: any) {
       console.error('Error searching users:', error);
-      toast.error('Ошибка поиска пользователей');
+      toast.error(t('clients.errorSearchingUsers'));
     } finally {
       setSearching(false);
     }
@@ -118,13 +119,13 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
     try {
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       if (user.user_id === currentUser?.id) {
-        toast.error('Вы не можете добавить себя как клиента');
+        toast.error(t('clients.cannotAddSelf'));
         return;
       }
 
       setIsAdding(true);
       await onAddClient(user.user_id);
-      toast.success(`${user.username || user.full_name} добавлен как клиент`);
+      toast.success(t('clients.addedAsClient', { name: user.username || user.full_name }));
       
       setFoundUsers([]);
       setAllUsers([]);
@@ -132,7 +133,7 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
       setShowAllUsers(false);
     } catch (error: any) {
       console.error('Error adding client:', error);
-      toast.error(error.message || 'Ошибка при добавлении клиента');
+      toast.error(error.message || t('clients.errorAddingClient'));
     } finally {
       setIsAdding(false);
     }
@@ -215,26 +216,26 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
       {/* Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <TrainerStatCard
-          title="Всего подопечных"
+          title={t('clients.totalClients')}
           value={summaryStats.totalClients}
           icon={<Users className="h-6 w-6" />}
           color="blue"
         />
         <TrainerStatCard
-          title="Активных (7д)"
+          title={t('clients.active7d')}
           value={summaryStats.activeClients}
           icon={<Activity className="h-6 w-6" />}
           color="green"
-          subtitle={`${Math.round((summaryStats.activeClients / (summaryStats.totalClients || 1)) * 100)}% клиентов`}
+          subtitle={`${Math.round((summaryStats.activeClients / (summaryStats.totalClients || 1)) * 100)}% ${t('integrations.ofClients')}`}
         />
         <TrainerStatCard
-          title="Требуют внимания"
+          title={t('clients.needAttention')}
           value={summaryStats.clientsAtRisk}
           icon={<AlertTriangle className="h-6 w-6" />}
           color="orange"
         />
         <TrainerStatCard
-          title="Средний Health Score"
+          title={t('clients.avgHealthScore')}
           value={`${summaryStats.avgHealthScore}%`}
           icon={<TrendingUp className="h-6 w-6" />}
           color="purple"
@@ -244,9 +245,9 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Список клиентов</h2>
+          <h2 className="text-2xl font-bold">{t('clients.title')}</h2>
           <p className="text-muted-foreground">
-            {filteredClients.length} из {clients.length} клиентов
+            {t('clients.ofClients', { filtered: filteredClients.length, total: clients.length })}
           </p>
         </div>
         
@@ -254,17 +255,17 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
           <DialogTrigger asChild>
             <Button className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
-              Добавить подопечного
+              {t('clients.addClient')}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Добавить нового подопечного</DialogTitle>
+              <DialogTitle>{t('clients.addNewClient')}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div className="flex gap-2">
                 <Input
-                  placeholder="Поиск по email или имени..."
+                  placeholder={t('clients.searchPlaceholder')}
                   value={searchEmail}
                   onChange={(e) => setSearchEmail(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && searchUsers()}
@@ -281,11 +282,11 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
                   disabled={loadingUsers}
                   className="flex-1"
                 >
-                  {loadingUsers ? "Загрузка..." : "Показать всех пользователей"}
+                  {loadingUsers ? t('clients.loading') : t('clients.showAllUsers')}
                 </Button>
                 {(foundUsers.length > 0 || showAllUsers) && (
                   <Button variant="outline" onClick={resetSearch}>
-                    Сбросить
+                    {t('clients.reset')}
                   </Button>
                 )}
               </div>
@@ -293,7 +294,7 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
               {foundUsers.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">
-                    Результаты поиска ({foundUsers.length}):
+                    {t('clients.searchResults', { count: foundUsers.length })}
                   </p>
                   <div className="max-h-64 overflow-y-auto space-y-2">
                     {foundUsers.map((user) => (
@@ -311,7 +312,7 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
                           </div>
                         </div>
                         <Button size="sm" onClick={() => handleAddClient(user)} disabled={isAdding}>
-                          {isAdding ? "Добавление..." : "Добавить"}
+                          {isAdding ? t('clients.adding') : t('clients.add')}
                         </Button>
                       </div>
                     ))}
@@ -322,7 +323,7 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
               {showAllUsers && allUsers.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">
-                    Все доступные пользователи ({allUsers.length}):
+                    {t('clients.allAvailableUsers', { count: allUsers.length })}
                   </p>
                   <div className="max-h-64 overflow-y-auto space-y-2">
                     {allUsers.map((user) => (
@@ -340,7 +341,7 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
                           </div>
                         </div>
                         <Button size="sm" onClick={() => handleAddClient(user)} disabled={isAdding}>
-                          {isAdding ? "Добавление..." : "Добавить"}
+                          {isAdding ? t('clients.adding') : t('clients.add')}
                         </Button>
                       </div>
                     ))}
@@ -351,7 +352,7 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
               {!loadingUsers && !searching && searchEmail && foundUsers.length === 0 && (
                 <div className="text-center py-4">
                   <p className="text-sm text-muted-foreground">
-                    Пользователи не найдены
+                    {t('clients.noUsersFound')}
                   </p>
                 </div>
               )}
@@ -359,7 +360,7 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
               {showAllUsers && allUsers.length === 0 && (
                 <div className="text-center py-4">
                   <p className="text-sm text-muted-foreground">
-                    Все пользователи уже добавлены как подопечные
+                    {t('clients.allUsersAdded')}
                   </p>
                 </div>
               )}
@@ -376,10 +377,10 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="activity">По активности</SelectItem>
-            <SelectItem value="name">По имени</SelectItem>
-            <SelectItem value="date">По дате добавления</SelectItem>
-            <SelectItem value="health_score">По Health Score</SelectItem>
+            <SelectItem value="activity">{t('clients.sortBy.activity')}</SelectItem>
+            <SelectItem value="name">{t('clients.sortBy.name')}</SelectItem>
+            <SelectItem value="date">{t('clients.sortBy.date')}</SelectItem>
+            <SelectItem value="health_score">{t('clients.sortBy.healthScore')}</SelectItem>
           </SelectContent>
         </Select>
         
@@ -389,12 +390,12 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Все клиенты</SelectItem>
-            <SelectItem value="active">Активные (&lt; 7 дней)</SelectItem>
-            <SelectItem value="inactive">Неактивные (&gt; 7 дней)</SelectItem>
-            <SelectItem value="at_risk">⚠️ Требуют внимания</SelectItem>
-            <SelectItem value="high_performers">⭐ Лучшие результаты</SelectItem>
-            <SelectItem value="new">🆕 Новые (&lt; 30 дней)</SelectItem>
+            <SelectItem value="all">{t('clients.filter.all')}</SelectItem>
+            <SelectItem value="active">{t('clients.filter.active')}</SelectItem>
+            <SelectItem value="inactive">{t('clients.filter.inactive')}</SelectItem>
+            <SelectItem value="at_risk">{t('clients.filter.atRisk')}</SelectItem>
+            <SelectItem value="high_performers">{t('clients.filter.highPerformers')}</SelectItem>
+            <SelectItem value="new">{t('clients.filter.new')}</SelectItem>
           </SelectContent>
         </Select>
 
@@ -412,12 +413,12 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
           <CardContent className="flex flex-col items-center justify-center py-12">
             <User className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium mb-2">
-              {clients.length === 0 ? 'Нет подопечных' : 'Нет результатов'}
+              {clients.length === 0 ? t('clients.noClients') : t('clients.noResults')}
             </h3>
             <p className="text-muted-foreground text-center">
               {clients.length === 0 
-                ? 'Добавьте первого подопечного, чтобы начать отслеживать их прогресс'
-                : 'Попробуйте изменить фильтры'
+                ? t('clients.addFirstClient')
+                : t('clients.tryChangingFilters')
               }
             </p>
           </CardContent>
@@ -431,14 +432,14 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
             
             const metrics = [
               { 
-                name: 'Измерений', 
+                name: t('clients.metrics.measurements'), 
                 value: client.recent_measurements_count || 0,
                 trend: client.measurements_trend,
                 icon: <Dumbbell className="h-3 w-3" />, 
                 color: 'blue' as const
               },
               client.sleep_hours_avg && {
-                name: 'Сон',
+                name: t('clients.metrics.sleep'),
                 value: client.sleep_hours_avg.toFixed(1),
                 unit: 'ч',
                 trend: client.sleep_trend,
@@ -446,46 +447,25 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
                 icon: <Moon className="h-3 w-3" />,
                 color: 'purple' as const
               },
-              (client.latest_recovery || client.whoop_recovery_avg) && {
-                name: 'Recovery',
-                value: client.latest_recovery ? Math.round(client.latest_recovery) : Math.round(client.whoop_recovery_avg),
+              client.whoop_recovery_avg && {
+                name: t('clients.metrics.recovery'),
+                value: Math.round(client.whoop_recovery_avg),
                 unit: '%',
-                subtitle: client.whoop_recovery_avg && client.latest_recovery ? `7д: ${Math.round(client.whoop_recovery_avg)}%` : undefined,
                 trend: client.recovery_trend,
                 alert: client.low_recovery_alert,
                 icon: <Heart className="h-3 w-3" />,
                 color: 'green' as const
-              },
-            ].filter(Boolean) as any[];
-
-            const hasAlerts = client.low_recovery_alert || client.poor_sleep_alert || daysSinceData > 7;
+              }
+            ].filter(Boolean);
             
             return (
               <TrainerClientCard
                 key={client.id}
-                client={{
-                  id: client.id,
-                  username: client.username,
-                  full_name: client.full_name,
-                  avatar_url: client.avatar_url,
-                  goals_count: client.active_goals_count
-                }}
+                client={client}
                 healthScore={healthScore}
-                metrics={metrics}
                 isActive={isActive}
-                lastActivity={client.last_activity_date ? 
-                  `Активность: ${new Date(client.last_activity_date).toLocaleDateString('ru-RU')}` : 
-                  'Нет активности'
-                }
-                goalsOnTrack={client.goals_on_track || 0}
-                goalsAtRisk={client.goals_at_risk || 0}
-                activeChallenges={client.active_challenges_count || 0}
-                hasAlerts={hasAlerts}
-                hasOverdueTasks={client.has_overdue_tasks || false}
-                topGoals={client.top_3_goals || []}
-                connectedSources={client.connected_sources || []}
+                metrics={metrics as any}
                 onViewDetails={() => onSelectClient(client)}
-                onAskAI={() => onSelectClient(client)}
               />
             );
           })}

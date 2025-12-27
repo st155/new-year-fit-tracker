@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,7 +24,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useWhoopAdminSync } from "@/hooks/useWhoopAdminSync";
 import { formatDistanceToNow, format, differenceInDays, subDays } from "date-fns";
-import { ru } from "date-fns/locale";
+import { ru, enUS } from "date-fns/locale";
 
 interface WhoopDirectClientDiagnosticsProps {
   clientId: string;
@@ -31,9 +32,12 @@ interface WhoopDirectClientDiagnosticsProps {
 }
 
 export function WhoopDirectClientDiagnostics({ clientId, clientName }: WhoopDirectClientDiagnosticsProps) {
+  const { t, i18n } = useTranslation('trainer');
   const [isOpen, setIsOpen] = useState(false);
   const [selectedDays, setSelectedDays] = useState(28);
   const { syncClientData, isLoading: isSyncing } = useWhoopAdminSync();
+
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
 
   // Fetch Whoop token status
   const { data: whoopToken, isLoading: isLoadingToken, refetch } = useQuery({
@@ -125,10 +129,10 @@ export function WhoopDirectClientDiagnostics({ clientId, clientName }: WhoopDire
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Activity className="h-5 w-5 text-orange-500" />
-            Whoop Direct — {clientName}
+            {t('whoopDirect.title')} — {clientName}
           </DialogTitle>
           <DialogDescription>
-            Статус прямой интеграции Whoop и управление данными
+            {t('whoopDirect.subtitle')}
           </DialogDescription>
         </DialogHeader>
 
@@ -137,18 +141,18 @@ export function WhoopDirectClientDiagnostics({ clientId, clientName }: WhoopDire
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center justify-between">
-                <span className="font-medium">Статус подключения</span>
+                <span className="font-medium">{t('whoopDirect.connectionStatus')}</span>
                 {isLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : isConnected ? (
                   <Badge className="bg-green-100 text-green-700">
                     <CheckCircle2 className="h-3 w-3 mr-1" />
-                    Подключено
+                    {t('whoopDirect.connected')}
                   </Badge>
                 ) : (
                   <Badge variant="secondary">
                     <XCircle className="h-3 w-3 mr-1" />
-                    Не подключено
+                    {t('whoopDirect.notConnected')}
                   </Badge>
                 )}
               </div>
@@ -156,15 +160,15 @@ export function WhoopDirectClientDiagnostics({ clientId, clientName }: WhoopDire
               {whoopToken && (
                 <div className="mt-3 space-y-2 text-sm text-muted-foreground">
                   <div className="flex justify-between">
-                    <span>Последняя синхронизация:</span>
+                    <span>{t('whoopDirect.lastSync')}</span>
                     <span>
                       {whoopToken.last_sync_at 
-                        ? formatDistanceToNow(new Date(whoopToken.last_sync_at), { addSuffix: true, locale: ru })
-                        : 'Никогда'}
+                        ? formatDistanceToNow(new Date(whoopToken.last_sync_at), { addSuffix: true, locale: dateLocale })
+                        : t('whoopDirect.never')}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Токен действителен до:</span>
+                    <span>{t('whoopDirect.tokenValidUntil')}</span>
                     <span>
                       {format(new Date(whoopToken.expires_at), 'dd.MM.yyyy HH:mm')}
                     </span>
@@ -179,9 +183,9 @@ export function WhoopDirectClientDiagnostics({ clientId, clientName }: WhoopDire
             <Card>
               <CardContent className="pt-4">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="font-medium">Данные за 30 дней</span>
+                  <span className="font-medium">{t('whoopDirect.dataFor30Days')}</span>
                   <Badge variant="outline">
-                    {dataGaps.datesWithData} / 30 дней
+                    {dataGaps.datesWithData} / 30 {t('whoopDirect.days')}
                   </Badge>
                 </div>
 
@@ -189,7 +193,7 @@ export function WhoopDirectClientDiagnostics({ clientId, clientName }: WhoopDire
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm text-orange-600">
                       <AlertTriangle className="h-4 w-4" />
-                      <span>Обнаружены пробелы в данных:</span>
+                      <span>{t('whoopDirect.dataGapsFound')}</span>
                     </div>
                     <div className="space-y-1">
                       {dataGaps.gaps.map((gap, idx) => (
@@ -200,7 +204,7 @@ export function WhoopDirectClientDiagnostics({ clientId, clientName }: WhoopDire
                           <Calendar className="h-3 w-3" />
                           <span>
                             {format(new Date(gap.start), 'dd.MM')} — {format(new Date(gap.end), 'dd.MM')}
-                            <span className="ml-1 text-orange-600">({gap.days} дн.)</span>
+                            <span className="ml-1 text-orange-600">({gap.days} {t('whoopDirect.daysShort')})</span>
                           </span>
                         </div>
                       ))}
@@ -209,7 +213,7 @@ export function WhoopDirectClientDiagnostics({ clientId, clientName }: WhoopDire
                 ) : (
                   <div className="flex items-center gap-2 text-sm text-green-600">
                     <CheckCircle2 className="h-4 w-4" />
-                    <span>Нет пробелов в данных</span>
+                    <span>{t('whoopDirect.noDataGaps')}</span>
                   </div>
                 )}
               </CardContent>
@@ -221,7 +225,7 @@ export function WhoopDirectClientDiagnostics({ clientId, clientName }: WhoopDire
             <Card>
               <CardContent className="pt-4">
                 <div className="space-y-3">
-                  <span className="font-medium">Принудительная синхронизация</span>
+                  <span className="font-medium">{t('whoopDirect.forcedSync')}</span>
                   
                   <div className="flex gap-2">
                     {[7, 14, 28, 60].map(days => (
@@ -231,7 +235,7 @@ export function WhoopDirectClientDiagnostics({ clientId, clientName }: WhoopDire
                         size="sm"
                         onClick={() => setSelectedDays(days)}
                       >
-                        {days} дн.
+                        {days} {t('whoopDirect.daysShort')}
                       </Button>
                     ))}
                   </div>
@@ -244,12 +248,12 @@ export function WhoopDirectClientDiagnostics({ clientId, clientName }: WhoopDire
                     {isSyncing ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Синхронизация...
+                        {t('whoopDirect.syncing')}
                       </>
                     ) : (
                       <>
                         <RefreshCw className="h-4 w-4 mr-2" />
-                        Загрузить данные за {selectedDays} дней
+                        {t('whoopDirect.syncButton', { days: selectedDays })}
                       </>
                     )}
                   </Button>
@@ -261,8 +265,8 @@ export function WhoopDirectClientDiagnostics({ clientId, clientName }: WhoopDire
           {!isConnected && !isLoading && (
             <div className="text-center py-4 text-muted-foreground">
               <XCircle className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
-              <p>У клиента нет активного подключения Whoop</p>
-              <p className="text-sm">Попросите клиента подключить Whoop в настройках</p>
+              <p>{t('whoopDirect.noActiveConnection')}</p>
+              <p className="text-sm">{t('whoopDirect.askClientToConnect')}</p>
             </div>
           )}
         </div>

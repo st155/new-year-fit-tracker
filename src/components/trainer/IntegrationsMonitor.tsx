@@ -1,8 +1,8 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -35,7 +35,7 @@ import {
 import { TerraClientDiagnostics } from "./integrations/TerraClientDiagnostics";
 import { WhoopDirectClientDiagnostics } from "./integrations/WhoopDirectClientDiagnostics";
 import { formatDistanceToNow } from "date-fns";
-import { ru } from "date-fns/locale";
+import { ru, enUS } from "date-fns/locale";
 
 interface Client {
   client_id: string;
@@ -53,10 +53,12 @@ interface IntegrationsMonitorProps {
 }
 
 export function IntegrationsMonitor({ clients, loading = false }: IntegrationsMonitorProps) {
+  const { t, i18n } = useTranslation('trainer');
   const [searchQuery, setSearchQuery] = useState("");
   const [filterSource, setFilterSource] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
   const sources = ["whoop", "oura", "garmin", "withings"];
 
   const getSourceIcon = (source: string) => {
@@ -77,15 +79,6 @@ export function IntegrationsMonitor({ clients, loading = false }: IntegrationsMo
       case "withings": return "text-green-500";
       default: return "text-muted-foreground";
     }
-  };
-
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
   };
 
   // Statistics
@@ -163,48 +156,48 @@ export function IntegrationsMonitor({ clients, loading = false }: IntegrationsMo
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Всего клиентов</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('integrations.totalClients')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalClients}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              {stats.withIntegrations} с интеграциями
+              {stats.withIntegrations} {t('integrations.withIntegrations')}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Активны сегодня</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('integrations.activeToday')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">{stats.activeToday}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              {Math.round((stats.activeToday / stats.totalClients) * 100)}% клиентов
+              {Math.round((stats.activeToday / stats.totalClients) * 100)}% {t('integrations.ofClients')}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Устаревшие данные</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('integrations.staleData')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">{stats.staleData}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              &gt;7 дней без данных
+              {t('integrations.daysWithoutData')}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Без интеграций</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('integrations.withoutIntegrations')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-muted-foreground">{stats.withoutIntegrations}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Требуют настройки
+              {t('integrations.requireSetup')}
             </p>
           </CardContent>
         </Card>
@@ -213,8 +206,8 @@ export function IntegrationsMonitor({ clients, loading = false }: IntegrationsMo
       {/* Integration Sources Overview */}
       <Card>
         <CardHeader>
-          <CardTitle>Статистика по источникам</CardTitle>
-          <CardDescription>Количество подключений к каждому устройству</CardDescription>
+          <CardTitle>{t('integrations.sourceStats')}</CardTitle>
+          <CardDescription>{t('integrations.sourceStatsDesc')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -245,15 +238,15 @@ export function IntegrationsMonitor({ clients, loading = false }: IntegrationsMo
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Мониторинг подключений</CardTitle>
-          <CardDescription>Отслеживайте статус интеграций ваших клиентов</CardDescription>
+          <CardTitle>{t('integrations.connectionMonitor')}</CardTitle>
+          <CardDescription>{t('integrations.connectionMonitorDesc')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-3 mb-6">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Поиск по имени или username..."
+                placeholder={t('integrations.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -266,7 +259,7 @@ export function IntegrationsMonitor({ clients, loading = false }: IntegrationsMo
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Все источники</SelectItem>
+                <SelectItem value="all">{t('integrations.allSources')}</SelectItem>
                 <SelectItem value="whoop">Whoop</SelectItem>
                 <SelectItem value="oura">Oura</SelectItem>
                 <SelectItem value="garmin">Garmin</SelectItem>
@@ -279,10 +272,10 @@ export function IntegrationsMonitor({ clients, loading = false }: IntegrationsMo
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Все статусы</SelectItem>
-                <SelectItem value="connected">Подключено</SelectItem>
-                <SelectItem value="disconnected">Не подключено</SelectItem>
-                <SelectItem value="stale">Устаревшие данные</SelectItem>
+                <SelectItem value="all">{t('integrations.allStatuses')}</SelectItem>
+                <SelectItem value="connected">{t('integrations.connected')}</SelectItem>
+                <SelectItem value="disconnected">{t('integrations.disconnected')}</SelectItem>
+                <SelectItem value="stale">{t('integrations.stale')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -292,13 +285,13 @@ export function IntegrationsMonitor({ clients, loading = false }: IntegrationsMo
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Клиент</TableHead>
+                  <TableHead>{t('integrations.client')}</TableHead>
                   <TableHead>Whoop</TableHead>
                   <TableHead>Oura</TableHead>
                   <TableHead>Garmin</TableHead>
                   <TableHead>Withings</TableHead>
-                  <TableHead>Последняя активность</TableHead>
-                  <TableHead>Статус</TableHead>
+                  <TableHead>{t('integrations.lastActivity')}</TableHead>
+                  <TableHead>{t('integrations.status')}</TableHead>
                   <TableHead className="w-[80px]">Terra</TableHead>
                   <TableHead className="w-[80px]">Whoop Direct</TableHead>
                 </TableRow>
@@ -307,7 +300,7 @@ export function IntegrationsMonitor({ clients, loading = false }: IntegrationsMo
                 {filteredClients.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                      Клиенты не найдены
+                      {t('integrations.noClients')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -355,10 +348,10 @@ export function IntegrationsMonitor({ clients, loading = false }: IntegrationsMo
                               {client.last_activity_date ? (
                                 formatDistanceToNow(new Date(client.last_activity_date), {
                                   addSuffix: true,
-                                  locale: ru
+                                  locale: dateLocale
                                 })
                               ) : (
-                                "Нет данных"
+                                t('integrations.noData')
                               )}
                             </span>
                           </div>
@@ -368,17 +361,17 @@ export function IntegrationsMonitor({ clients, loading = false }: IntegrationsMo
                           {isStale ? (
                             <Badge variant="destructive" className="gap-1">
                               <AlertTriangle className="h-3 w-3" />
-                              Устарело
+                              {t('integrations.outdated')}
                             </Badge>
                           ) : connectedSources.length === 0 ? (
                             <Badge variant="outline" className="gap-1">
                               <XCircle className="h-3 w-3" />
-                              Не подключено
+                              {t('integrations.notConnected')}
                             </Badge>
                           ) : (
                             <Badge variant="secondary" className="gap-1">
                               <CheckCircle2 className="h-3 w-3" />
-                              Активно
+                              {t('integrations.active')}
                             </Badge>
                           )}
                         </TableCell>
@@ -406,7 +399,7 @@ export function IntegrationsMonitor({ clients, loading = false }: IntegrationsMo
 
           {filteredClients.length > 0 && (
             <div className="mt-4 text-sm text-muted-foreground text-center">
-              Показано {filteredClients.length} из {clients.length} клиентов
+              {t('integrations.showing', { count: filteredClients.length, total: clients.length })}
             </div>
           )}
         </CardContent>
