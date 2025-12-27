@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 export type DocumentType = 'inbody' | 'blood_test' | 'fitness_report' | 'progress_photo' | 'vo2max' | 'caliper' | 'prescription' | 'training_program' | 'other';
 
@@ -50,6 +51,7 @@ export function useMedicalDocuments(filters?: {
   startDate?: string;
   endDate?: string;
 }) {
+  const { t } = useTranslation('medicalDocs');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -139,13 +141,13 @@ export function useMedicalDocuments(filters?: {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['medical-documents'] });
       toast({
-        title: 'Документ загружен',
-        description: 'Файл успешно сохранён',
+        title: t('toast.uploaded'),
+        description: t('toast.uploadedDesc'),
       });
     },
     onError: (error) => {
       toast({
-        title: 'Ошибка загрузки',
+        title: t('toast.uploadError'),
         description: error.message,
         variant: 'destructive',
       });
@@ -175,12 +177,12 @@ export function useMedicalDocuments(filters?: {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['medical-documents'] });
       toast({
-        title: 'Документ удалён',
+        title: t('toast.deleted'),
       });
     },
     onError: (error) => {
       toast({
-        title: 'Ошибка удаления',
+        title: t('toast.deleteError'),
         description: error.message,
         variant: 'destructive',
       });
@@ -208,12 +210,12 @@ export function useMedicalDocuments(filters?: {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['medical-documents'] });
       toast({
-        title: 'Документ обновлён',
+        title: t('toast.updated'),
       });
     },
     onError: (error) => {
       toast({
-        title: 'Ошибка обновления',
+        title: t('toast.updateError'),
         description: error.message,
         variant: 'destructive',
       });

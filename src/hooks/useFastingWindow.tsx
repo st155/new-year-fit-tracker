@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import i18n from "i18next";
 
 interface FastingWindow {
   id: string;
@@ -93,10 +94,10 @@ export function useFastingWindow(habitId: string, userId?: string): UseFastingWi
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["fasting-windows", habitId] });
-      toast.success("Окно питания началось! 🍽️");
+      toast.success(i18n.t('habits:fasting.eatingStarted'));
     },
     onError: (error) => {
-      toast.error(`Ошибка: ${error.message}`);
+      toast.error(i18n.t('habits:fasting.error', { message: error.message }));
     },
   });
 
@@ -121,10 +122,10 @@ export function useFastingWindow(habitId: string, userId?: string): UseFastingWi
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["fasting-windows", habitId] });
-      toast.success("Голодание началось! 💪");
+      toast.success(i18n.t('habits:fasting.fastingStarted'));
     },
     onError: (error) => {
-      toast.error(`Ошибка: ${error.message}`);
+      toast.error(i18n.t('habits:fasting.error', { message: error.message }));
     },
   });
 
@@ -167,10 +168,10 @@ export function useFastingWindow(habitId: string, userId?: string): UseFastingWi
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["fasting-windows", habitId] });
-      toast.success("Голодание началось! 💪");
+      toast.success(i18n.t('habits:fasting.fastingStarted'));
     },
     onError: (error) => {
-      toast.error(`Ошибка: ${error.message}`);
+      toast.error(i18n.t('habits:fasting.error', { message: error.message }));
     },
   });
 

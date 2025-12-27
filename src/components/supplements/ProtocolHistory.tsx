@@ -24,6 +24,7 @@ import { useSupplementProtocol } from "@/hooks/supplements/useSupplementProtocol
 import { useAuth } from "@/hooks/useAuth";
 import { Eye, Power, Trash2, Sparkles, Calendar, Package, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 interface ProtocolProgress {
   daysPassed: number;
@@ -31,16 +32,17 @@ interface ProtocolProgress {
   progressPercent: number;
 }
 
-const INTAKE_TIME_LABELS: Record<string, string> = {
-  morning: '🌅 Утро',
-  afternoon: '☀️ Обед',
-  evening: '🌆 Ужин',
-  before_sleep: '🌙 Перед сном'
-};
-
 export function ProtocolHistory() {
+  const { t } = useTranslation('supplements');
   const { user } = useAuth();
   const { toast } = useToast();
+
+  const INTAKE_TIME_LABELS: Record<string, string> = {
+    morning: `🌅 ${t('timeGroups.morning')}`,
+    afternoon: `☀️ ${t('timeGroups.afternoon')}`,
+    evening: `🌆 ${t('timeGroups.evening')}`,
+    before_sleep: `🌙 ${t('timeGroups.before_sleep')}`
+  };
   const { 
     activeProtocol, 
     protocolHistory, 
@@ -94,8 +96,8 @@ export function ProtocolHistory() {
       await activateProtocol.mutateAsync(protocolId);
     } catch (error) {
       toast({
-        title: "Ошибка активации",
-        description: error instanceof Error ? error.message : "Попробуйте еще раз",
+        title: t('protocols.activateError'),
+        description: error instanceof Error ? error.message : t('protocols.tryAgain'),
         variant: "destructive"
       });
     }
@@ -115,8 +117,8 @@ export function ProtocolHistory() {
       setProtocolToDelete(null);
     } catch (error) {
       toast({
-        title: "Ошибка удаления",
-        description: error instanceof Error ? error.message : "Попробуйте еще раз",
+        title: t('protocols.deleteError'),
+        description: error instanceof Error ? error.message : t('protocols.tryAgain'),
         variant: "destructive"
       });
     }
@@ -138,7 +140,7 @@ export function ProtocolHistory() {
               {isActive && (
                 <Badge variant="default" className="gap-1">
                   <Power className="h-3 w-3" />
-                  Активен
+                  {t('protocols.active')}
                 </Badge>
               )}
               {protocol.ai_generated && (
@@ -156,25 +158,25 @@ export function ProtocolHistory() {
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
                 <Package className="h-4 w-4" />
-                {itemsCount} {itemsCount === 1 ? 'добавка' : 'добавок'}
+                {t('protocols.supplements', { count: itemsCount })}
               </div>
               {protocol.duration_days && (
                 <div className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
-                  {protocol.duration_days} {protocol.duration_days === 1 ? 'день' : 'дней'}
+                  {t('protocols.days', { count: protocol.duration_days })}
                 </div>
               )}
               <div>
-                Создан {new Date(protocol.created_at).toLocaleDateString('ru-RU')}
+                {t('protocols.created', { date: new Date(protocol.created_at).toLocaleDateString() })}
               </div>
             </div>
 
             {progress && isActive && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Прогресс</span>
+                  <span className="text-muted-foreground">{t('protocols.progress')}</span>
                   <span className="font-medium">
-                    {progress.daysPassed} / {progress.daysTotal} дней ({progress.progressPercent}%)
+                    {t('protocols.progressDays', { passed: progress.daysPassed, total: progress.daysTotal, percent: progress.progressPercent })}
                   </span>
                 </div>
                 <Progress value={progress.progressPercent} className="h-2" />
@@ -190,7 +192,7 @@ export function ProtocolHistory() {
             onClick={() => handleViewDetails(protocol)}
           >
             <Eye className="h-4 w-4 mr-2" />
-            Просмотр
+            {t('protocols.view')}
           </Button>
 
           {!isActive && (
@@ -202,7 +204,7 @@ export function ProtocolHistory() {
                 disabled={activateProtocol.isPending}
               >
                 <Power className="h-4 w-4 mr-2" />
-                Активировать
+                {t('protocols.activate')}
               </Button>
               <Button
                 size="sm"
@@ -224,9 +226,9 @@ export function ProtocolHistory() {
     return (
       <div className="text-center py-12 space-y-4">
         <Package className="h-12 w-12 mx-auto text-muted-foreground/50" />
-        <p className="text-muted-foreground">Войдите в аккаунт</p>
+        <p className="text-muted-foreground">{t('protocols.loginRequired')}</p>
         <p className="text-sm text-muted-foreground">
-          Для просмотра протоколов необходимо авторизоваться
+          {t('protocols.loginRequiredDesc')}
         </p>
       </div>
     );
@@ -238,7 +240,7 @@ export function ProtocolHistory() {
       <div className="flex items-center justify-center py-12">
         <div className="text-center space-y-2">
           <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto" />
-          <p className="text-sm text-muted-foreground">Загрузка протоколов...</p>
+          <p className="text-sm text-muted-foreground">{t('protocols.loading')}</p>
         </div>
       </div>
     );
@@ -249,7 +251,7 @@ export function ProtocolHistory() {
     return (
       <div className="text-center py-12 space-y-4">
         <Package className="h-12 w-12 mx-auto text-destructive/50" />
-        <p className="text-destructive">Ошибка загрузки</p>
+        <p className="text-destructive">{t('protocols.loadError')}</p>
         <p className="text-sm text-muted-foreground">
           {(errorActive as Error)?.message || (errorHistory as Error)?.message}
         </p>
@@ -259,7 +261,7 @@ export function ProtocolHistory() {
           onClick={() => refetchAll()}
         >
           <RefreshCw className="h-4 w-4 mr-2" />
-          Повторить
+          {t('protocols.retry')}
         </Button>
       </div>
     );
@@ -280,7 +282,7 @@ export function ProtocolHistory() {
         <div className="space-y-4">
           <h2 className="text-xl font-bold flex items-center gap-2">
             <div className="h-3 w-3 rounded-full bg-primary animate-pulse" />
-            Активный протокол
+            {t('protocols.activeProtocol')}
           </h2>
           {renderProtocolCard(activeProtocol, true)}
         </div>
@@ -290,7 +292,7 @@ export function ProtocolHistory() {
       {inactiveProtocols.length > 0 && (
         <div className="space-y-4">
           <h2 className="text-xl font-bold">
-            📚 История протоколов ({inactiveProtocols.length})
+            📚 {t('protocols.history')} ({inactiveProtocols.length})
           </h2>
           <div className="space-y-4">
             {inactiveProtocols.map((protocol: any) => renderProtocolCard(protocol, false))}
@@ -301,9 +303,9 @@ export function ProtocolHistory() {
       {!activeProtocol && inactiveProtocols.length === 0 && (
         <div className="text-center py-12 space-y-4">
           <Package className="h-12 w-12 mx-auto text-muted-foreground/50" />
-          <p className="text-muted-foreground">Протоколы не найдены</p>
+          <p className="text-muted-foreground">{t('protocols.notFound')}</p>
           <p className="text-sm text-muted-foreground">
-            Создайте свой первый протокол во вкладке "Import Protocol"
+            {t('protocols.createFirst')}
           </p>
           <Button 
             variant="outline" 
@@ -311,7 +313,7 @@ export function ProtocolHistory() {
             onClick={() => refetchAll()}
           >
             <RefreshCw className="h-4 w-4 mr-2" />
-            Обновить
+            {t('protocols.refresh')}
           </Button>
         </div>
       )}
@@ -359,14 +361,14 @@ export function ProtocolHistory() {
 
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-muted-foreground">Дозировка:</span>
+                    <span className="text-muted-foreground">{t('protocols.dosage')}</span>
                     <p className="font-medium">
                       {item.daily_dosage} {item.dosage_unit}
                     </p>
                   </div>
                   {item.supplement_products?.form && (
                     <div>
-                      <span className="text-muted-foreground">Форма:</span>
+                      <span className="text-muted-foreground">{t('protocols.form')}</span>
                       <p className="font-medium capitalize">
                         {item.supplement_products.form}
                       </p>
@@ -376,7 +378,7 @@ export function ProtocolHistory() {
 
                 {item.intake_times && item.intake_times.length > 0 && (
                   <div>
-                    <span className="text-sm text-muted-foreground">Время приема:</span>
+                    <span className="text-sm text-muted-foreground">{t('protocols.intakeTimes')}</span>
                     <div className="flex flex-wrap gap-2 mt-1">
                       {item.intake_times.map((time: string) => (
                         <Badge key={time} variant="outline">
@@ -402,18 +404,18 @@ export function ProtocolHistory() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Удалить протокол?</AlertDialogTitle>
+            <AlertDialogTitle>{t('protocols.deleteConfirm')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Это действие нельзя отменить. Протокол и все его данные будут удалены навсегда.
+              {t('protocols.deleteDesc')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Отмена</AlertDialogCancel>
+            <AlertDialogCancel>{t('protocols.cancel')}</AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleDeleteConfirm}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Удалить
+              {t('protocols.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
