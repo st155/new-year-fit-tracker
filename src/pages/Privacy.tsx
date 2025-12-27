@@ -22,8 +22,8 @@ const Privacy = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">{t('title')}</CardTitle>
-            <p className="text-muted-foreground">{t('lastUpdated')} 26 декабря 2024</p>
+<CardTitle className="text-2xl">{t('title')}</CardTitle>
+            <p className="text-muted-foreground">{t('lastUpdatedFull')}</p>
           </CardHeader>
           <CardContent className="space-y-6 text-foreground">
             <section>

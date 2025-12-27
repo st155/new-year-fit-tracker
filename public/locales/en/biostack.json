@@ -15,5 +15,15 @@
     "labInWeeks": "Lab tests in ~2 weeks",
     "recommendedDate": "Recommended date: {{date}}",
     "lastLab": "Last lab: {{date}}"
+  },
+  "alerts": {
+    "title": "Protocol Notifications",
+    "newCount": "{{count}} new",
+    "retestPrompt": "Retest recommended",
+    "protocolComplete": "Protocol completed",
+    "unknownProtocol": "Unknown protocol",
+    "scheduleRetest": "Schedule retest",
+    "dismiss": "Dismiss",
+    "noNew": "No new notifications"
   }
 }

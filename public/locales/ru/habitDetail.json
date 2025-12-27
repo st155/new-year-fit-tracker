@@ -22,6 +22,13 @@
     "creating": "Создание...",
     "csvSuccess": "CSV экспортирован",
     "pdfSuccess": "PDF отчет создан",
-    "pdfError": "Ошибка при создании PDF"
+    "pdfError": "Ошибка при создании PDF",
+    "csvHeaders": {
+      "date": "Дата",
+      "completed": "Выполнено",
+      "streak": "Серия"
+    },
+    "yes": "Да",
+    "no": "Нет"
   }
 }

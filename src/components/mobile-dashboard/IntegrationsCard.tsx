@@ -4,6 +4,7 @@ import { Plug, Check, AlertTriangle, Circle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 
 type ConnectionStatus = 'active' | 'needs_sync' | 'disconnected';
 
@@ -24,6 +25,7 @@ const PROVIDER_DISPLAY: Record<string, string> = {
 };
 
 export function IntegrationsCard() {
+  const { t } = useTranslation('integrations');
   const { user } = useAuth();
 
   const { data: integrations = [], isLoading } = useQuery({
@@ -95,9 +97,9 @@ export function IntegrationsCard() {
 
   const getStatusText = (status: ConnectionStatus) => {
     switch (status) {
-      case 'active': return 'Синхр.';
-      case 'needs_sync': return 'Обновить';
-      default: return 'Откл.';
+      case 'active': return t('status.active');
+      case 'needs_sync': return t('status.needsSync');
+      default: return t('status.disconnected');
     }
   };
 
@@ -114,7 +116,7 @@ export function IntegrationsCard() {
             <div className="w-7 h-7 rounded-lg bg-orange-500/20 flex items-center justify-center">
               <Plug className="w-4 h-4 text-orange-500" />
             </div>
-            <span className="text-xs font-medium text-foreground">Интеграции</span>
+            <span className="text-xs font-medium text-foreground">{t('title')}</span>
           </div>
           {activeCount > 0 && (
             <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-500 font-medium">
@@ -142,11 +144,11 @@ export function IntegrationsCard() {
               </div>
             ))
           ) : (
-            <p className="text-[11px] text-muted-foreground">Нет подключений</p>
+            <p className="text-[11px] text-muted-foreground">{t('noConnections')}</p>
           )}
         </div>
 
-        <div className="text-[10px] text-primary mt-auto">Настроить →</div>
+        <div className="text-[10px] text-primary mt-auto">{t('configure')}</div>
       </Link>
     </motion.div>
   );

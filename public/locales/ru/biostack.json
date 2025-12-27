@@ -15,5 +15,15 @@
     "labInWeeks": "Анализы через ~2 недели",
     "recommendedDate": "Рекомендуемая дата: {{date}}",
     "lastLab": "Последний анализ: {{date}}"
+  },
+  "alerts": {
+    "title": "Уведомления протоколов",
+    "newCount": "{{count}} новых",
+    "retestPrompt": "Рекомендуется пересдача",
+    "protocolComplete": "Протокол завершён",
+    "unknownProtocol": "Неизвестный протокол",
+    "scheduleRetest": "Запланировать пересдачу",
+    "dismiss": "Скрыть",
+    "noNew": "Нет новых уведомлений"
   }
 }

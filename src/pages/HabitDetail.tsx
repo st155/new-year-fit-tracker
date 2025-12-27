@@ -102,10 +102,10 @@ export default function HabitDetail() {
     if (!progressData) return;
     
     // Create CSV content
-    const headers = ['Дата', 'Выполнено', 'Серия'];
+    const headers = [t('export.csvHeaders.date'), t('export.csvHeaders.completed'), t('export.csvHeaders.streak')];
     const rows = progressData.map(day => [
       day.date,
-      day.completed ? 'Да' : 'Нет',
+      day.completed ? t('export.yes') : t('export.no'),
       day.streak_day || 0
     ]);
     
