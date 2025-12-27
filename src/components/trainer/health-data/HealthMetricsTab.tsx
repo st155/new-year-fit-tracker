@@ -1,11 +1,14 @@
 import { HealthData } from "./types";
 import { HealthMetricCard } from "./HealthMetricCard";
+import { useTranslation } from 'react-i18next';
 
 interface HealthMetricsTabProps {
   healthData: HealthData[];
 }
 
 export function HealthMetricsTab({ healthData }: HealthMetricsTabProps) {
+  const { t } = useTranslation('health');
+
   const getLatestValue = (key: keyof HealthData) => {
     const latestData = healthData.find(d => d[key] !== undefined && d[key] !== null);
     return latestData?.[key] as number | undefined;
@@ -48,17 +51,17 @@ export function HealthMetricsTab({ healthData }: HealthMetricsTabProps) {
         title="VO2 Max"
         icon="🫁"
         value={getLatestValue('vo2_max') || 0}
-        unit="мл/кг/мин"
+        unit={t('units.mlKgMin')}
         source={getLatestSource('vo2_max_source')}
         data={getChartData('vo2_max')}
         trend={getTrend('vo2_max')}
       />
       
       <HealthMetricCard
-        title="Пульсовое давление"
+        title={t('metrics.bloodPressure')}
         icon="🩺"
         value={getLatestValue('blood_pressure') || 0}
-        unit="мм рт.ст."
+        unit={t('units.mmHg')}
         source={getLatestSource('blood_pressure_source')}
         data={getChartData('blood_pressure')}
         trend={getTrend('blood_pressure')}

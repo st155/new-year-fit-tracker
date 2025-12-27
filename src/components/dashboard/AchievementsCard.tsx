@@ -15,12 +15,14 @@ import {
   getCategoryName 
 } from '@/lib/achievements';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface AchievementsCardProps {
   className?: string;
 }
 
 export function AchievementsCard({ className }: AchievementsCardProps) {
+  const { t } = useTranslation('dashboard');
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
@@ -160,7 +162,7 @@ export function AchievementsCard({ className }: AchievementsCardProps) {
       const newlyUnlocked = updatedAchievements.filter(a => a.unlocked && !a.unlockedAt);
       if (newlyUnlocked.length > 0) {
         newlyUnlocked.forEach(a => {
-          toast.success(`Достижение получено: ${a.icon} ${a.title}`, {
+          toast.success(t('achievements.toast', { icon: a.icon, title: a.title }), {
             description: a.description,
             duration: 5000,
           });
@@ -210,10 +212,10 @@ export function AchievementsCard({ className }: AchievementsCardProps) {
   if (loading) {
     return (
       <Card className={className}>
-        <CardHeader>
+      <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Trophy className="h-5 w-5 text-yellow-500" />
-            Достижения
+            {t('achievements.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -236,15 +238,15 @@ export function AchievementsCard({ className }: AchievementsCardProps) {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Trophy className="h-5 w-5 text-yellow-500" />
-              Достижения
+              {t('achievements.title')}
             </CardTitle>
             <CardDescription>
-              {unlockedCount} из {totalCount} разблокировано
+              {t('achievements.unlocked', { count: unlockedCount, total: totalCount })}
             </CardDescription>
           </div>
           <div className="text-right">
             <div className="text-2xl font-bold text-yellow-500">{completionPercentage.toFixed(0)}%</div>
-            <div className="text-xs text-muted-foreground">Завершено</div>
+            <div className="text-xs text-muted-foreground">{t('achievements.completed')}</div>
           </div>
         </div>
         <Progress value={completionPercentage} className="mt-4" />
@@ -252,12 +254,12 @@ export function AchievementsCard({ className }: AchievementsCardProps) {
       <CardContent>
         <Tabs value={selectedCategory} onValueChange={(v) => setSelectedCategory(v as any)}>
           <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6">
-            <TabsTrigger value="all" className="text-xs">Все</TabsTrigger>
-            <TabsTrigger value="streak" className="text-xs">Серии</TabsTrigger>
-            <TabsTrigger value="milestone" className="text-xs">Вехи</TabsTrigger>
-            <TabsTrigger value="workout" className="text-xs">Спорт</TabsTrigger>
-            <TabsTrigger value="elite" className="text-xs">Элита</TabsTrigger>
-            <TabsTrigger value="social" className="text-xs">Соц.</TabsTrigger>
+            <TabsTrigger value="all" className="text-xs">{t('achievements.tabs.all')}</TabsTrigger>
+            <TabsTrigger value="streak" className="text-xs">{t('achievements.tabs.streak')}</TabsTrigger>
+            <TabsTrigger value="milestone" className="text-xs">{t('achievements.tabs.milestone')}</TabsTrigger>
+            <TabsTrigger value="workout" className="text-xs">{t('achievements.tabs.workout')}</TabsTrigger>
+            <TabsTrigger value="elite" className="text-xs">{t('achievements.tabs.elite')}</TabsTrigger>
+            <TabsTrigger value="social" className="text-xs">{t('achievements.tabs.social')}</TabsTrigger>
           </TabsList>
 
           <div className="mt-6 space-y-3">
@@ -296,10 +298,10 @@ export function AchievementsCard({ className }: AchievementsCardProps) {
                         </p>
                       </div>
                       <Badge variant={getRarityBadgeVariant(achievement.rarity)} className="shrink-0">
-                        {achievement.rarity === 'common' && 'Обычное'}
-                        {achievement.rarity === 'rare' && 'Редкое'}
-                        {achievement.rarity === 'epic' && 'Эпичное'}
-                        {achievement.rarity === 'legendary' && '⭐ Легендарное'}
+                        {achievement.rarity === 'common' && t('achievements.rarity.common')}
+                        {achievement.rarity === 'rare' && t('achievements.rarity.rare')}
+                        {achievement.rarity === 'epic' && t('achievements.rarity.epic')}
+                        {achievement.rarity === 'legendary' && t('achievements.rarity.legendary')}
                       </Badge>
                     </div>
 
@@ -307,7 +309,7 @@ export function AchievementsCard({ className }: AchievementsCardProps) {
                     {!achievement.unlocked && achievement.progress !== undefined && (
                       <div className="space-y-1 mt-3">
                         <div className="flex justify-between text-xs text-muted-foreground">
-                          <span>Прогресс</span>
+                          <span>{t('achievements.progress')}</span>
                           <span>{achievement.progress} / {achievement.requirement}</span>
                         </div>
                         <Progress 
@@ -320,7 +322,7 @@ export function AchievementsCard({ className }: AchievementsCardProps) {
                     {achievement.unlocked && (
                       <div className="flex items-center gap-2 mt-2">
                         <Sparkles className="h-4 w-4 text-yellow-500" />
-                        <span className="text-xs font-medium text-yellow-500">Разблокировано</span>
+                        <span className="text-xs font-medium text-yellow-500">{t('achievements.unlockedLabel')}</span>
                       </div>
                     )}
                   </div>
@@ -332,7 +334,7 @@ export function AchievementsCard({ className }: AchievementsCardProps) {
               <div className="text-center py-8">
                 <Award className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground">
-                  Нет достижений в этой категории
+                  {t('achievements.noInCategory')}
                 </p>
               </div>
             )}

@@ -130,5 +130,28 @@
     "weeklyMetrics": "You logged {{count}} metrics this week. You're on fire!",
     "getStarted": "🎯 Get Started",
     "getStartedDesc": "Start logging your metrics and completing habits to see personalized insights here!"
+  },
+  "achievements": {
+    "title": "Achievements",
+    "unlocked": "{{count}} of {{total}} unlocked",
+    "completed": "Completed",
+    "toast": "Achievement unlocked: {{icon}} {{title}}",
+    "tabs": {
+      "all": "All",
+      "streak": "Streaks",
+      "milestone": "Milestones",
+      "workout": "Workout",
+      "elite": "Elite",
+      "social": "Social"
+    },
+    "rarity": {
+      "common": "Common",
+      "rare": "Rare",
+      "epic": "Epic",
+      "legendary": "⭐ Legendary"
+    },
+    "progress": "Progress",
+    "unlockedLabel": "Unlocked",
+    "noInCategory": "No achievements in this category"
   }
 }
