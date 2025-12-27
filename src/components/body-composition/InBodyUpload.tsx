@@ -231,35 +231,33 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
           </div>
         )}
 
-        <label className="cursor-pointer">
+        <div className="relative inline-flex">
           <Button
             variant="default"
             size="lg"
             disabled={uploading}
-            asChild
+            type="button"
           >
-            <span>
-              {uploading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Загрузка...
-                </>
-              ) : (
-                <>
-                  <Upload className="mr-2 h-4 w-4" />
-                  Выбрать PDF
-                </>
-              )}
-            </span>
+            {uploading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Загрузка...
+              </>
+            ) : (
+              <>
+                <Upload className="mr-2 h-4 w-4" />
+                Выбрать PDF
+              </>
+            )}
           </Button>
           <input
             type="file"
             accept=".pdf"
             onChange={handleFileUpload}
-            className="sr-only"
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
             disabled={uploading}
           />
-        </label>
+        </div>
 
         <p className="text-xs text-muted-foreground mt-4">
           PDF format only, max 15 MB
