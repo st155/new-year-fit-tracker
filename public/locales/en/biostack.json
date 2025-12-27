@@ -1,0 +1,19 @@
+{
+  "timeline": {
+    "status": {
+      "ready": "Ready to evaluate effectiveness",
+      "needsLab": "Lab tests recommended",
+      "upcoming": "Lab tests coming soon",
+      "inProgress": "Cumulative effect"
+    },
+    "weekProgress": "Week {{week}} of {{total}}",
+    "start": "Start",
+    "effect": "Effect",
+    "added": "Added",
+    "expectedEffect": "Expected effect",
+    "timeForLab": "Time for lab tests",
+    "labInWeeks": "Lab tests in ~2 weeks",
+    "recommendedDate": "Recommended date: {{date}}",
+    "lastLab": "Last lab: {{date}}"
+  }
+}

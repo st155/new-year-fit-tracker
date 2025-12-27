@@ -9,7 +9,8 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { format, differenceInWeeks, addWeeks } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 
 interface SupplementTimelineProps {
   supplementName: string;
@@ -26,6 +27,9 @@ export function SupplementTimeline({
   hasRecentLabResults = false,
   lastLabDate,
 }: SupplementTimelineProps) {
+  const { t, i18n } = useTranslation('biostack');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
+
   const start = new Date(startDate);
   const now = new Date();
   const weeksElapsed = differenceInWeeks(now, start);
@@ -43,7 +47,7 @@ export function SupplementTimeline({
         color: 'text-green-400',
         bgColor: 'bg-green-500/10',
         borderColor: 'border-green-500/30',
-        message: 'Можно оценить эффективность',
+        message: t('timeline.status.ready'),
       };
     }
     if (isEffectExpected && !hasRecentLabResults) {
@@ -52,7 +56,7 @@ export function SupplementTimeline({
         color: 'text-amber-400',
         bgColor: 'bg-amber-500/10',
         borderColor: 'border-amber-500/30',
-        message: 'Рекомендуется сдать анализы',
+        message: t('timeline.status.needsLab'),
       };
     }
     if (shouldDoLab) {
@@ -61,7 +65,7 @@ export function SupplementTimeline({
         color: 'text-blue-400',
         bgColor: 'bg-blue-500/10',
         borderColor: 'border-blue-500/30',
-        message: 'Скоро время для анализов',
+        message: t('timeline.status.upcoming'),
       };
     }
     return {
@@ -69,7 +73,7 @@ export function SupplementTimeline({
       color: 'text-purple-400',
       bgColor: 'bg-purple-500/10',
       borderColor: 'border-purple-500/30',
-      message: 'Накопительный эффект',
+      message: t('timeline.status.inProgress'),
     };
   };
 
@@ -85,7 +89,7 @@ export function SupplementTimeline({
             <span className="font-semibold">{supplementName}</span>
           </div>
           <Badge variant="outline" className={config.borderColor}>
-            Неделя {weeksElapsed} из {expectedEffectWeeks}
+            {t('timeline.weekProgress', { week: weeksElapsed, total: expectedEffectWeeks })}
           </Badge>
         </div>
 
@@ -93,9 +97,9 @@ export function SupplementTimeline({
         <div className="space-y-2">
           <Progress value={progressPercent} className="h-2" />
           <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Начало</span>
+            <span>{t('timeline.start')}</span>
             <span className={config.color}>{config.message}</span>
-            <span>Эффект</span>
+            <span>{t('timeline.effect')}</span>
           </div>
         </div>
 
@@ -104,16 +108,16 @@ export function SupplementTimeline({
           <div className="flex items-center gap-2 p-2 rounded-lg bg-background/50">
             <Calendar className="h-4 w-4 text-muted-foreground" />
             <div>
-              <p className="text-xs text-muted-foreground">Добавлено</p>
-              <p className="font-medium">{format(start, 'd MMM yyyy', { locale: ru })}</p>
+              <p className="text-xs text-muted-foreground">{t('timeline.added')}</p>
+              <p className="font-medium">{format(start, 'd MMM yyyy', { locale: dateLocale })}</p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 p-2 rounded-lg bg-background/50">
             <Clock className="h-4 w-4 text-muted-foreground" />
             <div>
-              <p className="text-xs text-muted-foreground">Ожидаемый эффект</p>
-              <p className="font-medium">{format(expectedEffectDate, 'd MMM yyyy', { locale: ru })}</p>
+              <p className="text-xs text-muted-foreground">{t('timeline.expectedEffect')}</p>
+              <p className="font-medium">{format(expectedEffectDate, 'd MMM yyyy', { locale: dateLocale })}</p>
             </div>
           </div>
         </div>
@@ -132,10 +136,10 @@ export function SupplementTimeline({
               <p className={`font-medium ${
                 config.status === 'needs_lab' ? 'text-amber-400' : 'text-blue-400'
               }`}>
-                {config.status === 'needs_lab' ? 'Время сдать анализы' : 'Анализы через ~2 недели'}
+                {config.status === 'needs_lab' ? t('timeline.timeForLab') : t('timeline.labInWeeks')}
               </p>
               <p className="text-xs text-muted-foreground">
-                Рекомендуемая дата: {format(recommendedLabDate, 'd MMM yyyy', { locale: ru })}
+                {t('timeline.recommendedDate', { date: format(recommendedLabDate, 'd MMM yyyy', { locale: dateLocale }) })}
               </p>
             </div>
           </div>
@@ -144,7 +148,7 @@ export function SupplementTimeline({
         {/* Last lab info */}
         {lastLabDate && (
           <div className="text-xs text-muted-foreground text-center">
-            Последний анализ: {format(new Date(lastLabDate), 'd MMM yyyy', { locale: ru })}
+            {t('timeline.lastLab', { date: format(new Date(lastLabDate), 'd MMM yyyy', { locale: dateLocale }) })}
           </div>
         )}
       </div>

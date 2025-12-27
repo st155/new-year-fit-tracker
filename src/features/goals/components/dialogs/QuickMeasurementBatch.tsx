@@ -6,6 +6,7 @@ import { Save, X } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useMeasurementMutations } from "../../hooks";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 interface Goal {
   id: string;
@@ -21,6 +22,7 @@ interface QuickMeasurementBatchProps {
 }
 
 export function QuickMeasurementBatch({ goals, userId, onComplete }: QuickMeasurementBatchProps) {
+  const { t } = useTranslation('goals');
   const [values, setValues] = useState<Record<string, string>>({});
 
   const { createMeasurementsBatch } = useMeasurementMutations();
@@ -40,7 +42,7 @@ export function QuickMeasurementBatch({ goals, userId, onComplete }: QuickMeasur
       }));
 
     if (measurementInputs.length === 0) {
-      toast.error("Введите хотя бы одно значение");
+      toast.error(t('batch.enterValue'));
       return;
     }
 
@@ -55,9 +57,9 @@ export function QuickMeasurementBatch({ goals, userId, onComplete }: QuickMeasur
     <Card className="p-6 space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold">Добавить начальные измерения</h3>
+          <h3 className="text-lg font-semibold">{t('batch.title')}</h3>
           <p className="text-sm text-muted-foreground">
-            Введите текущие значения для ваших целей
+            {t('batch.subtitle')}
           </p>
         </div>
         <Button variant="ghost" size="icon" onClick={onComplete}>
@@ -77,7 +79,7 @@ export function QuickMeasurementBatch({ goals, userId, onComplete }: QuickMeasur
                   id={`goal-${goal.id}`}
                   type="number"
                   step="any"
-                  placeholder={`Текущее значение`}
+                  placeholder={t('batch.placeholder')}
                   value={values[goal.id] || ''}
                   onChange={(e) => setValues(prev => ({ ...prev, [goal.id]: e.target.value }))}
                   className="flex-1"
@@ -86,7 +88,7 @@ export function QuickMeasurementBatch({ goals, userId, onComplete }: QuickMeasur
                   {goal.target_unit}
                 </span>
                 <span className="text-xs text-muted-foreground/60 w-24">
-                  Цель: {goal.target_value}
+                  {t('batch.target', { value: goal.target_value })}
                 </span>
               </div>
             </div>
@@ -95,11 +97,11 @@ export function QuickMeasurementBatch({ goals, userId, onComplete }: QuickMeasur
 
         <div className="flex justify-end gap-2 pt-4">
           <Button type="button" variant="outline" onClick={onComplete}>
-            Отмена
+            {t('batch.cancel')}
           </Button>
           <Button type="submit" disabled={createMeasurementsBatch.isPending}>
             <Save className="h-4 w-4 mr-2" />
-            {createMeasurementsBatch.isPending ? "Сохранение..." : "Сохранить"}
+            {createMeasurementsBatch.isPending ? t('batch.saving') : t('batch.save')}
           </Button>
         </div>
       </form>
