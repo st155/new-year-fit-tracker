@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Save, Trash2, Edit2, X } from 'lucide-react';
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 
 interface ClientNotesProps {
   clientId: string;
@@ -22,6 +23,7 @@ interface Note {
 export const ClientNotes = ({ clientId }: ClientNotesProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useTranslation('trainer');
   const [newNote, setNewNote] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
@@ -58,10 +60,10 @@ export const ClientNotes = ({ clientId }: ClientNotesProps) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['client-notes', clientId] });
       setNewNote('');
-      toast({ description: 'Заметка добавлена' });
+      toast({ description: t('notes.noteAdded') });
     },
     onError: () => {
-      toast({ variant: 'destructive', description: 'Ошибка при добавлении заметки' });
+      toast({ variant: 'destructive', description: t('notes.addError') });
     },
   });
 
@@ -78,10 +80,10 @@ export const ClientNotes = ({ clientId }: ClientNotesProps) => {
       queryClient.invalidateQueries({ queryKey: ['client-notes', clientId] });
       setEditingId(null);
       setEditContent('');
-      toast({ description: 'Заметка обновлена' });
+      toast({ description: t('notes.noteUpdated') });
     },
     onError: () => {
-      toast({ variant: 'destructive', description: 'Ошибка при обновлении заметки' });
+      toast({ variant: 'destructive', description: t('notes.updateError') });
     },
   });
 
@@ -96,10 +98,10 @@ export const ClientNotes = ({ clientId }: ClientNotesProps) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['client-notes', clientId] });
-      toast({ description: 'Заметка удалена' });
+      toast({ description: t('notes.noteDeleted') });
     },
     onError: () => {
-      toast({ variant: 'destructive', description: 'Ошибка при удалении заметки' });
+      toast({ variant: 'destructive', description: t('notes.deleteError') });
     },
   });
 
@@ -117,7 +119,7 @@ export const ClientNotes = ({ clientId }: ClientNotesProps) => {
     <div className="space-y-4">
       <Card className="p-4">
         <Textarea
-          placeholder="Добавить новую заметку о клиенте..."
+          placeholder={t('notes.addNotePlaceholder')}
           value={newNote}
           onChange={(e) => setNewNote(e.target.value)}
           className="mb-2"
@@ -128,14 +130,14 @@ export const ClientNotes = ({ clientId }: ClientNotesProps) => {
           size="sm"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Добавить заметку
+          {t('notes.addNote')}
         </Button>
       </Card>
 
       {isLoading ? (
-        <p className="text-muted-foreground text-sm">Загрузка заметок...</p>
+        <p className="text-muted-foreground text-sm">{t('notes.loadingNotes')}</p>
       ) : notes.length === 0 ? (
-        <p className="text-muted-foreground text-sm">Нет заметок о клиенте</p>
+        <p className="text-muted-foreground text-sm">{t('notes.noNotes')}</p>
       ) : (
         <div className="space-y-3">
           {notes.map((note) => (
@@ -153,11 +155,11 @@ export const ClientNotes = ({ clientId }: ClientNotesProps) => {
                       size="sm"
                     >
                       <Save className="h-4 w-4 mr-2" />
-                      Сохранить
+                      {t('notes.save')}
                     </Button>
                     <Button onClick={handleCancelEdit} variant="outline" size="sm">
                       <X className="h-4 w-4 mr-2" />
-                      Отмена
+                      {t('notes.cancel')}
                     </Button>
                   </div>
                 </div>

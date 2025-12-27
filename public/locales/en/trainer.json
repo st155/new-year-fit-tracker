@@ -97,5 +97,120 @@
       "sleep": "Sleep",
       "recovery": "Recovery"
     }
+  },
+  "analytics": {
+    "title": "Analytics and Statistics",
+    "subtitle": "Track progress of all clients",
+    "exportReport": "Export Report",
+    "totalClients": "Total Clients",
+    "activeClients": "Active:",
+    "activity": "activity",
+    "activeGoals": "Active Goals",
+    "completed": "Completed:",
+    "measurementsThisMonth": "Measurements this month",
+    "last30days": "Last 30 days",
+    "avgProgress": "Average Progress",
+    "detailedStats": "Detailed Statistics by Client",
+    "detailedStatsDesc": "Progress and activity of each client",
+    "noClients": "No clients",
+    "addClientsForAnalytics": "Add clients to view analytics",
+    "goals": "Goals:",
+    "loadError": "Error loading analytics",
+    "status": {
+      "excellent": "Excellent",
+      "good": "Good",
+      "needsAttention": "Needs attention",
+      "inactive": "Inactive"
+    },
+    "recommendations": "Recommendations",
+    "alerts": {
+      "inactiveClients": "{{count}} inactive clients",
+      "contactThem": "Contact them or create a motivational post",
+      "needAttention": "{{count}} clients need attention",
+      "checkGoals": "Check their goals and offer support",
+      "excellentResults": "{{count}} clients showing excellent results",
+      "shareSuccess": "Share their success to motivate others"
+    }
+  },
+  "tasks": {
+    "createTask": "Create Task",
+    "client": "Client",
+    "selectClient": "Select client",
+    "taskTitle": "Task Title",
+    "taskTitlePlaceholder": "e.g.: Record VO2 max",
+    "description": "Description (optional)",
+    "descriptionPlaceholder": "Task details...",
+    "priority": "Priority",
+    "priorities": {
+      "low": "Low",
+      "normal": "Normal",
+      "high": "High",
+      "urgent": "Urgent"
+    },
+    "deadline": "Deadline (optional)",
+    "cancel": "Cancel",
+    "create": "Create",
+    "creating": "Creating...",
+    "status": {
+      "pending": "Pending",
+      "inProgress": "In Progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "taskCompleted": "Task completed",
+    "taskResumed": "Task resumed",
+    "updateError": "Failed to update task",
+    "createSuccess": "Task created",
+    "createError": "Failed to create task",
+    "fillRequired": "Fill in required fields",
+    "error": "Error"
+  },
+  "notes": {
+    "addNotePlaceholder": "Add a new note about the client...",
+    "addNote": "Add Note",
+    "loadingNotes": "Loading notes...",
+    "noNotes": "No notes about the client",
+    "save": "Save",
+    "cancel": "Cancel",
+    "noteAdded": "Note added",
+    "noteUpdated": "Note updated",
+    "noteDeleted": "Note deleted",
+    "addError": "Error adding note",
+    "updateError": "Error updating note",
+    "deleteError": "Error deleting note"
+  },
+  "clientDetail": {
+    "back": "Back",
+    "addGoal": "Add Goal",
+    "askAI": "Ask AI",
+    "participatesInChallenge": "Client participates in challenge:",
+    "returnToChallenge": "Return to Challenge",
+    "goals": "goals",
+    "measurementsPerMonth": "measurements this month",
+    "tabs": {
+      "goals": "Goals & Progress",
+      "progress": "Progress",
+      "workouts": "Workouts",
+      "timeline": "Timeline",
+      "automation": "Automation",
+      "comparison": "Comparison",
+      "measurements": "Measurements",
+      "health": "Health Data"
+    },
+    "noGoals": {
+      "title": "Client has no goals yet",
+      "description": "Create goals for the client to track their progress. You can create goals for strength, cardio, body composition, or flexibility.",
+      "createFirst": "Create First Goal"
+    },
+    "showGrouping": "Show grouping by goal types",
+    "whoopMetrics": "Health Metrics from Whoop",
+    "last7days": "Last 7 days",
+    "recoveryScore": "Recovery Score",
+    "min": "Min:",
+    "max": "Max:",
+    "loadError": "Error loading client data",
+    "loadErrorDesc": "Failed to load data. Check your connection and try again.",
+    "goalsUpdated": "Goals updated",
+    "measurementAdded": "New measurement added"
   }
 }

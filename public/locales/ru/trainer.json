@@ -97,5 +97,120 @@
       "sleep": "Сон",
       "recovery": "Восстановление"
     }
+  },
+  "analytics": {
+    "title": "Аналитика и статистика",
+    "subtitle": "Отслеживайте прогресс всех подопечных",
+    "exportReport": "Экспорт отчета",
+    "totalClients": "Всего подопечных",
+    "activeClients": "Активных:",
+    "activity": "активность",
+    "activeGoals": "Активных целей",
+    "completed": "Завершено:",
+    "measurementsThisMonth": "Измерений за месяц",
+    "last30days": "Последние 30 дней",
+    "avgProgress": "Средний прогресс",
+    "detailedStats": "Детальная статистика по подопечным",
+    "detailedStatsDesc": "Прогресс и активность каждого подопечного",
+    "noClients": "Нет подопечных",
+    "addClientsForAnalytics": "Добавьте подопечных для просмотра аналитики",
+    "goals": "Целей:",
+    "loadError": "Ошибка загрузки аналитики",
+    "status": {
+      "excellent": "Отлично",
+      "good": "Хорошо",
+      "needsAttention": "Требует внимания",
+      "inactive": "Неактивен"
+    },
+    "recommendations": "Рекомендации",
+    "alerts": {
+      "inactiveClients": "{{count}} неактивных клиентов",
+      "contactThem": "Свяжитесь с ними или создайте мотивирующий пост",
+      "needAttention": "{{count}} клиентов требуют внимания",
+      "checkGoals": "Проверьте их цели и предложите поддержку",
+      "excellentResults": "{{count}} клиентов показывают отличные результаты",
+      "shareSuccess": "Поделитесь их успехом для мотивации других"
+    }
+  },
+  "tasks": {
+    "createTask": "Создать задачу",
+    "client": "Клиент",
+    "selectClient": "Выберите клиента",
+    "taskTitle": "Название задачи",
+    "taskTitlePlaceholder": "Например: Записать VO2 max",
+    "description": "Описание (опционально)",
+    "descriptionPlaceholder": "Детали задачи...",
+    "priority": "Приоритет",
+    "priorities": {
+      "low": "Низкий",
+      "normal": "Обычный",
+      "high": "Высокий",
+      "urgent": "Срочный"
+    },
+    "deadline": "Дедлайн (опционально)",
+    "cancel": "Отмена",
+    "create": "Создать",
+    "creating": "Создание...",
+    "status": {
+      "pending": "В ожидании",
+      "inProgress": "В работе",
+      "completed": "Завершено",
+      "cancelled": "Отменено"
+    },
+    "taskCompleted": "Задача завершена",
+    "taskResumed": "Задача возобновлена",
+    "updateError": "Не удалось обновить задачу",
+    "createSuccess": "Задача создана",
+    "createError": "Не удалось создать задачу",
+    "fillRequired": "Заполните обязательные поля",
+    "error": "Ошибка"
+  },
+  "notes": {
+    "addNotePlaceholder": "Добавить новую заметку о клиенте...",
+    "addNote": "Добавить заметку",
+    "loadingNotes": "Загрузка заметок...",
+    "noNotes": "Нет заметок о клиенте",
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "noteAdded": "Заметка добавлена",
+    "noteUpdated": "Заметка обновлена",
+    "noteDeleted": "Заметка удалена",
+    "addError": "Ошибка добавления заметки",
+    "updateError": "Ошибка обновления заметки",
+    "deleteError": "Ошибка удаления заметки"
+  },
+  "clientDetail": {
+    "back": "Назад",
+    "addGoal": "Добавить цель",
+    "askAI": "Спросить AI",
+    "participatesInChallenge": "Клиент участвует в челлендже:",
+    "returnToChallenge": "Вернуться к челленджу",
+    "goals": "целей",
+    "measurementsPerMonth": "измерений за месяц",
+    "tabs": {
+      "goals": "Цели и прогресс",
+      "progress": "Прогресс",
+      "workouts": "Тренировки",
+      "timeline": "Timeline",
+      "automation": "Автоматизация",
+      "comparison": "Сравнение",
+      "measurements": "Измерения",
+      "health": "Данные здоровья"
+    },
+    "noGoals": {
+      "title": "У клиента пока нет целей",
+      "description": "Создайте цели для клиента, чтобы отслеживать его прогресс. Вы можете создать цели по силовым показателям, кардио, составу тела или гибкости.",
+      "createFirst": "Создать первую цель"
+    },
+    "showGrouping": "Показать группировку по типам целей",
+    "whoopMetrics": "Метрики здоровья от Whoop",
+    "last7days": "Последние 7 дней",
+    "recoveryScore": "Recovery Score",
+    "min": "Мин:",
+    "max": "Макс:",
+    "loadError": "Ошибка загрузки данных клиента",
+    "loadErrorDesc": "Не удалось загрузить данные. Проверьте подключение и попробуйте снова.",
+    "goalsUpdated": "Цели обновлены",
+    "measurementAdded": "Добавлено новое измерение"
   }
 }
