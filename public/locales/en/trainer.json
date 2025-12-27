@@ -730,5 +730,25 @@
     "broadcastSent": "Broadcast sent to {{count}} recipients",
     "broadcastSendFailed": "Failed to send broadcast",
     "loadError": "Error loading broadcasts"
+  },
+  "measurement": {
+    "title": "Add Measurement",
+    "goalLabel": "goal",
+    "weightKg": "Weight (kg)",
+    "valueUnit": "Value ({{unit}})",
+    "exampleWeight": "e.g.: 100",
+    "enterValue": "Enter value in {{unit}}",
+    "reps": "Reps",
+    "goalReps": "Goal: {{reps}}",
+    "date": "Measurement date",
+    "currentProgress": "Current progress",
+    "cancel": "Cancel",
+    "add": "Add",
+    "adding": "Adding...",
+    "done": "Done",
+    "added": "Measurement added: {{value}}",
+    "error": "Error",
+    "enterValidValue": "Enter a valid value",
+    "addFailed": "Failed to add measurement"
   }
 }
