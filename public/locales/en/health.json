@@ -31,5 +31,12 @@
     "hours": "h",
     "ms": "ms",
     "bpm": "bpm"
+  },
+  "metrics": {
+    "bloodPressure": "Blood Pressure"
+  },
+  "units": {
+    "mlKgMin": "ml/kg/min",
+    "mmHg": "mmHg"
   }
 }

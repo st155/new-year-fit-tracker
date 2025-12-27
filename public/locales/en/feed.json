@@ -5,5 +5,13 @@
   "empty": {
     "title": "No activity yet",
     "description": "Start tracking your fitness data to see your activity feed"
+  },
+  "events": {
+    "completion": "completed habit \"{{name}}\"",
+    "streak": "reached {{days}} days streak!",
+    "achievement": "earned achievement \"{{name}}\"",
+    "milestone": "reached milestone: {{text}}",
+    "challengeComplete": "completed challenge \"{{name}}\"",
+    "progressUpdate": "updated progress"
   }
 }

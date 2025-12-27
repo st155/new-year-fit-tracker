@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { aiTrainingApi } from '@/lib/api';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { ONBOARDING_FLOW, type OnboardingStep } from '@/lib/ai-onboarding-flow';
 import { ConnectHealthButtons } from '@/components/workout/onboarding/ConnectHealthButtons';
 import { ButtonToggleGroup } from '@/components/workout/onboarding/ButtonToggleGroup';
@@ -69,6 +70,7 @@ function onboardingReducer(state: OnboardingState, action: OnboardingAction): On
 }
 
 export default function AITrainingOnboarding() {
+  const { t } = useTranslation('workouts');
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showProgress, setShowProgress] = useState(false);
@@ -187,12 +189,12 @@ export default function AITrainingOnboarding() {
         throw funcError;
       }
 
-      toast.success('План создан!');
+      toast.success(t('onboarding.planCreated'));
       navigate('/workouts');
 
     } catch (error: any) {
       console.error('Generation error:', error);
-      toast.error(error.message || 'Ошибка создания плана');
+      toast.error(error.message || t('onboarding.createError'));
       setShowProgress(false);
       dispatch({ type: 'SET_GENERATING', value: false });
     }
@@ -315,7 +317,7 @@ export default function AITrainingOnboarding() {
                     variant="default"
                     size="lg"
                   >
-                    Продолжить
+                    {t('onboarding.continue')}
                   </Button>
                 </motion.div>
               )}

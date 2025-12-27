@@ -96,5 +96,10 @@
     "calculatingProgression": "Calculating load progression for maximum results...",
     "settingPeriodization": "Setting periodization to avoid overtraining...",
     "finalAdjustments": "Final adjustments based on your preferences..."
+  },
+  "onboarding": {
+    "planCreated": "Plan created!",
+    "createError": "Error creating plan",
+    "continue": "Continue"
   }
 }

@@ -3,7 +3,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Trophy, Flame, Target, CheckCircle2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 import type { HabitFeedEvent } from '@/hooks/useHabitFeed';
 
 interface FeedEventProps {
@@ -23,22 +24,24 @@ const eventIcons = {
 const reactionEmojis = ['🔥', '💪', '👏', '🎉', '⭐'];
 
 export function FeedEvent({ event, onReact, onRemoveReaction }: FeedEventProps) {
+  const { t, i18n } = useTranslation('feed');
   const Icon = eventIcons[event.event_type] || CheckCircle2;
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
   
   const getEventText = () => {
     switch (event.event_type) {
       case 'completion':
-        return `завершил(а) привычку "${event.event_data?.habit_name}"`;
+        return t('events.completion', { name: event.event_data?.habit_name });
       case 'streak':
-        return `достиг(ла) серии ${event.event_data?.streak_days} дней!`;
+        return t('events.streak', { days: event.event_data?.streak_days });
       case 'achievement':
-        return `получил(а) достижение "${event.event_data?.achievement_name}"`;
+        return t('events.achievement', { name: event.event_data?.achievement_name });
       case 'milestone':
-        return `достиг(ла) milestone: ${event.event_data?.milestone_text}`;
+        return t('events.milestone', { text: event.event_data?.milestone_text });
       case 'challenge_complete':
-        return `завершил(а) челлендж "${event.event_data?.challenge_name}"`;
+        return t('events.challengeComplete', { name: event.event_data?.challenge_name });
       default:
-        return 'обновил(а) прогресс';
+        return t('events.progressUpdate');
     }
   };
 
@@ -64,7 +67,7 @@ export function FeedEvent({ event, onReact, onRemoveReaction }: FeedEventProps) 
               <p className="text-xs text-muted-foreground mt-1">
                 {formatDistanceToNow(new Date(event.created_at), { 
                   addSuffix: true, 
-                  locale: ru 
+                  locale: dateLocale 
                 })}
               </p>
             </div>
