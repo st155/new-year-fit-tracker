@@ -122,15 +122,34 @@ export function WhoopDirectIntegration() {
   }, [status?.connected, toast, queryClient]);
 
   const checkStatus = async () => {
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
+    
     try {
-      const { data, error } = await supabase.functions.invoke('whoop-auth', {
-        body: { action: 'status' },
-      });
+      // Direct database query instead of edge function (fixes session issues)
+      const { data: tokenData, error } = await supabase
+        .from('whoop_tokens')
+        .select('is_active, expires_at, whoop_user_id, last_sync_at, created_at')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
       if (error) throw error;
-      setStatus(data);
+
+      const isExpired = tokenData?.expires_at && new Date(tokenData.expires_at) < new Date();
+
+      setStatus({
+        connected: !!(tokenData?.is_active && !isExpired),
+        whoop_user_id: tokenData?.whoop_user_id,
+        expires_at: tokenData?.expires_at,
+        is_expired: isExpired ?? false,
+        last_sync_at: tokenData?.last_sync_at,
+        connected_at: tokenData?.created_at,
+      });
     } catch (error: any) {
       console.error('Failed to check Whoop status:', error);
+      setStatus({ connected: false });
     } finally {
       setLoading(false);
     }
