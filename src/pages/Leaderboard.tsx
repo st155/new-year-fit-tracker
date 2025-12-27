@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { motion } from "framer-motion";
 import { staggerContainer, staggerItem } from "@/lib/animations";
@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Trophy, Medal, Award, Flame, RefreshCw, Info } from "lucide-react";
+import { Trophy, Medal, Award, Flame, RefreshCw, Info, Calculator } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PageLoader } from "@/components/ui/page-loader";
 import { useTranslation } from 'react-i18next';
@@ -16,7 +16,7 @@ import { useLeaderboard } from "@/hooks/useLeaderboard";
 import { useAuth } from "@/hooks/useAuth";
 import { formatPoints, getRankColorClass } from "@/features/challenges/utils";
 import { PersonalStatsCard } from "@/components/leaderboard/PersonalStatsCard";
-import { LeaderboardTabs } from "@/components/leaderboard/LeaderboardTabs";
+import { LeaderboardTabs, type RankingType } from "@/components/leaderboard/LeaderboardTabs";
 import { AchievementsGallery } from "@/components/leaderboard/AchievementsGallery";
 import { FeaturedAchievements } from "@/components/leaderboard/FeaturedAchievements";
 import { DailyChallenges } from "@/components/leaderboard/DailyChallenges";
@@ -26,7 +26,9 @@ import { LeaderboardUserCard } from "@/components/leaderboard/LeaderboardUserCar
 import { getUserLevel } from "@/lib/gamification";
 import { LeaveOtherChallengesButton } from "@/components/leaderboard/LeaveOtherChallengesButton";
 import { ChallengeSelector } from "@/components/leaderboard/ChallengeSelector";
-import { usePreferredChallengeQuery } from "@/features/challenges";
+import { usePreferredChallengeQuery, type LeaderboardEntry } from "@/features/challenges";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Leaderboard = () => {
   const { t } = useTranslation('leaderboard');
@@ -35,9 +37,12 @@ const Leaderboard = () => {
   const [selectedUserName, setSelectedUserName] = useState<string>('');
   const [activeTab, setActiveTab] = useState('overall');
   const [selectedCategory, setSelectedCategory] = useState<CategoryInfo | null>(null);
+  const [isRecalculating, setIsRecalculating] = useState(false);
   
-  // Map activeTab to timePeriod for the hook
-  const timePeriod = activeTab === 'week' ? 'week' : activeTab === 'month' ? 'month' : 'overall';
+  // Determine if activeTab is a ranking type or time period
+  const isRankingTab = ['activity', 'recovery', 'progress', 'balance'].includes(activeTab);
+  const timePeriod = isRankingTab ? 'overall' : (activeTab === 'week' ? 'week' : activeTab === 'month' ? 'month' : 'overall');
+  const rankingType = isRankingTab ? activeTab as RankingType : 'overall';
   
   const { 
     challengeId: preferredChallengeId, 
@@ -47,7 +52,7 @@ const Leaderboard = () => {
   } = usePreferredChallengeQuery(user?.id);
 
   const { 
-    leaderboard, 
+    leaderboard: rawLeaderboard, 
     loading: leaderboardLoading, 
     userEntry, 
     error, 
@@ -55,7 +60,69 @@ const Leaderboard = () => {
     challengeTitle
   } = useLeaderboard({ timePeriod, challengeId: preferredChallengeId });
   
+  // Sort leaderboard based on ranking type
+  const leaderboard = useMemo(() => {
+    if (!rawLeaderboard.length) return rawLeaderboard;
+    
+    const sorted = [...rawLeaderboard].sort((a, b) => {
+      switch (rankingType) {
+        case 'activity':
+          return (b.activityScore || 0) - (a.activityScore || 0);
+        case 'recovery':
+          return (b.recoveryScore || 0) - (a.recoveryScore || 0);
+        case 'progress':
+          return (b.progressScore || 0) - (a.progressScore || 0);
+        case 'balance':
+          return (b.balanceScore || 0) - (a.balanceScore || 0);
+        default:
+          return b.totalPoints - a.totalPoints;
+      }
+    });
+    
+    // Update ranks after sorting
+    return sorted.map((entry, index) => ({
+      ...entry,
+      rank: index + 1
+    }));
+  }, [rawLeaderboard, rankingType]);
+  
   const isLoading = authLoading || leaderboardLoading;
+
+  // Get score for current ranking type
+  const getScoreForRankingType = (entry: LeaderboardEntry) => {
+    switch (rankingType) {
+      case 'activity':
+        return entry.activityScore || 0;
+      case 'recovery':
+        return entry.recoveryScore || 0;
+      case 'progress':
+        return entry.progressScore || 0;
+      case 'balance':
+        return entry.balanceScore || 0;
+      default:
+        return entry.totalPoints;
+    }
+  };
+
+  // Recalculate points handler
+  const handleRecalculate = async () => {
+    setIsRecalculating(true);
+    try {
+      const { error } = await supabase.functions.invoke('calculate-health-points', {
+        body: { recalculate_all: true }
+      });
+      
+      if (error) throw error;
+      
+      toast.success(t('recalculateSuccess'));
+      refresh();
+    } catch (err) {
+      console.error('Recalculate error:', err);
+      toast.error(t('recalculateError'));
+    } finally {
+      setIsRecalculating(false);
+    }
+  };
 
   console.log('[Leaderboard Page] State:', {
     authLoading,
@@ -63,6 +130,7 @@ const Leaderboard = () => {
     isLoading,
     userId: user?.id,
     timePeriod,
+    rankingType,
     leaderboardLength: leaderboard.length
   });
 
@@ -103,16 +171,35 @@ const Leaderboard = () => {
             />
           )}
           <button
+            onClick={handleRecalculate}
+            disabled={isRecalculating}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent/10 hover:bg-accent/20 transition-colors disabled:opacity-50"
+            title={t('recalculate')}
+          >
+            <Calculator className={cn("h-4 w-4", isRecalculating && "animate-pulse")} />
+            <span className="text-sm font-medium hidden sm:inline">{isRecalculating ? t('recalculating') : t('recalculate')}</span>
+          </button>
+          <button
             onClick={() => refresh()}
             disabled={isLoading}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors disabled:opacity-50"
             title="Refresh data"
           >
             <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
-            <span className="text-sm font-medium">Refresh</span>
+            <span className="text-sm font-medium hidden sm:inline">{t('refresh')}</span>
           </button>
         </div>
       </div>
+
+      {/* Ranking Type Header */}
+      {isRankingTab && (
+        <Card className="border-primary/20 bg-primary/5">
+          <CardContent className="p-4">
+            <h2 className="text-lg font-semibold">{t(`rankings.${rankingType}`)}</h2>
+            <p className="text-sm text-muted-foreground">{t(`rankings.${rankingType}Desc`)}</p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Tabs */}
       <LeaderboardTabs activeTab={activeTab} onTabChange={setActiveTab} />

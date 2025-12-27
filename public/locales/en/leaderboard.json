@@ -16,5 +16,36 @@
   "you": "(You)",
   "weeklyLeaders": "Weekly Leaders",
   "fullRankings": "Full Rankings",
-  "topPodium": "Top 3 Podium"
+  "topPodium": "Top 3 Podium",
+  "recalculate": "Recalculate Points",
+  "recalculating": "Recalculating...",
+  "recalculateSuccess": "Points recalculated successfully",
+  "recalculateError": "Error recalculating points",
+  "tabs": {
+    "overall": "Overall",
+    "week": "Week",
+    "month": "Month",
+    "activity": "Activity",
+    "recovery": "Recovery",
+    "progress": "Progress",
+    "balance": "Balance",
+    "achievements": "Awards"
+  },
+  "rankings": {
+    "overall": "Overall Ranking",
+    "activity": "Activity Ranking",
+    "recovery": "Recovery Ranking",
+    "progress": "Progress Ranking",
+    "balance": "Balance Ranking",
+    "activityDesc": "Most active participants based on steps, workouts, and strain",
+    "recoveryDesc": "Best recovery scores based on sleep and HRV",
+    "progressDesc": "Highest consistency and streak achievements",
+    "balanceDesc": "Best balance between activity and recovery"
+  },
+  "scores": {
+    "activity": "Activity",
+    "recovery": "Recovery",
+    "progress": "Progress",
+    "balance": "Balance"
+  }
 }

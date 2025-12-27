@@ -1086,6 +1086,8 @@ export type Database = {
       }
       challenge_points: {
         Row: {
+          activity_score: number | null
+          balance_score: number | null
           challenge_id: string
           comments_count: number
           created_at: string
@@ -1098,13 +1100,17 @@ export type Database = {
           points: number
           points_breakdown: Json | null
           posts_count: number
+          progress_score: number | null
           recovery_points: number | null
+          recovery_score: number | null
           streak_days: number
           synergy_points: number | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          activity_score?: number | null
+          balance_score?: number | null
           challenge_id: string
           comments_count?: number
           created_at?: string
@@ -1117,13 +1123,17 @@ export type Database = {
           points?: number
           points_breakdown?: Json | null
           posts_count?: number
+          progress_score?: number | null
           recovery_points?: number | null
+          recovery_score?: number | null
           streak_days?: number
           synergy_points?: number | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          activity_score?: number | null
+          balance_score?: number | null
           challenge_id?: string
           comments_count?: number
           created_at?: string
@@ -1136,7 +1146,9 @@ export type Database = {
           points?: number
           points_breakdown?: Json | null
           posts_count?: number
+          progress_score?: number | null
           recovery_points?: number | null
+          recovery_score?: number | null
           streak_days?: number
           synergy_points?: number | null
           updated_at?: string

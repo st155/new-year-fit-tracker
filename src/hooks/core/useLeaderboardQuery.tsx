@@ -169,6 +169,10 @@ async function fetchFallbackLeaderboard(userId: string, limit?: number, challeng
       performancePoints: 0,
       recoveryPoints: 0,
       synergyPoints: 0,
+      activityScore: 0,
+      recoveryScore: 0,
+      progressScore: 0,
+      balanceScore: 0,
       totalGoals: 0,
       goalsWithBaseline: 0,
       trackableGoals: 0,
@@ -251,7 +255,7 @@ export function useLeaderboardQuery(
           const userIds = filteredData.map((entry: any) => entry.user_id);
           const { data: pointsData } = await supabase
             .from('challenge_points')
-            .select('user_id, performance_points, recovery_points, synergy_points, points_breakdown')
+            .select('user_id, performance_points, recovery_points, synergy_points, activity_score, recovery_score, progress_score, balance_score, points_breakdown')
             .in('user_id', userIds);
 
           // Process and enrich data
@@ -284,6 +288,10 @@ export function useLeaderboardQuery(
               performancePoints: points?.performance_points || 0,
               recoveryPoints: points?.recovery_points || 0,
               synergyPoints: points?.synergy_points || 0,
+              activityScore: points?.activity_score || 0,
+              recoveryScore: points?.recovery_score || 0,
+              progressScore: points?.progress_score || 0,
+              balanceScore: points?.balance_score || 0,
               pointsBreakdown: points?.points_breakdown as any || undefined,
               totalGoals: 0,
               goalsWithBaseline: 0,
