@@ -1,4 +1,12 @@
 {
+  "title": "Интеграции",
+  "status": {
+    "active": "Синхр.",
+    "needsSync": "Обновить",
+    "disconnected": "Откл."
+  },
+  "noConnections": "Нет подключений",
+  "configure": "Настроить →",
   "terra": {
     "deviceConnected": "Устройство подключено!",
     "successConnected": "{{provider}} успешно подключен.",

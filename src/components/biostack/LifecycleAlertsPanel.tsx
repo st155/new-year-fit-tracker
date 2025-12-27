@@ -6,14 +6,18 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
+import { ru, enUS } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 
 interface LifecycleAlertsPanelProps {
   userId: string;
 }
 
 export function LifecycleAlertsPanel({ userId }: LifecycleAlertsPanelProps) {
+  const { t, i18n } = useTranslation('biostack');
   const { alerts, isLoading, markAsRead, dismissAlert, unreadCount } = useLifecycleAlerts(userId);
   const navigate = useNavigate();
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
 
   const handleScheduleRetest = (alertId: string) => {
     markAsRead(alertId);
@@ -71,7 +75,7 @@ export function LifecycleAlertsPanel({ userId }: LifecycleAlertsPanelProps) {
               </motion.div>
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-warning" />
-                Уведомления протоколов
+                {t('alerts.title')}
               </h3>
             </div>
             {unreadCount > 0 && (
@@ -81,7 +85,7 @@ export function LifecycleAlertsPanel({ userId }: LifecycleAlertsPanelProps) {
                 className="px-3 py-1 rounded-full bg-warning/20 border border-warning/40"
               >
                 <span className="text-sm font-semibold text-warning">
-                  {unreadCount} новых
+                  {t('alerts.newCount', { count: unreadCount })}
                 </span>
               </motion.div>
             )}
@@ -108,9 +112,9 @@ export function LifecycleAlertsPanel({ userId }: LifecycleAlertsPanelProps) {
                     <div>
                       <h4 className="font-semibold text-sm">
                         {alert.alert_type === 'retest_prompt' 
-                          ? 'Рекомендуется пересдача' 
-                          : 'Протокол завершён'}
-                        : {alert.protocol?.stack_name || 'Неизвестный протокол'}
+                          ? t('alerts.retestPrompt')
+                          : t('alerts.protocolComplete')}
+                        : {alert.protocol?.stack_name || t('alerts.unknownProtocol')}
                       </h4>
                       {alert.protocol?.supplement_products && (
                         <p className="text-xs text-muted-foreground">
@@ -123,7 +127,7 @@ export function LifecycleAlertsPanel({ userId }: LifecycleAlertsPanelProps) {
                     </div>
                   </div>
                   <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
-                    {formatDistanceToNow(new Date(alert.created_at), { addSuffix: true })}
+                    {formatDistanceToNow(new Date(alert.created_at), { addSuffix: true, locale: dateLocale })}
                   </span>
                 </div>
 
@@ -141,7 +145,7 @@ export function LifecycleAlertsPanel({ userId }: LifecycleAlertsPanelProps) {
                     variant="outline"
                   >
                     <Calendar className="h-3 w-3 mr-1" />
-                    Запланировать пересдачу
+                    {t('alerts.scheduleRetest')}
                   </Button>
                   <Button
                     size="sm"
@@ -150,7 +154,7 @@ export function LifecycleAlertsPanel({ userId }: LifecycleAlertsPanelProps) {
                     className="text-muted-foreground hover:text-foreground"
                   >
                     <X className="h-3 w-3 mr-1" />
-                    Скрыть
+                    {t('alerts.dismiss')}
                   </Button>
                 </div>
               </motion.div>
@@ -161,7 +165,7 @@ export function LifecycleAlertsPanel({ userId }: LifecycleAlertsPanelProps) {
           {alerts.length === 0 && !isLoading && (
             <div className="text-center py-8">
               <CheckCircle className="h-12 w-12 text-success mx-auto mb-3 opacity-50" />
-              <p className="text-sm text-muted-foreground">Нет новых уведомлений</p>
+              <p className="text-sm text-muted-foreground">{t('alerts.noNew')}</p>
             </div>
           )}
         </div>

@@ -1,4 +1,12 @@
 {
+  "title": "Integrations",
+  "status": {
+    "active": "Synced",
+    "needsSync": "Update",
+    "disconnected": "Off"
+  },
+  "noConnections": "No connections",
+  "configure": "Configure →",
   "terra": {
     "deviceConnected": "Device connected!",
     "successConnected": "{{provider}} successfully connected.",
