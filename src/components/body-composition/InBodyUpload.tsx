@@ -161,9 +161,12 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
 
           console.log('Analysis completed successfully:', analysisData);
 
+          const reportsCount = analysisData?.reports_count || analysisData?.analyses?.length || 1;
           toast({
             title: "Анализ завершен!",
-            description: "InBody данные успешно извлечены"
+            description: reportsCount > 1 
+              ? `Создано ${reportsCount} InBody отчётов` 
+              : "InBody данные успешно извлечены"
           });
           
           // Обновляем данные после успешного анализа

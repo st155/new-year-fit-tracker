@@ -655,6 +655,8 @@ export interface InBodyAnalysis {
 export interface ParseInBodyResult {
   success: boolean;
   analysis?: InBodyAnalysis;
+  analyses?: InBodyAnalysis[];
+  reports_count?: number;
   error?: string;
 }
 

@@ -57,6 +57,7 @@ export async function convertPdfToImages(
   options?: {
     fetchTimeoutMs?: number;
     scale?: number;
+    maxPages?: number;
     onProgress?: (current: number, total: number) => void;
   }
 ): Promise<string[]> {
@@ -97,8 +98,12 @@ export async function convertPdfToImages(
     throw error;
   }
   
-  const numPages = Math.min(pdf.numPages, 2); // Only first 2 pages
+  // Для InBody PDF: до 8 страниц (могут быть multi-report)
+  const maxPages = options?.maxPages ?? 8;
+  const numPages = Math.min(pdf.numPages, maxPages);
   const images: string[] = [];
+  
+  console.log(`Processing ${numPages} pages (total in PDF: ${pdf.numPages}, max allowed: ${maxPages})`);
 
   for (let i = 1; i <= numPages; i++) {
     console.log(`Rendering page ${i}/${numPages}...`);
