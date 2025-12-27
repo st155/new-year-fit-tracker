@@ -117,5 +117,32 @@
     "completed": "Fasting completed! {{hours}}h",
     "interrupted": "Fasting interrupted",
     "endError": "Error ending fasting"
+  },
+  "documents": {
+    "uploadTitle": "Upload Document",
+    "uploadDesc": "Upload medical documents, tests, or progress photos",
+    "fileLabel": "File",
+    "typeLabel": "Document Type",
+    "dateLabel": "Document Date",
+    "tagsLabel": "Tags (comma-separated)",
+    "tagsPlaceholder": "e.g.: test, important, check-up",
+    "notesLabel": "Notes",
+    "notesPlaceholder": "Additional information about the document",
+    "hideFromTrainer": "Hide from trainer",
+    "uploading": "Uploading...",
+    "uploadButton": "Upload Document",
+    "fileTooLarge": "File is too large",
+    "maxFileSize": "Maximum file size is 150 MB"
+  },
+  "documentTypes": {
+    "inbody": "InBody Analysis",
+    "blood_test": "Blood Test",
+    "fitness_report": "Medical Report",
+    "progress_photo": "Progress Photo",
+    "vo2max": "VO2max Test",
+    "caliper": "Caliper",
+    "prescription": "Prescription",
+    "training_program": "Training Program",
+    "other": "Other"
   }
 }

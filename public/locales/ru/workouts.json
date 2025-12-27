@@ -19,5 +19,25 @@
     "cannotStartWorkout": "Невозможно начать тренировку",
     "restDay": "Сегодня день отдыха",
     "noActivePlan": "Нет активного плана тренировок"
+  },
+  "logbook": {
+    "title": "Журнал",
+    "noWorkouts": "Нет тренировок с выбранными фильтрами",
+    "today": "Сегодня",
+    "yesterday": "Вчера",
+    "sortRecent": "Недавние",
+    "sortStrain": "По нагрузке",
+    "sortDuration": "По длительности",
+    "minutes": "мин",
+    "kcal": "ккал",
+    "km": "км",
+    "prVolume": "PR: Объём {{value}} кг"
+  },
+  "categories": {
+    "strength": "Силовые",
+    "cardio": "Кардио",
+    "recovery": "Восстановление",
+    "wellness": "Wellness",
+    "other": "Другое"
   }
 }

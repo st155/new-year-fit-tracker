@@ -9,20 +9,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { useMedicalDocuments, DocumentType } from '@/hooks/useMedicalDocuments';
 import { toast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
-const documentTypes: { value: DocumentType; label: string }[] = [
-  { value: 'inbody', label: 'InBody анализ' },
-  { value: 'blood_test', label: 'Анализ крови' },
-  { value: 'fitness_report', label: 'Медицинское заключение' },
-  { value: 'progress_photo', label: 'Фото прогресса' },
-  { value: 'vo2max', label: 'VO2max тест' },
-  { value: 'caliper', label: 'Калипер' },
-  { value: 'prescription', label: 'Рецепт' },
-  { value: 'training_program', label: 'Программа тренировок' },
-  { value: 'other', label: 'Другое' },
+const DOCUMENT_TYPE_KEYS: DocumentType[] = [
+  'inbody', 'blood_test', 'fitness_report', 'progress_photo', 'vo2max', 
+  'caliper', 'prescription', 'training_program', 'other'
 ];
 
 export const DocumentUpload = () => {
+  const { t } = useTranslation('common');
   const [file, setFile] = useState<File | null>(null);
   const [documentType, setDocumentType] = useState<DocumentType>('other');
   const [documentDate, setDocumentDate] = useState(new Date().toISOString().split('T')[0]);
@@ -39,8 +34,8 @@ export const DocumentUpload = () => {
       
       if (selectedFile.size > maxSize) {
         toast({
-          title: 'Файл слишком большой',
-          description: 'Максимальный размер файла — 150 МБ',
+          title: t('documents.fileTooLarge'),
+          description: t('documents.maxFileSize'),
           variant: 'destructive',
         });
         e.target.value = '';
@@ -80,15 +75,15 @@ export const DocumentUpload = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Upload className="h-5 w-5" />
-          Загрузить документ
+          {t('documents.uploadTitle')}
         </CardTitle>
         <CardDescription>
-          Загрузите медицинские документы, анализы или фотографии прогресса
+          {t('documents.uploadDesc')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="file-upload">Файл</Label>
+          <Label htmlFor="file-upload">{t('documents.fileLabel')}</Label>
           <div className="flex items-center gap-2">
             <Input
               id="file-upload"
@@ -106,15 +101,15 @@ export const DocumentUpload = () => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="document-type">Тип документа</Label>
+          <Label htmlFor="document-type">{t('documents.typeLabel')}</Label>
           <Select value={documentType} onValueChange={(value) => setDocumentType(value as DocumentType)}>
             <SelectTrigger id="document-type">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {documentTypes.map((type) => (
-                <SelectItem key={type.value} value={type.value}>
-                  {type.label}
+              {DOCUMENT_TYPE_KEYS.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {t(`documentTypes.${type}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -122,7 +117,7 @@ export const DocumentUpload = () => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="document-date">Дата документа</Label>
+          <Label htmlFor="document-date">{t('documents.dateLabel')}</Label>
           <Input
             id="document-date"
             type="date"
@@ -132,20 +127,20 @@ export const DocumentUpload = () => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="tags">Теги (через запятую)</Label>
+          <Label htmlFor="tags">{t('documents.tagsLabel')}</Label>
           <Input
             id="tags"
-            placeholder="например: анализ, важно, контроль"
+            placeholder={t('documents.tagsPlaceholder')}
             value={tags}
             onChange={(e) => setTags(e.target.value)}
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="notes">Заметки</Label>
+          <Label htmlFor="notes">{t('documents.notesLabel')}</Label>
           <Textarea
             id="notes"
-            placeholder="Дополнительная информация о документе"
+            placeholder={t('documents.notesPlaceholder')}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
@@ -153,7 +148,7 @@ export const DocumentUpload = () => {
         </div>
 
         <div className="flex items-center justify-between">
-          <Label htmlFor="hidden-from-trainer">Скрыть от тренера</Label>
+          <Label htmlFor="hidden-from-trainer">{t('documents.hideFromTrainer')}</Label>
           <Switch
             id="hidden-from-trainer"
             checked={hiddenFromTrainer}
@@ -166,7 +161,7 @@ export const DocumentUpload = () => {
           disabled={!file || uploadDocument.isPending}
           className="w-full"
         >
-          {uploadDocument.isPending ? 'Загрузка...' : 'Загрузить документ'}
+          {uploadDocument.isPending ? t('documents.uploading') : t('documents.uploadButton')}
         </Button>
       </CardContent>
     </Card>

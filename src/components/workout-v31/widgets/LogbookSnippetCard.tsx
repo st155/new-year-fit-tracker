@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Trophy, Calendar, Flame, Clock, Dumbbell, Activity, Heart, Filter } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format, isToday, isYesterday, startOfDay } from "date-fns";
-import { ru } from "date-fns/locale";
+import { ru, enUS } from "date-fns/locale";
 import { getWorkoutIcon } from "@/lib/workout-icons";
 import { Badge } from "@/components/ui/badge";
 import { useState, useMemo } from "react";
@@ -14,6 +14,7 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTranslation } from "react-i18next";
 
 interface LogEntry {
   id?: string;
@@ -43,43 +44,33 @@ interface LogbookSnippetCardProps {
   isLoading?: boolean;
 }
 
-// Categorize workouts
-const WORKOUT_CATEGORIES: Record<string, { label: string; icon: React.ReactNode; types: string[] }> = {
+// Categorize workouts - types only for matching
+const WORKOUT_CATEGORY_TYPES: Record<string, { icon: React.ReactNode; types: string[] }> = {
   strength: {
-    label: 'Силовые',
     icon: <Dumbbell className="w-4 h-4" />,
     types: ['Weightlifting', 'Силовая тренировка', 'Powerlifting', 'Пауэрлифтинг', 'Functional Fitness', 'Кроссфит', 'CrossFit']
   },
   cardio: {
-    label: 'Кардио',
     icon: <Activity className="w-4 h-4" />,
     types: ['Running', 'Бег', 'Cycling', 'Велосипед', 'Swimming', 'Плавание', 'Walking', 'Прогулка', 'Hiking', 'Хайкинг', 'HIIT', 'Elliptical', 'Эллипсоид', 'Spin', 'Сайкл']
   },
   recovery: {
-    label: 'Восстановление',
     icon: <Heart className="w-4 h-4" />,
     types: ['Yoga', 'Йога', 'Meditation', 'Медитация', 'Stretching', 'Растяжка', 'Pilates', 'Пилатес', 'Massage', 'Массаж']
   },
   wellness: {
-    label: 'Wellness',
     icon: <span>🧖</span>,
     types: ['Sauna', 'Сауна', 'Ice Bath', 'Ледяная ванна', 'Air Compression', 'Воздушная компрессия', 'Percussive Massage', 'Перкуссионный массаж']
   }
 };
 
 function getWorkoutCategory(name: string): string {
-  for (const [category, data] of Object.entries(WORKOUT_CATEGORIES)) {
+  for (const [category, data] of Object.entries(WORKOUT_CATEGORY_TYPES)) {
     if (data.types.some(type => name.toLowerCase().includes(type.toLowerCase()))) {
       return category;
     }
   }
   return 'other';
-}
-
-function formatDateLabel(date: Date): string {
-  if (isToday(date)) return 'Сегодня';
-  if (isYesterday(date)) return 'Вчера';
-  return format(date, 'dd MMMM', { locale: ru });
 }
 
 function LogbookSkeleton() {
@@ -113,6 +104,7 @@ function LogbookSkeleton() {
 
 export function LogbookSnippetCard({ entries, workouts, isLoading }: LogbookSnippetCardProps) {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation('workouts');
   const [sortBy, setSortBy] = useState<'recent' | 'strain' | 'duration'>('recent');
   const [categoryFilters, setCategoryFilters] = useState<Record<string, boolean>>({
     strength: true,
@@ -159,12 +151,18 @@ export function LogbookSnippetCard({ entries, workouts, isLoading }: LogbookSnip
   }, [filteredAndSortedWorkouts]);
   
   const activeFiltersCount = Object.values(categoryFilters).filter(Boolean).length;
+
+  const formatDateLabel = (date: Date): string => {
+    if (isToday(date)) return t('logbook.today');
+    if (isYesterday(date)) return t('logbook.yesterday');
+    return format(date, 'dd MMMM', { locale: i18n.language === 'ru' ? ru : enUS });
+  };
   
   return (
     <Card className="bg-neutral-900 border border-neutral-800">
       <CardContent className="pt-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">Журнал</h3>
+          <h3 className="text-lg font-semibold">{t('logbook.title')}</h3>
           
           <div className="flex items-center gap-2">
             {/* Category filter */}
@@ -176,7 +174,7 @@ export function LogbookSnippetCard({ entries, workouts, isLoading }: LogbookSnip
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                {Object.entries(WORKOUT_CATEGORIES).map(([key, { label, icon }]) => (
+                {Object.entries(WORKOUT_CATEGORY_TYPES).map(([key, { icon }]) => (
                   <DropdownMenuCheckboxItem
                     key={key}
                     checked={categoryFilters[key] !== false}
@@ -186,7 +184,7 @@ export function LogbookSnippetCard({ entries, workouts, isLoading }: LogbookSnip
                   >
                     <span className="flex items-center gap-2">
                       {icon}
-                      {label}
+                      {t(`categories.${key}`)}
                     </span>
                   </DropdownMenuCheckboxItem>
                 ))}
@@ -198,7 +196,7 @@ export function LogbookSnippetCard({ entries, workouts, isLoading }: LogbookSnip
                 >
                   <span className="flex items-center gap-2">
                     <Activity className="w-4 h-4" />
-                    Другое
+                    {t('categories.other')}
                   </span>
                 </DropdownMenuCheckboxItem>
               </DropdownMenuContent>
@@ -213,7 +211,7 @@ export function LogbookSnippetCard({ entries, workouts, isLoading }: LogbookSnip
                     ? 'bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 text-white' 
                     : 'text-muted-foreground hover:text-foreground hover:bg-neutral-700'
                 }`}
-                title="Недавние"
+                title={t('logbook.sortRecent')}
               >
                 <Calendar className="w-4 h-4" />
               </button>
@@ -225,7 +223,7 @@ export function LogbookSnippetCard({ entries, workouts, isLoading }: LogbookSnip
                     ? 'bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 text-white' 
                     : 'text-muted-foreground hover:text-foreground hover:bg-neutral-700'
                 }`}
-                title="По нагрузке"
+                title={t('logbook.sortStrain')}
               >
                 <Flame className="w-4 h-4" />
               </button>
@@ -237,7 +235,7 @@ export function LogbookSnippetCard({ entries, workouts, isLoading }: LogbookSnip
                     ? 'bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 text-white' 
                     : 'text-muted-foreground hover:text-foreground hover:bg-neutral-700'
                 }`}
-                title="По длительности"
+                title={t('logbook.sortDuration')}
               >
                 <Clock className="w-4 h-4" />
               </button>
@@ -249,7 +247,7 @@ export function LogbookSnippetCard({ entries, workouts, isLoading }: LogbookSnip
           <LogbookSkeleton />
         ) : Object.keys(groupedWorkouts).length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
-            Нет тренировок с выбранными фильтрами
+            {t('logbook.noWorkouts')}
           </div>
         ) : (
           <div className="space-y-4">
@@ -272,7 +270,7 @@ export function LogbookSnippetCard({ entries, workouts, isLoading }: LogbookSnip
                     {dayWorkouts.map((workout) => {
                       const hasPR = workout.volume ? workout.volume > 5000 : false;
                       const category = getWorkoutCategory(workout.name);
-                      const categoryData = WORKOUT_CATEGORIES[category];
+                      const categoryData = WORKOUT_CATEGORY_TYPES[category];
                       
                       return (
                         <div 
@@ -289,9 +287,9 @@ export function LogbookSnippetCard({ entries, workouts, isLoading }: LogbookSnip
                           </div>
                           
                           <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                            <span>{workout.duration} мин</span>
-                            <span>{workout.calories} ккал</span>
-                            {workout.distance && <span>{workout.distance.toFixed(1)} км</span>}
+                            <span>{workout.duration} {t('logbook.minutes')}</span>
+                            <span>{workout.calories} {t('logbook.kcal')}</span>
+                            {workout.distance && <span>{workout.distance.toFixed(1)} {t('logbook.km')}</span>}
                             {workout.strain && (
                               <span className="text-orange-400 flex items-center gap-1">
                                 <Flame className="w-3 h-3" />
@@ -304,7 +302,7 @@ export function LogbookSnippetCard({ entries, workouts, isLoading }: LogbookSnip
                             <div className="mt-2 flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 rounded-md px-3 py-2">
                               <Trophy className="w-4 h-4 text-amber-500" />
                               <span className="text-sm text-amber-500 font-medium">
-                                PR: Объём {workout.volume?.toFixed(0)} кг
+                                {t('logbook.prVolume', { value: workout.volume?.toFixed(0) })}
                               </span>
                             </div>
                           )}

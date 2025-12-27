@@ -19,5 +19,25 @@
     "cannotStartWorkout": "Cannot start workout",
     "restDay": "Today is a rest day",
     "noActivePlan": "No active training plan"
+  },
+  "logbook": {
+    "title": "Logbook",
+    "noWorkouts": "No workouts with selected filters",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "sortRecent": "Recent",
+    "sortStrain": "By strain",
+    "sortDuration": "By duration",
+    "minutes": "min",
+    "kcal": "kcal",
+    "km": "km",
+    "prVolume": "PR: Volume {{value}} kg"
+  },
+  "categories": {
+    "strength": "Strength",
+    "cardio": "Cardio",
+    "recovery": "Recovery",
+    "wellness": "Wellness",
+    "other": "Other"
   }
 }
