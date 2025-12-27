@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { CheckCircle2, XCircle, Clock, Target, TrendingUp, CheckSquare, Dumbbell, Activity } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +14,8 @@ interface AIToolCardProps {
 }
 
 export function AIToolCard({ action }: AIToolCardProps) {
+  const { t } = useTranslation('trainerDashboard');
+  
   const getActionIcon = () => {
     const type = action.type.toLowerCase();
     if (type.includes('goal')) return Target;
@@ -36,11 +39,11 @@ export function AIToolCard({ action }: AIToolCardProps) {
   const getStatusText = () => {
     switch (action.status) {
       case 'success':
-        return 'Выполнено';
+        return t('aiTool.success');
       case 'failed':
-        return 'Ошибка';
+        return t('aiTool.failed');
       default:
-        return 'Ожидание';
+        return t('aiTool.pending');
     }
   };
 
@@ -92,7 +95,7 @@ export function AIToolCard({ action }: AIToolCardProps) {
           {action.result && (
             <details className="mt-3 text-xs">
               <summary className="cursor-pointer text-muted-foreground hover:text-foreground font-medium flex items-center gap-1">
-                <span>📋 Результат</span>
+                <span>{t('aiTool.result')}</span>
               </summary>
               <pre className="mt-2 p-3 bg-muted rounded-lg overflow-x-auto max-h-40 text-xs">
                 {JSON.stringify(action.result, null, 2)}

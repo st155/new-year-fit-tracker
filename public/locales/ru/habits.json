@@ -54,5 +54,9 @@
       "hours": "{{hours}}ч {{mins}}м",
       "minutes": "{{mins}}м"
     }
+  },
+  "miniChart": {
+    "completed": "Выполнено",
+    "lastDays": "за последние {{days}} дней"
   }
 }

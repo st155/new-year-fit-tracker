@@ -76,5 +76,23 @@
     "reclassifySuccess": "✅ Reclassification complete",
     "reclassifyCount": "Found and updated: {{count}} documents",
     "reclassifyError": "Reclassification error"
+  },
+  "trends": {
+    "title": "Metric Trends",
+    "subtitle": "Key indicator changes over time",
+    "noDataDesc": "Not enough data to build trends. Upload at least 2 processed documents.",
+    "weight": "Weight",
+    "fat": "Fat",
+    "muscle": "Muscle",
+    "weightUnit": "Weight (kg)",
+    "fatUnit": "Fat (%)",
+    "muscleUnit": "Muscle (kg)",
+    "historyTitle": "Measurement History",
+    "weightLabel": "Weight:",
+    "fatLabel": "Fat:",
+    "muscleLabel": "Muscle:"
+  },
+  "units": {
+    "kg": "kg"
   }
 }

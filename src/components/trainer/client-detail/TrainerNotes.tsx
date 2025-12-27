@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -6,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plus, MessageSquare, Star, AlertCircle, CheckCircle, Edit2, Trash2, Save, X } from 'lucide-react';
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -29,6 +30,7 @@ interface TrainerNotesProps {
 type NoteType = 'important' | 'attention' | 'progress' | 'note';
 
 export function TrainerNotes({ clientId, clientName }: TrainerNotesProps) {
+  const { t, i18n } = useTranslation('trainerDashboard');
   const { user } = useAuth();
   const [notes, setNotes] = useState<TrainerNote[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,6 +38,8 @@ export function TrainerNotes({ clientId, clientName }: TrainerNotesProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newNote, setNewNote] = useState('');
   const [noteType, setNoteType] = useState<NoteType>('note');
+  
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
 
   useEffect(() => {
     loadNotes();
@@ -54,7 +58,7 @@ export function TrainerNotes({ clientId, clientName }: TrainerNotesProps) {
       setNotes(data || []);
     } catch (error) {
       console.error('Error loading notes:', error);
-      toast.error('Ошибка загрузки заметок');
+      toast.error(t('notes.error.load'));
     } finally {
       setLoading(false);
     }
@@ -81,10 +85,10 @@ export function TrainerNotes({ clientId, clientName }: TrainerNotesProps) {
       setNewNote('');
       setNoteType('note');
       setIsAdding(false);
-      toast.success('Заметка добавлена');
+      toast.success(t('notes.success.added'));
     } catch (error) {
       console.error('Error adding note:', error);
-      toast.error('Ошибка добавления заметки');
+      toast.error(t('notes.error.add'));
     }
   };
 
@@ -99,10 +103,10 @@ export function TrainerNotes({ clientId, clientName }: TrainerNotesProps) {
 
       setNotes(notes.map(n => n.id === noteId ? { ...n, note_text: updatedText } : n));
       setEditingId(null);
-      toast.success('Заметка обновлена');
+      toast.success(t('notes.success.updated'));
     } catch (error) {
       console.error('Error updating note:', error);
-      toast.error('Ошибка обновления заметки');
+      toast.error(t('notes.error.update'));
     }
   };
 
@@ -116,10 +120,10 @@ export function TrainerNotes({ clientId, clientName }: TrainerNotesProps) {
       if (error) throw error;
 
       setNotes(notes.filter(n => n.id !== noteId));
-      toast.success('Заметка удалена');
+      toast.success(t('notes.success.deleted'));
     } catch (error) {
       console.error('Error deleting note:', error);
-      toast.error('Ошибка удаления заметки');
+      toast.error(t('notes.error.delete'));
     }
   };
 
@@ -129,8 +133,8 @@ export function TrainerNotes({ clientId, clientName }: TrainerNotesProps) {
   };
 
   const getNoteLabel = (note: TrainerNote) => {
-    if (note.is_private) return 'Важно';
-    return 'Заметка';
+    if (note.is_private) return t('notes.types.important');
+    return t('notes.types.note');
   };
 
   return (
@@ -139,7 +143,7 @@ export function TrainerNotes({ clientId, clientName }: TrainerNotesProps) {
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5" />
-            Заметки тренера
+            {t('notes.title')}
           </CardTitle>
           <Button 
             size="sm" 
@@ -147,7 +151,7 @@ export function TrainerNotes({ clientId, clientName }: TrainerNotesProps) {
             variant={isAdding ? "outline" : "default"}
           >
             {isAdding ? <X className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
-            {isAdding ? 'Отмена' : 'Добавить'}
+            {isAdding ? t('common.cancel') : t('common.add')}
           </Button>
         </div>
       </CardHeader>
@@ -162,7 +166,7 @@ export function TrainerNotes({ clientId, clientName }: TrainerNotesProps) {
                 onClick={() => setNoteType('note')}
               >
                 <MessageSquare className="h-3 w-3 mr-1" />
-                Заметка
+                {t('notes.types.note')}
               </Button>
               <Button
                 size="sm"
@@ -170,7 +174,7 @@ export function TrainerNotes({ clientId, clientName }: TrainerNotesProps) {
                 onClick={() => setNoteType('important')}
               >
                 <Star className="h-3 w-3 mr-1" />
-                Важно
+                {t('notes.types.important')}
               </Button>
               <Button
                 size="sm"
@@ -178,7 +182,7 @@ export function TrainerNotes({ clientId, clientName }: TrainerNotesProps) {
                 onClick={() => setNoteType('attention')}
               >
                 <AlertCircle className="h-3 w-3 mr-1" />
-                Внимание
+                {t('notes.types.attention')}
               </Button>
               <Button
                 size="sm"
@@ -186,22 +190,22 @@ export function TrainerNotes({ clientId, clientName }: TrainerNotesProps) {
                 onClick={() => setNoteType('progress')}
               >
                 <CheckCircle className="h-3 w-3 mr-1" />
-                Прогресс
+                {t('notes.types.progress')}
               </Button>
             </div>
             <Textarea
               value={newNote}
               onChange={(e) => setNewNote(e.target.value)}
-              placeholder="Введите заметку..."
+              placeholder={t('notes.placeholder')}
               rows={3}
             />
             <div className="flex justify-end gap-2">
               <Button size="sm" variant="outline" onClick={() => setIsAdding(false)}>
-                Отмена
+                {t('common.cancel')}
               </Button>
               <Button size="sm" onClick={handleAddNote} disabled={!newNote.trim()}>
                 <Save className="h-4 w-4 mr-2" />
-                Сохранить
+                {t('common.save')}
               </Button>
             </div>
           </div>
@@ -217,8 +221,8 @@ export function TrainerNotes({ clientId, clientName }: TrainerNotesProps) {
         ) : notes.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
             <MessageSquare className="h-12 w-12 mb-2 opacity-50" />
-            <p className="text-sm">Нет заметок о клиенте</p>
-            <p className="text-xs">Добавьте первую заметку о {clientName}</p>
+            <p className="text-sm">{t('notes.empty')}</p>
+            <p className="text-xs">{t('notes.emptyDesc', { name: clientName })}</p>
           </div>
         ) : (
           <ScrollArea className="h-[400px] pr-4">
@@ -238,7 +242,7 @@ export function TrainerNotes({ clientId, clientName }: TrainerNotesProps) {
                         {getNoteLabel(note)}
                       </Badge>
                       <span className="text-xs text-muted-foreground">
-                        {format(new Date(note.created_at), 'dd MMM yyyy, HH:mm', { locale: ru })}
+                        {format(new Date(note.created_at), 'dd MMM yyyy, HH:mm', { locale: dateLocale })}
                       </span>
                     </div>
                     <div className="flex gap-1">
@@ -270,7 +274,7 @@ export function TrainerNotes({ clientId, clientName }: TrainerNotesProps) {
                       />
                       <div className="flex justify-end gap-2">
                         <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>
-                          Отмена
+                          {t('common.cancel')}
                         </Button>
                         <Button
                           size="sm"
@@ -279,7 +283,7 @@ export function TrainerNotes({ clientId, clientName }: TrainerNotesProps) {
                             handleUpdateNote(note.id, textarea.value);
                           }}
                         >
-                          Сохранить
+                          {t('common.save')}
                         </Button>
                       </div>
                     </div>

@@ -128,5 +128,39 @@
       "title": "No posts",
       "description": "Create your first post for your clients"
     }
+  },
+  "notes": {
+    "title": "Trainer Notes",
+    "placeholder": "Enter note...",
+    "empty": "No notes about client",
+    "emptyDesc": "Add your first note about {{name}}",
+    "types": {
+      "note": "Note",
+      "important": "Important",
+      "attention": "Attention",
+      "progress": "Progress"
+    },
+    "error": {
+      "load": "Error loading notes",
+      "add": "Error adding note",
+      "update": "Error updating note",
+      "delete": "Error deleting note"
+    },
+    "success": {
+      "added": "Note added",
+      "updated": "Note updated",
+      "deleted": "Note deleted"
+    }
+  },
+  "aiTool": {
+    "success": "Completed",
+    "failed": "Failed",
+    "pending": "Pending",
+    "result": "📋 Result"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "add": "Add",
+    "save": "Save"
   }
 }

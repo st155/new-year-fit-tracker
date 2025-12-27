@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { TrendingUp, Activity } from "lucide-react";
@@ -7,6 +8,7 @@ import { useInBodyAnalyses } from "@/hooks/useInBodyAnalyses";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const DocumentTrends = () => {
+  const { t, i18n } = useTranslation('medicalDocs');
   const { user } = useAuth();
   const { data: inbodyAnalyses, isLoading } = useInBodyAnalyses(user?.id);
 
@@ -16,7 +18,7 @@ export const DocumentTrends = () => {
     return inbodyAnalyses
       .map(analysis => ({
         date: analysis.test_date 
-          ? new Date(analysis.test_date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' }) 
+          ? new Date(analysis.test_date).toLocaleDateString(i18n.language === 'ru' ? 'ru-RU' : 'en-US', { day: '2-digit', month: '2-digit' }) 
           : 'N/A',
         timestamp: analysis.test_date ? new Date(analysis.test_date).getTime() : 0,
         weight: analysis.weight || null,
@@ -61,10 +63,10 @@ export const DocumentTrends = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5" />
-            Тренды метрик
+            {t('trends.title')}
           </CardTitle>
           <CardDescription>
-            Недостаточно данных для построения трендов. Загрузите минимум 2 обработанных документа.
+            {t('trends.noDataDesc')}
           </CardDescription>
         </CardHeader>
       </Card>
@@ -77,10 +79,10 @@ export const DocumentTrends = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5" />
-            Тренды метрик
+            {t('trends.title')}
           </CardTitle>
           <CardDescription>
-            Изменение ключевых показателей за период
+            {t('trends.subtitle')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -88,10 +90,10 @@ export const DocumentTrends = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               {stats.weight && (
                 <div className="p-4 border rounded-lg">
-                  <div className="text-sm text-muted-foreground mb-1">Вес</div>
+                  <div className="text-sm text-muted-foreground mb-1">{t('trends.weight')}</div>
                   <div className="flex items-baseline gap-2">
                     <span className={`text-2xl font-bold ${stats.weight.value > 0 ? 'text-orange-500' : 'text-green-500'}`}>
-                      {stats.weight.value > 0 ? '+' : ''}{stats.weight.value.toFixed(1)} кг
+                      {stats.weight.value > 0 ? '+' : ''}{stats.weight.value.toFixed(1)} {t('units.kg')}
                     </span>
                     <span className="text-sm text-muted-foreground">
                       ({stats.weight.percent > 0 ? '+' : ''}{stats.weight.percent.toFixed(1)}%)
@@ -102,7 +104,7 @@ export const DocumentTrends = () => {
               
               {stats.bodyFat && (
                 <div className="p-4 border rounded-lg">
-                  <div className="text-sm text-muted-foreground mb-1">Жир</div>
+                  <div className="text-sm text-muted-foreground mb-1">{t('trends.fat')}</div>
                   <div className="flex items-baseline gap-2">
                     <span className={`text-2xl font-bold ${stats.bodyFat.value > 0 ? 'text-orange-500' : 'text-green-500'}`}>
                       {stats.bodyFat.value > 0 ? '+' : ''}{stats.bodyFat.value.toFixed(1)}%
@@ -116,10 +118,10 @@ export const DocumentTrends = () => {
               
               {stats.muscleMass && (
                 <div className="p-4 border rounded-lg">
-                  <div className="text-sm text-muted-foreground mb-1">Мышцы</div>
+                  <div className="text-sm text-muted-foreground mb-1">{t('trends.muscle')}</div>
                   <div className="flex items-baseline gap-2">
                     <span className={`text-2xl font-bold ${stats.muscleMass.value < 0 ? 'text-orange-500' : 'text-green-500'}`}>
-                      {stats.muscleMass.value > 0 ? '+' : ''}{stats.muscleMass.value.toFixed(1)} кг
+                      {stats.muscleMass.value > 0 ? '+' : ''}{stats.muscleMass.value.toFixed(1)} {t('units.kg')}
                     </span>
                     <span className="text-sm text-muted-foreground">
                       ({stats.muscleMass.percent > 0 ? '+' : ''}{stats.muscleMass.percent.toFixed(1)}%)
@@ -156,7 +158,7 @@ export const DocumentTrends = () => {
                   dataKey="weight" 
                   stroke="hsl(var(--primary))" 
                   strokeWidth={2}
-                  name="Вес (кг)"
+                  name={t('trends.weightUnit')}
                   connectNulls
                   dot={{ fill: 'hsl(var(--primary))' }}
                 />
@@ -165,7 +167,7 @@ export const DocumentTrends = () => {
                   dataKey="bodyFat" 
                   stroke="hsl(var(--destructive))" 
                   strokeWidth={2}
-                  name="Жир (%)"
+                  name={t('trends.fatUnit')}
                   connectNulls
                   dot={{ fill: 'hsl(var(--destructive))' }}
                 />
@@ -174,7 +176,7 @@ export const DocumentTrends = () => {
                   dataKey="muscleMass" 
                   stroke="hsl(var(--chart-2))" 
                   strokeWidth={2}
-                  name="Мышцы (кг)"
+                  name={t('trends.muscleUnit')}
                   connectNulls
                   dot={{ fill: 'hsl(var(--chart-2))' }}
                 />
@@ -188,7 +190,7 @@ export const DocumentTrends = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Activity className="h-5 w-5" />
-            История измерений
+            {t('trends.historyTitle')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -197,9 +199,9 @@ export const DocumentTrends = () => {
               <div key={idx} className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="font-medium">{item.date}</div>
                 <div className="flex gap-4 text-sm">
-                  {item.weight && <span>Вес: {item.weight} кг</span>}
-                  {item.bodyFat && <span>Жир: {item.bodyFat}%</span>}
-                  {item.muscleMass && <span>Мышцы: {item.muscleMass} кг</span>}
+                  {item.weight && <span>{t('trends.weightLabel')} {item.weight} {t('units.kg')}</span>}
+                  {item.bodyFat && <span>{t('trends.fatLabel')} {item.bodyFat}%</span>}
+                  {item.muscleMass && <span>{t('trends.muscleLabel')} {item.muscleMass} {t('units.kg')}</span>}
                 </div>
               </div>
             ))}
