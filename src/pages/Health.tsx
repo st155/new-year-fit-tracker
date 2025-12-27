@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,13 +15,14 @@ interface HealthCheck {
 }
 
 export default function Health() {
+  const { t } = useTranslation('health');
   const [checks, setChecks] = useState<HealthCheck[]>([
-    { name: 'Build Info', status: 'loading' },
-    { name: 'Service Worker', status: 'loading' },
-    { name: 'Caches', status: 'loading' },
-    { name: 'Supabase Auth', status: 'loading' },
-    { name: 'Supabase Database', status: 'loading' },
-    { name: 'Supabase URL', status: 'loading' },
+    { name: t('checks.buildInfo'), status: 'loading' },
+    { name: t('checks.serviceWorker'), status: 'loading' },
+    { name: t('checks.caches'), status: 'loading' },
+    { name: t('checks.supabaseAuth'), status: 'loading' },
+    { name: t('checks.supabaseDb'), status: 'loading' },
+    { name: t('checks.supabaseUrl'), status: 'loading' },
   ]);
 
   useEffect(() => {
@@ -32,7 +34,7 @@ export default function Health() {
 
     // Check 1: Build info
     newChecks.push({
-      name: 'Build Info',
+      name: t('checks.buildInfo'),
       status: 'ok',
       data: {
         mode: import.meta.env.MODE,
@@ -53,17 +55,17 @@ export default function Health() {
         details.registrations = regs.map(r => ({ scope: r.scope, hasActive: !!r.active, hasWaiting: !!r.waiting, hasInstalling: !!r.installing }));
         message = regs.length ? `Registrations: ${regs.length}` : 'No registrations';
       }
-      newChecks.push({ name: 'Service Worker', status: 'ok', message, data: details });
+      newChecks.push({ name: t('checks.serviceWorker'), status: 'ok', message, data: details });
     } catch (error: any) {
-      newChecks.push({ name: 'Service Worker', status: 'error', message: error.message });
+      newChecks.push({ name: t('checks.serviceWorker'), status: 'error', message: error.message });
     }
 
     // Check 3: Caches
     try {
       const cacheNames = 'caches' in window ? await caches.keys() : [];
-      newChecks.push({ name: 'Caches', status: 'ok', message: `Cache keys: ${cacheNames.length}` , data: { cacheNames }});
+      newChecks.push({ name: t('checks.caches'), status: 'ok', message: `Cache keys: ${cacheNames.length}` , data: { cacheNames }});
     } catch (error: any) {
-      newChecks.push({ name: 'Caches', status: 'error', message: error.message });
+      newChecks.push({ name: t('checks.caches'), status: 'error', message: error.message });
     }
 
     // Check 4: Supabase Auth
@@ -71,13 +73,13 @@ export default function Health() {
       const { data, error } = await supabase.auth.getSession();
       if (error) throw error;
       newChecks.push({
-        name: 'Supabase Auth',
+        name: t('checks.supabaseAuth'),
         status: 'ok',
         message: data.session ? 'Authenticated' : 'Not authenticated',
         data: { hasSession: !!data.session, userId: data.session?.user?.id || null }
       });
     } catch (error: any) {
-      newChecks.push({ name: 'Supabase Auth', status: 'error', message: error.message });
+      newChecks.push({ name: t('checks.supabaseAuth'), status: 'error', message: error.message });
     }
 
     // Check 5: Supabase Database
@@ -88,15 +90,15 @@ export default function Health() {
         .limit(1)
         .single();
       if (error && (error as any).code !== 'PGRST116') throw error;
-      newChecks.push({ name: 'Supabase Database', status: 'ok', message: 'Connection successful' });
+      newChecks.push({ name: t('checks.supabaseDb'), status: 'ok', message: 'Connection successful' });
     } catch (error: any) {
-      newChecks.push({ name: 'Supabase Database', status: 'error', message: error.message });
+      newChecks.push({ name: t('checks.supabaseDb'), status: 'error', message: error.message });
     }
 
     // Check 6: Supabase URL
     const supabaseUrl = (supabase as any).supabaseUrl || 'Unknown';
     newChecks.push({
-      name: 'Supabase URL',
+      name: t('checks.supabaseUrl'),
       status: 'ok',
       message: supabaseUrl,
       data: supabaseUrl.includes('d.elite10.club') ? '✅ Custom domain' : '⚠️ Standard domain'
@@ -114,9 +116,9 @@ export default function Health() {
   const handleCopyRecoveryLink = () => {
     const recoveryUrl = `${location.origin}/?recover=1`;
     navigator.clipboard.writeText(recoveryUrl).then(() => {
-      toast.success('Ссылка восстановления скопирована');
+      toast.success(t('recovery.linkCopied'));
     }).catch(() => {
-      toast.error('Не удалось скопировать ссылку');
+      toast.error(t('recovery.linkCopyError'));
     });
   };
 
@@ -137,43 +139,43 @@ export default function Health() {
   return (
     <div className="container mx-auto p-6 max-w-2xl">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Health Check</h1>
+        <h1 className="text-3xl font-bold mb-2">{t('title')}</h1>
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <div className="flex items-center gap-2">
-            <span className="text-muted-foreground">Overall Status:</span>
+            <span className="text-muted-foreground">{t('overallStatus')}:</span>
             <Badge variant={overallStatus === 'ok' ? 'default' : overallStatus === 'error' ? 'destructive' : 'secondary'}>
               {overallStatus.toUpperCase()}
             </Badge>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="secondary" onClick={runHealthChecks}>Re-run</Button>
-            <Button variant="default" onClick={handleRunRecovery}>Запустить восстановление</Button>
+            <Button variant="secondary" onClick={runHealthChecks}>{t('rerun')}</Button>
+            <Button variant="default" onClick={handleRunRecovery}>{t('runRecovery')}</Button>
           </div>
         </div>
       </div>
 
       <Card className="mb-6 border-primary/20 bg-primary/5">
         <CardHeader>
-          <CardTitle className="text-lg">🔧 Восстановление системы</CardTitle>
+          <CardTitle className="text-lg">🔧 {t('recovery.title')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            Если приложение не загружается (чёрный экран), используйте ссылку восстановления для полной очистки кэшей и Service Worker:
+            {t('recovery.description')}
           </p>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={handleCopyRecoveryLink} className="gap-2">
               <Copy className="h-4 w-4" />
-              Скопировать ссылку восстановления
+              {t('recovery.copyLink')}
             </Button>
             <Button variant="outline" size="sm" asChild className="gap-2">
               <a href="/?recover=1" target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="h-4 w-4" />
-                Открыть /?recover=1
+                {t('recovery.openRecovery')}
               </a>
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Также работают: <code className="text-xs bg-muted px-1 rounded">/recover</code>, <code className="text-xs bg-muted px-1 rounded">/recover1</code>
+            {t('recovery.alsoWorks')}: <code className="text-xs bg-muted px-1 rounded">/recover</code>, <code className="text-xs bg-muted px-1 rounded">/recover1</code>
           </p>
         </CardContent>
       </Card>

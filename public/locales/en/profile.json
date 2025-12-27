@@ -1,0 +1,20 @@
+{
+  "title": "Profile",
+  "subtitle": "Account management and settings",
+  "updated": "Profile updated",
+  "updatedDesc": "Data saved successfully",
+  "updateError": "Failed to update profile",
+  "roleUpdated": "Role updated",
+  "pageReloading": "Page will reload...",
+  "roleUpdateError": "Failed to update role",
+  "onboardingReset": "Onboarding reset",
+  "onboardingResetDesc": "Reload the page to go through it again",
+  "refreshed": "Refreshed",
+  "refreshedDesc": "Profile updated successfully",
+  "refreshError": "Failed to update profile",
+  "settingsError": "Failed to save settings",
+  "devTools": {
+    "title": "Developer Tools",
+    "subtitle": "Testing and debugging"
+  }
+}

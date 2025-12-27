@@ -1,0 +1,23 @@
+{
+  "title": "Проверка здоровья системы",
+  "overallStatus": "Общий статус",
+  "rerun": "Перезапустить",
+  "runRecovery": "Запустить восстановление",
+  "recovery": {
+    "title": "Восстановление системы",
+    "description": "Если приложение не загружается (чёрный экран), используйте ссылку восстановления для полной очистки кэшей и Service Worker:",
+    "copyLink": "Скопировать ссылку восстановления",
+    "linkCopied": "Ссылка восстановления скопирована",
+    "linkCopyError": "Не удалось скопировать ссылку",
+    "openRecovery": "Открыть /?recover=1",
+    "alsoWorks": "Также работают"
+  },
+  "checks": {
+    "buildInfo": "Информация о сборке",
+    "serviceWorker": "Service Worker",
+    "caches": "Кэши",
+    "supabaseAuth": "Supabase Auth",
+    "supabaseDb": "База данных Supabase",
+    "supabaseUrl": "Supabase URL"
+  }
+}

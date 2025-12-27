@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import GoalProgressDetail from "@/components/detail/GoalProgressDetail";
 import { PageLoader } from "@/components/ui/page-loader";
@@ -10,6 +11,7 @@ import { ArrowLeft, AlertCircle } from "lucide-react";
 import { useGoalDetailQuery } from "@/features/goals/hooks";
 
 const GoalDetail = () => {
+  const { t } = useTranslation('goalDetail');
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -23,11 +25,11 @@ const GoalDetail = () => {
   );
   
   const error = queryError 
-    ? "Ошибка при загрузке цели" 
+    ? t('loadError')
     : (goal && !hasAccess) 
-      ? "У вас нет доступа к этой цели"
+      ? t('accessDenied')
       : (!goal && !loading)
-        ? "Цель не найдена"
+        ? t('notFound')
         : null;
 
   const handleBack = () => {
@@ -35,7 +37,7 @@ const GoalDetail = () => {
   };
 
   if (loading) {
-    return <PageLoader message="Загрузка цели..." />;
+    return <PageLoader message={t('loading')} />;
   }
 
   if (error || !goal || !hasAccess) {
@@ -45,13 +47,13 @@ const GoalDetail = () => {
           <CardContent className="pt-6">
             <div className="text-center py-12">
               <AlertCircle className="h-16 w-16 mx-auto text-destructive mb-4" />
-              <h3 className="text-lg font-semibold mb-2">{error || "Цель не найдена"}</h3>
+              <h3 className="text-lg font-semibold mb-2">{error || t('notFound')}</h3>
               <p className="text-muted-foreground mb-6">
-                Возможно, цель была удалена или у вас нет прав для её просмотра
+                {t('deletedOrNoAccess')}
               </p>
               <Button onClick={handleBack} variant="outline">
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Назад
+                {t('back')}
               </Button>
             </div>
           </CardContent>

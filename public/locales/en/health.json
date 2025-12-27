@@ -1,0 +1,23 @@
+{
+  "title": "System Health Check",
+  "overallStatus": "Overall Status",
+  "rerun": "Re-run",
+  "runRecovery": "Run Recovery",
+  "recovery": {
+    "title": "System Recovery",
+    "description": "If the app doesn't load (black screen), use the recovery link to fully clear caches and Service Worker:",
+    "copyLink": "Copy recovery link",
+    "linkCopied": "Recovery link copied",
+    "linkCopyError": "Failed to copy link",
+    "openRecovery": "Open /?recover=1",
+    "alsoWorks": "Also works"
+  },
+  "checks": {
+    "buildInfo": "Build Info",
+    "serviceWorker": "Service Worker",
+    "caches": "Caches",
+    "supabaseAuth": "Supabase Auth",
+    "supabaseDb": "Supabase Database",
+    "supabaseUrl": "Supabase URL"
+  }
+}

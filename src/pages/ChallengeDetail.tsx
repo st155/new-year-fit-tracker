@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { useChallengeDetailQuery, useParticipantQuery } from "@/features/challenges";
 import { captureBaseline } from "@/features/challenges/utils";
@@ -23,10 +24,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
-import { enUS } from "date-fns/locale";
+import { ru, enUS } from "date-fns/locale";
 
 
 export default function ChallengeDetail() {
+  const { t, i18n } = useTranslation('challengeDetail');
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -35,6 +37,8 @@ export default function ChallengeDetail() {
   const { data: isParticipant = false, refetch: refetchParticipation } = useParticipantQuery(id, user?.id);
   const { data: difficultyLevel = 0 } = useDifficultyLevel(id, user?.id);
   const [showDifficultyDialog, setShowDifficultyDialog] = useState(false);
+
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
 
   // Fetch challenge disciplines for difficulty dialog
   const { data: disciplines = [] } = useQuery({
@@ -71,9 +75,9 @@ export default function ChallengeDetail() {
       const goalsCreated = result?.goals_created || 0;
       
       if (goalsCreated > 0) {
-        toast.success(`Вы присоединились к челленджу! Создано целей: ${goalsCreated}`);
+        toast.success(`${t('success.joined')} ${t('success.goalsCreated', { count: goalsCreated })}`);
       } else {
-        toast.success("Вы присоединились к челленджу!");
+        toast.success(t('success.joined'));
       }
       
       // Capture baseline metrics
@@ -98,7 +102,7 @@ export default function ChallengeDetail() {
         userId: user?.id
       });
       
-      const errorMessage = error?.message || "Не удалось присоединиться к челленджу";
+      const errorMessage = error?.message || t('errors.joinFailed');
       toast.error(errorMessage, {
         description: import.meta.env.DEV ? `Error: ${error?.code || 'unknown'}` : undefined
       });
@@ -121,14 +125,14 @@ export default function ChallengeDetail() {
       }
       
       if (count === 0) {
-        throw new Error("Не удалось найти участие в челлендже");
+        throw new Error(t('errors.notFoundParticipation'));
       }
       
       console.log('✅ [leaveMutation] Delete successful:', { count });
       return { count };
     },
     onSuccess: () => {
-      toast.success("Вы вышли из челленджа");
+      toast.success(t('success.left'));
       
       // Invalidate multiple related queries
       queryClient.invalidateQueries({ queryKey: ["challenges"] });
@@ -154,9 +158,9 @@ export default function ChallengeDetail() {
         hint: error?.hint
       });
       
-      const errorMessage = error?.message || "Не удалось выйти из челленджа";
+      const errorMessage = error?.message || t('errors.leaveFailed');
       toast.error(errorMessage, {
-        description: import.meta.env.DEV ? `Error: ${error?.code || 'unknown'}` : 'Проверьте права доступа'
+        description: import.meta.env.DEV ? `Error: ${error?.code || 'unknown'}` : t('errors.checkPermissions')
       });
     },
   });
@@ -176,7 +180,7 @@ export default function ChallengeDetail() {
       <div className="container py-6">
         <Card>
           <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">Challenge not found</p>
+            <p className="text-muted-foreground">{t('notFound')}</p>
           </CardContent>
         </Card>
       </div>
@@ -196,7 +200,7 @@ export default function ChallengeDetail() {
           className="mb-2"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Назад к челленджам
+          {t('backToList')}
         </Button>
 
         <div className="relative overflow-hidden rounded-3xl bg-gradient-primary p-8 md:p-12">
@@ -209,7 +213,7 @@ export default function ChallengeDetail() {
                   {isParticipant && (
                     <>
                       <Badge className="bg-success/20 text-success border-success/50">
-                        ✓ Участвую
+                        ✓ {t('participating')}
                       </Badge>
                       <DifficultyBadge level={difficultyLevel} />
                     </>
@@ -226,7 +230,7 @@ export default function ChallengeDetail() {
                   className="bg-white text-gray-900 hover:bg-white/90 shrink-0 font-semibold"
                 >
                   <UserPlus className="h-4 w-4 mr-2" />
-                  {joinMutation.isPending ? "Присоединение..." : "Участвовать"}
+                  {joinMutation.isPending ? t('joining') : t('join')}
                 </Button>
               ) : (
                 <AlertDialog>
@@ -237,20 +241,20 @@ export default function ChallengeDetail() {
                       className="bg-white/10 text-white border-white/20 hover:bg-white/20 shrink-0"
                     >
                       <LogOut className="h-4 w-4 mr-2" />
-                      Выйти
+                      {t('leave')}
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Выйти из челленджа?</AlertDialogTitle>
+                      <AlertDialogTitle>{t('leaveConfirm.title')}</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Вы уверены, что хотите выйти из челленджа? Ваш прогресс и очки будут сохранены, но вы больше не будете участвовать в соревновании.
+                        {t('leaveConfirm.description')}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Отмена</AlertDialogCancel>
+                      <AlertDialogCancel>{t('leaveConfirm.cancel')}</AlertDialogCancel>
                       <AlertDialogAction onClick={() => leaveMutation.mutate()}>
-                        Выйти
+                        {t('leaveConfirm.confirm')}
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
@@ -263,25 +267,25 @@ export default function ChallengeDetail() {
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
                 <div className="flex items-center gap-2 text-white/80 text-xs mb-1">
                   <Calendar className="h-3.5 w-3.5" />
-                  Начало
+                  {t('stats.start')}
                 </div>
                 <p className="text-sm font-bold text-white">
-                  {formatDistanceToNow(new Date(challenge.start_date), { addSuffix: true, locale: enUS })}
+                  {formatDistanceToNow(new Date(challenge.start_date), { addSuffix: true, locale: dateLocale })}
                 </p>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
                 <div className="flex items-center gap-2 text-white/80 text-xs mb-1">
                   <Trophy className="h-3.5 w-3.5" />
-                  Осталось
+                  {t('stats.remaining')}
                 </div>
                 <p className="text-sm font-bold text-white">
-                  {daysLeft > 0 ? `${daysLeft} дней` : "Завершен"}
+                  {daysLeft > 0 ? `${daysLeft} ${t('stats.days')}` : t('stats.finished')}
                 </p>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
                 <div className="flex items-center gap-2 text-white/80 text-xs mb-1">
                   <Target className="h-3.5 w-3.5" />
-                  Целей
+                  {t('stats.goals')}
                 </div>
                 <p className="text-2xl font-bold text-white">9</p>
               </div>
@@ -293,10 +297,10 @@ export default function ChallengeDetail() {
                 >
                   <div className="flex items-center gap-2 text-white/80 text-xs mb-1">
                     <FileText className="h-3.5 w-3.5" />
-                    {daysLeft > 0 ? "Превью" : "Итоги"}
+                    {daysLeft > 0 ? t('report.preview') : t('report.results')}
                   </div>
                   <p className="text-sm font-bold text-white">
-                    {daysLeft > 0 ? "Отчёт" : "Смотреть"}
+                    {daysLeft > 0 ? t('report.report') : t('report.view')}
                   </p>
                 </Button>
               )}
@@ -313,19 +317,19 @@ export default function ChallengeDetail() {
         <TabsList className="grid w-full grid-cols-4 h-auto">
           <TabsTrigger value="dashboard" className="gap-2">
             <Info className="h-4 w-4" />
-            <span className="hidden sm:inline">О челлендже</span>
+            <span className="hidden sm:inline">{t('tabs.about')}</span>
           </TabsTrigger>
           <TabsTrigger value="feed" className="gap-2">
             <List className="h-4 w-4" />
-            <span className="hidden sm:inline">Лента</span>
+            <span className="hidden sm:inline">{t('tabs.feed')}</span>
           </TabsTrigger>
           <TabsTrigger value="chat" className="gap-2">
             <MessageSquare className="h-4 w-4" />
-            <span className="hidden sm:inline">Чат</span>
+            <span className="hidden sm:inline">{t('tabs.chat')}</span>
           </TabsTrigger>
           <TabsTrigger value="leaderboard" className="gap-2">
             <Trophy className="h-4 w-4" />
-            <span className="hidden sm:inline">Лидерборд</span>
+            <span className="hidden sm:inline">{t('tabs.leaderboard')}</span>
           </TabsTrigger>
         </TabsList>
 

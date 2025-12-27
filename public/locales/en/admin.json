@@ -1,0 +1,7 @@
+{
+  "accessDenied": "You don't have permission to access this page. Admin and trainer access only.",
+  "tabs": {
+    "dataQuality": "Data Quality",
+    "terraTokens": "Terra Tokens"
+  }
+}

@@ -24,7 +24,8 @@ import { CleanupAppleHealthButton } from "@/components/admin/CleanupAppleHealthB
 import { Echo11SyncCard } from "@/components/progress/Echo11SyncCard";
 
 const ProfilePage = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('profile');
+  const { t: tCommon } = useTranslation('common');
   const { user, signOut } = useAuth();
   const { profile: contextProfile, refetch: refetchProfile } = useProfile();
   const { data: summary, isLoading: summaryLoading } = useProfileSummary();
@@ -111,14 +112,14 @@ const ProfilePage = () => {
       }));
 
       toast({
-        title: "Профиль обновлён",
-        description: "Данные успешно сохранены",
+        title: t('updated'),
+        description: t('updatedDesc'),
       });
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось обновить профиль",
+        title: tCommon('error'),
+        description: t('updateError'),
         variant: "destructive",
       });
     } finally {
@@ -140,8 +141,8 @@ const ProfilePage = () => {
       if (error) throw error;
 
       toast({
-        title: "Роль обновлена",
-        description: "Страница будет перезагружена...",
+        title: t('roleUpdated'),
+        description: t('pageReloading'),
       });
       
       setTimeout(() => {
@@ -150,7 +151,7 @@ const ProfilePage = () => {
     } catch (error) {
       console.error('Error updating trainer mode:', error);
       setProfile(prev => ({ ...prev, trainer_role: !value }));
-      toast({ title: 'Ошибка', description: 'Не удалось обновить роль', variant: 'destructive' });
+      toast({ title: tCommon('error'), description: t('roleUpdateError'), variant: 'destructive' });
     }
   };
 
@@ -166,7 +167,7 @@ const ProfilePage = () => {
       if (error) throw error;
     } catch (error) {
       console.error('Error updating preference:', error);
-      toast({ title: 'Ошибка', description: 'Не удалось сохранить настройки', variant: 'destructive' });
+      toast({ title: tCommon('error'), description: t('settingsError'), variant: 'destructive' });
       setPreferences(prev => ({ ...prev, [key]: !value }));
     }
   };
@@ -177,8 +178,8 @@ const ProfilePage = () => {
       localStorage.removeItem(`onboarding_steps_${user.id}`);
       localStorage.removeItem(`tutorial_step_${user.id}`);
       toast({
-        title: "Онбординг сброшен",
-        description: "Перезагрузите страницу для повторного прохождения",
+        title: t('onboardingReset'),
+        description: t('onboardingResetDesc'),
       });
       setTimeout(() => window.location.reload(), 1000);
     }
@@ -208,14 +209,14 @@ const ProfilePage = () => {
       await refetchProfile();
       await fetchProfile();
       toast({
-        title: "Обновлено",
-        description: "Профиль успешно обновлен",
+        title: t('refreshed'),
+        description: t('refreshedDesc'),
       });
     } catch (error) {
       console.error('Error refreshing profile:', error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось обновить профиль",
+        title: tCommon('error'),
+        description: t('refreshError'),
         variant: "destructive",
       });
     } finally {
@@ -231,10 +232,10 @@ const ProfilePage = () => {
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
-                {t('profile.title')}
+                {t('title')}
               </h1>
               <p className="text-muted-foreground">
-                {t('profile.subtitle')}
+                {t('subtitle')}
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -246,7 +247,7 @@ const ProfilePage = () => {
                 className="gap-2"
               >
                 <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-                {t('refresh')}
+                {tCommon('refresh')}
               </Button>
             </div>
           </div>
@@ -333,9 +334,9 @@ const ProfilePage = () => {
                     <FlaskConical className="h-5 w-5 text-yellow-500" />
                   </div>
                   <div>
-                    <CardTitle>Инструменты разработчика</CardTitle>
+                    <CardTitle>{t('devTools.title')}</CardTitle>
                     <CardDescription>
-                      Тестирование и отладка
+                      {t('devTools.subtitle')}
                     </CardDescription>
                   </div>
                 </div>
