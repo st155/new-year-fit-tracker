@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Heart, Upload, X, Brain, Loader2, CheckCircle, AlertCircle, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +18,7 @@ interface VO2MaxUploadProps {
 export function VO2MaxUpload({ onDataExtracted, className }: VO2MaxUploadProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation('common');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
@@ -27,8 +29,8 @@ export function VO2MaxUpload({ onDataExtracted, className }: VO2MaxUploadProps) 
   const handleFileSelect = async (file: File) => {
     if (!user) {
       toast({
-        title: "Ошибка",
-        description: "Необходимо войти в систему",
+        title: t('errors.generic'),
+        description: t('errors.authRequired'),
         variant: "destructive",
       });
       return;
@@ -37,8 +39,8 @@ export function VO2MaxUpload({ onDataExtracted, className }: VO2MaxUploadProps) 
     // Проверка типа файла
     if (!file.type.startsWith('image/')) {
       toast({
-        title: "Ошибка",
-        description: "Пожалуйста, выберите изображение",
+        title: t('errors.generic'),
+        description: t('errors.invalidImage'),
         variant: "destructive",
       });
       return;
@@ -47,8 +49,8 @@ export function VO2MaxUpload({ onDataExtracted, className }: VO2MaxUploadProps) 
     // Проверка размера файла (максимум 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast({
-        title: "Ошибка",
-        description: "Размер файла не должен превышать 5MB",
+        title: t('errors.generic'),
+        description: t('errors.fileTooLarge', { size: 5 }),
         variant: "destructive",
       });
       return;
@@ -86,8 +88,8 @@ export function VO2MaxUpload({ onDataExtracted, className }: VO2MaxUploadProps) 
       const photoUrl = urlData.publicUrl;
 
       toast({
-        title: "Скриншот загружен!",
-        description: "Анализируем данные VO2Max с помощью ИИ...",
+        title: t('vo2max.uploaded'),
+        description: t('vo2max.analyzing'),
       });
 
       // Запускаем специализированный анализ VO2Max
@@ -97,8 +99,8 @@ export function VO2MaxUpload({ onDataExtracted, className }: VO2MaxUploadProps) 
     } catch (error) {
       console.error('Error uploading file:', error);
       toast({
-        title: "Ошибка",
-        description: `Не удалось загрузить скриншот: ${error.message}`,
+        title: t('errors.generic'),
+        description: t('vo2max.uploadError', { error: error.message }),
         variant: "destructive",
       });
       setPreviewUrl(null);
@@ -128,14 +130,14 @@ export function VO2MaxUpload({ onDataExtracted, className }: VO2MaxUploadProps) 
 
       if (data.success && data.saved) {
         toast({
-          title: "VO2Max данные найдены!",
+          title: t('vo2max.dataFound'),
           description: data.message,
         });
         onDataExtracted?.(data);
       } else {
         toast({
-          title: "Анализ завершен",
-          description: data.message || "VO2Max данные не найдены на скриншоте",
+          title: t('vo2max.analysisComplete'),
+          description: data.message || t('vo2max.noDataFound'),
           variant: "destructive",
         });
       }
@@ -143,8 +145,8 @@ export function VO2MaxUpload({ onDataExtracted, className }: VO2MaxUploadProps) 
     } catch (error) {
       console.error('Error analyzing VO2Max:', error);
       toast({
-        title: "Ошибка анализа",
-        description: "Не удалось проанализировать скриншот VO2Max",
+        title: t('vo2max.analysisError'),
+        description: t('vo2max.analysisErrorDesc'),
         variant: "destructive",
       });
     } finally {
@@ -189,12 +191,21 @@ export function VO2MaxUpload({ onDataExtracted, className }: VO2MaxUploadProps) 
     }
   };
 
+  const getQualityLabel = (quality: string) => {
+    switch (quality) {
+      case 'high': return t('vo2max.highQuality');
+      case 'medium': return t('vo2max.mediumQuality');
+      case 'low': return t('vo2max.lowQuality');
+      default: return '';
+    }
+  };
+
   return (
     <Card className={cn("", className)}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Heart className="w-5 h-5 text-red-500" />
-          Добавить VO2Max из Whoop
+          {t('vo2max.title')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -225,7 +236,7 @@ export function VO2MaxUpload({ onDataExtracted, className }: VO2MaxUploadProps) 
                   disabled={uploading || analyzing}
                 >
                   <Upload className="h-4 w-4 mr-1" />
-                  Заменить
+                  {t('actions.replace')}
                 </Button>
                 <Button
                   size="sm"
@@ -249,7 +260,7 @@ export function VO2MaxUpload({ onDataExtracted, className }: VO2MaxUploadProps) 
                     )}
                   </div>
                   <p className="text-sm">
-                    {analyzing ? "Анализируем VO2Max данные..." : "Загружаем скриншот..."}
+                    {analyzing ? t('vo2max.analyzingData') : t('vo2max.uploadingScreenshot')}
                   </p>
                 </div>
               </div>
@@ -265,8 +276,7 @@ export function VO2MaxUpload({ onDataExtracted, className }: VO2MaxUploadProps) 
                     <AlertCircle className="h-4 w-4 text-warning" />
                   )}
                   <Badge className={getQualityColor(analysisResult.analysis?.dataQuality)}>
-                    {analysisResult.analysis?.dataQuality === 'high' ? 'Высокое качество' :
-                     analysisResult.analysis?.dataQuality === 'medium' ? 'Среднее качество' : 'Низкое качество'}
+                    {getQualityLabel(analysisResult.analysis?.dataQuality)}
                   </Badge>
                 </div>
                 <p className="text-xs">
@@ -317,29 +327,29 @@ export function VO2MaxUpload({ onDataExtracted, className }: VO2MaxUploadProps) 
               </div>
               
               <div className="space-y-2">
-                <h3 className="font-medium">Загрузить скриншот VO2Max из Whoop</h3>
+                <h3 className="font-medium">{t('vo2max.uploadScreenshot')}</h3>
                 <p className="text-sm text-muted-foreground">
                   {uploading 
-                    ? "Загружаем скриншот..." 
+                    ? t('vo2max.uploadingScreenshot')
                     : analyzing
-                    ? "ИИ анализирует данные VO2Max..."
-                    : "Перетащите скриншот VO2Max из приложения Whoop"
+                    ? t('vo2max.aiAnalyzing')
+                    : t('vo2max.dragDrop')
                   }
                 </p>
                 <div className="text-xs text-muted-foreground space-y-1">
-                  <p>• ИИ автоматически найдет значение VO2Max</p>
-                  <p>• Поддерживает скриншоты из приложения Whoop</p>
-                  <p>• Данные будут сохранены в вашем профиле</p>
+                  <p>• {t('vo2max.autoFind')}</p>
+                  <p>• {t('vo2max.supportsWhoop')}</p>
+                  <p>• {t('vo2max.dataWillBeSaved')}</p>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Поддерживаются: JPG, PNG, WebP (до 5MB)
+                  {t('vo2max.supportedFormats')}
                 </p>
               </div>
 
               {!uploading && !analyzing && (
                 <Button variant="outline" size="sm" className="border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20">
                   <Upload className="h-4 w-4 mr-2" />
-                  Выбрать скриншот Whoop
+                  {t('vo2max.selectWhoopScreenshot')}
                 </Button>
               )}
             </div>
@@ -347,13 +357,13 @@ export function VO2MaxUpload({ onDataExtracted, className }: VO2MaxUploadProps) 
         )}
 
         <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
-          <p className="font-medium mb-1">💡 Как получить скриншот VO2Max из Whoop:</p>
+          <p className="font-medium mb-1">💡 {t('vo2max.howToGet')}</p>
           <ol className="list-decimal list-inside space-y-1">
-            <li>Откройте приложение Whoop</li>
-            <li>Перейдите в раздел "Trends" или "Health"</li>
-            <li>Найдите метрику VO2Max</li>
-            <li>Сделайте скриншот экрана с данными</li>
-            <li>Загрузите его сюда для автоматического анализа</li>
+            <li>{t('vo2max.step1')}</li>
+            <li>{t('vo2max.step2')}</li>
+            <li>{t('vo2max.step3')}</li>
+            <li>{t('vo2max.step4')}</li>
+            <li>{t('vo2max.step5')}</li>
           </ol>
         </div>
       </CardContent>
