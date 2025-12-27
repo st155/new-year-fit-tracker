@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Clock, Utensils } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface FastingInlineWidgetProps {
   habit: any;
@@ -11,6 +12,7 @@ interface FastingInlineWidgetProps {
 }
 
 export function FastingInlineWidget({ habit, userId, compact }: FastingInlineWidgetProps) {
+  const { t } = useTranslation('habits');
   const { status, startEating, endEating, startFasting, isStarting, isEnding, isFastingStarting } = useFastingWindow(habit.id, userId);
 
   const formatDuration = (minutes: number) => {
@@ -19,9 +21,9 @@ export function FastingInlineWidget({ habit, userId, compact }: FastingInlineWid
     if (hours > 24) {
       const days = Math.floor(hours / 24);
       const remainingHours = hours % 24;
-      return `${days}д ${remainingHours}ч`;
+      return t('fasting.duration.days', { days, hours: remainingHours });
     }
-    return hours > 0 ? `${hours}ч ${mins}м` : `${mins}м`;
+    return hours > 0 ? t('fasting.duration.hours', { hours, mins }) : t('fasting.duration.minutes', { mins });
   };
 
   const targetMinutes = habit.custom_settings?.fasting_window || 960; // Default 16h
@@ -33,19 +35,19 @@ export function FastingInlineWidget({ habit, userId, compact }: FastingInlineWid
       {/* Status indicator */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          {status.isFasting && (
+        {status.isFasting && (
             <Badge variant="default" className="bg-gradient-to-r from-emerald-500 to-green-500 animate-pulse-slow">
-              🔥 Голодание
+              {t('fasting.statusFasting')}
             </Badge>
           )}
           {status.isEating && (
             <Badge variant="secondary" className="bg-gradient-to-r from-orange-500/20 to-yellow-500/20">
-              🍽️ Окно питания
+              {t('fasting.statusEating')}
             </Badge>
           )}
           {!status.isFasting && !status.isEating && (
             <Badge variant="outline" className="border-muted-foreground/30">
-              ⏸️ Неактивно
+              {t('fasting.statusInactive')}
             </Badge>
           )}
         </div>
@@ -70,7 +72,7 @@ export function FastingInlineWidget({ habit, userId, compact }: FastingInlineWid
         <div className="space-y-1">
           <Progress value={eatingProgress} className="h-2 bg-muted/50" />
           <div className="text-xs text-muted-foreground text-center">
-            Окно питания: {formatDuration(status.duration)}
+            {t('fasting.eatingWindow', { duration: formatDuration(status.duration) })}
           </div>
         </div>
       )}
@@ -86,7 +88,7 @@ export function FastingInlineWidget({ habit, userId, compact }: FastingInlineWid
             className="flex-1 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600"
           >
             <Clock className="h-3.5 w-3.5 mr-1.5" />
-            {isEnding ? "..." : "Начать пост"}
+            {isEnding ? "..." : t('fasting.startFast')}
           </Button>
         )}
         
@@ -100,7 +102,7 @@ export function FastingInlineWidget({ habit, userId, compact }: FastingInlineWid
               className="flex-1 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600"
             >
               <Clock className="h-3.5 w-3.5 mr-1.5" />
-              {isFastingStarting ? "..." : "Начать пост"}
+              {isFastingStarting ? "..." : t('fasting.startFast')}
             </Button>
             <Button 
               size="sm" 
@@ -110,7 +112,7 @@ export function FastingInlineWidget({ habit, userId, compact }: FastingInlineWid
               className="flex-1"
             >
               <Utensils className="h-3.5 w-3.5 mr-1.5" />
-              {isStarting ? "..." : "Начать еду"}
+              {isStarting ? "..." : t('fasting.startEating')}
             </Button>
           </>
         )}
@@ -124,7 +126,7 @@ export function FastingInlineWidget({ habit, userId, compact }: FastingInlineWid
             className="flex-1"
           >
             <Utensils className="h-3.5 w-3.5 mr-1.5" />
-            {isStarting ? "..." : "Начать еду"}
+            {isStarting ? "..." : t('fasting.startEating')}
           </Button>
         )}
       </div>

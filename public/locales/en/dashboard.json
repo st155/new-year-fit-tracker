@@ -153,5 +153,12 @@
     "progress": "Progress",
     "unlockedLabel": "Unlocked",
     "noInCategory": "No achievements in this category"
+  },
+  "dataQuality": {
+    "title": "Data Quality",
+    "excellent": "Excellent",
+    "good": "Good",
+    "fair": "Fair",
+    "poor": "Poor"
   }
 }

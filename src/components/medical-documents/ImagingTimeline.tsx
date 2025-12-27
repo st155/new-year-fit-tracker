@@ -10,6 +10,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { documentsApi } from "@/lib/api";
+import { useTranslation } from "react-i18next";
 
 const severityColors = {
   normal: 'bg-green-500/20 border-green-500/30 text-green-700 dark:text-green-300',
@@ -26,6 +27,7 @@ const severityIcons = {
 };
 
 export const ImagingTimeline = () => {
+  const { t, i18n } = useTranslation('medicalDocs');
   const { data: documents, isLoading, refetch } = useImagingTimeline();
   const [expandedDocs, setExpandedDocs] = useState<Set<string>>(new Set());
   const { toast } = useToast();
@@ -38,15 +40,15 @@ export const ImagingTimeline = () => {
     },
     onSuccess: (data) => {
       toast({
-        title: "✅ Переклассификация завершена",
-        description: `Найдено и обновлено: ${data.reclassified} документов`,
+        title: t('imaging.reclassifySuccess'),
+        description: t('imaging.reclassifyCount', { count: data.reclassified }),
       });
       refetch();
     },
     onError: (error: Error) => {
       toast({
         variant: "destructive",
-        title: "Ошибка переклассификации",
+        title: t('imaging.reclassifyError'),
         description: error.message,
       });
     },
@@ -83,12 +85,12 @@ export const ImagingTimeline = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Stethoscope className="h-5 w-5" />
-            Таймлайн исследований
+            {t('imaging.title')}
           </CardTitle>
         </CardHeader>
         <CardContent className="text-center py-16 text-muted-foreground">
           <Stethoscope className="h-16 w-16 mx-auto mb-4 opacity-30" />
-          <p>Нет МРТ/УЗИ документов</p>
+          <p>{t('imaging.noDocuments')}</p>
         </CardContent>
       </Card>
     );
@@ -101,10 +103,10 @@ export const ImagingTimeline = () => {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Stethoscope className="h-5 w-5 text-primary" />
-              Таймлайн исследований
+              {t('imaging.title')}
             </CardTitle>
             <CardDescription>
-              {documents.length} исследований за все время
+              {t('imaging.documentsCount', { count: documents.length })}
             </CardDescription>
           </div>
           <Button 
@@ -114,7 +116,7 @@ export const ImagingTimeline = () => {
             disabled={reclassifyMutation.isPending}
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${reclassifyMutation.isPending ? 'animate-spin' : ''}`} />
-            Найти ещё
+            {t('imaging.findMore')}
           </Button>
         </div>
       </CardHeader>
@@ -145,13 +147,13 @@ export const ImagingTimeline = () => {
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <CardTitle className="text-base flex items-center gap-2">
-                              {new Date(doc.document_date).toLocaleDateString('ru-RU', {
+                              {new Date(doc.document_date).toLocaleDateString(i18n.language === 'ru' ? 'ru-RU' : 'en-US', {
                                 day: 'numeric',
                                 month: 'long',
                                 year: 'numeric'
                               })}
                               <Badge variant="outline" className="text-xs">
-                                {doc.findings.length} находок
+                                {t('imaging.findingsCount', { count: doc.findings.length })}
                               </Badge>
                             </CardTitle>
                             <CardDescription className="mt-1 line-clamp-2">
@@ -202,7 +204,7 @@ export const ImagingTimeline = () => {
                             );
                           })
                         ) : (
-                          <p className="text-sm text-muted-foreground">Нет детальных находок</p>
+                          <p className="text-sm text-muted-foreground">{t('imaging.noFindings')}</p>
                         )}
                       </CardContent>
                     </CollapsibleContent>
