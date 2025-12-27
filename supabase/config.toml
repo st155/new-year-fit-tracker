@@ -273,3 +273,6 @@ verify_jwt = false
 
 [functions.backfill-whoop-all]
 verify_jwt = false
+
+[functions.whoop-sync-admin]
+verify_jwt = true
