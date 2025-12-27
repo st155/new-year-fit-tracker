@@ -9,10 +9,11 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon, Clock } from 'lucide-react';
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import { ScheduleEvent } from '@/hooks/useScheduleEvents';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 
 interface ScheduleEventDialogProps {
   open: boolean;
@@ -34,6 +35,8 @@ interface TrainingPlan {
 }
 
 export function ScheduleEventDialog({ open, onOpenChange, event, onSave, defaultDate }: ScheduleEventDialogProps) {
+  const { t, i18n } = useTranslation('trainer');
+  const locale = i18n.language === 'ru' ? ru : enUS;
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
@@ -159,12 +162,12 @@ export function ScheduleEventDialog({ open, onOpenChange, event, onSave, default
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{event ? 'Редактировать событие' : 'Создать событие'}</DialogTitle>
+          <DialogTitle>{event ? t('calendar.dialog.editTitle') : t('calendar.dialog.createTitle')}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="event_type">Тип события</Label>
+            <Label htmlFor="event_type">{t('calendar.dialog.eventType')}</Label>
             <Select
               value={formData.event_type}
               onValueChange={(value: any) => setFormData({ ...formData, event_type: value })}
@@ -173,16 +176,16 @@ export function ScheduleEventDialog({ open, onOpenChange, event, onSave, default
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="workout">Тренировка</SelectItem>
-                <SelectItem value="consultation">Консультация</SelectItem>
-                <SelectItem value="reminder">Напоминание</SelectItem>
-                <SelectItem value="other">Другое</SelectItem>
+                <SelectItem value="workout">{t('calendar.eventTypes.workout')}</SelectItem>
+                <SelectItem value="consultation">{t('calendar.eventTypes.consultation')}</SelectItem>
+                <SelectItem value="reminder">{t('calendar.eventTypes.reminder')}</SelectItem>
+                <SelectItem value="other">{t('calendar.eventTypes.other')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="title">Название *</Label>
+            <Label htmlFor="title">{t('calendar.dialog.title')}</Label>
             <Input
               id="title"
               value={formData.title}
@@ -192,7 +195,7 @@ export function ScheduleEventDialog({ open, onOpenChange, event, onSave, default
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Описание</Label>
+            <Label htmlFor="description">{t('calendar.dialog.description')}</Label>
             <Textarea
               id="description"
               value={formData.description}
@@ -203,16 +206,16 @@ export function ScheduleEventDialog({ open, onOpenChange, event, onSave, default
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Клиент</Label>
+              <Label>{t('calendar.dialog.client')}</Label>
               <Select
                 value={formData.client_id}
                 onValueChange={(value) => setFormData({ ...formData, client_id: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Выберите клиента" />
+                  <SelectValue placeholder={t('calendar.dialog.selectClient')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Без клиента</SelectItem>
+                  <SelectItem value="">{t('calendar.dialog.noClient')}</SelectItem>
                   {clients.map((client) => (
                     <SelectItem key={client.user_id} value={client.user_id}>
                       {client.full_name || client.username}
@@ -223,16 +226,16 @@ export function ScheduleEventDialog({ open, onOpenChange, event, onSave, default
             </div>
 
             <div className="space-y-2">
-              <Label>Тренировочный план</Label>
+              <Label>{t('calendar.dialog.trainingPlan')}</Label>
               <Select
                 value={formData.training_plan_id}
                 onValueChange={(value) => setFormData({ ...formData, training_plan_id: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Выберите план" />
+                  <SelectValue placeholder={t('calendar.dialog.selectPlan')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Без плана</SelectItem>
+                  <SelectItem value="">{t('calendar.dialog.noPlan')}</SelectItem>
                   {plans.map((plan) => (
                     <SelectItem key={plan.id} value={plan.id}>
                       {plan.name}
@@ -245,12 +248,12 @@ export function ScheduleEventDialog({ open, onOpenChange, event, onSave, default
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Дата начала *</Label>
+              <Label>{t('calendar.dialog.startDate')}</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full justify-start text-left font-normal">
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {format(formData.start_time, 'PPP', { locale: ru })}
+                    {format(formData.start_time, 'PPP', { locale })}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
@@ -261,14 +264,14 @@ export function ScheduleEventDialog({ open, onOpenChange, event, onSave, default
                       ...formData, 
                       start_time: setTimeForDate(date, formData.start_time.getHours(), formData.start_time.getMinutes())
                     })}
-                    locale={ru}
+                    locale={locale}
                   />
                 </PopoverContent>
               </Popover>
             </div>
 
             <div className="space-y-2">
-              <Label>Время начала *</Label>
+              <Label>{t('calendar.dialog.startTime')}</Label>
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-muted-foreground" />
                 <Input
@@ -288,12 +291,12 @@ export function ScheduleEventDialog({ open, onOpenChange, event, onSave, default
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Дата окончания *</Label>
+              <Label>{t('calendar.dialog.endDate')}</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full justify-start text-left font-normal">
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {format(formData.end_time, 'PPP', { locale: ru })}
+                    {format(formData.end_time, 'PPP', { locale })}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
@@ -304,14 +307,14 @@ export function ScheduleEventDialog({ open, onOpenChange, event, onSave, default
                       ...formData, 
                       end_time: setTimeForDate(date, formData.end_time.getHours(), formData.end_time.getMinutes())
                     })}
-                    locale={ru}
+                    locale={locale}
                   />
                 </PopoverContent>
               </Popover>
             </div>
 
             <div className="space-y-2">
-              <Label>Время окончания *</Label>
+              <Label>{t('calendar.dialog.endTime')}</Label>
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-muted-foreground" />
                 <Input
@@ -330,17 +333,17 @@ export function ScheduleEventDialog({ open, onOpenChange, event, onSave, default
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="location">Место проведения</Label>
+            <Label htmlFor="location">{t('calendar.dialog.location')}</Label>
             <Input
               id="location"
               value={formData.location}
               onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              placeholder="Адрес, зал, онлайн и т.д."
+              placeholder={t('calendar.dialog.locationPlaceholder')}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="reminder">Напоминание за (минут)</Label>
+            <Label htmlFor="reminder">{t('calendar.dialog.reminder')}</Label>
             <Select
               value={formData.reminder_minutes.toString()}
               onValueChange={(value) => setFormData({ ...formData, reminder_minutes: parseInt(value) })}
@@ -349,22 +352,22 @@ export function ScheduleEventDialog({ open, onOpenChange, event, onSave, default
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="0">Нет напоминания</SelectItem>
-                <SelectItem value="15">За 15 минут</SelectItem>
-                <SelectItem value="30">За 30 минут</SelectItem>
-                <SelectItem value="60">За 1 час</SelectItem>
-                <SelectItem value="120">За 2 часа</SelectItem>
-                <SelectItem value="1440">За 1 день</SelectItem>
+                <SelectItem value="0">{t('calendar.dialog.reminders.none')}</SelectItem>
+                <SelectItem value="15">{t('calendar.dialog.reminders.15min')}</SelectItem>
+                <SelectItem value="30">{t('calendar.dialog.reminders.30min')}</SelectItem>
+                <SelectItem value="60">{t('calendar.dialog.reminders.1hour')}</SelectItem>
+                <SelectItem value="120">{t('calendar.dialog.reminders.2hours')}</SelectItem>
+                <SelectItem value="1440">{t('calendar.dialog.reminders.1day')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Отмена
+              {t('calendar.cancel')}
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 'Сохранение...' : event ? 'Сохранить' : 'Создать'}
+              {loading ? t('calendar.dialog.saving') : event ? t('calendar.dialog.save') : t('calendar.dialog.create')}
             </Button>
           </DialogFooter>
         </form>

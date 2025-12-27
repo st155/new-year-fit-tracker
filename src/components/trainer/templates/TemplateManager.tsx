@@ -35,6 +35,7 @@ import {
 } from "@/features/challenges/utils";
 import { ImportTemplateDialog } from "./ImportTemplateDialog";
 import { CreateFromTemplateDialog } from "./CreateFromTemplateDialog";
+import { useTranslation } from "react-i18next";
 
 interface TemplateManagerProps {
   open: boolean;
@@ -43,6 +44,7 @@ interface TemplateManagerProps {
 }
 
 export function TemplateManager({ open, onOpenChange, onSuccess }: TemplateManagerProps) {
+  const { t } = useTranslation('trainer');
   const { user } = useAuth();
   const [myTemplates, setMyTemplates] = useState<ChallengeTemplate[]>([]);
   const [publicTemplates, setPublicTemplates] = useState<ChallengeTemplate[]>([]);
@@ -72,7 +74,7 @@ export function TemplateManager({ open, onOpenChange, onSuccess }: TemplateManag
       setPublicTemplates(publicData);
     } catch (error) {
       console.error('Error loading templates:', error);
-      toast.error('Ошибка загрузки шаблонов');
+      toast.error(t('templates.loadError'));
     } finally {
       setIsLoading(false);
     }
@@ -81,27 +83,27 @@ export function TemplateManager({ open, onOpenChange, onSuccess }: TemplateManag
   const handleDelete = async (templateId: string) => {
     try {
       await deleteTemplate(templateId);
-      toast.success('Шаблон удален');
+      toast.success(t('templates.deleted'));
       loadTemplates();
     } catch (error) {
       console.error('Error deleting template:', error);
-      toast.error('Ошибка удаления шаблона');
+      toast.error(t('templates.deleteError'));
     }
   };
 
   const handleExport = (template: ChallengeTemplate) => {
     exportTemplateAsJSON(template);
-    toast.success('Шаблон экспортирован');
+    toast.success(t('templates.exported'));
   };
 
   const handleTogglePublic = async (template: ChallengeTemplate) => {
     try {
       await updateTemplate(template.id!, { is_public: !template.is_public });
-      toast.success(template.is_public ? 'Шаблон теперь приватный' : 'Шаблон опубликован');
+      toast.success(template.is_public ? t('templates.nowPrivate') : t('templates.published'));
       loadTemplates();
     } catch (error) {
       console.error('Error updating template:', error);
-      toast.error('Ошибка обновления шаблона');
+      toast.error(t('templates.updateError'));
     }
   };
 
@@ -144,7 +146,7 @@ export function TemplateManager({ open, onOpenChange, onSuccess }: TemplateManag
               )}
             </div>
             <CardDescription className="mt-2">
-              {template.description || 'Нет описания'}
+              {template.description || t('templates.noDescription')}
             </CardDescription>
           </div>
           {isOwner && (
@@ -157,18 +159,18 @@ export function TemplateManager({ open, onOpenChange, onSuccess }: TemplateManag
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => handleExport(template)}>
                   <Download className="w-4 h-4 mr-2" />
-                  Экспорт JSON
+                  {t('templates.exportJson')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleTogglePublic(template)}>
                   {template.is_public ? (
                     <>
                       <Lock className="w-4 h-4 mr-2" />
-                      Сделать приватным
+                      {t('templates.makePrivate')}
                     </>
                   ) : (
                     <>
                       <Globe className="w-4 h-4 mr-2" />
-                      Опубликовать
+                      {t('templates.publish')}
                     </>
                   )}
                 </DropdownMenuItem>
@@ -177,7 +179,7 @@ export function TemplateManager({ open, onOpenChange, onSuccess }: TemplateManag
                   className="text-destructive"
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
-                  Удалить
+                  {t('templates.delete')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -187,10 +189,10 @@ export function TemplateManager({ open, onOpenChange, onSuccess }: TemplateManag
       <CardContent>
         <div className="space-y-3">
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <span>{template.template_data.disciplines.length} дисциплин</span>
-            {template.duration_weeks && <span>{template.duration_weeks} недель</span>}
+            <span>{template.template_data.disciplines.length} {t('templates.disciplines')}</span>
+            {template.duration_weeks && <span>{template.duration_weeks} {t('templates.weeks')}</span>}
             {template.use_count !== undefined && template.use_count > 0 && (
-              <span>Использован {template.use_count}x</span>
+              <span>{t('templates.used')} {template.use_count}x</span>
             )}
           </div>
           <div className="flex flex-wrap gap-2">
@@ -207,7 +209,7 @@ export function TemplateManager({ open, onOpenChange, onSuccess }: TemplateManag
           </div>
           <Button onClick={() => handleUseTemplate(template)} className="w-full">
             <Sparkles className="w-4 h-4 mr-2" />
-            Использовать шаблон
+            {t('templates.useTemplate')}
           </Button>
         </div>
       </CardContent>
@@ -221,7 +223,7 @@ export function TemplateManager({ open, onOpenChange, onSuccess }: TemplateManag
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileText className="w-5 h-5" />
-              Библиотека шаблонов челленджей
+              {t('templates.library')}
             </DialogTitle>
           </DialogHeader>
 
@@ -231,7 +233,7 @@ export function TemplateManager({ open, onOpenChange, onSuccess }: TemplateManag
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder="Поиск шаблонов..."
+                  placeholder={t('templates.searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -239,7 +241,7 @@ export function TemplateManager({ open, onOpenChange, onSuccess }: TemplateManag
               </div>
               <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
                 <Upload className="w-4 h-4 mr-2" />
-                Импорт
+                {t('templates.import')}
               </Button>
             </div>
 
@@ -251,7 +253,7 @@ export function TemplateManager({ open, onOpenChange, onSuccess }: TemplateManag
                   className="cursor-pointer"
                   onClick={() => setSelectedCategory(null)}
                 >
-                  Все
+                  {t('templates.all')}
                 </Badge>
                 {categories.map(cat => (
                   <Badge
@@ -270,10 +272,10 @@ export function TemplateManager({ open, onOpenChange, onSuccess }: TemplateManag
             <Tabs defaultValue="my" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="my">
-                  Мои шаблоны ({myTemplates.length})
+                  {t('templates.myTemplates')} ({myTemplates.length})
                 </TabsTrigger>
                 <TabsTrigger value="public">
-                  Публичные ({publicTemplates.length})
+                  {t('templates.public')} ({publicTemplates.length})
                 </TabsTrigger>
               </TabsList>
 
@@ -283,8 +285,8 @@ export function TemplateManager({ open, onOpenChange, onSuccess }: TemplateManag
                     <Card className="p-8 text-center">
                       <p className="text-muted-foreground">
                         {searchQuery || selectedCategory
-                          ? 'Шаблоны не найдены'
-                          : 'У вас пока нет шаблонов. Создайте первый челлендж и сохраните его как шаблон!'}
+                          ? t('templates.noTemplatesFiltered')
+                          : t('templates.noTemplates')}
                       </p>
                     </Card>
                   ) : (
@@ -303,8 +305,8 @@ export function TemplateManager({ open, onOpenChange, onSuccess }: TemplateManag
                     <Card className="p-8 text-center">
                       <p className="text-muted-foreground">
                         {searchQuery || selectedCategory
-                          ? 'Шаблоны не найдены'
-                          : 'Пока нет публичных шаблонов'}
+                          ? t('templates.noTemplatesFiltered')
+                          : t('templates.noPublicTemplates')}
                       </p>
                     </Card>
                   ) : (

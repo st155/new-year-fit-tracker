@@ -21,6 +21,7 @@ import {
   Filter
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 interface AIActionsHistoryProps {
   userId: string | undefined;
@@ -35,85 +36,84 @@ const getActionIcon = (actionType: string) => {
   return Activity;
 };
 
-const getActionTypeLabel = (actionType: string) => {
-  const type = actionType.toLowerCase();
-  if (type.includes('create_goal')) return 'Создание цели';
-  if (type.includes('update_goal')) return 'Обновление цели';
-  if (type.includes('delete_goal')) return 'Удаление цели';
-  if (type.includes('add_measurement')) return 'Добавление измерения';
-  if (type.includes('create_task')) return 'Создание задачи';
-  if (type.includes('update_task')) return 'Обновление задачи';
-  if (type.includes('create_training_plan')) return 'Создание тренировочного плана';
-  if (type.includes('assign_training_plan')) return 'Назначение плана';
-  return actionType;
-};
+export function AIActionsHistory({ userId }: AIActionsHistoryProps) {
+  const { t } = useTranslation('trainer');
+  const { actions, loading } = useAIActionsHistory(userId);
+  const { user } = useAuth();
+  const { pendingActions, loading: pendingLoading } = useAIPendingActions(user?.id);
+  const [activeTab, setActiveTab] = useState<'executed' | 'pending' | 'rejected' | 'all'>('executed');
 
-const goalTypeLabels: Record<string, string> = {
-  'body_fat': 'Процент жира',
-  'vo2max': 'VO2max',
-  'hanging_leg_raises': 'Подъем ног в висе',
-  'pushups': 'Отжимания',
-  'plank': 'Планка',
-  'weight': 'Вес',
-  'muscle_mass': 'Мышечная масса',
-  'steps': 'Шаги',
-  'water_intake': 'Потребление воды',
-  'sleep_hours': 'Часы сна',
-  'workouts': 'Тренировки',
-  'calories_burned': 'Сожженные калории'
-};
+  const getActionTypeLabel = (actionType: string) => {
+    const type = actionType.toLowerCase();
+    if (type.includes('create_goal')) return t('aiHistory.actionTypes.createGoal');
+    if (type.includes('update_goal')) return t('aiHistory.actionTypes.updateGoal');
+    if (type.includes('delete_goal')) return t('aiHistory.actionTypes.deleteGoal');
+    if (type.includes('add_measurement')) return t('aiHistory.actionTypes.addMeasurement');
+    if (type.includes('create_task')) return t('aiHistory.actionTypes.createTask');
+    if (type.includes('update_task')) return t('aiHistory.actionTypes.updateTask');
+    if (type.includes('create_training_plan')) return t('aiHistory.actionTypes.createPlan');
+    if (type.includes('assign_training_plan')) return t('aiHistory.actionTypes.assignPlan');
+    return actionType;
+  };
 
-const getActionDescription = (action: any) => {
-  const details = action.action_details || {};
-  const type = action.action_type.toLowerCase();
-  
-  if (type.includes('create_goal')) {
-    const goalName = details.goal_name || goalTypeLabels[details.goal_type] || 'Цель';
-    const targetValue = details.target_value;
-    const targetUnit = details.target_unit || '';
-    return `Создана цель "${goalName}": достичь ${targetValue}${targetUnit}`;
-  }
-  
-  if (type.includes('update_goal')) {
-    const goalName = details.goal_name || goalTypeLabels[details.goal_type] || 'Цель';
-    if (details.target_value) {
-      return `Обновлена цель "${goalName}": новое значение ${details.target_value}${details.target_unit || ''}`;
+  const getGoalTypeLabel = (goalType: string) => {
+    const key = `aiHistory.goalLabels.${goalType}`;
+    const translated = t(key);
+    return translated !== key ? translated : goalType;
+  };
+
+  const getActionDescription = (action: any) => {
+    const details = action.action_details || {};
+    const type = action.action_type.toLowerCase();
+    
+    if (type.includes('create_goal')) {
+      const goalName = details.goal_name || getGoalTypeLabel(details.goal_type);
+      const targetValue = details.target_value;
+      const targetUnit = details.target_unit || '';
+      return t('aiHistory.goalCreated', { name: goalName, value: targetValue, unit: targetUnit });
     }
-    return `Обновлена цель "${goalName}"`;
-  }
-  
-  if (type.includes('delete_goal')) {
-    const goalName = details.goal_name || 'Цель';
-    return `Удалена цель "${goalName}"`;
-  }
-  
-  if (type.includes('add_measurement')) {
-    const metricName = details.metric_name || details.goal_name || 'Показатель';
-    const value = details.value;
-    const unit = details.unit || '';
-    return `Добавлено измерение "${metricName}": ${value}${unit}`;
-  }
-  
-  if (type.includes('create_task')) {
-    return `Создана задача: ${details.title || details.description || 'Новая задача'}`;
-  }
-  
-  if (type.includes('update_task')) {
-    return `Обновлена задача: ${details.title || details.description || 'Задача'}`;
-  }
-  
-  if (type.includes('create_training_plan')) {
-    return `Создан план тренировок: ${details.plan_name || details.name || 'Новый план'}`;
-  }
-  
-  if (type.includes('assign') && type.includes('plan')) {
-    return `Назначен план: ${details.plan_name || details.name || 'План тренировок'}`;
-  }
-  
-  return JSON.stringify(details).substring(0, 100);
-};
+    
+    if (type.includes('update_goal')) {
+      const goalName = details.goal_name || getGoalTypeLabel(details.goal_type);
+      if (details.target_value) {
+        return t('aiHistory.goalUpdated', { name: goalName, value: details.target_value, unit: details.target_unit || '' });
+      }
+      return t('aiHistory.goalUpdatedSimple', { name: goalName });
+    }
+    
+    if (type.includes('delete_goal')) {
+      const goalName = details.goal_name || t('aiHistory.goalLabels.weight');
+      return t('aiHistory.goalDeleted', { name: goalName });
+    }
+    
+    if (type.includes('add_measurement')) {
+      const metricName = details.metric_name || details.goal_name || t('aiHistory.goalLabels.weight');
+      const value = details.value;
+      const unit = details.unit || '';
+      return t('aiHistory.measurementAdded', { name: metricName, value: value, unit: unit });
+    }
+    
+    if (type.includes('create_task')) {
+      return t('aiHistory.taskCreated', { title: details.title || details.description || '' });
+    }
+    
+    if (type.includes('update_task')) {
+      return t('aiHistory.taskUpdated', { title: details.title || details.description || '' });
+    }
+    
+    if (type.includes('create_training_plan')) {
+      return t('aiHistory.planCreated', { name: details.plan_name || details.name || '' });
+    }
+    
+    if (type.includes('assign') && type.includes('plan')) {
+      return t('aiHistory.planAssigned', { name: details.plan_name || details.name || '' });
+    }
+    
+    return JSON.stringify(details).substring(0, 100);
+  };
 
 export function AIActionsHistory({ userId }: AIActionsHistoryProps) {
+  const { t } = useTranslation('trainer');
   const { actions, loading } = useAIActionsHistory(userId);
   const { user } = useAuth();
   const { pendingActions, loading: pendingLoading } = useAIPendingActions(user?.id);
@@ -147,14 +147,14 @@ export function AIActionsHistory({ userId }: AIActionsHistoryProps) {
   return (
     <div className="space-y-4 p-4">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold">История действий AI</h2>
+        <h2 className="text-lg font-semibold">{t('aiHistory.title')}</h2>
       </div>
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="executed" className="text-xs">
             <CheckCircle2 className="h-3 w-3 mr-1" />
-            Выполненные
+            {t('aiHistory.tabs.executed')}
             {actions.length > 0 && (
               <Badge variant="secondary" className="ml-1 text-xs">
                 {actions.length}
@@ -163,7 +163,7 @@ export function AIActionsHistory({ userId }: AIActionsHistoryProps) {
           </TabsTrigger>
           <TabsTrigger value="pending" className="text-xs">
             <Clock className="h-3 w-3 mr-1" />
-            Ожидают
+            {t('aiHistory.tabs.pending')}
             {pendingActions.filter(pa => pa.status === 'pending').length > 0 && (
               <Badge variant="secondary" className="ml-1 text-xs">
                 {pendingActions.filter(pa => pa.status === 'pending').length}
@@ -172,7 +172,7 @@ export function AIActionsHistory({ userId }: AIActionsHistoryProps) {
           </TabsTrigger>
           <TabsTrigger value="rejected" className="text-xs">
             <XCircle className="h-3 w-3 mr-1" />
-            Отклонённые
+            {t('aiHistory.tabs.rejected')}
             {pendingActions.filter(pa => pa.status === 'rejected').length > 0 && (
               <Badge variant="secondary" className="ml-1 text-xs">
                 {pendingActions.filter(pa => pa.status === 'rejected').length}
@@ -181,7 +181,7 @@ export function AIActionsHistory({ userId }: AIActionsHistoryProps) {
           </TabsTrigger>
           <TabsTrigger value="all" className="text-xs">
             <Filter className="h-3 w-3 mr-1" />
-            Все
+            {t('aiHistory.tabs.all')}
           </TabsTrigger>
         </TabsList>
 
@@ -190,16 +190,16 @@ export function AIActionsHistory({ userId }: AIActionsHistoryProps) {
             <div className="text-center py-12 text-muted-foreground">
               <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <h3 className="text-lg font-medium mb-2">
-                {activeTab === 'executed' && 'Нет выполненных действий'}
-                {activeTab === 'pending' && 'Нет ожидающих действий'}
-                {activeTab === 'rejected' && 'Нет отклонённых действий'}
-                {activeTab === 'all' && 'История пуста'}
+                {activeTab === 'executed' && t('aiHistory.empty.executed')}
+                {activeTab === 'pending' && t('aiHistory.empty.pending')}
+                {activeTab === 'rejected' && t('aiHistory.empty.rejected')}
+                {activeTab === 'all' && t('aiHistory.empty.all')}
               </h3>
               <p className="text-sm">
-                {activeTab === 'executed' && 'Выполненные действия появятся здесь'}
-                {activeTab === 'pending' && 'Планы, ожидающие подтверждения, появятся здесь'}
-                {activeTab === 'rejected' && 'Отклонённые планы появятся здесь'}
-                {activeTab === 'all' && 'Все действия AI помощника будут отображаться здесь'}
+                {activeTab === 'executed' && t('aiHistory.empty.executedDesc')}
+                {activeTab === 'pending' && t('aiHistory.empty.pendingDesc')}
+                {activeTab === 'rejected' && t('aiHistory.empty.rejectedDesc')}
+                {activeTab === 'all' && t('aiHistory.empty.allDesc')}
               </p>
             </div>
           ) : (
@@ -218,7 +218,7 @@ export function AIActionsHistory({ userId }: AIActionsHistoryProps) {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                           <Badge variant="outline" className="text-xs bg-amber-500/10">
-                            Ожидает подтверждения
+                            {t('aiHistory.awaitingConfirmation')}
                           </Badge>
                           <span className="text-xs text-muted-foreground">
                             {new Date(action.created_at).toLocaleString('ru-RU')}
@@ -229,7 +229,7 @@ export function AIActionsHistory({ userId }: AIActionsHistoryProps) {
                         </p>
                         <details className="text-xs">
                           <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
-                            Детали действия
+                            {t('aiHistory.actionDetails')}
                           </summary>
                           <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-auto">
                             {JSON.stringify(action.action_data, null, 2)}
@@ -253,7 +253,7 @@ export function AIActionsHistory({ userId }: AIActionsHistoryProps) {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                           <Badge variant="outline" className="text-xs bg-red-500/10">
-                            Отклонено
+                            {t('aiHistory.rejected')}
                           </Badge>
                           <span className="text-xs text-muted-foreground">
                             {new Date(action.created_at).toLocaleString('ru-RU')}
@@ -264,7 +264,7 @@ export function AIActionsHistory({ userId }: AIActionsHistoryProps) {
                         </p>
                         <details className="text-xs">
                           <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
-                            Детали действия
+                            {t('aiHistory.actionDetails')}
                           </summary>
                           <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-auto">
                             {JSON.stringify(action.action_data, null, 2)}
@@ -305,7 +305,7 @@ export function AIActionsHistory({ userId }: AIActionsHistoryProps) {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                       <Badge variant="outline" className="text-xs">
-                        {getActionTypeLabel(action.action_type)}
+                        {getActionTypeLabel(action.action_type, t)}
                       </Badge>
                       
                       {action.client_name && (
@@ -322,7 +322,7 @@ export function AIActionsHistory({ userId }: AIActionsHistoryProps) {
                           <XCircle className="h-3.5 w-3.5 text-destructive" />
                         )}
                         <span className="text-xs text-muted-foreground">
-                          {action.success ? 'Успешно' : 'Ошибка'}
+                          {action.success ? t('aiHistory.success') : t('aiHistory.error')}
                         </span>
                       </div>
                       
@@ -357,7 +357,7 @@ export function AIActionsHistory({ userId }: AIActionsHistoryProps) {
 
                     {/* Description */}
                     <p className="text-sm mb-2 font-medium">
-                      {getActionDescription(action)}
+                      {getActionDescription(action, t)}
                     </p>
 
                     {/* Error message */}
@@ -370,7 +370,7 @@ export function AIActionsHistory({ userId }: AIActionsHistoryProps) {
                     {/* Details */}
                     <details className="text-xs mt-2">
                       <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
-                        Технические детали
+                        {t('aiHistory.technicalDetails')}
                       </summary>
                       <div className="mt-2 p-3 bg-muted rounded text-xs space-y-1">
                         {Object.entries(action.action_details || {}).map(([key, value]) => (

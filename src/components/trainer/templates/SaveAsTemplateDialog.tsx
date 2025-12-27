@@ -10,6 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Save } from "lucide-react";
 import { toast } from "sonner";
 import { createTemplateFromChallenge } from "@/features/challenges/utils";
+import { useTranslation } from "react-i18next";
 
 interface SaveAsTemplateDialogProps {
   open: boolean;
@@ -26,6 +27,7 @@ export function SaveAsTemplateDialog({
   challengeTitle,
   onSuccess,
 }: SaveAsTemplateDialogProps) {
+  const { t } = useTranslation('trainer');
   const [templateName, setTemplateName] = useState(challengeTitle);
   const [description, setDescription] = useState('');
   const [makePublic, setMakePublic] = useState(false);
@@ -33,7 +35,7 @@ export function SaveAsTemplateDialog({
 
   const handleSave = async () => {
     if (!templateName.trim()) {
-      toast.error('Введите название шаблона');
+      toast.error(t('templates.saveAs.enterName'));
       return;
     }
 
@@ -47,7 +49,7 @@ export function SaveAsTemplateDialog({
       );
 
       if (result.success) {
-        toast.success('Шаблон сохранен');
+        toast.success(t('templates.saveAs.saved'));
         onSuccess?.();
         onOpenChange(false);
         // Reset form
@@ -55,11 +57,11 @@ export function SaveAsTemplateDialog({
         setDescription('');
         setMakePublic(false);
       } else {
-        toast.error(result.error || 'Ошибка создания шаблона');
+        toast.error(result.error || t('templates.saveAs.saveError'));
       }
     } catch (error) {
       console.error('Error saving template:', error);
-      toast.error('Ошибка сохранения шаблона');
+      toast.error(t('templates.saveAs.saveError'));
     } finally {
       setIsCreating(false);
     }
@@ -69,7 +71,7 @@ export function SaveAsTemplateDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Сохранить как шаблон</DialogTitle>
+          <DialogTitle>{t('templates.saveAs.title')}</DialogTitle>
         </DialogHeader>
 
         <ScrollArea className="max-h-[70vh]">
@@ -77,24 +79,24 @@ export function SaveAsTemplateDialog({
             {/* Template Name */}
             <div className="space-y-2">
               <Label htmlFor="template-name">
-                Название шаблона <span className="text-destructive">*</span>
+                {t('templates.saveAs.templateName')} <span className="text-destructive">{t('templates.saveAs.required')}</span>
               </Label>
               <Input
                 id="template-name"
                 value={templateName}
                 onChange={(e) => setTemplateName(e.target.value)}
-                placeholder="Например: 8-Week Strength Builder"
+                placeholder={t('templates.saveAs.namePlaceholder')}
               />
             </div>
 
             {/* Description */}
             <div className="space-y-2">
-              <Label htmlFor="description">Описание</Label>
+              <Label htmlFor="description">{t('templates.saveAs.description')}</Label>
               <Textarea
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Опишите этот шаблон и для кого он подходит..."
+                placeholder={t('templates.saveAs.descriptionPlaceholder')}
                 rows={4}
               />
             </div>
@@ -110,22 +112,20 @@ export function SaveAsTemplateDialog({
                 htmlFor="make-public"
                 className="text-sm font-normal cursor-pointer"
               >
-                Сделать шаблон публичным (доступен всем тренерам)
+                {t('templates.saveAs.makePublic')}
               </Label>
             </div>
 
             {/* Info */}
             <div className="rounded-lg border p-4 bg-muted/50">
               <p className="text-sm text-muted-foreground">
-                💡 <strong>Совет:</strong> Шаблон сохранит структуру челленджа, включая все 
-                дисциплины и их параметры. При создании нового челленджа из шаблона вы сможете 
-                настроить длительность и уровень сложности.
+                💡 <strong>{t('templates.saveAs.tip')}</strong>
               </p>
             </div>
 
             {/* Preview */}
             <div className="space-y-2">
-              <Label>Оригинальный челлендж</Label>
+              <Label>{t('templates.saveAs.originalChallenge')}</Label>
               <div className="rounded-lg border p-3 bg-card">
                 <p className="font-medium">{challengeTitle}</p>
               </div>
@@ -136,11 +136,11 @@ export function SaveAsTemplateDialog({
         {/* Actions */}
         <div className="flex justify-end gap-2 pt-4 border-t">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Отмена
+            {t('templates.saveAs.cancel')}
           </Button>
           <Button onClick={handleSave} disabled={isCreating}>
             <Save className="w-4 h-4 mr-2" />
-            {isCreating ? 'Сохранение...' : 'Сохранить шаблон'}
+            {isCreating ? t('templates.saveAs.saving') : t('templates.saveAs.save')}
           </Button>
         </div>
       </DialogContent>

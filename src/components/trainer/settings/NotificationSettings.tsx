@@ -9,6 +9,7 @@ import { Bell, Mail, Save } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface NotificationSettingsData {
   email_enabled: boolean;
@@ -20,6 +21,7 @@ interface NotificationSettingsData {
 }
 
 export function NotificationSettings() {
+  const { t } = useTranslation('trainer');
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -61,7 +63,7 @@ export function NotificationSettings() {
       }
     } catch (error) {
       console.error('Error loading settings:', error);
-      toast.error('Ошибка загрузки настроек');
+      toast.error(t('settings.notifications.loadError'));
     } finally {
       setLoading(false);
     }
@@ -81,10 +83,10 @@ export function NotificationSettings() {
 
       if (error) throw error;
 
-      toast.success('Настройки сохранены');
+      toast.success(t('settings.notifications.saved'));
     } catch (error) {
       console.error('Error saving settings:', error);
-      toast.error('Ошибка сохранения настроек');
+      toast.error(t('settings.notifications.saveError'));
     } finally {
       setSaving(false);
     }
@@ -94,7 +96,7 @@ export function NotificationSettings() {
     return (
       <Card>
         <CardContent className="py-8">
-          <div className="text-center text-muted-foreground">Загрузка настроек...</div>
+          <div className="text-center text-muted-foreground">{t('settings.notifications.loading')}</div>
         </CardContent>
       </Card>
     );
@@ -105,10 +107,10 @@ export function NotificationSettings() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Bell className="h-5 w-5" />
-          Уведомления
+          {t('settings.notifications.title')}
         </CardTitle>
         <CardDescription>
-          Управляйте настройками уведомлений о клиентах и их прогрессе
+          {t('settings.notifications.description')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -118,10 +120,10 @@ export function NotificationSettings() {
             <div className="space-y-0.5">
               <Label htmlFor="email-enabled" className="text-base flex items-center gap-2">
                 <Mail className="h-4 w-4" />
-                Email уведомления
+                {t('settings.notifications.emailNotifications')}
               </Label>
               <p className="text-sm text-muted-foreground">
-                Получать уведомления на электронную почту
+                {t('settings.notifications.emailDesc')}
               </p>
             </div>
             <Switch
@@ -140,10 +142,10 @@ export function NotificationSettings() {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label htmlFor="integration-issues" className="font-normal">
-                  Проблемы с интеграциями
+                  {t('settings.notifications.integrationIssues')}
                 </Label>
                 <p className="text-xs text-muted-foreground">
-                  Уведомления когда у клиента нет данных более 7 дней
+                  {t('settings.notifications.integrationDesc')}
                 </p>
               </div>
               <Switch
@@ -159,10 +161,10 @@ export function NotificationSettings() {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label htmlFor="client-alerts" className="font-normal">
-                  Алерты о клиентах
+                  {t('settings.notifications.clientAlerts')}
                 </Label>
                 <p className="text-xs text-muted-foreground">
-                  Риск перетренированности и низкий recovery
+                  {t('settings.notifications.clientAlertsDesc')}
                 </p>
               </div>
               <Switch
@@ -183,10 +185,10 @@ export function NotificationSettings() {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label htmlFor="daily-digest" className="font-normal">
-                  Ежедневный дайджест
+                  {t('settings.notifications.dailyDigest')}
                 </Label>
                 <p className="text-xs text-muted-foreground">
-                  Сводка по всем клиентам
+                  {t('settings.notifications.dailyDigestDesc')}
                 </p>
               </div>
               <Switch
@@ -202,7 +204,7 @@ export function NotificationSettings() {
             {settings.email_daily_digest && (
               <div className="grid grid-cols-2 gap-4 pl-6">
                 <div className="space-y-2">
-                  <Label htmlFor="digest-frequency">Частота</Label>
+                  <Label htmlFor="digest-frequency">{t('settings.notifications.frequency')}</Label>
                   <Select
                     value={settings.digest_frequency}
                     onValueChange={(value: 'daily' | 'weekly' | 'never') =>
@@ -213,15 +215,15 @@ export function NotificationSettings() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="daily">Каждый день</SelectItem>
-                      <SelectItem value="weekly">Раз в неделю</SelectItem>
-                      <SelectItem value="never">Отключить</SelectItem>
+                      <SelectItem value="daily">{t('settings.notifications.frequencies.daily')}</SelectItem>
+                      <SelectItem value="weekly">{t('settings.notifications.frequencies.weekly')}</SelectItem>
+                      <SelectItem value="never">{t('settings.notifications.frequencies.never')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="digest-time">Время отправки</Label>
+                  <Label htmlFor="digest-time">{t('settings.notifications.sendTime')}</Label>
                   <input
                     id="digest-time"
                     type="time"
@@ -241,7 +243,7 @@ export function NotificationSettings() {
         <div className="flex justify-end pt-4">
           <Button onClick={handleSave} disabled={saving}>
             <Save className="h-4 w-4 mr-2" />
-            {saving ? 'Сохранение...' : 'Сохранить настройки'}
+            {saving ? t('settings.notifications.saving') : t('settings.notifications.saveSettings')}
           </Button>
         </div>
       </CardContent>

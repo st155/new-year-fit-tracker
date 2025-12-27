@@ -15,6 +15,7 @@ import { useAIPendingActions } from '@/hooks/useAIPendingActions';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useTranslation } from 'react-i18next';
 
 interface AIMessageListProps {
   selectedClient?: {
@@ -26,31 +27,32 @@ interface AIMessageListProps {
 }
 
 // Helper function to format error messages
-function formatErrorMessage(error: string | undefined): string {
-  if (!error) return 'Неизвестная ошибка';
+function formatErrorMessage(error: string | undefined, t: (key: string) => string): string {
+  if (!error) return t('trainer:aiMessages.unknownError');
   
   const errorLower = error.toLowerCase();
   
   if (errorLower.includes('duplicate key') || errorLower.includes('unique constraint')) {
-    return 'Запись с такими данными уже существует';
+    return t('trainer:aiMessages.errors.duplicate');
   }
   if (errorLower.includes('foreign key violation') || errorLower.includes('foreign key constraint')) {
-    return 'Связанная запись не найдена';
+    return t('trainer:aiMessages.errors.foreignKey');
   }
   if (errorLower.includes('not found')) {
-    return 'Запись не найдена';
+    return t('trainer:aiMessages.errors.notFound');
   }
   if (errorLower.includes('permission denied') || errorLower.includes('unauthorized')) {
-    return 'Недостаточно прав для выполнения операции';
+    return t('trainer:aiMessages.errors.permission');
   }
   if (errorLower.includes('null value') || errorLower.includes('not-null constraint')) {
-    return 'Отсутствуют обязательные данные';
+    return t('trainer:aiMessages.errors.nullValue');
   }
   
   return error;
 }
 
 export function AIMessageList({ selectedClient }: AIMessageListProps) {
+  const { t } = useTranslation('trainer');
   const { messages, sending, sendingState, loading, currentConversation } = useAIChat();
   const { user } = useAuth();
   const { pendingActions, executeActions, rejectAction, executing } = useAIPendingActions(user?.id);
@@ -87,7 +89,7 @@ export function AIMessageList({ selectedClient }: AIMessageListProps) {
           >
             <div className="flex flex-col items-center gap-3">
               <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
-              <p className="text-sm text-muted-foreground">Загружаем историю...</p>
+              <p className="text-sm text-muted-foreground">{t('aiMessages.loadingHistory')}</p>
             </div>
           </motion.div>
         )}
@@ -154,7 +156,7 @@ export function AIMessageList({ selectedClient }: AIMessageListProps) {
                             type: result.action || result.action_type || 'Unknown',
                             description: result.success 
                               ? (result.message || JSON.stringify(result.data || {}))
-                              : formatErrorMessage(result.error || result.message),
+                              : formatErrorMessage(result.error || result.message, t),
                             status: result.success ? 'success' : 'failed',
                             result: result.data
                           }}
@@ -168,9 +170,7 @@ export function AIMessageList({ selectedClient }: AIMessageListProps) {
                     <Alert className="mb-3 border-yellow-500/50 bg-yellow-500/10">
                       <AlertTriangle className="h-4 w-4 text-yellow-500" />
                       <AlertDescription className="text-xs">
-                        <strong>AI создал план в виде текста.</strong> Для автоматического создания используйте 
-                        более конкретную формулировку (например: "создай план тренировок для @client") 
-                        или скопируйте план вручную.
+                        <strong>{t('aiMessages.textPlanWarning')}</strong> {t('aiMessages.textPlanHint')}
                       </AlertDescription>
                     </Alert>
                   )}
@@ -243,7 +243,7 @@ export function AIMessageList({ selectedClient }: AIMessageListProps) {
                     <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border/50">
                       <Clock className="h-3 w-3 text-amber-500 animate-pulse" />
                       <span className="text-xs text-muted-foreground">
-                        Ожидает подтверждения
+                        {t('aiMessages.awaitingConfirmation')}
                       </span>
                     </div>
                   )}
@@ -252,14 +252,14 @@ export function AIMessageList({ selectedClient }: AIMessageListProps) {
                   {isOptimistic && !isFailed && (
                     <div className="flex items-center gap-2 mt-2 text-xs opacity-70">
                       <Loader2 className="h-3 w-3 animate-spin" />
-                      <span>Sending...</span>
+                      <span>{t('aiMessages.sending')}</span>
                     </div>
                   )}
                   
                   {isFailed && (
                     <div className="flex items-center gap-2 mt-2 text-xs text-destructive">
                       <AlertCircle className="h-3 w-3" />
-                      <span>Failed to send</span>
+                      <span>{t('aiMessages.failed')}</span>
                     </div>
                   )}
                 </div>
@@ -282,7 +282,7 @@ export function AIMessageList({ selectedClient }: AIMessageListProps) {
                               <Sparkles className="h-4 w-4 text-green-600 dark:text-green-400" />
                             </div>
                             <div className="flex-1 space-y-1">
-                              <div className="font-medium text-sm">Готово к выполнению</div>
+                              <div className="font-medium text-sm">{t('aiMessages.readyToExecute')}</div>
                               <p className="text-xs text-muted-foreground leading-relaxed">
                                 {pendingAction.action_plan}
                               </p>
@@ -299,12 +299,12 @@ export function AIMessageList({ selectedClient }: AIMessageListProps) {
                               {executing ? (
                                 <>
                                   <Loader2 className="h-3 w-3 mr-2 animate-spin" />
-                                  Выполняю...
+                                  {t('aiMessages.executing')}
                                 </>
                               ) : (
                                 <>
                                   <CheckCircle className="h-3 w-3 mr-2" />
-                                  Выполнить
+                                  {t('aiMessages.execute')}
                                 </>
                               )}
                             </Button>
@@ -316,7 +316,7 @@ export function AIMessageList({ selectedClient }: AIMessageListProps) {
                               className="flex-1 border-red-500/50 text-red-600 hover:bg-red-500/10 disabled:opacity-50"
                             >
                               <XCircle className="h-3 w-3 mr-2" />
-                              Отклонить
+                              {t('aiMessages.reject')}
                             </Button>
                           </div>
                         </div>
@@ -350,7 +350,7 @@ export function AIMessageList({ selectedClient }: AIMessageListProps) {
               </div>
             </Avatar>
             <div className="rounded-2xl px-4 py-3 bg-muted shadow-sm">
-              <span className="text-sm text-muted-foreground">Отправка сообщения...</span>
+              <span className="text-sm text-muted-foreground">{t('aiMessages.sendingMessage')}</span>
             </div>
           </motion.div>
         )}
@@ -385,12 +385,13 @@ export function AIMessageList({ selectedClient }: AIMessageListProps) {
                     transition={{ duration: 1.5, repeat: Infinity, delay: 0.4 }}
                   />
                 </div>
-                <span className="text-sm text-muted-foreground">AI думает...</span>
+                <span className="text-sm text-muted-foreground">{t('aiMessages.thinkingDots')}</span>
               </div>
             </div>
           </motion.div>
         )}
         
+        {/* Scroll anchor */}
         <div ref={bottomRef} />
       </div>
     </ScrollArea>
