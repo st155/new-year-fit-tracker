@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ExerciseSelector } from './ExerciseSelector';
 import { Exercise } from '@/lib/exercises-database';
 import { Plus, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface WorkoutExercise {
   exercise_id: string;
@@ -49,13 +50,22 @@ interface WorkoutEditorProps {
   };
 }
 
-const DAYS = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
-
 export const WorkoutEditor = ({ open, onClose, onSave, dayOfWeek, initialData }: WorkoutEditorProps) => {
   const [workoutName, setWorkoutName] = useState(initialData?.workout_name || '');
   const [description, setDescription] = useState(initialData?.description || '');
   const [exercises, setExercises] = useState<WorkoutExercise[]>(initialData?.exercises || []);
   const [showExerciseSelector, setShowExerciseSelector] = useState(false);
+  const { t } = useTranslation('trainer');
+
+  const DAYS = [
+    t('trainingPlans.daysFull.monday'),
+    t('trainingPlans.daysFull.tuesday'),
+    t('trainingPlans.daysFull.wednesday'),
+    t('trainingPlans.daysFull.thursday'),
+    t('trainingPlans.daysFull.friday'),
+    t('trainingPlans.daysFull.saturday'),
+    t('trainingPlans.daysFull.sunday')
+  ];
 
   const handleAddExercise = (exercise: Exercise) => {
     const baseExercise: WorkoutExercise = {
@@ -122,24 +132,24 @@ export const WorkoutEditor = ({ open, onClose, onSave, dayOfWeek, initialData }:
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              Тренировка: {DAYS[dayOfWeek]}
+              {t('workoutEditor.workoutFor', { day: DAYS[dayOfWeek] })}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             <div>
-              <Label>Название тренировки</Label>
+              <Label>{t('workoutEditor.workoutName')}</Label>
               <Input
-                placeholder="Например: Грудь + трицепс"
+                placeholder={t('workoutEditor.workoutNamePlaceholder')}
                 value={workoutName}
                 onChange={(e) => setWorkoutName(e.target.value)}
               />
             </div>
 
             <div>
-              <Label>Описание (опционально)</Label>
+              <Label>{t('workoutEditor.description')}</Label>
               <Textarea
-                placeholder="Дополнительная информация..."
+                placeholder={t('workoutEditor.descriptionPlaceholder')}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={2}
@@ -148,14 +158,14 @@ export const WorkoutEditor = ({ open, onClose, onSave, dayOfWeek, initialData }:
 
             <div>
               <div className="flex items-center justify-between mb-3">
-                <Label>Упражнения</Label>
+                <Label>{t('workoutEditor.exercises')}</Label>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setShowExerciseSelector(true)}
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  Добавить упражнение
+                  {t('workoutEditor.addExercise')}
                 </Button>
               </div>
 
@@ -177,7 +187,7 @@ export const WorkoutEditor = ({ open, onClose, onSave, dayOfWeek, initialData }:
                       <>
                         <div className="grid grid-cols-4 gap-3">
                           <div>
-                            <Label className="text-xs">Подходы</Label>
+                            <Label className="text-xs">{t('workoutEditor.sets')}</Label>
                             <Input
                               type="number"
                               min="1"
@@ -186,15 +196,15 @@ export const WorkoutEditor = ({ open, onClose, onSave, dayOfWeek, initialData }:
                             />
                           </div>
                           <div>
-                            <Label className="text-xs">Повторения</Label>
+                            <Label className="text-xs">{t('workoutEditor.reps')}</Label>
                             <Input
-                              placeholder="10 или 8-12"
+                              placeholder={t('workoutEditor.repsPlaceholder')}
                               value={ex.reps}
                               onChange={(e) => handleUpdateExercise(index, 'reps', e.target.value)}
                             />
                           </div>
                           <div>
-                            <Label className="text-xs">Вес (кг)</Label>
+                            <Label className="text-xs">{t('workoutEditor.weight')}</Label>
                             <Input
                               type="number"
                               step="0.5"
@@ -204,7 +214,7 @@ export const WorkoutEditor = ({ open, onClose, onSave, dayOfWeek, initialData }:
                             />
                           </div>
                           <div>
-                            <Label className="text-xs">Отдых (сек)</Label>
+                            <Label className="text-xs">{t('workoutEditor.rest')}</Label>
                             <Input
                               type="number"
                               min="30"
@@ -215,17 +225,17 @@ export const WorkoutEditor = ({ open, onClose, onSave, dayOfWeek, initialData }:
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <Label className="text-xs">Темп (опционально)</Label>
+                            <Label className="text-xs">{t('workoutEditor.tempo')}</Label>
                             <Input
-                              placeholder="3-0-1-0"
+                              placeholder={t('workoutEditor.tempoPlaceholder')}
                               value={ex.tempo || ''}
                               onChange={(e) => handleUpdateExercise(index, 'tempo', e.target.value)}
                             />
                           </div>
                           <div>
-                            <Label className="text-xs">Целевая метрика</Label>
+                            <Label className="text-xs">{t('workoutEditor.targetMetric')}</Label>
                             <Input
-                              placeholder="до отказа, макс вес"
+                              placeholder={t('workoutEditor.targetMetricPlaceholder')}
                               value={ex.target_metric || ''}
                               onChange={(e) => handleUpdateExercise(index, 'target_metric', e.target.value)}
                             />
@@ -238,7 +248,7 @@ export const WorkoutEditor = ({ open, onClose, onSave, dayOfWeek, initialData }:
                       <>
                         <div className="grid grid-cols-3 gap-3">
                           <div>
-                            <Label className="text-xs">Дистанция (км)</Label>
+                            <Label className="text-xs">{t('workoutEditor.distance')}</Label>
                             <Input
                               type="number"
                               step="0.1"
@@ -248,7 +258,7 @@ export const WorkoutEditor = ({ open, onClose, onSave, dayOfWeek, initialData }:
                             />
                           </div>
                           <div>
-                            <Label className="text-xs">Время (мин)</Label>
+                            <Label className="text-xs">{t('workoutEditor.time')}</Label>
                             <Input
                               type="number"
                               placeholder="30"
@@ -257,9 +267,9 @@ export const WorkoutEditor = ({ open, onClose, onSave, dayOfWeek, initialData }:
                             />
                           </div>
                           <div>
-                            <Label className="text-xs">Темп</Label>
+                            <Label className="text-xs">{t('workoutEditor.pace')}</Label>
                             <Input
-                              placeholder="5:30 мин/км"
+                              placeholder={t('workoutEditor.pacePlaceholder')}
                               value={ex.pace || ''}
                               onChange={(e) => handleUpdateExercise(index, 'pace', e.target.value)}
                             />
@@ -267,20 +277,20 @@ export const WorkoutEditor = ({ open, onClose, onSave, dayOfWeek, initialData }:
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <Label className="text-xs">Интенсивность</Label>
+                            <Label className="text-xs">{t('workoutEditor.intensity')}</Label>
                             <select
                               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                               value={ex.intensity || 'moderate'}
                               onChange={(e) => handleUpdateExercise(index, 'intensity', e.target.value)}
                             >
-                              <option value="low">Легкая</option>
-                              <option value="moderate">Средняя</option>
-                              <option value="high">Высокая</option>
-                              <option value="intervals">Интервальная</option>
+                              <option value="low">{t('workoutEditor.intensityLevels.low')}</option>
+                              <option value="moderate">{t('workoutEditor.intensityLevels.moderate')}</option>
+                              <option value="high">{t('workoutEditor.intensityLevels.high')}</option>
+                              <option value="intervals">{t('workoutEditor.intensityLevels.intervals')}</option>
                             </select>
                           </div>
                           <div>
-                            <Label className="text-xs">Отдых (сек)</Label>
+                            <Label className="text-xs">{t('workoutEditor.rest')}</Label>
                             <Input
                               type="number"
                               min="30"
@@ -296,7 +306,7 @@ export const WorkoutEditor = ({ open, onClose, onSave, dayOfWeek, initialData }:
                       <>
                         <div className="grid grid-cols-3 gap-3">
                           <div>
-                            <Label className="text-xs">Подходы</Label>
+                            <Label className="text-xs">{t('workoutEditor.sets')}</Label>
                             <Input
                               type="number"
                               min="1"
@@ -305,15 +315,15 @@ export const WorkoutEditor = ({ open, onClose, onSave, dayOfWeek, initialData }:
                             />
                           </div>
                           <div>
-                            <Label className="text-xs">Повторения</Label>
+                            <Label className="text-xs">{t('workoutEditor.reps')}</Label>
                             <Input
-                              placeholder="макс или 20"
+                              placeholder={t('workoutEditor.repsBodyweightPlaceholder')}
                               value={ex.reps}
                               onChange={(e) => handleUpdateExercise(index, 'reps', e.target.value)}
                             />
                           </div>
                           <div>
-                            <Label className="text-xs">Отдых (сек)</Label>
+                            <Label className="text-xs">{t('workoutEditor.rest')}</Label>
                             <Input
                               type="number"
                               min="30"
@@ -324,7 +334,7 @@ export const WorkoutEditor = ({ open, onClose, onSave, dayOfWeek, initialData }:
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <Label className="text-xs">Доп. вес (кг, опционально)</Label>
+                            <Label className="text-xs">{t('workoutEditor.additionalWeight')}</Label>
                             <Input
                               type="number"
                               step="0.5"
@@ -334,9 +344,9 @@ export const WorkoutEditor = ({ open, onClose, onSave, dayOfWeek, initialData }:
                             />
                           </div>
                           <div>
-                            <Label className="text-xs">Темп</Label>
+                            <Label className="text-xs">{t('workoutEditor.tempo')}</Label>
                             <Input
-                              placeholder="3-0-1-0"
+                              placeholder={t('workoutEditor.tempoPlaceholder')}
                               value={ex.tempo || ''}
                               onChange={(e) => handleUpdateExercise(index, 'tempo', e.target.value)}
                             />
@@ -346,9 +356,9 @@ export const WorkoutEditor = ({ open, onClose, onSave, dayOfWeek, initialData }:
                     )}
 
                     <div>
-                      <Label className="text-xs">Заметки (опционально)</Label>
+                      <Label className="text-xs">{t('workoutEditor.notes')}</Label>
                       <Input
-                        placeholder="Техника выполнения, особенности..."
+                        placeholder={t('workoutEditor.notesPlaceholder')}
                         value={ex.notes || ''}
                         onChange={(e) => handleUpdateExercise(index, 'notes', e.target.value)}
                       />
@@ -358,7 +368,7 @@ export const WorkoutEditor = ({ open, onClose, onSave, dayOfWeek, initialData }:
 
                 {exercises.length === 0 && (
                   <div className="text-center py-8 text-muted-foreground">
-                    Добавьте упражнения для тренировки
+                    {t('workoutEditor.addExercises')}
                   </div>
                 )}
               </div>
@@ -367,10 +377,10 @@ export const WorkoutEditor = ({ open, onClose, onSave, dayOfWeek, initialData }:
 
           <DialogFooter>
             <Button variant="outline" onClick={onClose}>
-              Отмена
+              {t('workoutEditor.cancel')}
             </Button>
             <Button onClick={handleSave} disabled={!workoutName.trim() || exercises.length === 0}>
-              Сохранить тренировку
+              {t('workoutEditor.save')}
             </Button>
           </DialogFooter>
         </DialogContent>
