@@ -84,33 +84,34 @@ export const getMetricQualityColor = (metricName: string, value: number): string
   }
   
   if (name.includes('sleep') && name.includes('efficiency')) {
-    if (value < 75) return 'hsl(var(--destructive))';
-    if (value < 85) return 'hsl(var(--warning))';
+    if (value < 70) return 'hsl(var(--destructive))';
+    if (value < 80) return 'hsl(var(--warning))';
     return 'hsl(var(--success))';
   }
   
   if (name.includes('sleep') && name.includes('duration')) {
-    if (value < 6) return 'hsl(var(--destructive))';
-    if (value < 7) return 'hsl(var(--warning))';
+    if (value < 5.5) return 'hsl(var(--destructive))';
+    if (value < 6.5) return 'hsl(var(--warning))';
     return 'hsl(var(--success))';
   }
   
+  // Resting HR: широкий диапазон нормы 35-90 bpm
   if ((name.includes('resting') && name.includes('heart')) || name.includes('resting hr')) {
-    if (value < 35 || value > 100) return 'hsl(var(--destructive))';
-    if (value < 45 || value > 85) return 'hsl(var(--warning))';
+    if (value < 30 || value > 100) return 'hsl(var(--destructive))';
     return 'hsl(var(--success))';
   }
   
   if (name.includes('step')) {
-    if (value < 5000) return 'hsl(var(--destructive))';
-    if (value < 8000) return 'hsl(var(--warning))';
-    if (value >= 10000) return 'hsl(var(--success))';
+    if (value < 3000) return 'hsl(var(--destructive))';
+    if (value < 5000) return 'hsl(var(--warning))';
+    if (value >= 8000) return 'hsl(var(--success))';
     return null;
   }
   
+  // HRV: мягкие пороги, т.к. сильно зависит от индивидуальных особенностей
   if (name.includes('hrv')) {
-    if (value < 40) return 'hsl(var(--destructive))';
-    if (value < 60) return 'hsl(var(--warning))';
+    if (value < 15) return 'hsl(var(--destructive))';
+    if (value < 25) return 'hsl(var(--warning))';
     return 'hsl(var(--success))';
   }
   
@@ -127,17 +128,17 @@ export const getQualityLabel = (metricName: string, value: number): { icon: stri
   }
   
   if (name.includes('sleep') && name.includes('efficiency')) {
-    if (value < 75) return { icon: '😴', text: 'Плохой сон', color: 'hsl(var(--destructive))' };
-    if (value < 85) return { icon: '😐', text: 'Норма', color: 'hsl(var(--warning))' };
-    if (value < 95) return { icon: '😊', text: 'Хороший сон', color: 'hsl(var(--success))' };
-    return { icon: '🌟', text: 'Отличный сон', color: 'hsl(var(--success))' };
+    if (value < 70) return { icon: '😴', text: 'Плохой сон', color: 'hsl(var(--destructive))' };
+    if (value < 80) return { icon: '😐', text: 'Норма', color: 'hsl(var(--warning))' };
+    return { icon: '😊', text: 'Хороший сон', color: 'hsl(var(--success))' };
   }
   
   if (name.includes('step')) {
-    if (value < 5000) return { icon: '🔴', text: 'Очень мало', color: 'hsl(var(--destructive))' };
-    if (value < 8000) return { icon: '⚠️', text: 'Недостаточно', color: 'hsl(var(--warning))' };
+    if (value < 3000) return { icon: '🔴', text: 'Очень мало', color: 'hsl(var(--destructive))' };
+    if (value < 5000) return { icon: '⚠️', text: 'Маловато', color: 'hsl(var(--warning))' };
     if (value >= 10000) return { icon: '✅', text: 'Отлично', color: 'hsl(var(--success))' };
-    return { icon: '😊', text: 'Хорошо', color: 'hsl(var(--success))' };
+    if (value >= 8000) return { icon: '😊', text: 'Хорошо', color: 'hsl(var(--success))' };
+    return null;
   }
   
   return null;
