@@ -18,6 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import confetti from 'canvas-confetti';
 import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
+import { useTranslation } from 'react-i18next';
 
 const BodyModel3D = lazy(() => import('@/components/body-composition/BodyModel3D').then(m => ({ default: m.BodyModel3D })));
 
@@ -52,7 +53,7 @@ const AnimatedCounter = ({ value, duration = 2 }: { value: number; duration?: nu
 };
 
 // Insight Card Component
-const InsightCard = ({ insight, index }: { insight: any; index: number }) => {
+const InsightCard = ({ insight, index, t }: { insight: any; index: number; t: any }) => {
   const getIcon = () => {
     switch (insight.type) {
       case 'critical': return '🚨';
@@ -84,7 +85,7 @@ const InsightCard = ({ insight, index }: { insight: any; index: number }) => {
       <div className="flex items-start gap-3">
         <span className="text-3xl">{getIcon()}</span>
         <div className="flex-1">
-          <h4 className="font-semibold text-foreground mb-2 capitalize">{insight.type}</h4>
+          <h4 className="font-semibold text-foreground mb-2 capitalize">{t(`insightTypes.${insight.type}`)}</h4>
           <p className="text-sm text-muted-foreground line-clamp-3">{insight.message}</p>
         </div>
       </div>
@@ -120,26 +121,8 @@ const StatCard = ({ icon: Icon, value, label, index, color }: {
   </motion.div>
 );
 
-// Testimonials data
-const testimonials = [
-  {
-    name: "Алексей М.",
-    role: "Триатлет",
-    quote: "AI точно предсказал мою перетренированность за 2 дня до травмы. Спасибо!"
-  },
-  {
-    name: "Мария К.",
-    role: "Фитнес-тренер",
-    quote: "Клиенты теперь получают персонализированные планы автоматически. Революция!"
-  },
-  {
-    name: "Дмитрий С.",
-    role: "Бодибилдер",
-    quote: "3D анализ тела показал дисбаланс, о котором я не знал. Результаты улучшились!"
-  }
-];
-
 export default function LandingAI() {
+  const { t } = useTranslation('landingAI');
   const navigate = useNavigate();
   const { user } = useAuth();
   const [emblaRef] = useEmblaCarousel({ loop: true }, [Autoplay({ delay: 4000, stopOnInteraction: false })]);
@@ -197,7 +180,7 @@ export default function LandingAI() {
 
   // Process data
   const displayInsight = insights[0] || {
-    message: 'Подключите данные для AI анализа',
+    message: t('dashboard.connectDataForAI'),
     type: 'info',
   };
 
@@ -206,10 +189,10 @@ export default function LandingAI() {
   const bestHabit = useMemo(() => {
     const habitsWithStreaks = (habits || []).filter(h => h.currentStreak && h.currentStreak > 0);
     return habitsWithStreaks.sort((a, b) => (b.currentStreak || 0) - (a.currentStreak || 0))[0] || {
-      name: 'Создайте первую привычку',
+      name: t('dashboard.createFirstHabit'),
       currentStreak: 0,
     };
-  }, [habits]);
+  }, [habits, t]);
 
   const chartData = useMemo(() => {
     return metricsHistory?.slice(-7).map((m: any) => ({
@@ -219,7 +202,7 @@ export default function LandingAI() {
   }, [metricsHistory]);
 
   if (insightsLoading || qualityLoading) {
-    return <PageLoader message="Загружаем ваш AI демо..." />;
+    return <PageLoader message={t('loading')} />;
   }
 
   return (
@@ -259,9 +242,9 @@ export default function LandingAI() {
 
           {/* Floating Stats */}
           {[
-            { value: "92%", label: "Точность", top: "15%", left: "5%" },
-            { value: "24/7", label: "Мониторинг", top: "60%", right: "5%" },
-            { value: "1M+", label: "Данных", bottom: "20%", left: "10%" }
+            { value: "92%", label: t('floatingStats.accuracy'), top: "15%", left: "5%" },
+            { value: "24/7", label: t('floatingStats.monitoring'), top: "60%", right: "5%" },
+            { value: "1M+", label: t('floatingStats.data'), bottom: "20%", left: "10%" }
           ].map((stat, i) => (
             <motion.div
               key={i}
@@ -285,10 +268,10 @@ export default function LandingAI() {
             className="text-center mb-12"
           >
             <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-primary via-cyan-400 to-purple-400 bg-clip-text text-transparent">
-              Elite10: Ваш AI-тренер
+              {t('hero.title')}
             </h1>
             <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
-              Отдыхайте умнее. Тренируйтесь эффективнее. Достигайте большего.
+              {t('hero.subtitle')}
             </p>
           </motion.div>
 
@@ -309,7 +292,7 @@ export default function LandingAI() {
               max-w-5xl mx-auto"
           >
             <h2 className="text-2xl md:text-3xl font-bold mb-8 text-foreground">
-              Привет, {user?.user_metadata?.full_name || 'Спортсмен'}! 👋
+              {t('hero.greeting', { name: user?.user_metadata?.full_name || t('hero.defaultName') })}
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
@@ -324,7 +307,7 @@ export default function LandingAI() {
               >
                 <div className="flex items-start gap-3 mb-3">
                   <Brain className="h-6 w-6 text-cyan-400" />
-                  <h3 className="font-semibold text-foreground">AI Совет</h3>
+                  <h3 className="font-semibold text-foreground">{t('dashboard.aiAdvice')}</h3>
                 </div>
                 <p className="text-sm text-muted-foreground">{displayInsight.message}</p>
               </motion.div>
@@ -340,7 +323,7 @@ export default function LandingAI() {
               >
                 <div className="flex items-start gap-3 mb-3">
                   <Shield className="h-6 w-6 text-green-400" />
-                  <h3 className="font-semibold text-foreground">Качество данных</h3>
+                  <h3 className="font-semibold text-foreground">{t('dashboard.dataQuality')}</h3>
                 </div>
                 <div className="flex items-baseline gap-2">
                   <span className="text-4xl font-bold text-green-400">{Math.round(displayConfidence)}</span>
@@ -359,13 +342,13 @@ export default function LandingAI() {
               >
                 <div className="flex items-start gap-3 mb-3">
                   <Target className="h-6 w-6 text-orange-400" />
-                  <h3 className="font-semibold text-foreground">Лучшая привычка</h3>
+                  <h3 className="font-semibold text-foreground">{t('dashboard.bestHabit')}</h3>
                 </div>
                 <p className="text-sm text-muted-foreground mb-2">{bestHabit.name}</p>
                 <div className="flex items-baseline gap-2">
                   <span className="text-2xl">🔥</span>
                   <span className="text-3xl font-bold text-orange-400">{bestHabit.currentStreak || 0}</span>
-                  <span className="text-muted-foreground text-sm">дней</span>
+                  <span className="text-muted-foreground text-sm">{t('dashboard.days')}</span>
                 </div>
               </motion.div>
 
@@ -380,7 +363,7 @@ export default function LandingAI() {
               >
                 <div className="flex items-start gap-3 mb-3">
                   <TrendingUp className="h-6 w-6 text-purple-400" />
-                  <h3 className="font-semibold text-foreground">Динамика веса</h3>
+                  <h3 className="font-semibold text-foreground">{t('dashboard.weightDynamics')}</h3>
                 </div>
                 {chartData.length > 0 ? (
                   <AreaChart
@@ -396,7 +379,7 @@ export default function LandingAI() {
                     showTooltip={true}
                   />
                 ) : (
-                  <p className="text-sm text-muted-foreground">Добавьте первую метрику</p>
+                  <p className="text-sm text-muted-foreground">{t('dashboard.addFirstMetric')}</p>
                 )}
               </motion.div>
             </div>
@@ -412,28 +395,28 @@ export default function LandingAI() {
               <StatCard 
                 icon={Target}
                 value={platformStats?.challenges || 1204} 
-                label="Активных челленджей" 
+                label={t('stats.activeChallenges')} 
                 index={0}
                 color="cyan"
               />
               <StatCard 
                 icon={Zap}
                 value={platformStats?.workouts || 8500} 
-                label="Тренировок завершено" 
+                label={t('stats.workoutsCompleted')} 
                 index={1}
                 color="purple"
               />
               <StatCard 
                 icon={Activity}
                 value={platformStats?.metrics || 1000000} 
-                label="Метрик синхронизировано" 
+                label={t('stats.metricsSynced')} 
                 index={2}
                 color="green"
               />
               <StatCard 
                 icon={Brain}
                 value={platformStats?.insights || 5200} 
-                label="AI-советов сгенерировано" 
+                label={t('stats.aiAdvicesGenerated')} 
                 index={3}
                 color="orange"
               />
@@ -452,20 +435,20 @@ export default function LandingAI() {
             className="text-center mb-12"
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
-              AI, который видит паттерны, не только цифры
+              {t('insights.title')}
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Персонализированные инсайты на основе ваших данных в реальном времени
+              {t('insights.subtitle')}
             </p>
           </motion.div>
 
           <div className="overflow-hidden" ref={emblaRef}>
             <div className="flex gap-6">
-              {insights.slice(0, 6).map((insight, index) => (
-                <div key={index} className="flex-[0_0_100%] md:flex-[0_0_50%] lg:flex-[0_0_33.333%] min-w-0">
-                  <InsightCard insight={insight} index={index} />
-                </div>
-              ))}
+            {insights.slice(0, 6).map((insight, index) => (
+              <div key={index} className="flex-[0_0_100%] md:flex-[0_0_50%] lg:flex-[0_0_33.333%] min-w-0">
+                <InsightCard insight={insight} index={index} t={t} />
+              </div>
+            ))}
             </div>
           </div>
         </div>
@@ -481,7 +464,7 @@ export default function LandingAI() {
             className="text-center mb-12"
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-              Полный контроль над вашим прогрессом
+              {t('features.title')}
             </h2>
           </motion.div>
 
@@ -494,7 +477,7 @@ export default function LandingAI() {
               className="lg:row-span-2 glass-card p-8 rounded-2xl border border-border/50 hover:border-primary/50 transition-all"
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-semibold text-foreground">3D Анализ тела</h3>
+                <h3 className="text-xl font-semibold text-foreground">{t('features.bodyAnalysis')}</h3>
                 <Activity className="h-6 w-6 text-primary" />
               </div>
               <Suspense fallback={
@@ -506,7 +489,7 @@ export default function LandingAI() {
               </Suspense>
               <div className="mt-4 p-3 glass-medium rounded-lg">
                 <p className="text-sm text-muted-foreground text-center">
-                  Muscle Mass: {bodyData?.muscleMass?.toFixed(1) || '--'} kg
+                  {t('features.muscleMass')}: {bodyData?.muscleMass?.toFixed(1) || '--'} kg
                 </p>
               </div>
             </motion.div>
@@ -520,9 +503,9 @@ export default function LandingAI() {
               className="glass-card p-6 rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 hover:scale-105 transition-transform"
             >
               <Zap className="h-8 w-8 text-cyan-400 mb-4" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">AI Тренировки</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-2">{t('features.aiWorkouts.title')}</h3>
               <p className="text-sm text-muted-foreground">
-                Автоматическая генерация тренировок на основе вашего восстановления и целей
+                {t('features.aiWorkouts.desc')}
               </p>
             </motion.div>
 
@@ -534,9 +517,9 @@ export default function LandingAI() {
               className="glass-card p-6 rounded-2xl bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20 hover:scale-105 transition-transform"
             >
               <Shield className="h-8 w-8 text-green-400 mb-4" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">Ассессмент здоровья</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-2">{t('features.healthAssessment.title')}</h3>
               <p className="text-sm text-muted-foreground">
-                Мониторинг биомаркеров и предупреждения о рисках перетренированности
+                {t('features.healthAssessment.desc')}
               </p>
             </motion.div>
 
@@ -548,9 +531,9 @@ export default function LandingAI() {
               className="glass-card p-6 rounded-2xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 hover:scale-105 transition-transform"
             >
               <Target className="h-8 w-8 text-purple-400 mb-4" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">Умные цели</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-2">{t('features.smartGoals.title')}</h3>
               <p className="text-sm text-muted-foreground">
-                Адаптивные цели, которые корректируются на основе вашего прогресса
+                {t('features.smartGoals.desc')}
               </p>
             </motion.div>
 
@@ -562,9 +545,9 @@ export default function LandingAI() {
               className="glass-card p-6 rounded-2xl bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-orange-500/20 hover:scale-105 transition-transform"
             >
               <Brain className="h-8 w-8 text-orange-400 mb-4" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">Предиктивная аналитика</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-2">{t('features.predictiveAnalytics.title')}</h3>
               <p className="text-sm text-muted-foreground">
-                Прогнозы достижения целей и предупреждения о потенциальных проблемах
+                {t('features.predictiveAnalytics.desc')}
               </p>
             </motion.div>
           </div>
@@ -581,12 +564,12 @@ export default function LandingAI() {
             className="text-center mb-12"
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
-              Что говорят пользователи
+              {t('testimonials.title')}
             </h2>
           </motion.div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {testimonials.map((t, i) => (
+            {(t('testimonials.items', { returnObjects: true }) as any[]).map((testimonial, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
@@ -600,11 +583,11 @@ export default function LandingAI() {
                     <Users className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <div className="font-semibold text-foreground">{t.name}</div>
-                    <div className="text-sm text-muted-foreground">{t.role}</div>
+                    <div className="font-semibold text-foreground">{testimonial.name}</div>
+                    <div className="text-sm text-muted-foreground">{testimonial.role}</div>
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground italic mb-4">"{t.quote}"</p>
+                <p className="text-sm text-muted-foreground italic mb-4">"{testimonial.quote}"</p>
                 <div className="flex gap-1">
                   {[...Array(5)].map((_, starIndex) => (
                     <Star key={starIndex} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
@@ -626,10 +609,10 @@ export default function LandingAI() {
             className="glass-card backdrop-blur-xl p-8 sm:p-12 rounded-3xl border border-border/50 text-center"
           >
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-primary via-cyan-400 to-purple-400 bg-clip-text text-transparent">
-              Готовы перейти от данных к действиям?
+              {t('cta.title')}
             </h2>
             <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Активируйте AI Juggernaut Engine и получите персонализированный тренировочный план за 2 минуты
+              {t('cta.subtitle')}
             </p>
 
             <HoverBorderGradient
@@ -649,13 +632,13 @@ export default function LandingAI() {
                   navigate('/workouts/ai-onboarding');
                 }}
               >
-                Начать AI Онбординг
+                {t('cta.button')}
                 <Sparkles className="ml-2 h-5 w-5" />
               </Button>
             </HoverBorderGradient>
 
             <p className="text-sm text-muted-foreground mt-6">
-              Бесплатный 14-дневный триал. Отмена в любое время.
+              {t('cta.trial')}
             </p>
           </motion.div>
         </div>

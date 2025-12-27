@@ -7,6 +7,7 @@
   "tryRefresh": "Try to refresh",
   "noDataForAnalysis": "No data for analysis",
   "customizeOptimalRange": "Customize Optimal Range",
+  "configureRange": "Configure Range",
   "chartTitle": "Change Chart",
   "tabs": {
     "trend": "Trend",
@@ -42,19 +43,18 @@
     "excellent": "Excellent! Most of your measurements are in the optimal zone.",
     "good": "Good result. Keep working on improvement.",
     "needsAttention": "Less than half of measurements are in the optimal zone. We recommend consulting a specialist.",
-    "noData": "Not enough data to calculate time in optimal zone"
+    "noData": "Configure optimal range to see this statistic"
   },
-  "recommendations": {
-    "title": "Recommended Supplements",
-    "addToStack": "Add to Stack",
-    "noSupplements": "No recommended supplements for this biomarker"
+  "history": {
+    "currentValue": "Current Value",
+    "originalName": "Original Name",
+    "labReference": "Lab Reference",
+    "original": "original"
   },
   "about": {
-    "description": "Description",
-    "clinicalSignificance": "Clinical Significance",
+    "title": "About",
     "referenceRanges": "Reference Ranges",
     "normal": "Normal",
-    "optimal": "Optimal",
-    "wiki": "Learn more on Wikipedia"
+    "optimal": "Optimal"
   }
 }
