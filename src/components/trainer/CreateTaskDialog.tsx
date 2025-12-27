@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 interface CreateTaskDialogProps {
   open: boolean;
@@ -23,12 +24,13 @@ export const CreateTaskDialog = ({ open, onClose, onSuccess, clients }: CreateTa
   const [deadline, setDeadline] = useState('');
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
+  const { t } = useTranslation('trainer');
 
   const handleSubmit = async () => {
     if (!title.trim() || !clientId) {
       toast({
-        title: 'Ошибка',
-        description: 'Заполните обязательные поля',
+        title: t('tasks.error'),
+        description: t('tasks.fillRequired'),
         variant: 'destructive'
       });
       return;
@@ -57,8 +59,7 @@ export const CreateTaskDialog = ({ open, onClose, onSuccess, clients }: CreateTa
       console.log('Task created successfully');
       
       toast({
-        title: 'Успешно',
-        description: 'Задача создана'
+        title: t('tasks.createSuccess')
       });
 
       onSuccess();
@@ -66,8 +67,8 @@ export const CreateTaskDialog = ({ open, onClose, onSuccess, clients }: CreateTa
     } catch (error: any) {
       console.error('Detailed error:', error);
       toast({
-        title: 'Ошибка',
-        description: error.message || 'Не удалось создать задачу',
+        title: t('tasks.error'),
+        description: error.message || t('tasks.createError'),
         variant: 'destructive'
       });
     } finally {
@@ -88,15 +89,15 @@ export const CreateTaskDialog = ({ open, onClose, onSuccess, clients }: CreateTa
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Создать задачу</DialogTitle>
+          <DialogTitle>{t('tasks.createTask')}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <div>
-            <Label>Клиент *</Label>
+            <Label>{t('tasks.client')} *</Label>
             <Select value={clientId} onValueChange={setClientId}>
               <SelectTrigger>
-                <SelectValue placeholder="Выберите клиента" />
+                <SelectValue placeholder={t('tasks.selectClient')} />
               </SelectTrigger>
               <SelectContent>
                 {clients.map(client => (
@@ -109,18 +110,18 @@ export const CreateTaskDialog = ({ open, onClose, onSuccess, clients }: CreateTa
           </div>
 
           <div>
-            <Label>Название задачи *</Label>
+            <Label>{t('tasks.taskTitle')} *</Label>
             <Input
-              placeholder="Например: Записать ВО2 макс"
+              placeholder={t('tasks.taskTitlePlaceholder')}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
           </div>
 
           <div>
-            <Label>Описание (опционально)</Label>
+            <Label>{t('tasks.description')}</Label>
             <Textarea
-              placeholder="Детали задачи..."
+              placeholder={t('tasks.descriptionPlaceholder')}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
@@ -129,22 +130,22 @@ export const CreateTaskDialog = ({ open, onClose, onSuccess, clients }: CreateTa
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Приоритет</Label>
+              <Label>{t('tasks.priority')}</Label>
               <Select value={priority} onValueChange={setPriority}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="low">Низкий</SelectItem>
-                  <SelectItem value="normal">Обычный</SelectItem>
-                  <SelectItem value="high">Высокий</SelectItem>
-                  <SelectItem value="urgent">Срочный</SelectItem>
+                  <SelectItem value="low">{t('tasks.priorities.low')}</SelectItem>
+                  <SelectItem value="normal">{t('tasks.priorities.normal')}</SelectItem>
+                  <SelectItem value="high">{t('tasks.priorities.high')}</SelectItem>
+                  <SelectItem value="urgent">{t('tasks.priorities.urgent')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div>
-              <Label>Дедлайн (опционально)</Label>
+              <Label>{t('tasks.deadline')}</Label>
               <Input
                 type="date"
                 value={deadline}
@@ -157,10 +158,10 @@ export const CreateTaskDialog = ({ open, onClose, onSuccess, clients }: CreateTa
 
         <DialogFooter>
           <Button variant="outline" onClick={handleClose}>
-            Отмена
+            {t('tasks.cancel')}
           </Button>
           <Button onClick={handleSubmit} disabled={saving}>
-            {saving ? 'Создание...' : 'Создать'}
+            {saving ? t('tasks.creating') : t('tasks.create')}
           </Button>
         </DialogFooter>
       </DialogContent>

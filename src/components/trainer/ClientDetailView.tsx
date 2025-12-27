@@ -57,6 +57,7 @@ import { AssignTrainingPlanDialog } from './AssignTrainingPlanDialog';
 import { useAuth } from '@/hooks/useAuth';
 import { ClientWorkoutsList } from './client-detail/ClientWorkoutsList';
 import { ClientStrengthWorkouts } from './client-detail/ClientStrengthWorkouts';
+import { useTranslation } from 'react-i18next';
 
 interface Client {
   id: string;
@@ -169,6 +170,7 @@ const ClientHealthScoreWithData = ({ clientId }: { clientId: string }) => {
 export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
   const { navigationSource } = useClientContext();
   const navigate = useNavigate();
+  const { t } = useTranslation('trainer');
   const [showGoalDialog, setShowGoalDialog] = useState(false);
   const [showAssignPlanDialog, setShowAssignPlanDialog] = useState(false);
   const queryClient = useQueryClient();
@@ -207,7 +209,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
 
   // Real-time updates for goals with optimistic updates
   useGoalsRealtime(client.user_id, (payload) => {
-    toast.info("Цели обновлены");
+    toast.info(t('clientDetail.goalsUpdated'));
     
     // Точечное обновление goals в React Query кэше
     queryClient.setQueryData(['client-detail', client.user_id], (old: any) => {
@@ -233,7 +235,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
   });
 
   useMeasurementsRealtime(client.user_id, () => {
-    toast.info("Добавлено новое измерение");
+    toast.info(t('clientDetail.measurementAdded'));
     refetch();
   });
 
@@ -256,12 +258,12 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" onClick={onBack}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Назад
+            {t('clientDetail.back')}
           </Button>
         </div>
         <ErrorState
-          title="Ошибка загрузки данных клиента"
-          message={error.message || "Не удалось загрузить данные. Проверьте подключение и попробуйте снова."}
+          title={t('clientDetail.loadError')}
+          message={error.message || t('clientDetail.loadErrorDesc')}
           onRetry={refetch}
         />
       </div>
@@ -279,7 +281,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" onClick={onBack}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Назад
+            {t('clientDetail.back')}
           </Button>
         </div>
         
@@ -295,11 +297,11 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
           />
           <Button onClick={() => setShowGoalDialog(true)} variant="outline" size="sm">
             <Plus className="h-4 w-4 mr-2" />
-            Добавить цель
+            {t('clientDetail.addGoal')}
           </Button>
           <Button onClick={handleOpenAIHub} size="sm" className="gap-2">
             <Sparkles className="h-4 w-4" />
-            Спросить AI
+            {t('clientDetail.askAI')}
           </Button>
         </div>
       </div>
@@ -310,14 +312,14 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
           <Info className="h-4 w-4" />
           <AlertDescription className="flex items-center justify-between">
             <span>
-              Клиент участвует в челлендже: <strong>{navigationSource.challengeName}</strong>
+              {t('clientDetail.participatesInChallenge')} <strong>{navigationSource.challengeName}</strong>
             </span>
             <Button 
               variant="outline" 
               size="sm"
               onClick={() => navigate(`/trainer-dashboard?tab=challenges&challenge=${navigationSource.challengeId}`)}
             >
-              Вернуться к челленджу
+              {t('clientDetail.returnToChallenge')}
             </Button>
           </AlertDescription>
         </Alert>
@@ -336,8 +338,8 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
               <CardTitle className="text-2xl">{client.full_name || client.username}</CardTitle>
               <CardDescription>@{client.username}</CardDescription>
               <div className="flex gap-2 mt-2">
-                <Badge variant="secondary">{goals.length} целей</Badge>
-                <Badge variant="outline">{measurements.length} измерений за месяц</Badge>
+                <Badge variant="secondary">{goals.length} {t('clientDetail.goals')}</Badge>
+                <Badge variant="outline">{measurements.length} {t('clientDetail.measurementsPerMonth')}</Badge>
               </div>
             </div>
             
@@ -356,14 +358,14 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="goals" className="space-y-4">
         <TabsList className="w-full overflow-x-auto flex flex-nowrap md:grid md:grid-cols-8 bg-muted/50 p-1 gap-1">
-          <TabsTrigger value="goals" className="whitespace-nowrap flex-shrink-0">Цели и прогресс</TabsTrigger>
-          <TabsTrigger value="progress" className="whitespace-nowrap flex-shrink-0">Прогресс</TabsTrigger>
-          <TabsTrigger value="workouts" className="whitespace-nowrap flex-shrink-0">Тренировки</TabsTrigger>
-          <TabsTrigger value="timeline" className="whitespace-nowrap flex-shrink-0">Timeline</TabsTrigger>
-          <TabsTrigger value="automation" className="whitespace-nowrap flex-shrink-0">Автоматизация</TabsTrigger>
-          <TabsTrigger value="comparison" className="whitespace-nowrap flex-shrink-0">Сравнение</TabsTrigger>
-          <TabsTrigger value="measurements" className="whitespace-nowrap flex-shrink-0">Измерения</TabsTrigger>
-          <TabsTrigger value="health" className="whitespace-nowrap flex-shrink-0">Данные здоровья</TabsTrigger>
+          <TabsTrigger value="goals" className="whitespace-nowrap flex-shrink-0">{t('clientDetail.tabs.goals')}</TabsTrigger>
+          <TabsTrigger value="progress" className="whitespace-nowrap flex-shrink-0">{t('clientDetail.tabs.progress')}</TabsTrigger>
+          <TabsTrigger value="workouts" className="whitespace-nowrap flex-shrink-0">{t('clientDetail.tabs.workouts')}</TabsTrigger>
+          <TabsTrigger value="timeline" className="whitespace-nowrap flex-shrink-0">{t('clientDetail.tabs.timeline')}</TabsTrigger>
+          <TabsTrigger value="automation" className="whitespace-nowrap flex-shrink-0">{t('clientDetail.tabs.automation')}</TabsTrigger>
+          <TabsTrigger value="comparison" className="whitespace-nowrap flex-shrink-0">{t('clientDetail.tabs.comparison')}</TabsTrigger>
+          <TabsTrigger value="measurements" className="whitespace-nowrap flex-shrink-0">{t('clientDetail.tabs.measurements')}</TabsTrigger>
+          <TabsTrigger value="health" className="whitespace-nowrap flex-shrink-0">{t('clientDetail.tabs.health')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="goals" className="space-y-4">
@@ -383,7 +385,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
               {/* Original Grouped View - collapsed by default */}
               <details className="mt-8">
                 <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                  Показать группировку по типам целей
+                  {t('clientDetail.showGrouping')}
                 </summary>
                 <div className="mt-4">
                   <GroupedGoalsView 
@@ -398,11 +400,9 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12 text-center">
                 <Target className="h-16 w-16 mb-4 text-muted-foreground opacity-50" />
-                <h3 className="text-xl font-semibold mb-2">У клиента пока нет целей</h3>
+                <h3 className="text-xl font-semibold mb-2">{t('clientDetail.noGoals.title')}</h3>
                 <p className="text-sm text-muted-foreground mb-6 max-w-md">
-                  Создайте цели для клиента, чтобы отслеживать его прогресс. 
-                  Вы можете создать цели по силовым показателям, кардио, 
-                  составу тела или гибкости.
+                  {t('clientDetail.noGoals.description')}
                 </p>
                 <div className="flex gap-2">
                   <Button 
@@ -410,7 +410,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                     size="lg"
                   >
                     <Plus className="h-5 w-5 mr-2" />
-                    Создать первую цель
+                    {t('clientDetail.noGoals.createFirst')}
                   </Button>
                   <Button 
                     onClick={handleOpenAIHub} 
@@ -418,7 +418,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                     variant="outline"
                   >
                     <Sparkles className="h-5 w-5 mr-2" />
-                    Спросить AI
+                    {t('clientDetail.askAI')}
                   </Button>
                 </div>
               </CardContent>
@@ -429,8 +429,8 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
           <div className="space-y-4 mt-8">
             <h3 className="text-lg font-semibold flex items-center gap-2">
               <Activity className="h-5 w-5" />
-              Метрики здоровья от Whoop
-              <Badge variant="outline" className="ml-2">Последние 7 дней</Badge>
+              {t('clientDetail.whoopMetrics')}
+              <Badge variant="outline" className="ml-2">{t('clientDetail.last7days')}</Badge>
             </h3>
             
             {whoopSummary && whoopSummary.recoveryScore.count > 0 ? (
@@ -441,7 +441,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-lg flex items-center gap-2">
                         <Zap className="h-5 w-5 text-green-500" />
-                        Recovery Score
+                        {t('clientDetail.recoveryScore')}
                       </CardTitle>
                       <Badge variant="outline">Whoop</Badge>
                     </div>
@@ -461,8 +461,8 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                         }
                       />
                       <div className="flex justify-between text-sm text-muted-foreground">
-                        <span>Мин: {whoopSummary.recoveryScore.min}%</span>
-                        <span>Макс: {whoopSummary.recoveryScore.max}%</span>
+                        <span>{t('clientDetail.min')} {whoopSummary.recoveryScore.min}%</span>
+                        <span>{t('clientDetail.max')} {whoopSummary.recoveryScore.max}%</span>
                       </div>
                       <p className="text-xs text-muted-foreground">
                         Средний показатель за 7 дней

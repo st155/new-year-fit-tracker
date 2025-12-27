@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle2, Circle, Calendar, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 interface TaskCardProps {
   task: {
@@ -28,15 +29,16 @@ const PRIORITY_COLORS = {
   urgent: 'bg-red-500'
 };
 
-const STATUS_LABELS = {
-  pending: 'В ожидании',
-  in_progress: 'В процессе',
-  completed: 'Завершено',
-  cancelled: 'Отменено'
-};
-
 export const TaskCard = ({ task, onUpdate }: TaskCardProps) => {
   const { toast } = useToast();
+  const { t } = useTranslation('trainer');
+
+  const STATUS_LABELS: Record<string, string> = {
+    pending: t('tasks.status.pending'),
+    in_progress: t('tasks.status.inProgress'),
+    completed: t('tasks.status.completed'),
+    cancelled: t('tasks.status.cancelled')
+  };
 
   const handleToggleStatus = async () => {
     const newStatus = task.status === 'completed' ? 'pending' : 'completed';
@@ -50,15 +52,15 @@ export const TaskCard = ({ task, onUpdate }: TaskCardProps) => {
       if (error) throw error;
 
       toast({
-        title: newStatus === 'completed' ? 'Задача выполнена' : 'Задача возобновлена'
+        title: newStatus === 'completed' ? t('tasks.taskCompleted') : t('tasks.taskResumed')
       });
 
       onUpdate();
     } catch (error) {
       console.error('Error updating task:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось обновить задачу',
+        title: t('tasks.error'),
+        description: t('tasks.updateError'),
         variant: 'destructive'
       });
     }
@@ -94,7 +96,7 @@ export const TaskCard = ({ task, onUpdate }: TaskCardProps) => {
             </div>
             <div className="flex gap-2">
               <div className={`w-2 h-2 rounded-full ${PRIORITY_COLORS[task.priority as keyof typeof PRIORITY_COLORS]} mt-2`} />
-              <Badge variant="outline">{STATUS_LABELS[task.status as keyof typeof STATUS_LABELS]}</Badge>
+              <Badge variant="outline">{STATUS_LABELS[task.status] || task.status}</Badge>
             </div>
           </div>
 

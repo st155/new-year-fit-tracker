@@ -26,6 +26,7 @@ import { ClientProgressCharts } from "./ClientProgressCharts";
 import { motion } from 'framer-motion';
 import { staggerContainer, staggerItem } from '@/lib/animations';
 import { Card as TremorCard, Metric, Text, BadgeDelta, ProgressBar, Table, TableHead, TableRow, TableHeaderCell, TableBody, TableCell, Badge as TremorBadge } from '@tremor/react';
+import { useTranslation } from "react-i18next";
 
 interface ClientStats {
   id: string;
@@ -53,6 +54,7 @@ interface OverallStats {
 
 export function TrainerAnalytics() {
   const { user } = useAuth();
+  const { t } = useTranslation("trainer");
   const [clientStats, setClientStats] = useState<ClientStats[]>([]);
   const [overallStats, setOverallStats] = useState<OverallStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -164,7 +166,7 @@ export function TrainerAnalytics() {
       });
     } catch (error: any) {
       console.error('Error loading analytics:', error);
-      toast.error('Ошибка загрузки аналитики');
+      toast.error(t('analytics.loadError'));
     } finally {
       setLoading(false);
     }
@@ -188,13 +190,13 @@ export function TrainerAnalytics() {
   const getStatusLabel = (status: ClientStats['status']) => {
     switch (status) {
       case 'excellent':
-        return 'Отлично';
+        return t('analytics.status.excellent');
       case 'good':
-        return 'Хорошо';
+        return t('analytics.status.good');
       case 'needs_attention':
-        return 'Требует внимания';
+        return t('analytics.status.needsAttention');
       case 'inactive':
-        return 'Неактивен';
+        return t('analytics.status.inactive');
       default:
         return status;
     }
@@ -235,12 +237,12 @@ export function TrainerAnalytics() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Аналитика и статистика</h2>
-          <p className="text-muted-foreground">Отслеживайте прогресс всех подопечных</p>
+          <h2 className="text-2xl font-bold">{t('analytics.title')}</h2>
+          <p className="text-muted-foreground">{t('analytics.subtitle')}</p>
         </div>
         <Button onClick={() => setExportOpen(true)} variant="outline">
           <Download className="h-4 w-4 mr-2" />
-          Экспорт отчета
+          {t('analytics.exportReport')}
         </Button>
       </div>
       
@@ -262,18 +264,18 @@ export function TrainerAnalytics() {
           <motion.div variants={staggerItem}>
             <TremorCard className="glass-medium border-white/10" decoration="top" decorationColor="cyan">
               <div className="flex items-center justify-between">
-                <Text>Всего подопечных</Text>
+                <Text>{t('analytics.totalClients')}</Text>
                 <Users className="h-4 w-4 text-muted-foreground" />
               </div>
               <Metric className="mt-2">{overallStats.total_clients}</Metric>
               <Text className="text-xs mt-1">
-                Активных: {overallStats.active_clients}
+                {t('analytics.activeClients')} {overallStats.active_clients}
               </Text>
               <BadgeDelta 
                 deltaType={overallStats.active_clients > 0 ? "moderateIncrease" : "unchanged"} 
                 className="mt-2"
               >
-                {overallStats.total_clients > 0 ? Math.round((overallStats.active_clients / overallStats.total_clients) * 100) : 0}% активность
+                {overallStats.total_clients > 0 ? Math.round((overallStats.active_clients / overallStats.total_clients) * 100) : 0}% {t('analytics.activity')}
               </BadgeDelta>
             </TremorCard>
           </motion.div>
@@ -281,12 +283,12 @@ export function TrainerAnalytics() {
           <motion.div variants={staggerItem}>
             <TremorCard className="glass-medium border-white/10" decoration="top" decorationColor="purple">
               <div className="flex items-center justify-between">
-                <Text>Активных целей</Text>
+                <Text>{t('analytics.activeGoals')}</Text>
                 <Target className="h-4 w-4 text-muted-foreground" />
               </div>
               <Metric className="mt-2">{overallStats.total_goals}</Metric>
               <Text className="text-xs mt-1">
-                Завершено: {overallStats.completed_goals}
+                {t('analytics.completed')} {overallStats.completed_goals}
               </Text>
             </TremorCard>
           </motion.div>
@@ -294,18 +296,18 @@ export function TrainerAnalytics() {
           <motion.div variants={staggerItem}>
             <TremorCard className="glass-medium border-white/10" decoration="top" decorationColor="orange">
               <div className="flex items-center justify-between">
-                <Text>Измерений за месяц</Text>
+                <Text>{t('analytics.measurementsThisMonth')}</Text>
                 <BarChart3 className="h-4 w-4 text-muted-foreground" />
               </div>
               <Metric className="mt-2">{overallStats.recent_measurements}</Metric>
-              <Text className="text-xs mt-1">Последние 30 дней</Text>
+              <Text className="text-xs mt-1">{t('analytics.last30days')}</Text>
             </TremorCard>
           </motion.div>
 
           <motion.div variants={staggerItem}>
             <TremorCard className="glass-medium border-white/10" decoration="top" decorationColor="emerald">
               <div className="flex items-center justify-between">
-                <Text>Средний прогресс</Text>
+                <Text>{t('analytics.avgProgress')}</Text>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </div>
               <Metric className="mt-2">{overallStats.avg_progress}%</Metric>
@@ -324,19 +326,19 @@ export function TrainerAnalytics() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            Детальная статистика по подопечным
+            {t('analytics.detailedStats')}
           </CardTitle>
           <CardDescription>
-            Прогресс и активность каждого подопечного
+            {t('analytics.detailedStatsDesc')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {clientStats.length === 0 ? (
             <div className="text-center py-12">
               <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-medium mb-2">Нет подопечных</h3>
+              <h3 className="text-lg font-medium mb-2">{t('analytics.noClients')}</h3>
               <p className="text-muted-foreground">
-                Добавьте подопечных для просмотра аналитики
+                {t('analytics.addClientsForAnalytics')}
               </p>
             </div>
           ) : (
@@ -389,12 +391,12 @@ export function TrainerAnalytics() {
                       <div className="flex gap-4 mt-2">
                         <div className="flex items-center gap-1 text-xs">
                           <Target className="h-3 w-3 text-purple-400" />
-                          <span className="text-muted-foreground">Целей:</span>
+                          <span className="text-muted-foreground">{t('analytics.goals')}</span>
                           <span className="font-medium">{client.goals_count}</span>
                         </div>
                         <div className="flex items-center gap-1 text-xs">
                           <Activity className="h-3 w-3 text-green-400" />
-                          <span className="text-muted-foreground">Активность:</span>
+                          <span className="text-muted-foreground">{t('analytics.activity')}:</span>
                           <span className="font-medium">{client.recent_measurements}</span>
                         </div>
                         {client.last_activity && (
@@ -425,7 +427,7 @@ export function TrainerAnalytics() {
       {/* Рекомендации */}
       <Card>
         <CardHeader>
-          <CardTitle>Рекомендации</CardTitle>
+          <CardTitle>{t('analytics.recommendations')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
