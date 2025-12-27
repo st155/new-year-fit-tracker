@@ -3,5 +3,21 @@
   "tabs": {
     "dataQuality": "Data Quality",
     "terraTokens": "Terra Tokens"
+  },
+  "errorLogs": {
+    "title": "Error Logs",
+    "description": "History of errors and integration issues",
+    "error": "Error",
+    "loadError": "Failed to load error logs",
+    "copied": "Copied",
+    "copiedDesc": "Information copied to clipboard",
+    "source": "Source",
+    "allSources": "All sources",
+    "export": "Export",
+    "refresh": "Refresh",
+    "noErrors": "No errors",
+    "noErrorsDesc": "Great! No errors found for the selected filter.",
+    "errorDetails": "Error details:",
+    "copy": "Copy"
   }
 }

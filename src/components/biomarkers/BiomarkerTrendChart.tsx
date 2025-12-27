@@ -1,7 +1,8 @@
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, ReferenceLine, ReferenceArea, ComposedChart, Legend } from 'recharts';
 import { Card } from '@/components/ui/card';
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 
 interface BiomarkerTrendChartProps {
   data: Array<{
@@ -19,8 +20,11 @@ interface BiomarkerTrendChartProps {
 }
 
 export function BiomarkerTrendChart({ data, unit, referenceRanges }: BiomarkerTrendChartProps) {
+  const { t, i18n } = useTranslation('biomarkers');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
+  
   const chartData = data.map(d => ({
-    date: format(new Date(d.date), 'dd MMM yyyy', { locale: ru }),
+    date: format(new Date(d.date), 'dd MMM yyyy', { locale: dateLocale }),
     value: d.value,
     laboratory: d.laboratory,
     // Add zone boundaries for shading
@@ -51,18 +55,18 @@ export function BiomarkerTrendChart({ data, unit, referenceRanges }: BiomarkerTr
     <div className="flex justify-center gap-6 text-xs">
       <div className="flex items-center gap-2">
         <div className="w-4 h-4 rounded" style={{ backgroundColor: 'hsl(var(--muted))', opacity: 0.4 }} />
-        <span className="text-muted-foreground">Lab Reference Range</span>
+        <span className="text-muted-foreground">{t('trendChart.labRange')}</span>
       </div>
       <div className="flex items-center gap-2">
         <div className="w-4 h-4 rounded bg-emerald-500" style={{ opacity: 0.5 }} />
-        <span className="text-muted-foreground">Your Optimal Range</span>
+        <span className="text-muted-foreground">{t('trendChart.optimalRange')}</span>
       </div>
     </div>
   );
 
   return (
     <Card className="p-6">
-      <h3 className="font-semibold text-lg mb-4">Тренд</h3>
+      <h3 className="font-semibold text-lg mb-4">{t('trendChart.title')}</h3>
       <ResponsiveContainer width="100%" height={300}>
         <ComposedChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
@@ -115,7 +119,7 @@ export function BiomarkerTrendChart({ data, unit, referenceRanges }: BiomarkerTr
               y={referenceRanges.min} 
               stroke="hsl(var(--muted-foreground))" 
               strokeDasharray="3 3"
-              label={{ value: 'Мин', position: 'insideTopRight', className: 'text-xs' }}
+              label={{ value: t('trendChart.minLabel'), position: 'insideTopRight', className: 'text-xs' }}
             />
           )}
           
@@ -124,7 +128,7 @@ export function BiomarkerTrendChart({ data, unit, referenceRanges }: BiomarkerTr
               y={referenceRanges.max} 
               stroke="hsl(var(--muted-foreground))" 
               strokeDasharray="3 3"
-              label={{ value: 'Макс', position: 'insideBottomRight', className: 'text-xs' }}
+              label={{ value: t('trendChart.maxLabel'), position: 'insideBottomRight', className: 'text-xs' }}
             />
           )}
           
@@ -133,7 +137,7 @@ export function BiomarkerTrendChart({ data, unit, referenceRanges }: BiomarkerTr
               y={referenceRanges.optimal_min} 
               stroke="hsl(var(--chart-1))" 
               strokeDasharray="5 5"
-              label={{ value: 'Опт. мин', position: 'insideTopRight', className: 'text-xs' }}
+              label={{ value: t('trendChart.optMinLabel'), position: 'insideTopRight', className: 'text-xs' }}
             />
           )}
           
@@ -142,7 +146,7 @@ export function BiomarkerTrendChart({ data, unit, referenceRanges }: BiomarkerTr
               y={referenceRanges.optimal_max} 
               stroke="hsl(var(--chart-1))" 
               strokeDasharray="5 5"
-              label={{ value: 'Опт. макс', position: 'insideBottomRight', className: 'text-xs' }}
+              label={{ value: t('trendChart.optMaxLabel'), position: 'insideBottomRight', className: 'text-xs' }}
             />
           )}
           

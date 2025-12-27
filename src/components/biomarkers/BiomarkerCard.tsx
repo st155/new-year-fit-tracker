@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 interface BiomarkerCardProps {
   biomarkerId: string;
@@ -25,6 +26,7 @@ export function BiomarkerCard({
   status = 'normal',
   history = [],
 }: BiomarkerCardProps) {
+  const { t } = useTranslation('biomarkers');
   const navigate = useNavigate();
 
   const statusColors = {
@@ -47,10 +49,10 @@ export function BiomarkerCard({
           <p className="text-sm text-muted-foreground capitalize">{category}</p>
         </div>
         <Badge variant="outline" className={cn('ml-2', statusColors[status])}>
-          {status === 'optimal' && 'Оптимально'}
-          {status === 'normal' && 'Норма'}
-          {status === 'low' && 'Ниже нормы'}
-          {status === 'high' && 'Выше нормы'}
+          {status === 'optimal' && t('status.optimal')}
+          {status === 'normal' && t('status.normal')}
+          {status === 'low' && t('status.low')}
+          {status === 'high' && t('status.high')}
         </Badge>
       </div>
 

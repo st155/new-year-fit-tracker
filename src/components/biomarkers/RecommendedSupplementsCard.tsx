@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Pill, TrendingUp, Clock, ChevronRight } from "lucide-react";
 import { useBiomarkerCorrelations } from "@/hooks/biomarkers/useBiomarkerCorrelations";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTranslation } from "react-i18next";
 
 interface RecommendedSupplementsCardProps {
   biomarkerId: string;
@@ -14,6 +15,7 @@ export function RecommendedSupplementsCard({
   biomarkerId, 
   onAddToStack 
 }: RecommendedSupplementsCardProps) {
+  const { t } = useTranslation('biomarkers');
   const { data: correlations, isLoading } = useBiomarkerCorrelations(biomarkerId);
 
   if (isLoading) {
@@ -58,7 +60,7 @@ export function RecommendedSupplementsCard({
         <div className="flex items-center gap-3">
           <Pill className="h-5 w-5 text-purple-400" />
           <h3 className="text-lg font-semibold text-foreground">
-            Рекомендуемые добавки
+            {t('supplements.title')}
           </h3>
         </div>
 
@@ -80,8 +82,8 @@ export function RecommendedSupplementsCard({
                       variant="outline" 
                       className={getEvidenceBadgeClass(corr.evidence_level)}
                     >
-                      {corr.evidence_level === 'high' ? 'Высокая' : 
-                       corr.evidence_level === 'moderate' ? 'Средняя' : 'Низкая'} доказательность
+                      {corr.evidence_level === 'high' ? t('supplements.evidenceHigh') : 
+                       corr.evidence_level === 'moderate' ? t('supplements.evidenceModerate') : t('supplements.evidenceLow')}
                     </Badge>
                   </div>
 
@@ -90,7 +92,7 @@ export function RecommendedSupplementsCard({
                     <TrendingUp className="h-4 w-4 text-green-400" />
                     <span className="text-muted-foreground">
                       {getCorrelationIcon(corr.correlation_type)}
-                      {Math.abs(corr.expected_change_percent)}% ожидаемое изменение
+                      {Math.abs(corr.expected_change_percent)}% {t('supplements.expectedChange')}
                     </span>
                   </div>
 
@@ -98,7 +100,7 @@ export function RecommendedSupplementsCard({
                   <div className="flex items-center gap-2 text-sm">
                     <Clock className="h-4 w-4 text-blue-400" />
                     <span className="text-muted-foreground">
-                      Результат через {corr.timeframe_weeks} недель
+                      {t('supplements.resultIn', { weeks: corr.timeframe_weeks })}
                     </span>
                   </div>
 
@@ -118,7 +120,7 @@ export function RecommendedSupplementsCard({
                     className="shrink-0 bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/30 text-purple-400 hover:text-purple-300"
                     onClick={() => onAddToStack(corr.supplement_name)}
                   >
-                    Добавить
+                    {t('supplements.add')}
                   </Button>
                 )}
               </div>

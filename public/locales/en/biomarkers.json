@@ -12,9 +12,46 @@
     "chartHint": "Chart shows qualitative changes in results over time"
   },
   "trendChart": {
+    "title": "Trend",
+    "labRange": "Lab Reference Range",
+    "optimalRange": "Your Optimal Range",
     "minLabel": "Min",
     "maxLabel": "Max",
     "optMinLabel": "Opt. min",
     "optMaxLabel": "Opt. max"
+  },
+  "status": {
+    "optimal": "Optimal",
+    "normal": "Normal",
+    "low": "Below normal",
+    "high": "Above normal"
+  },
+  "settings": {
+    "title": "⚙️ Customize Optimal Range",
+    "description": "Define your personal optimal range for",
+    "labRange": "Lab Reference Range",
+    "min": "Min:",
+    "max": "Max:",
+    "optimalRange": "Your Optimal Range",
+    "optimalMin": "Optimal Min",
+    "optimalMax": "Optimal Max",
+    "aiSuggestion": "AI Suggestion",
+    "aiSuggestionText": "Based on medical research, optimal ranges for {{biomarker}} may vary based on age, gender, and health goals. Consider consulting your healthcare provider.",
+    "notes": "Notes (Optional)",
+    "notesPlaceholder": "Add any personal notes about this range...",
+    "save": "Save Optimal Range"
+  },
+  "supplements": {
+    "title": "Recommended Supplements",
+    "evidenceHigh": "High evidence",
+    "evidenceModerate": "Moderate evidence",
+    "evidenceLow": "Low evidence",
+    "expectedChange": "expected change",
+    "resultIn": "Result in {{weeks}} weeks",
+    "add": "Add"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "saving": "Saving..."
   }
 }

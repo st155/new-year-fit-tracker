@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Info, Sparkles } from 'lucide-react';
 import { useBiomarkerPreferences } from '@/hooks/composite/biomarkers/useBiomarkerPreferences';
+import { useTranslation } from 'react-i18next';
 
 interface BiomarkerSettingsModalProps {
   open: boolean;
@@ -37,6 +38,7 @@ export function BiomarkerSettingsModal({
   currentOptimalMin,
   currentOptimalMax,
 }: BiomarkerSettingsModalProps) {
+  const { t } = useTranslation('biomarkers');
   const { preferences, upsertPreferences, isUpserting } = useBiomarkerPreferences(biomarkerId);
   
   const [optimalMin, setOptimalMin] = useState<string>('');
@@ -85,10 +87,10 @@ export function BiomarkerSettingsModal({
       <DialogContent className="max-w-2xl bg-neutral-950 border-purple-500/50 shadow-[0_0_20px_rgba(168,85,247,0.3)]">
         <DialogHeader>
           <DialogTitle className="text-purple-400 flex items-center gap-2">
-            ⚙️ Customize Optimal Range
+            {t('settings.title')}
           </DialogTitle>
           <DialogDescription className="text-foreground/60">
-            Define your personal optimal range for <span className="font-semibold text-foreground">{biomarkerName}</span>
+            {t('settings.description')} <span className="font-semibold text-foreground">{biomarkerName}</span>
           </DialogDescription>
         </DialogHeader>
 
@@ -97,11 +99,11 @@ export function BiomarkerSettingsModal({
           <div className="border border-neutral-700 rounded-lg p-4 bg-neutral-900/50">
             <div className="flex items-center gap-2 mb-3">
               <Info className="h-4 w-4 text-neutral-400" />
-              <h3 className="text-sm font-semibold text-neutral-300">Lab Reference Range</h3>
+              <h3 className="text-sm font-semibold text-neutral-300">{t('settings.labRange')}</h3>
             </div>
             <div className="flex items-center gap-3">
               <div className="text-sm">
-                <span className="text-neutral-400">Min:</span>{' '}
+                <span className="text-neutral-400">{t('settings.min')}</span>{' '}
                 <span className="font-mono font-semibold text-foreground">{referenceMin}</span>{' '}
                 <span className="text-neutral-500">{unit}</span>
               </div>
@@ -109,7 +111,7 @@ export function BiomarkerSettingsModal({
                 <div className="absolute inset-0 bg-gradient-to-r from-neutral-600 to-neutral-600" />
               </div>
               <div className="text-sm">
-                <span className="text-neutral-400">Max:</span>{' '}
+                <span className="text-neutral-400">{t('settings.max')}</span>{' '}
                 <span className="font-mono font-semibold text-foreground">{referenceMax}</span>{' '}
                 <span className="text-neutral-500">{unit}</span>
               </div>
@@ -118,11 +120,11 @@ export function BiomarkerSettingsModal({
 
           {/* Optimal Range Inputs */}
           <div className="border border-green-500/50 rounded-lg p-4 bg-green-500/5">
-            <h3 className="text-sm font-semibold text-green-400 mb-3">Your Optimal Range</h3>
+            <h3 className="text-sm font-semibold text-green-400 mb-3">{t('settings.optimalRange')}</h3>
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="space-y-2">
                 <Label htmlFor="optimal-min" className="text-foreground">
-                  Optimal Min
+                  {t('settings.optimalMin')}
                 </Label>
                 <Input
                   id="optimal-min"
@@ -136,7 +138,7 @@ export function BiomarkerSettingsModal({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="optimal-max" className="text-foreground">
-                  Optimal Max
+                  {t('settings.optimalMax')}
                 </Label>
                 <Input
                   id="optimal-max"
@@ -173,23 +175,23 @@ export function BiomarkerSettingsModal({
           <div className="border border-blue-500/30 rounded-lg p-4 bg-blue-500/5">
             <div className="flex items-center gap-2 mb-2">
               <Sparkles className="h-4 w-4 text-blue-400" />
-              <h3 className="text-sm font-semibold text-blue-400">AI Suggestion</h3>
+              <h3 className="text-sm font-semibold text-blue-400">{t('settings.aiSuggestion')}</h3>
             </div>
             <p className="text-xs text-foreground/70">
-              Based on medical research, optimal ranges for {biomarkerName} may vary based on age, gender, and health goals. Consider consulting your healthcare provider.
+              {t('settings.aiSuggestionText', { biomarker: biomarkerName })}
             </p>
           </div>
 
           {/* Notes */}
           <div className="space-y-2">
             <Label htmlFor="notes" className="text-foreground">
-              Notes (Optional)
+              {t('settings.notes')}
             </Label>
             <Textarea
               id="notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Add any personal notes about this range..."
+              placeholder={t('settings.notesPlaceholder')}
               className="bg-neutral-900 border-neutral-700 focus:border-purple-500 min-h-[80px]"
             />
           </div>
@@ -202,14 +204,14 @@ export function BiomarkerSettingsModal({
             disabled={isUpserting}
             className="border-neutral-700"
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             onClick={handleSave}
             disabled={isUpserting || !optimalMin || !optimalMax}
             className="bg-purple-600 hover:bg-purple-700 shadow-[0_0_10px_rgba(168,85,247,0.3)]"
           >
-            {isUpserting ? 'Saving...' : 'Save Optimal Range'}
+            {isUpserting ? t('common.saving') : t('settings.save')}
           </Button>
         </DialogFooter>
       </DialogContent>

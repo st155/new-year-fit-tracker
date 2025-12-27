@@ -63,5 +63,8 @@
   "vo2max": {
     "title": "VO2 Max",
     "description": "Upload your VO2 Max test results"
+  },
+  "recovery": {
+    "vsPrevious": "vs. previous period"
   }
 }

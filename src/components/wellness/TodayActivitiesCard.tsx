@@ -5,8 +5,10 @@ import { useTodayActivities, useToggleActivityCompletion } from "@/hooks/useWell
 import { getActivityConfig } from "@/lib/wellness-activity-types";
 import { CheckCircle, Circle, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 export function TodayActivitiesCard() {
+  const { t } = useTranslation('dashboard');
   const { user } = useAuth();
   const { data: activities = [], isLoading } = useTodayActivities(user?.id);
   const toggleCompletion = useToggleActivityCompletion();
@@ -34,7 +36,7 @@ export function TodayActivitiesCard() {
         <CardTitle className="text-base flex items-center justify-between">
           <span className="flex items-center gap-2">
             <Sun className="w-4 h-4 text-amber-400" />
-            Сегодня
+            {t('todayActivities.title')}
           </span>
           {total > 0 && (
             <span className="text-sm font-normal text-muted-foreground">
@@ -46,7 +48,7 @@ export function TodayActivitiesCard() {
       <CardContent>
         {activities.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-4">
-            Нет запланированных активностей
+            {t('todayActivities.empty')}
           </p>
         ) : (
           <div className="space-y-2">
@@ -78,7 +80,7 @@ export function TodayActivitiesCard() {
                     </span>
                     {activity.duration_minutes && (
                       <span className="text-xs text-muted-foreground">
-                        {activity.duration_minutes} мин
+                        {activity.duration_minutes} {t('units.min')}
                       </span>
                     )}
                   </div>
