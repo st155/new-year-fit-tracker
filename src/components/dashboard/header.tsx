@@ -6,6 +6,7 @@ import { Trophy, Target, Users, LogOut, Settings, Home, Calendar, TrendingUp, Ba
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 interface DashboardHeaderProps {
   userName: string;
@@ -16,6 +17,7 @@ interface DashboardHeaderProps {
 }
 
 export function DashboardHeader({ userName, userRole, challengeProgress, daysLeft, challengeTitle }: DashboardHeaderProps) {
+  const { t } = useTranslation('dashboard');
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -77,19 +79,19 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
             </Avatar>
             <div>
               <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                Привет, {userName}!
+                {t('header.greeting', { name: userName })}
               </h1>
               <div className="flex items-center gap-2 mt-1">
                 <Badge variant={userRole === "trainer" ? "default" : "secondary"} className="font-semibold">
                   {userRole === "trainer" ? (
                     <>
                       <Trophy className="w-3 h-3 mr-1" />
-                      Тренер
+                      {t('header.trainer')}
                     </>
                   ) : (
                     <>
                       <Target className="w-3 h-3 mr-1" />
-                      Участник
+                      {t('header.participant')}
                     </>
                   )}
                 </Badge>
@@ -108,10 +110,10 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
               <div className="flex flex-col items-end gap-2">
                 <div className="text-right">
                   <div className="text-2xl font-bold text-primary">
-                    {daysLeft > 0 ? `${daysLeft} дней` : 'Завершён!'}
+                    {daysLeft > 0 ? t('header.daysLeft', { count: daysLeft }) : t('header.finished')}
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    {daysLeft > 0 ? 'до финиша' : 'Челлендж завершён'}
+                    {daysLeft > 0 ? t('header.untilFinish') : t('header.challengeFinished')}
                   </div>
                 </div>
                 <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">
@@ -121,19 +123,19 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
                   />
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  {Math.round(challengeProgress)}% завершено
+                  {t('header.completed', { percent: Math.round(challengeProgress) })}
                 </div>
               </div>
             ) : (
               <div className="text-center text-muted-foreground">
-                <div className="text-sm">Нет активных челленджей</div>
+                <div className="text-sm">{t('header.noChallenges')}</div>
                 <Button 
                   variant="outline" 
                   size="sm" 
                   onClick={() => navigate('/challenges')}
                   className="mt-2"
                 >
-                  Присоединиться
+                  {t('header.joinChallenge')}
                 </Button>
               </div>
             )}
@@ -148,7 +150,7 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
                   className={location.pathname === '/' ? "text-white" : "text-foreground hover:text-white hover:bg-primary/20"}
                 >
                   <Home className="h-4 w-4 sm:mr-1" />
-                  <span className="hidden sm:inline">Главная</span>
+                  <span className="hidden sm:inline">{t('header.home')}</span>
                 </Button>
                 <Button 
                   variant={location.pathname === '/dashboard' ? "default" : "ghost"}
@@ -157,7 +159,7 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
                   className={location.pathname === '/dashboard' ? "text-white" : "text-foreground hover:text-white hover:bg-primary/20"}
                 >
                   <BarChart3 className="h-4 w-4 sm:mr-1" />
-                  <span className="hidden sm:inline">Фитнес</span>
+                  <span className="hidden sm:inline">{t('header.fitness')}</span>
                 </Button>
                 <Button 
                   variant={location.pathname === '/challenges' ? "default" : "ghost"}
@@ -166,7 +168,7 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
                   className={location.pathname === '/challenges' ? "text-white" : "text-foreground hover:text-white hover:bg-primary/20"}
                 >
                   <Calendar className="h-4 w-4 sm:mr-1" />
-                  <span className="hidden sm:inline">Челленджи</span>
+                  <span className="hidden sm:inline">{t('header.challenges')}</span>
                 </Button>
               </div>
               
@@ -217,7 +219,7 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
                   className={location.pathname === '/progress' ? "text-white" : "text-foreground hover:text-white hover:bg-primary/20"}
                 >
                   <TrendingUp className="h-4 w-4 mr-1" />
-                  Прогресс
+                  {t('header.progress')}
                 </Button>
                 {isTrainer && (
                   <Button 
@@ -227,7 +229,7 @@ export function DashboardHeader({ userName, userRole, challengeProgress, daysLef
                     className={location.pathname === '/trainer-dashboard' ? "text-white" : "text-foreground hover:text-white hover:bg-primary/20"}
                   >
                     <Settings className="h-4 w-4 mr-1" />
-                    Тренер
+                    {t('header.trainer')}
                   </Button>
                 )}
                 <Button 

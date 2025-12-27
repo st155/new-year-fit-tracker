@@ -20,8 +20,9 @@ import { Trophy, Zap, Flame, Calendar, Plug, Pencil, Settings, LogOut, RotateCcw
 import { motion } from 'framer-motion';
 import { useUserLevel } from '@/hooks/useUserLevel';
 import { format, parseISO } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface ProfileHeroProps {
   username: string;
@@ -54,6 +55,7 @@ export function ProfileHero({
   trainerMode = false,
   onTrainerModeChange,
 }: ProfileHeroProps) {
+  const { t, i18n } = useTranslation('profile');
   const { levelInfo, isLoading } = useUserLevel();
 
   const getLevelColor = (level: number) => {
@@ -65,17 +67,18 @@ export function ProfileHero({
   };
 
   const getLevelTitle = (level: number) => {
-    if (level >= 50) return 'Мастер';
-    if (level >= 30) return 'Эксперт';
-    if (level >= 20) return 'Профессионал';
-    if (level >= 10) return 'Продвинутый';
-    return 'Новичок';
+    if (level >= 50) return t('hero.levels.master');
+    if (level >= 30) return t('hero.levels.expert');
+    if (level >= 20) return t('hero.levels.professional');
+    if (level >= 10) return t('hero.levels.advanced');
+    return t('hero.levels.beginner');
   };
 
   const formatRegistrationDate = (dateStr: string | null | undefined): string => {
     if (!dateStr) return '';
     try {
-      return format(parseISO(dateStr), 'LLLL yyyy', { locale: ru });
+      const locale = i18n.language === 'ru' ? ru : enUS;
+      return format(parseISO(dateStr), 'LLLL yyyy', { locale });
     } catch {
       return '';
     }
@@ -84,7 +87,7 @@ export function ProfileHero({
   const handleCopyUserId = () => {
     if (userId) {
       navigator.clipboard.writeText(userId);
-      toast.success('User ID скопирован');
+      toast.success(t('hero.userIdCopied'));
     }
   };
 
@@ -114,7 +117,7 @@ export function ProfileHero({
                   >
                     <Target className={`h-4 w-4 ${trainerMode ? 'text-green-500' : 'text-muted-foreground'}`} />
                     <span className={`text-sm font-semibold hidden sm:inline ${trainerMode ? 'text-green-500' : 'text-muted-foreground'}`}>
-                      Тренер
+                      {t('hero.trainer')}
                     </span>
                     <Switch 
                       checked={trainerMode} 
@@ -125,7 +128,7 @@ export function ProfileHero({
                   </motion.div>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="max-w-[200px]">
-                  <p className="text-sm">Создавай свои челленджи и приглашай друзей!</p>
+                  <p className="text-sm">{t('hero.trainerTooltip')}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -156,13 +159,13 @@ export function ProfileHero({
               {userId && (
                 <DropdownMenuItem onClick={handleCopyUserId} className="gap-2">
                   <Copy className="h-4 w-4" />
-                  Скопировать User ID
+                  {t('hero.copyUserId')}
                 </DropdownMenuItem>
               )}
               {onResetOnboarding && (
                 <DropdownMenuItem onClick={onResetOnboarding} className="gap-2">
                   <RotateCcw className="h-4 w-4" />
-                  Сбросить онбординг
+                  {t('hero.resetOnboarding')}
                 </DropdownMenuItem>
               )}
               {onSignOut && (
@@ -170,7 +173,7 @@ export function ProfileHero({
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={onSignOut} className="gap-2 text-destructive focus:text-destructive">
                     <LogOut className="h-4 w-4" />
-                    Выйти
+                    {t('hero.signOut')}
                   </DropdownMenuItem>
                 </>
               )}
@@ -185,7 +188,7 @@ export function ProfileHero({
               className="gap-1.5 h-9"
             >
               <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline">Выйти</span>
+              <span className="hidden sm:inline">{t('hero.signOut')}</span>
             </Button>
           )}
         </div>
@@ -220,12 +223,12 @@ export function ProfileHero({
                   {trainerMode ? (
                     <>
                       <Target className="h-3 w-3 mr-1" />
-                      Тренер
+                      {t('hero.trainer')}
                     </>
                   ) : (
                     <>
                       <Trophy className="h-3 w-3 mr-1" />
-                      Lvl {levelInfo?.level}
+                      {t('hero.level', { level: levelInfo?.level })}
                     </>
                   )}
                 </Badge>
@@ -254,13 +257,13 @@ export function ProfileHero({
                       className="gap-1.5 px-3 py-1.5 text-sm font-semibold border-green-500/50 bg-green-500/10"
                     >
                       <Target className="h-3.5 w-3.5 text-green-500" />
-                      Тренер
+                      {t('hero.trainer')}
                     </Badge>
                   ) : (
                     <>
                       <Badge variant="outline" className="gap-1.5 px-3 py-1.5 text-sm font-semibold">
                         <Zap className="h-3.5 w-3.5 text-yellow-500" />
-                        {levelInfo.totalXP} XP
+                        {t('hero.xp', { xp: levelInfo.totalXP })}
                       </Badge>
                       <Badge variant="outline" className="gap-1.5 px-3 py-1.5 text-sm font-semibold">
                         <Trophy className="h-3.5 w-3.5 text-purple-500" />
@@ -273,19 +276,19 @@ export function ProfileHero({
               {streakDays > 0 && (
                 <Badge variant="outline" className="gap-1.5 px-3 py-1.5 text-sm font-semibold">
                   <Flame className="h-3.5 w-3.5 text-orange-500" />
-                  {streakDays} дн. подряд
+                  {t('hero.streakDays', { count: streakDays })}
                 </Badge>
               )}
               {activeIntegrationsCount > 0 && (
                 <Badge variant="outline" className="gap-1.5 px-3 py-1.5 text-sm font-semibold">
                   <Plug className="h-3.5 w-3.5 text-green-500" />
-                  {activeIntegrationsCount} интеграций
+                  {t('hero.integrations', { count: activeIntegrationsCount })}
                 </Badge>
               )}
               {registeredAt && (
                 <Badge variant="outline" className="gap-1.5 px-3 py-1.5 text-sm text-muted-foreground">
                   <Calendar className="h-3.5 w-3.5" />
-                  С {formatRegistrationDate(registeredAt)}
+                  {t('hero.memberSince', { date: formatRegistrationDate(registeredAt) })}
                 </Badge>
               )}
             </div>
@@ -294,7 +297,7 @@ export function ProfileHero({
             {levelInfo && !isLoading && (
               <div className="mt-4 max-w-md mx-auto md:mx-0">
                 <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
-                  <span>До уровня {levelInfo.level + 1}</span>
+                  <span>{t('hero.toLevel', { level: levelInfo.level + 1 })}</span>
                   <span className="font-semibold">{levelInfo.xpToNext} XP</span>
                 </div>
                 <div className="h-2.5 bg-muted rounded-full overflow-hidden">

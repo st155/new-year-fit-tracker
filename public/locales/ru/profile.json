@@ -16,5 +16,26 @@
   "devTools": {
     "title": "Инструменты разработчика",
     "subtitle": "Тестирование и отладка"
+  },
+  "hero": {
+    "trainer": "Тренер",
+    "trainerTooltip": "Создавай свои челленджи и приглашай друзей!",
+    "level": "Lvl {{level}}",
+    "xp": "{{xp}} XP",
+    "streakDays": "{{count}} дн. подряд",
+    "integrations": "{{count}} интеграций",
+    "memberSince": "С {{date}}",
+    "toLevel": "До уровня {{level}}",
+    "copyUserId": "Скопировать User ID",
+    "userIdCopied": "User ID скопирован",
+    "resetOnboarding": "Сбросить онбординг",
+    "signOut": "Выйти",
+    "levels": {
+      "master": "Мастер",
+      "expert": "Эксперт",
+      "professional": "Профессионал",
+      "advanced": "Продвинутый",
+      "beginner": "Новичок"
+    }
   }
 }

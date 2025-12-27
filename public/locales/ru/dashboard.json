@@ -64,5 +64,21 @@
   "ai": {
     "fitnessTitle": "AI Fitness Анализ",
     "uploadTracker": "Загрузите фото вашего трекера"
+  },
+  "header": {
+    "greeting": "Привет, {{name}}!",
+    "trainer": "Тренер",
+    "participant": "Участник",
+    "daysLeft": "{{count}} дней",
+    "finished": "Завершён!",
+    "untilFinish": "до финиша",
+    "challengeFinished": "Челлендж завершён",
+    "completed": "{{percent}}% завершено",
+    "noChallenges": "Нет активных челленджей",
+    "joinChallenge": "Присоединиться",
+    "home": "Главная",
+    "fitness": "Фитнес",
+    "challenges": "Челленджи",
+    "progress": "Прогресс"
   }
 }
