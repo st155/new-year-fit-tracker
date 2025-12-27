@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -30,6 +31,7 @@ interface BodyCompositionUploadProps {
 }
 
 export function BodyCompositionUpload({ onSuccess }: BodyCompositionUploadProps) {
+  const { t } = useTranslation('body');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<BodyCompositionForm>({
@@ -45,7 +47,7 @@ export function BodyCompositionUpload({ onSuccess }: BodyCompositionUploadProps)
     try {
       const { data: session } = await supabase.auth.getSession();
       if (!session?.session?.user) {
-        toast.error("Please login to add measurements");
+        toast.error(t('form.pleaseLoginToAdd'));
         return;
       }
 
@@ -60,12 +62,12 @@ export function BodyCompositionUpload({ onSuccess }: BodyCompositionUploadProps)
 
       if (error) throw error;
 
-      toast.success("Body composition data added successfully!");
+      toast.success(t('form.dataSaved'));
       form.reset();
       onSuccess?.();
     } catch (error) {
       console.error('Error saving body composition:', error);
-      toast.error("Failed to save data");
+      toast.error(t('form.saveError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -80,7 +82,7 @@ export function BodyCompositionUpload({ onSuccess }: BodyCompositionUploadProps)
             name="measurement_date"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Measurement Date</FormLabel>
+                <FormLabel>{t('form.measurementDate')}</FormLabel>
                 <FormControl>
                   <Input type="date" {...field} />
                 </FormControl>
@@ -94,7 +96,7 @@ export function BodyCompositionUpload({ onSuccess }: BodyCompositionUploadProps)
             name="weight"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Weight (kg)</FormLabel>
+                <FormLabel>{t('form.weightKg')}</FormLabel>
                 <FormControl>
                   <Input type="number" step="0.1" placeholder="70.5" {...field} />
                 </FormControl>
@@ -108,7 +110,7 @@ export function BodyCompositionUpload({ onSuccess }: BodyCompositionUploadProps)
             name="body_fat_percentage"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Body Fat (%)</FormLabel>
+                <FormLabel>{t('form.bodyFatPercent')}</FormLabel>
                 <FormControl>
                   <Input type="number" step="0.1" placeholder="15.5" {...field} />
                 </FormControl>
@@ -122,7 +124,7 @@ export function BodyCompositionUpload({ onSuccess }: BodyCompositionUploadProps)
             name="muscle_mass"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Muscle Mass (kg)</FormLabel>
+                <FormLabel>{t('form.muscleMassKg')}</FormLabel>
                 <FormControl>
                   <Input type="number" step="0.1" placeholder="55.0" {...field} />
                 </FormControl>
@@ -134,7 +136,7 @@ export function BodyCompositionUpload({ onSuccess }: BodyCompositionUploadProps)
 
         <Button type="submit" disabled={isSubmitting} className="w-full">
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Сохранить измерение
+          {t('form.saveMeasurement')}
         </Button>
       </form>
     </Form>
