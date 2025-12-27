@@ -65,5 +65,16 @@
     "deleteDescription": "Это действие необратимо. Документ будет удалён навсегда.",
     "cancel": "Отмена",
     "delete": "Удалить"
+  },
+  "imaging": {
+    "title": "Таймлайн исследований",
+    "noDocuments": "Нет МРТ/УЗИ документов",
+    "documentsCount": "{{count}} исследований за все время",
+    "findMore": "Найти ещё",
+    "findingsCount": "{{count}} находок",
+    "noFindings": "Нет детальных находок",
+    "reclassifySuccess": "✅ Переклассификация завершена",
+    "reclassifyCount": "Найдено и обновлено: {{count}} документов",
+    "reclassifyError": "Ошибка переклассификации"
   }
 }

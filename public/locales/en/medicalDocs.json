@@ -65,5 +65,16 @@
     "deleteDescription": "This action is irreversible. The document will be permanently deleted.",
     "cancel": "Cancel",
     "delete": "Delete"
+  },
+  "imaging": {
+    "title": "Imaging Timeline",
+    "noDocuments": "No MRI/Ultrasound documents",
+    "documentsCount": "{{count}} studies in total",
+    "findMore": "Find More",
+    "findingsCount": "{{count}} findings",
+    "noFindings": "No detailed findings",
+    "reclassifySuccess": "✅ Reclassification complete",
+    "reclassifyCount": "Found and updated: {{count}} documents",
+    "reclassifyError": "Reclassification error"
   }
 }

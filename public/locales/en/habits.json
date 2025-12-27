@@ -42,6 +42,17 @@
   "fasting": {
     "eatingStarted": "Eating window started! 🍽️",
     "fastingStarted": "Fasting started! 💪",
-    "error": "Error: {{message}}"
+    "error": "Error: {{message}}",
+    "statusFasting": "🔥 Fasting",
+    "statusEating": "🍽️ Eating Window",
+    "statusInactive": "⏸️ Inactive",
+    "eatingWindow": "Eating window: {{duration}}",
+    "startFast": "Start Fast",
+    "startEating": "Start Eating",
+    "duration": {
+      "days": "{{days}}d {{hours}}h",
+      "hours": "{{hours}}h {{mins}}m",
+      "minutes": "{{mins}}m"
+    }
   }
 }

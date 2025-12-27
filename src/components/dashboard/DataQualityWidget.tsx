@@ -4,6 +4,7 @@ import { RefreshCw, CheckCircle2, TrendingUp, AlertTriangle, XCircle } from 'luc
 import { useAuth } from '@/hooks/useAuth';
 import { useDataQuality } from '@/hooks/useDataQuality';
 import { useConfidenceRecalculation } from '@/hooks/useConfidenceRecalculation';
+import { useTranslation } from 'react-i18next';
 
 function CompactRadialProgress({ value, size = 80 }: { value: number; size?: number }) {
   const radius = (size - 16) / 2;
@@ -52,6 +53,7 @@ function CompactRadialProgress({ value, size = 80 }: { value: number; size?: num
 }
 
 export function DataQualityWidget() {
+  const { t } = useTranslation('dashboard');
   const { user } = useAuth();
   const { 
     averageConfidence, 
@@ -76,25 +78,25 @@ export function DataQualityWidget() {
 
   const segments = [
     { 
-      label: 'Отлично', 
+      label: t('dataQuality.excellent'), 
       count: metricsByQuality.excellent.length, 
       color: 'bg-green-500',
       icon: CheckCircle2
     },
     { 
-      label: 'Хорошо', 
+      label: t('dataQuality.good'), 
       count: metricsByQuality.good.length, 
       color: 'bg-blue-500',
       icon: TrendingUp
     },
     { 
-      label: 'Средне', 
+      label: t('dataQuality.fair'), 
       count: metricsByQuality.fair.length, 
       color: 'bg-yellow-500',
       icon: AlertTriangle
     },
     { 
-      label: 'Плохо', 
+      label: t('dataQuality.poor'), 
       count: metricsByQuality.poor.length, 
       color: 'bg-red-500',
       icon: XCircle
@@ -117,7 +119,7 @@ export function DataQualityWidget() {
           {/* Middle: Stacked Bar */}
           <div className="flex-1 space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold">Качество данных</h3>
+              <h3 className="text-sm font-semibold">{t('dataQuality.title')}</h3>
               <Button
                 variant="ghost"
                 size="icon"

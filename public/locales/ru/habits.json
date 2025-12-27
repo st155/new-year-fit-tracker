@@ -42,6 +42,17 @@
   "fasting": {
     "eatingStarted": "Окно питания началось! 🍽️",
     "fastingStarted": "Голодание началось! 💪",
-    "error": "Ошибка: {{message}}"
+    "error": "Ошибка: {{message}}",
+    "statusFasting": "🔥 Голодание",
+    "statusEating": "🍽️ Окно питания",
+    "statusInactive": "⏸️ Неактивно",
+    "eatingWindow": "Окно питания: {{duration}}",
+    "startFast": "Начать пост",
+    "startEating": "Начать еду",
+    "duration": {
+      "days": "{{days}}д {{hours}}ч",
+      "hours": "{{hours}}ч {{mins}}м",
+      "minutes": "{{mins}}м"
+    }
   }
 }
