@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { MultiSourceMetricCard } from './MultiSourceMetricCard';
 import { LatestBodyReportCard } from './LatestBodyReportCard';
 import { SourceStatsGrid } from './SourceStatsGrid';
@@ -30,6 +31,7 @@ export function BodyDashboard({
   onManualEntry,
   onViewReport,
 }: BodyDashboardProps) {
+  const { t } = useTranslation('body');
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -51,19 +53,19 @@ export function BodyDashboard({
         <CardContent className="py-12 text-center space-y-4">
           <TrendingUp className="h-16 w-16 mx-auto text-muted-foreground opacity-50" />
           <div className="space-y-2">
-            <h3 className="text-xl font-semibold">No body composition data yet</h3>
+            <h3 className="text-xl font-semibold">{t('dashboard.noData')}</h3>
             <p className="text-muted-foreground">
-              Start tracking by uploading a body scan or adding manual measurements
+              {t('dashboard.noDataDesc')}
             </p>
           </div>
           <div className="flex gap-3 justify-center pt-4">
             <Button onClick={onUploadReport}>
               <Upload className="h-4 w-4 mr-2" />
-              Upload Report
+              {t('dashboard.uploadReport')}
             </Button>
             <Button variant="outline" onClick={onManualEntry}>
               <Plus className="h-4 w-4 mr-2" />
-              Manual Entry
+              {t('dashboard.manualEntry')}
             </Button>
           </div>
         </CardContent>
@@ -75,31 +77,31 @@ export function BodyDashboard({
     <div className="space-y-6">
       {/* Hero Metrics Cards */}
       <div>
-        <h2 className="text-xl font-semibold mb-4">Current Metrics</h2>
+        <h2 className="text-xl font-semibold mb-4">{t('dashboard.currentMetrics')}</h2>
         <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
           <MultiSourceMetricCard
-            title="Weight"
+            title={t('metrics.weight')}
             icon={<span className="text-lg">⚖️</span>}
             data={current.weight}
             unit="kg"
             sparklineData={sparklines.weight}
           />
           <MultiSourceMetricCard
-            title="Body Fat"
+            title={t('metrics.bodyFat')}
             icon={<span className="text-lg">📊</span>}
             data={current.bodyFat}
             unit="%"
             sparklineData={sparklines.bodyFat}
           />
           <MultiSourceMetricCard
-            title="Muscle Mass"
+            title={t('metrics.muscleMass')}
             icon={<span className="text-lg">💪</span>}
             data={current.muscleMass}
             unit="kg"
             sparklineData={sparklines.muscleMass}
           />
           <MultiSourceMetricCard
-            title="BMI"
+            title={t('metrics.bmi')}
             icon={<span className="text-lg">📏</span>}
             data={current.bmi}
             unit=""
@@ -111,11 +113,11 @@ export function BodyDashboard({
       {/* Additional Metrics (InBody-specific) */}
       {(current.bmr || current.visceralFat || current.bodyWater || current.protein) && (
         <div>
-          <h2 className="text-xl font-semibold mb-4">Detailed Metrics</h2>
+          <h2 className="text-xl font-semibold mb-4">{t('dashboard.detailedMetrics')}</h2>
           <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
             {current.bmr && (
               <MultiSourceMetricCard
-                title="BMR"
+                title={t('metrics.bmr')}
                 icon={<span className="text-lg">🔥</span>}
                 data={current.bmr}
                 unit="kcal"
@@ -124,7 +126,7 @@ export function BodyDashboard({
             )}
             {current.visceralFat && (
               <MultiSourceMetricCard
-                title="Visceral Fat"
+                title={t('metrics.visceralFat')}
                 icon={<span className="text-lg">⚠️</span>}
                 data={current.visceralFat}
                 unit=""
@@ -133,7 +135,7 @@ export function BodyDashboard({
             )}
             {current.bodyWater && (
               <MultiSourceMetricCard
-                title="Body Water"
+                title={t('metrics.bodyWater')}
                 icon={<span className="text-lg">💧</span>}
                 data={current.bodyWater}
                 unit="L"
@@ -142,7 +144,7 @@ export function BodyDashboard({
             )}
             {current.protein && (
               <MultiSourceMetricCard
-                title="Protein"
+                title={t('metrics.protein')}
                 icon={<span className="text-lg">🥩</span>}
                 data={current.protein}
                 unit="kg"
@@ -155,7 +157,7 @@ export function BodyDashboard({
 
       {/* Latest Body Report */}
       <div>
-        <h2 className="text-xl font-semibold mb-4">Latest Body Report</h2>
+        <h2 className="text-xl font-semibold mb-4">{t('dashboard.latestReport')}</h2>
         <LatestBodyReportCard 
           report={latestReport} 
           onViewReport={onViewReport}
@@ -165,17 +167,17 @@ export function BodyDashboard({
       {/* Quick Actions */}
       <Card>
         <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
+          <CardTitle>{t('dashboard.quickActions')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-3 flex-wrap">
             <Button onClick={onUploadReport}>
               <Upload className="h-4 w-4 mr-2" />
-              Upload Body Report
+              {t('dashboard.uploadBodyReport')}
             </Button>
             <Button variant="outline" onClick={onManualEntry}>
               <Plus className="h-4 w-4 mr-2" />
-              Add Manual Measurement
+              {t('dashboard.addManualMeasurement')}
             </Button>
           </div>
         </CardContent>
@@ -183,7 +185,7 @@ export function BodyDashboard({
 
       {/* Data Sources */}
       <div>
-        <h2 className="text-xl font-semibold mb-4">Data Sources</h2>
+        <h2 className="text-xl font-semibold mb-4">{t('dashboard.dataSources')}</h2>
         <SourceStatsGrid stats={sourceStats} />
       </div>
     </div>

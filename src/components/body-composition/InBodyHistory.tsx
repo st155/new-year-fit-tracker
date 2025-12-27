@@ -1,4 +1,5 @@
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { inbodyApi } from "@/lib/api/client";
@@ -61,6 +62,7 @@ interface InBodyUpload {
 }
 
 export const InBodyHistory = forwardRef<{ refresh: () => void }>((props, ref) => {
+  const { t } = useTranslation('body');
   const { user } = useAuth();
   const [analyses, setAnalyses] = useState<InBodyAnalysis[]>([]);
   const [uploads, setUploads] = useState<InBodyUpload[]>([]);
@@ -83,7 +85,7 @@ export const InBodyHistory = forwardRef<{ refresh: () => void }>((props, ref) =>
         .from('inbody_uploads')
         .update({ 
           status: 'failed', 
-          error_message: 'Обработка прервана - попробуйте снова' 
+          error_message: t('history.processingInterrupted')
         })
         .eq('user_id', user.id)
         .eq('status', 'processing')
@@ -110,7 +112,7 @@ export const InBodyHistory = forwardRef<{ refresh: () => void }>((props, ref) =>
       setUploads((uploadsRes.data || []) as InBodyUpload[]);
     } catch (error) {
       console.error('Error fetching data:', error);
-      toast.error('Ошибка загрузки истории');
+      toast.error(t('history.loadingError'));
     } finally {
       setLoading(false);
     }
@@ -129,7 +131,7 @@ export const InBodyHistory = forwardRef<{ refresh: () => void }>((props, ref) =>
         .update({ status: 'processing' })
         .eq('id', uploadId);
 
-      toast.info('Конвертируем PDF в изображения...');
+      toast.info(t('history.convertingPdf'));
 
       // Get signed URL for the PDF (valid for 1 hour)
       const { data: signedUrlData, error: urlError } = await supabase.storage
@@ -137,7 +139,7 @@ export const InBodyHistory = forwardRef<{ refresh: () => void }>((props, ref) =>
         .createSignedUrl(storagePath, 3600);
       
       if (urlError || !signedUrlData?.signedUrl) {
-        throw new Error('Не удалось получить доступ к PDF файлу');
+        throw new Error(t('history.cannotGetPdfAccess'));
       }
       
       console.log('Starting PDF conversion for:', storagePath);
@@ -149,11 +151,11 @@ export const InBodyHistory = forwardRef<{ refresh: () => void }>((props, ref) =>
       });
       
       if (!images || !Array.isArray(images) || images.length === 0) {
-        throw new Error('Не удалось конвертировать PDF в изображения');
+        throw new Error(t('history.cannotConvertPdf'));
       }
 
       console.log(`Converted ${images.length} pages, sending to AI...`);
-      toast.info('Анализируем с помощью AI...');
+      toast.info(t('history.analyzingWithAi'));
 
       // Send images to edge function via API client
       const { data, error } = await inbodyApi.parse(images.slice(0, 2), uploadId);
@@ -164,11 +166,11 @@ export const InBodyHistory = forwardRef<{ refresh: () => void }>((props, ref) =>
       }
 
       console.log('Analysis complete:', data);
-      toast.success('Анализ успешно завершен!');
+      toast.success(t('history.analysisComplete'));
       fetchData();
     } catch (error: any) {
       console.error('Error analyzing:', error);
-      toast.error(error.message || 'Ошибка анализа');
+      toast.error(error.message || t('history.analysisError'));
       
       await supabase
         .from('inbody_uploads')
@@ -196,11 +198,11 @@ export const InBodyHistory = forwardRef<{ refresh: () => void }>((props, ref) =>
         .eq('id', id);
 
       if (error) throw error;
-      toast.success('Analysis deleted');
+      toast.success(t('toasts.analysisDeleted'));
       fetchData();
     } catch (error) {
       console.error('Error deleting analysis:', error);
-      toast.error('Failed to delete analysis');
+      toast.error(t('toasts.failedToDelete'));
     }
   };
 
@@ -218,11 +220,11 @@ export const InBodyHistory = forwardRef<{ refresh: () => void }>((props, ref) =>
         .eq('id', id);
 
       if (dbError) throw dbError;
-      toast.success('PDF удален');
+      toast.success(t('toasts.pdfDeleted'));
       fetchData();
     } catch (error) {
       console.error('Error deleting upload:', error);
-      toast.error('Ошибка удаления');
+      toast.error(t('toasts.deleteError'));
     }
   };
 
@@ -251,7 +253,7 @@ export const InBodyHistory = forwardRef<{ refresh: () => void }>((props, ref) =>
         <CardContent className="flex flex-col items-center justify-center py-12">
           <FileText className="h-12 w-12 text-muted-foreground mb-4" />
           <p className="text-muted-foreground text-center">
-            No InBody data yet. Upload a PDF to get started.
+            {t('history.noData')}
           </p>
         </CardContent>
       </Card>
@@ -266,7 +268,7 @@ export const InBodyHistory = forwardRef<{ refresh: () => void }>((props, ref) =>
           <div>
             <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              Ожидают распознавания ({uploads.length})
+              {t('history.pendingRecognition')} ({uploads.length})
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {uploads.map((upload) => {
@@ -279,7 +281,7 @@ export const InBodyHistory = forwardRef<{ refresh: () => void }>((props, ref) =>
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <Badge variant={isFailed ? 'destructive' : 'secondary'} className="mb-2">
-                            {isFailed ? '❌ Ошибка' : '📁 Не распознан'}
+                            {isFailed ? `❌ ${t('history.error')}` : `📁 ${t('history.notRecognized')}`}
                           </Badge>
                           <CardTitle className="text-sm font-medium truncate">
                             {upload.file_name}
@@ -296,15 +298,15 @@ export const InBodyHistory = forwardRef<{ refresh: () => void }>((props, ref) =>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Удалить PDF?</AlertDialogTitle>
+                              <AlertDialogTitle>{t('dialogs.deletePdf')}</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Файл будет удален без возможности восстановления
+                                {t('dialogs.fileWillBeDeleted')}
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel>Отмена</AlertDialogCancel>
+                              <AlertDialogCancel>{t('dialogs.cancel')}</AlertDialogCancel>
                               <AlertDialogAction onClick={() => handleDeleteUpload(upload.id, upload.storage_path)}>
-                                Удалить
+                                {t('dialogs.delete')}
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
@@ -324,17 +326,17 @@ export const InBodyHistory = forwardRef<{ refresh: () => void }>((props, ref) =>
                         {isProcessing ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Анализируем...
+                            {t('history.analyzing')}
                           </>
                         ) : isFailed ? (
                           <>
                             <RefreshCw className="mr-2 h-4 w-4" />
-                            Попробовать снова
+                            {t('history.tryAgain')}
                           </>
                         ) : (
                           <>
                             <ScanLine className="mr-2 h-4 w-4" />
-                            Распознать
+                            {t('history.analyze')}
                           </>
                         )}
                       </Button>
@@ -351,7 +353,7 @@ export const InBodyHistory = forwardRef<{ refresh: () => void }>((props, ref) =>
           <div>
             <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
               <ScanLine className="h-5 w-5" />
-              Распознанные анализы ({analyses.length})
+              {t('history.analyzedReports')} ({analyses.length})
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {analyses.map((analysis, index) => {
@@ -412,15 +414,15 @@ export const InBodyHistory = forwardRef<{ refresh: () => void }>((props, ref) =>
                           </AlertDialogTrigger>
                           <AlertDialogContent onClick={(e) => e.stopPropagation()}>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Delete analysis?</AlertDialogTitle>
+                              <AlertDialogTitle>{t('dialogs.deleteAnalysis')}</AlertDialogTitle>
                               <AlertDialogDescription>
-                                This action cannot be undone.
+                                {t('dialogs.cannotUndo')}
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogCancel>{t('dialogs.cancel')}</AlertDialogCancel>
                               <AlertDialogAction onClick={() => handleDeleteAnalysis(analysis.id)}>
-                                Delete
+                                {t('dialogs.delete')}
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>

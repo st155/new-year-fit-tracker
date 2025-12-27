@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Upload, FileText, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,6 +15,7 @@ interface InBodyUploadProps {
 }
 
 export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) => {
+  const { t } = useTranslation('body');
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStage, setUploadStage] = useState<'idle' | 'uploading' | 'saving' | 'complete'>('idle');
@@ -25,8 +27,8 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
 
     if (file.type !== 'application/pdf') {
       toast({
-        title: "Invalid file",
-        description: "Please upload a PDF file",
+        title: t('upload.invalidFile'),
+        description: t('upload.pleaseUploadPdf'),
         variant: "destructive"
       });
       return;
@@ -34,8 +36,8 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
 
     if (file.size > 100 * 1024 * 1024) {
       toast({
-        title: "File too large",
-        description: "Maximum file size is 100 MB",
+        title: t('upload.fileTooLarge'),
+        description: t('upload.maxFileSize'),
         variant: "destructive"
       });
       return;
@@ -45,8 +47,8 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast({
-          title: "Authentication error",
-          description: "Please log in to upload files",
+          title: t('upload.authError'),
+          description: t('upload.pleaseLogin'),
           variant: "destructive"
         });
         return;
@@ -70,7 +72,7 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
       if (uploadError) {
         console.error('Storage upload error:', uploadError);
         toast({
-          title: "Upload failed",
+          title: t('upload.uploadFailed'),
           description: uploadError.message,
           variant: "destructive"
         });
@@ -98,7 +100,7 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
       if (dbError) {
         console.error('Database insert error:', dbError);
         toast({
-          title: "Database error",
+          title: t('upload.databaseError'),
           description: dbError.message,
           variant: "destructive"
         });
@@ -112,8 +114,8 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
       console.log('Upload complete:', uploadRecord);
 
       toast({
-        title: "PDF загружен",
-        description: "Начинаю автоматический анализ..."
+        title: t('toasts.pdfUploaded'),
+        description: t('toasts.analysisStarted')
       });
 
       // Автоматический запуск анализа в фоновом режиме
@@ -140,7 +142,7 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
           });
 
           if (!images || images.length === 0) {
-            throw new Error('Не удалось конвертировать PDF');
+            throw new Error(t('history.cannotConvertPdf'));
           }
 
           console.log(`Converted ${images.length} pages, sending to AI for analysis...`);
@@ -156,10 +158,10 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
 
           const reportsCount = analysisData?.reports_count || analysisData?.analyses?.length || 1;
           toast({
-            title: "Анализ завершен!",
+            title: t('toasts.analysisComplete'),
             description: reportsCount > 1 
-              ? `Создано ${reportsCount} InBody отчётов` 
-              : "InBody данные успешно извлечены"
+              ? t('toasts.reportsCreated', { count: reportsCount })
+              : t('toasts.dataExtracted')
           });
           
           // Обновляем данные после успешного анализа
@@ -168,8 +170,8 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
         } catch (analysisError) {
           console.error('Auto-analysis error:', analysisError);
           toast({
-            title: "Не удалось автоматически проанализировать",
-            description: "Попробуйте нажать 'Анализ' в истории загрузок",
+            title: t('toasts.analysisError'),
+            description: t('toasts.tryManualAnalysis'),
             variant: "destructive"
           });
         }
@@ -185,7 +187,7 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
     } catch (error) {
       console.error('Unexpected error:', error);
       toast({
-        title: "Upload error",
+        title: t('upload.uploadError'),
         description: error instanceof Error ? error.message : "An unexpected error occurred",
         variant: "destructive"
       });
@@ -213,13 +215,13 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
           )}
         </div>
 
-        <h3 className="text-xl font-semibold mb-2">Upload InBody Analysis</h3>
+        <h3 className="text-xl font-semibold mb-2">{t('upload.title')}</h3>
         <p className="text-sm text-muted-foreground text-center mb-6 max-w-md">
           {uploading && uploadStage === 'uploading'
-            ? "Uploading to cloud..."
+            ? t('upload.uploadingToCloud')
             : uploading && uploadStage === 'saving'
-            ? "Saving to database..."
-            : "Upload your InBody analysis PDF. After upload, click 'Analyze' in History to extract metrics"}
+            ? t('upload.savingToDatabase')
+            : t('upload.description')}
         </p>
 
         {uploading && (
@@ -241,12 +243,12 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
             {uploading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Загрузка...
+                {t('upload.uploading')}
               </>
             ) : (
               <>
                 <Upload className="mr-2 h-4 w-4" />
-                Выбрать PDF
+                {t('upload.selectPdf')}
               </>
             )}
           </Button>
@@ -260,7 +262,7 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
         </div>
 
         <p className="text-xs text-muted-foreground mt-4">
-          PDF format only, max 100 MB
+          {t('upload.formatHint')}
         </p>
       </CardContent>
     </Card>

@@ -1,0 +1,139 @@
+{
+  "pageTitle": "Состав тела",
+  "pageSubtitle": "Отслеживание и анализ метрик тела из разных источников",
+  
+  "tabs": {
+    "dashboard": "Обзор",
+    "reports": "Отчёты",
+    "timeline": "История",
+    "3dModel": "3D Модель"
+  },
+  
+  "metrics": {
+    "weight": "Вес",
+    "bodyFat": "Жировая масса",
+    "muscleMass": "Мышечная масса",
+    "leanMass": "Сухая масса",
+    "bmi": "ИМТ",
+    "bmr": "Базовый метаболизм",
+    "basalMetabolicRate": "Базальный метаболизм",
+    "visceralFat": "Висцеральный жир",
+    "bodyWater": "Вода в теле",
+    "totalBodyWater": "Общая вода тела",
+    "protein": "Белок",
+    "minerals": "Минералы",
+    "skeletalMuscleMass": "Скелетная мышечная масса",
+    "bodyFatMass": "Масса жира"
+  },
+  
+  "segments": {
+    "rightArm": "Правая рука",
+    "leftArm": "Левая рука",
+    "trunk": "Туловище",
+    "rightLeg": "Правая нога",
+    "leftLeg": "Левая нога"
+  },
+  
+  "upload": {
+    "title": "Загрузить InBody анализ",
+    "description": "Загрузите PDF файл InBody анализа. После загрузки нажмите 'Распознать' в истории для извлечения метрик",
+    "selectPdf": "Выбрать PDF",
+    "uploading": "Загрузка...",
+    "uploadingToCloud": "Загрузка в облако...",
+    "savingToDatabase": "Сохранение в базу данных...",
+    "formatHint": "Только PDF формат, макс. 100 МБ",
+    "invalidFile": "Неверный файл",
+    "pleaseUploadPdf": "Пожалуйста, загрузите PDF файл",
+    "fileTooLarge": "Файл слишком большой",
+    "maxFileSize": "Максимальный размер файла 100 МБ",
+    "authError": "Ошибка аутентификации",
+    "pleaseLogin": "Пожалуйста, войдите для загрузки файлов",
+    "uploadFailed": "Ошибка загрузки",
+    "uploadError": "Ошибка загрузки",
+    "databaseError": "Ошибка базы данных"
+  },
+  
+  "history": {
+    "pendingRecognition": "Ожидают распознавания",
+    "analyzedReports": "Распознанные анализы",
+    "analyze": "Распознать",
+    "analyzing": "Анализируем...",
+    "tryAgain": "Попробовать снова",
+    "notRecognized": "Не распознан",
+    "error": "Ошибка",
+    "processingInterrupted": "Обработка прервана - попробуйте снова",
+    "loadingError": "Ошибка загрузки истории",
+    "noData": "Нет данных InBody. Загрузите PDF чтобы начать.",
+    "convertingPdf": "Конвертируем PDF в изображения...",
+    "analyzingWithAi": "Анализируем с помощью AI...",
+    "analysisComplete": "Анализ успешно завершен!",
+    "analysisError": "Ошибка анализа",
+    "cannotGetPdfAccess": "Не удалось получить доступ к PDF файлу",
+    "cannotConvertPdf": "Не удалось конвертировать PDF в изображения"
+  },
+  
+  "detail": {
+    "inbodyScan": "INBODY СКАН",
+    "aiAnalysis": "AI АНАЛИЗ",
+    "keyInsights": "Ключевые выводы",
+    "segmentalAnalysis": "СЕГМЕНТНЫЙ АНАЛИЗ",
+    "muscleDistribution": "Распределение мышечной массы"
+  },
+  
+  "dashboard": {
+    "currentMetrics": "Текущие метрики",
+    "detailedMetrics": "Детальные метрики",
+    "latestReport": "Последний отчёт",
+    "quickActions": "Быстрые действия",
+    "dataSources": "Источники данных",
+    "noData": "Нет данных о составе тела",
+    "noDataDesc": "Начните отслеживание, загрузив скан тела или добавив измерения вручную",
+    "uploadReport": "Загрузить отчёт",
+    "uploadBodyReport": "Загрузить отчёт тела",
+    "manualEntry": "Ввести вручную",
+    "addManualMeasurement": "Добавить измерение вручную"
+  },
+  
+  "toasts": {
+    "pdfUploaded": "PDF загружен",
+    "analysisStarted": "Начинаю автоматический анализ...",
+    "analysisComplete": "Анализ завершен!",
+    "reportsCreated": "Создано {{count}} InBody отчётов",
+    "dataExtracted": "Данные InBody успешно извлечены",
+    "analysisError": "Не удалось автоматически проанализировать",
+    "tryManualAnalysis": "Попробуйте нажать 'Анализ' в истории загрузок",
+    "analysisDeleted": "Анализ удален",
+    "failedToDelete": "Не удалось удалить анализ",
+    "pdfDeleted": "PDF удален",
+    "deleteError": "Ошибка удаления"
+  },
+  
+  "dialogs": {
+    "deleteAnalysis": "Удалить анализ?",
+    "deletePdf": "Удалить PDF?",
+    "cannotUndo": "Это действие нельзя отменить.",
+    "fileWillBeDeleted": "Файл будет удален без возможности восстановления",
+    "cancel": "Отмена",
+    "delete": "Удалить"
+  },
+  
+  "form": {
+    "measurementDate": "Дата измерения",
+    "weightKg": "Вес (кг)",
+    "bodyFatPercent": "Жир (%)",
+    "muscleMassKg": "Мышечная масса (кг)",
+    "saveMeasurement": "Сохранить измерение",
+    "weightRequired": "Вес обязателен",
+    "bodyFatRequired": "Процент жира обязателен",
+    "muscleMassRequired": "Мышечная масса обязательна",
+    "dateRequired": "Дата обязательна",
+    "pleaseLoginToAdd": "Пожалуйста, войдите для добавления измерений",
+    "dataSaved": "Данные о составе тела успешно добавлены!",
+    "saveError": "Не удалось сохранить данные"
+  },
+  
+  "metricsCard": {
+    "lastMeasured": "Последнее измерение",
+    "noMeasurements": "Нет измерений. Добавьте первое измерение, чтобы начать!"
+  }
+}
