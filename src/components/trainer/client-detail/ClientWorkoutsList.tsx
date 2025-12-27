@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,50 +15,51 @@ interface ClientWorkoutsListProps {
   clientId: string;
 }
 
-const WORKOUT_TYPE_LABELS: Record<string, string> = {
-  'running': 'Бег',
-  'cycling': 'Велосипед',
-  'swimming': 'Плавание',
-  'strength': 'Силовая',
-  'yoga': 'Йога',
-  'hiit': 'HIIT',
-  'walking': 'Ходьба',
-  'functional_fitness': 'Функциональный тренинг',
-  'cross_training': 'Кросс-тренинг',
-  'elliptical': 'Эллиптический тренажер',
-  'rowing': 'Гребля',
-  'stair_climbing': 'Степпер',
-  'pilates': 'Пилатес',
-  'dance': 'Танцы',
-  'martial_arts': 'Единоборства',
-  'basketball': 'Баскетбол',
-  'soccer': 'Футбол',
-  'tennis': 'Теннис',
-  'golf': 'Гольф',
-  'hiking': 'Хайкинг',
-  'other': 'Другое',
-};
-
-const SOURCE_LABELS: Record<string, string> = {
-  'whoop': 'Whoop',
-  'garmin': 'Garmin',
-  'apple_health': 'Apple Health',
-  'withings': 'Withings',
-  'oura': 'Oura',
-  'manual': 'Вручную',
-  'elite10': 'Elite10',
-};
-
-const PERIOD_OPTIONS = [
-  { value: '7', label: 'Последние 7 дней' },
-  { value: '30', label: 'Последние 30 дней' },
-  { value: '90', label: 'Последние 90 дней' },
-  { value: 'all', label: 'Все время' },
-];
-
 export function ClientWorkoutsList({ clientId }: ClientWorkoutsListProps) {
+  const { t } = useTranslation('trainerDashboard');
   const [period, setPeriod] = useState('30');
   const [workoutType, setWorkoutType] = useState<string>('all');
+
+  const WORKOUT_TYPE_KEYS: Record<string, string> = {
+    'running': 'workoutTypes.running',
+    'cycling': 'workoutTypes.cycling',
+    'swimming': 'workoutTypes.swimming',
+    'strength': 'workoutTypes.strength',
+    'yoga': 'workoutTypes.yoga',
+    'hiit': 'workoutTypes.hiit',
+    'walking': 'workoutTypes.walking',
+    'functional_fitness': 'workoutTypes.functional_fitness',
+    'cross_training': 'workoutTypes.cross_training',
+    'elliptical': 'workoutTypes.elliptical',
+    'rowing': 'workoutTypes.rowing',
+    'stair_climbing': 'workoutTypes.stair_climbing',
+    'pilates': 'workoutTypes.pilates',
+    'dance': 'workoutTypes.dance',
+    'martial_arts': 'workoutTypes.martial_arts',
+    'basketball': 'workoutTypes.basketball',
+    'soccer': 'workoutTypes.soccer',
+    'tennis': 'workoutTypes.tennis',
+    'golf': 'workoutTypes.golf',
+    'hiking': 'workoutTypes.hiking',
+    'other': 'workoutTypes.other',
+  };
+
+  const SOURCE_KEYS: Record<string, string> = {
+    'whoop': 'Whoop',
+    'garmin': 'Garmin',
+    'apple_health': 'Apple Health',
+    'withings': 'Withings',
+    'oura': 'Oura',
+    'manual': 'sourceLabels.manual',
+    'elite10': 'Elite10',
+  };
+
+  const PERIOD_OPTIONS = [
+    { value: '7', labelKey: 'periodOptions.last7days' },
+    { value: '30', labelKey: 'periodOptions.last30days' },
+    { value: '90', labelKey: 'periodOptions.last90days' },
+    { value: 'all', labelKey: 'periodOptions.allTime' },
+  ];
 
   const { data: workouts, isLoading } = useQuery({
     queryKey: ['client-workouts-list', clientId, period],
@@ -88,13 +90,17 @@ export function ClientWorkoutsList({ clientId }: ClientWorkoutsListProps) {
   const uniqueWorkoutTypes = [...new Set(workouts?.map(w => w.workout_type) || [])];
 
   const getWorkoutTypeLabel = (type: string | null) => {
-    if (!type) return 'Тренировка';
-    return WORKOUT_TYPE_LABELS[type.toLowerCase()] || type;
+    if (!type) return t('clientWorkouts.defaultType');
+    const key = WORKOUT_TYPE_KEYS[type.toLowerCase()];
+    return key ? t(key) : type;
   };
 
   const getSourceLabel = (source: string | null) => {
-    if (!source) return 'Неизвестно';
-    return SOURCE_LABELS[source.toLowerCase()] || source;
+    if (!source) return t('clientWorkouts.unknownSource');
+    const key = SOURCE_KEYS[source.toLowerCase()];
+    if (!key) return source;
+    // If key starts with 'sourceLabels.', it's a translation key
+    return key.startsWith('sourceLabels.') ? t(key) : key;
   };
 
   const formatDuration = (minutes: number | null) => {
@@ -113,7 +119,7 @@ export function ClientWorkoutsList({ clientId }: ClientWorkoutsListProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Dumbbell className="h-5 w-5" />
-            История тренировок
+            {t('clientWorkouts.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -134,10 +140,10 @@ export function ClientWorkoutsList({ clientId }: ClientWorkoutsListProps) {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Dumbbell className="h-5 w-5" />
-              История тренировок
+              {t('clientWorkouts.title')}
             </CardTitle>
             <CardDescription>
-              {filteredWorkouts.length} тренировок найдено
+              {t('clientWorkouts.found', { count: filteredWorkouts.length })}
             </CardDescription>
           </div>
           <div className="flex gap-2">
@@ -148,17 +154,17 @@ export function ClientWorkoutsList({ clientId }: ClientWorkoutsListProps) {
               <SelectContent>
                 {PERIOD_OPTIONS.map(opt => (
                   <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
+                    {t(opt.labelKey)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <Select value={workoutType} onValueChange={setWorkoutType}>
               <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="Все типы" />
+                <SelectValue placeholder={t('clientWorkouts.allTypes')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Все типы</SelectItem>
+                <SelectItem value="all">{t('clientWorkouts.allTypes')}</SelectItem>
                 {uniqueWorkoutTypes.map(type => (
                   <SelectItem key={type} value={type || 'unknown'}>
                     {getWorkoutTypeLabel(type)}
@@ -173,34 +179,34 @@ export function ClientWorkoutsList({ clientId }: ClientWorkoutsListProps) {
         {filteredWorkouts.length === 0 ? (
           <div className="text-center py-12">
             <Activity className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-            <p className="text-muted-foreground">Нет тренировок за выбранный период</p>
+            <p className="text-muted-foreground">{t('clientWorkouts.noWorkouts')}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Дата</TableHead>
-                  <TableHead>Тип</TableHead>
+                  <TableHead>{t('clientWorkouts.date')}</TableHead>
+                  <TableHead>{t('clientWorkouts.type')}</TableHead>
                   <TableHead>
                     <div className="flex items-center gap-1">
                       <Clock className="h-4 w-4" />
-                      Длительность
+                      {t('clientWorkouts.duration')}
                     </div>
                   </TableHead>
                   <TableHead>
                     <div className="flex items-center gap-1">
                       <Flame className="h-4 w-4" />
-                      Калории
+                      {t('clientWorkouts.calories')}
                     </div>
                   </TableHead>
                   <TableHead>
                     <div className="flex items-center gap-1">
                       <Heart className="h-4 w-4" />
-                      Пульс
+                      {t('clientWorkouts.heartRate')}
                     </div>
                   </TableHead>
-                  <TableHead>Источник</TableHead>
+                  <TableHead>{t('clientWorkouts.source')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -219,7 +225,7 @@ export function ClientWorkoutsList({ clientId }: ClientWorkoutsListProps) {
                     </TableCell>
                     <TableCell>{formatDuration(workout.duration_minutes)}</TableCell>
                     <TableCell>
-                      {workout.calories_burned ? `${workout.calories_burned} ккал` : '-'}
+                      {workout.calories_burned ? `${workout.calories_burned} ${t('clientWorkouts.kcal')}` : '-'}
                     </TableCell>
                     <TableCell>
                       {workout.heart_rate_avg ? (
@@ -227,7 +233,7 @@ export function ClientWorkoutsList({ clientId }: ClientWorkoutsListProps) {
                           {workout.heart_rate_avg}
                           {workout.heart_rate_max && (
                             <span className="text-muted-foreground text-xs ml-1">
-                              (макс {workout.heart_rate_max})
+                              ({t('clientWorkouts.max')} {workout.heart_rate_max})
                             </span>
                           )}
                         </span>

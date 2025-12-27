@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { Heart } from "lucide-react";
@@ -8,6 +9,7 @@ interface HeartRateZonesChartProps {
 }
 
 export default function HeartRateZonesChart({ zoneData }: HeartRateZonesChartProps) {
+  const { t } = useTranslation('workouts');
   const chartData = transformZoneDurations(zoneData);
 
   if (chartData.length === 0) {
@@ -16,11 +18,11 @@ export default function HeartRateZonesChart({ zoneData }: HeartRateZonesChartPro
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Heart className="w-5 h-5 text-red-400" />
-            Зоны пульса
+            {t('heartRateZones.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-400 text-sm">Данные о зонах пульса недоступны для этой тренировки</p>
+          <p className="text-gray-400 text-sm">{t('heartRateZones.noData')}</p>
         </CardContent>
       </Card>
     );
@@ -31,7 +33,7 @@ export default function HeartRateZonesChart({ zoneData }: HeartRateZonesChartPro
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Heart className="w-5 h-5 text-red-400" />
-          Зоны пульса
+          {t('heartRateZones.title')}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -46,7 +48,7 @@ export default function HeartRateZonesChart({ zoneData }: HeartRateZonesChartPro
             <YAxis 
               stroke="rgba(255,255,255,0.5)"
               fontSize={12}
-              label={{ value: 'Минуты', angle: -90, position: 'insideLeft', fill: 'rgba(255,255,255,0.5)' }}
+              label={{ value: t('heartRateZones.minutes'), angle: -90, position: 'insideLeft', fill: 'rgba(255,255,255,0.5)' }}
             />
             <Tooltip 
               contentStyle={{ 
@@ -54,7 +56,7 @@ export default function HeartRateZonesChart({ zoneData }: HeartRateZonesChartPro
                 border: '1px solid rgba(255,255,255,0.2)',
                 borderRadius: '8px'
               }}
-              formatter={(value: number) => [`${value.toFixed(1)} мин`, 'Время']}
+              formatter={(value: number) => [`${value.toFixed(1)} ${t('heartRateZones.minAbbr')}`, t('heartRateZones.time')]}
             />
             <Bar dataKey="minutes" radius={[8, 8, 0, 0]}>
               {chartData.map((entry, index) => (
@@ -66,7 +68,7 @@ export default function HeartRateZonesChart({ zoneData }: HeartRateZonesChartPro
         
         <div className="mt-4 flex items-center gap-2 text-xs text-gray-400">
           <span>💡</span>
-          <span>Зоны пульса показывают интенсивность тренировки</span>
+          <span>{t('heartRateZones.hint')}</span>
         </div>
       </CardContent>
     </Card>

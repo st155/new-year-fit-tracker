@@ -1,5 +1,6 @@
 import { motion, useSpring, useTransform } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Flame, Dumbbell, Clock, Package } from 'lucide-react';
@@ -36,19 +37,20 @@ function AnimatedCounter({ value, suffix = '' }: { value: number; suffix?: strin
 
 export function StatsDashboardCard({ period = 'all', onPeriodChange }: StatsDashboardCardProps) {
   const { data: stats, isLoading } = useWorkoutStats(period);
+  const { t } = useTranslation('workouts');
 
   const statCards = [
     {
       icon: Flame,
-      label: 'Серия',
+      label: t('stats.streak'),
       value: stats?.streak || 0,
-      suffix: ' дней',
+      suffix: t('stats.streakDays'),
       gradient: 'from-orange-500 to-red-500',
       glow: 'hover:shadow-[0_0_20px_rgba(249,115,22,0.4)]',
     },
     {
       icon: Dumbbell,
-      label: 'Тренировок',
+      label: t('stats.workouts'),
       value: stats?.totalWorkouts || 0,
       suffix: '',
       gradient: 'from-purple-500 to-pink-500',
@@ -56,26 +58,26 @@ export function StatsDashboardCard({ period = 'all', onPeriodChange }: StatsDash
     },
     {
       icon: Clock,
-      label: 'Время',
+      label: t('stats.time'),
       value: stats ? Math.round(stats.totalMinutes / 60) : 0,
-      suffix: ' ч',
+      suffix: t('stats.timeHours'),
       gradient: 'from-cyan-500 to-blue-500',
       glow: 'hover:shadow-[0_0_20px_rgba(6,182,212,0.4)]',
     },
     {
       icon: Package,
-      label: 'Объем',
+      label: t('stats.volume'),
       value: stats ? Math.round(stats.totalVolume / 1000) : 0,
-      suffix: ' т',
+      suffix: t('stats.volumeTons'),
       gradient: 'from-green-500 to-emerald-500',
       glow: 'hover:shadow-[0_0_20px_rgba(34,197,94,0.4)]',
     },
   ];
 
   const periods: Array<{ value: 'week' | 'month' | 'all'; label: string }> = [
-    { value: 'week', label: 'Неделя' },
-    { value: 'month', label: 'Месяц' },
-    { value: 'all', label: 'Все время' },
+    { value: 'week', label: t('stats.week') },
+    { value: 'month', label: t('stats.month') },
+    { value: 'all', label: t('stats.allTime') },
   ];
 
   if (isLoading) {
@@ -105,7 +107,7 @@ export function StatsDashboardCard({ period = 'all', onPeriodChange }: StatsDash
         <CardContent className="p-6 space-y-6">
           {/* Period selector */}
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Статистика</h3>
+            <h3 className="text-lg font-semibold">{t('stats.title')}</h3>
             <div className="flex gap-2">
               {periods.map((p) => (
                 <Badge
