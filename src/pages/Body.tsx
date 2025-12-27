@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { useMultiSourceBodyData } from "@/hooks/composite/data/useMultiSourceBodyData";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
@@ -10,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LayoutDashboard, FileText, Clock, Box } from "lucide-react";
 
 export default function Body() {
+  const { t } = useTranslation('body');
   const { user } = useAuth();
   const { current, timeline, reports, sourceStats, sparklines, isLoading } = useMultiSourceBodyData(30);
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -24,9 +26,9 @@ export default function Body() {
   return (
     <AnimatedPage className="container py-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Body Composition</h1>
+        <h1 className="text-3xl font-bold">{t('pageTitle')}</h1>
         <p className="text-muted-foreground">
-          Multi-source body metrics tracking and analysis
+          {t('pageSubtitle')}
         </p>
       </div>
 
@@ -34,19 +36,19 @@ export default function Body() {
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="dashboard">
             <LayoutDashboard className="h-4 w-4 mr-2" />
-            Dashboard
+            {t('tabs.dashboard')}
           </TabsTrigger>
           <TabsTrigger value="reports">
             <FileText className="h-4 w-4 mr-2" />
-            Body Reports
+            {t('tabs.reports')}
           </TabsTrigger>
           <TabsTrigger value="timeline">
             <Clock className="h-4 w-4 mr-2" />
-            Timeline
+            {t('tabs.timeline')}
           </TabsTrigger>
           <TabsTrigger value="3d">
             <Box className="h-4 w-4 mr-2" />
-            3D Model
+            {t('tabs.3dModel')}
           </TabsTrigger>
         </TabsList>
 

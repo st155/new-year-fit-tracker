@@ -1,0 +1,139 @@
+{
+  "pageTitle": "Body Composition",
+  "pageSubtitle": "Multi-source body metrics tracking and analysis",
+  
+  "tabs": {
+    "dashboard": "Dashboard",
+    "reports": "Body Reports",
+    "timeline": "Timeline",
+    "3dModel": "3D Model"
+  },
+  
+  "metrics": {
+    "weight": "Weight",
+    "bodyFat": "Body Fat",
+    "muscleMass": "Muscle Mass",
+    "leanMass": "Lean Mass",
+    "bmi": "BMI",
+    "bmr": "BMR",
+    "basalMetabolicRate": "Basal Metabolic Rate",
+    "visceralFat": "Visceral Fat",
+    "bodyWater": "Body Water",
+    "totalBodyWater": "Total Body Water",
+    "protein": "Protein",
+    "minerals": "Minerals",
+    "skeletalMuscleMass": "Skeletal Muscle Mass",
+    "bodyFatMass": "Body Fat Mass"
+  },
+  
+  "segments": {
+    "rightArm": "Right Arm",
+    "leftArm": "Left Arm",
+    "trunk": "Trunk",
+    "rightLeg": "Right Leg",
+    "leftLeg": "Left Leg"
+  },
+  
+  "upload": {
+    "title": "Upload InBody Analysis",
+    "description": "Upload your InBody analysis PDF. After upload, click 'Analyze' in History to extract metrics",
+    "selectPdf": "Select PDF",
+    "uploading": "Uploading...",
+    "uploadingToCloud": "Uploading to cloud...",
+    "savingToDatabase": "Saving to database...",
+    "formatHint": "PDF format only, max 100 MB",
+    "invalidFile": "Invalid file",
+    "pleaseUploadPdf": "Please upload a PDF file",
+    "fileTooLarge": "File too large",
+    "maxFileSize": "Maximum file size is 100 MB",
+    "authError": "Authentication error",
+    "pleaseLogin": "Please log in to upload files",
+    "uploadFailed": "Upload failed",
+    "uploadError": "Upload error",
+    "databaseError": "Database error"
+  },
+  
+  "history": {
+    "pendingRecognition": "Pending Recognition",
+    "analyzedReports": "Analyzed Reports",
+    "analyze": "Analyze",
+    "analyzing": "Analyzing...",
+    "tryAgain": "Try Again",
+    "notRecognized": "Not recognized",
+    "error": "Error",
+    "processingInterrupted": "Processing interrupted - try again",
+    "loadingError": "Error loading history",
+    "noData": "No InBody data yet. Upload a PDF to get started.",
+    "convertingPdf": "Converting PDF to images...",
+    "analyzingWithAi": "Analyzing with AI...",
+    "analysisComplete": "Analysis completed successfully!",
+    "analysisError": "Analysis error",
+    "cannotGetPdfAccess": "Cannot get access to PDF file",
+    "cannotConvertPdf": "Cannot convert PDF to images"
+  },
+  
+  "detail": {
+    "inbodyScan": "INBODY SCAN",
+    "aiAnalysis": "AI ANALYSIS",
+    "keyInsights": "Key Insights",
+    "segmentalAnalysis": "SEGMENTAL ANALYSIS",
+    "muscleDistribution": "Muscle mass distribution"
+  },
+  
+  "dashboard": {
+    "currentMetrics": "Current Metrics",
+    "detailedMetrics": "Detailed Metrics",
+    "latestReport": "Latest Body Report",
+    "quickActions": "Quick Actions",
+    "dataSources": "Data Sources",
+    "noData": "No body composition data yet",
+    "noDataDesc": "Start tracking by uploading a body scan or adding manual measurements",
+    "uploadReport": "Upload Report",
+    "uploadBodyReport": "Upload Body Report",
+    "manualEntry": "Manual Entry",
+    "addManualMeasurement": "Add Manual Measurement"
+  },
+  
+  "toasts": {
+    "pdfUploaded": "PDF uploaded",
+    "analysisStarted": "Starting automatic analysis...",
+    "analysisComplete": "Analysis complete!",
+    "reportsCreated": "Created {{count}} InBody reports",
+    "dataExtracted": "InBody data successfully extracted",
+    "analysisError": "Could not analyze automatically",
+    "tryManualAnalysis": "Try clicking 'Analyze' in upload history",
+    "analysisDeleted": "Analysis deleted",
+    "failedToDelete": "Failed to delete analysis",
+    "pdfDeleted": "PDF deleted",
+    "deleteError": "Delete error"
+  },
+  
+  "dialogs": {
+    "deleteAnalysis": "Delete analysis?",
+    "deletePdf": "Delete PDF?",
+    "cannotUndo": "This action cannot be undone.",
+    "fileWillBeDeleted": "File will be deleted without possibility to restore",
+    "cancel": "Cancel",
+    "delete": "Delete"
+  },
+  
+  "form": {
+    "measurementDate": "Measurement Date",
+    "weightKg": "Weight (kg)",
+    "bodyFatPercent": "Body Fat (%)",
+    "muscleMassKg": "Muscle Mass (kg)",
+    "saveMeasurement": "Save Measurement",
+    "weightRequired": "Weight is required",
+    "bodyFatRequired": "Body fat % is required",
+    "muscleMassRequired": "Muscle mass is required",
+    "dateRequired": "Date is required",
+    "pleaseLoginToAdd": "Please login to add measurements",
+    "dataSaved": "Body composition data added successfully!",
+    "saveError": "Failed to save data"
+  },
+  
+  "metricsCard": {
+    "lastMeasured": "Last measured",
+    "noMeasurements": "No measurements yet. Add your first measurement to get started!"
+  }
+}
