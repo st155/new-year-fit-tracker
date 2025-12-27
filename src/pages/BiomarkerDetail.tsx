@@ -20,8 +20,10 @@ import { ru } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useTranslation } from 'react-i18next';
 
 export default function BiomarkerDetail() {
+  const { t } = useTranslation('biomarkerDetail');
   const { biomarkerId } = useParams<{ biomarkerId: string }>();
   const navigate = useNavigate();
   const [showSettings, setShowSettings] = useState(false);
@@ -76,9 +78,9 @@ export default function BiomarkerDetail() {
     return (
       <div className="container mx-auto py-8 px-4">
         <div className="text-center">
-          <p className="text-muted-foreground">Некорректный ID биомаркера</p>
+          <p className="text-muted-foreground">{t('invalidId')}</p>
           <Button onClick={() => navigate('/medical-documents')} variant="outline" className="mt-4">
-            Вернуться к документам
+            {t('backToDocs')}
           </Button>
         </div>
       </div>
@@ -116,21 +118,21 @@ export default function BiomarkerDetail() {
           </Button>
           <div className="flex-1">
             <h1 className="text-2xl font-bold">{biomarkerName}</h1>
-            <p className="text-muted-foreground">История измерений</p>
+            <p className="text-muted-foreground">{t('measurementHistory')}</p>
           </div>
         </div>
         
         <Card className="mb-4 border-yellow-500/50 bg-yellow-500/5">
           <CardContent className="pt-4">
             <p className="text-sm text-yellow-600 dark:text-yellow-400">
-              ⚠️ AI-анализ временно недоступен. Показаны только исторические данные.
+              ⚠️ {t('aiUnavailable')}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Последнее значение</CardTitle>
+            <CardTitle>{t('lastValue')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-baseline gap-2">
@@ -145,7 +147,7 @@ export default function BiomarkerDetail() {
 
         <Card className="mt-6">
           <CardHeader>
-            <CardTitle>История измерений</CardTitle>
+            <CardTitle>{t('measurementHistory')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -164,7 +166,7 @@ export default function BiomarkerDetail() {
         </Card>
 
         <Button onClick={() => window.location.reload()} variant="outline" className="mt-4">
-          🔄 Попробовать обновить
+          🔄 {t('tryRefresh')}
         </Button>
       </div>
     );
@@ -174,9 +176,9 @@ export default function BiomarkerDetail() {
     return (
       <div className="container mx-auto py-8 px-4">
         <div className="text-center">
-          <p className="text-muted-foreground">Нет данных для анализа</p>
+          <p className="text-muted-foreground">{t('noDataForAnalysis')}</p>
           <Button onClick={() => navigate('/medical-documents')} variant="outline" className="mt-4">
-            Вернуться к документам
+            {t('backToDocs')}
           </Button>
         </div>
       </div>
@@ -224,7 +226,7 @@ export default function BiomarkerDetail() {
           className="border-purple-500/50 hover:bg-purple-500/10 hover:shadow-[0_0_10px_rgba(168,85,247,0.2)]"
         >
           <Settings className="h-4 w-4 mr-2" />
-          Customize Optimal Range
+          {t('customizeOptimalRange')}
         </Button>
       </div>
 
@@ -233,7 +235,7 @@ export default function BiomarkerDetail() {
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground mb-1">Последнее значение</p>
+              <p className="text-sm text-muted-foreground mb-1">{t('lastValue')}</p>
               <div className="flex items-baseline gap-2">
                 <span className="text-4xl font-bold">{statistics.latest}</span>
                 <span className="text-lg text-muted-foreground">{biomarker.unit}</span>
@@ -265,17 +267,17 @@ export default function BiomarkerDetail() {
 
       <Tabs defaultValue="trend" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="trend">Тренд</TabsTrigger>
-          <TabsTrigger value="statistics">Статистика</TabsTrigger>
-          <TabsTrigger value="history">История</TabsTrigger>
-          <TabsTrigger value="about">О показателе</TabsTrigger>
+          <TabsTrigger value="trend">{t('tabs.trend')}</TabsTrigger>
+          <TabsTrigger value="statistics">{t('tabs.statistics')}</TabsTrigger>
+          <TabsTrigger value="history">{t('tabs.history')}</TabsTrigger>
+          <TabsTrigger value="about">{t('tabs.about')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="trend" className="space-y-6">
           {isQualitative ? (
             <Card>
               <CardHeader>
-                <CardTitle>График изменений</CardTitle>
+                <CardTitle>{t('chartTitle')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <QualitativeTrendChart history={analysisAny.history} />
@@ -292,7 +294,7 @@ export default function BiomarkerDetail() {
           {/* Before/After Cards for linked supplements */}
           {linkedStackItems && linkedStackItems.length > 0 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Влияние добавок</h3>
+              <h3 className="text-lg font-semibold">{t('supplementsImpact')}</h3>
               <div className="grid gap-4 md:grid-cols-2">
                 {linkedStackItems.map((item) => (
                   <BeforeAfterCard
@@ -311,7 +313,7 @@ export default function BiomarkerDetail() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Info className="h-5 w-5" />
-                  AI Анализ
+                  {t('aiAnalysis')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -326,12 +328,12 @@ export default function BiomarkerDetail() {
         <TabsContent value="statistics" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Распределение по зонам</CardTitle>
+              <CardTitle>{t('zones.title')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
                 <div className="flex justify-between mb-2">
-                  <span className="text-sm">Ниже нормы</span>
+                  <span className="text-sm">{t('zones.belowNormal')}</span>
                   <span className="text-sm font-semibold">{zones.below_normal}%</span>
                 </div>
                 <Progress value={zones.below_normal} className="h-2" />
@@ -339,7 +341,7 @@ export default function BiomarkerDetail() {
               
               <div>
                 <div className="flex justify-between mb-2">
-                  <span className="text-sm">Норма</span>
+                  <span className="text-sm">{t('zones.normal')}</span>
                   <span className="text-sm font-semibold">{zones.normal}%</span>
                 </div>
                 <Progress value={zones.normal} className="h-2 [&>div]:bg-green-500" />
@@ -347,7 +349,7 @@ export default function BiomarkerDetail() {
               
               <div>
                 <div className="flex justify-between mb-2">
-                  <span className="text-sm">Оптимально</span>
+                  <span className="text-sm">{t('zones.optimal')}</span>
                   <span className="text-sm font-semibold">{zones.optimal}%</span>
                 </div>
                 <Progress value={zones.optimal} className="h-2 [&>div]:bg-blue-500" />
@@ -355,7 +357,7 @@ export default function BiomarkerDetail() {
               
               <div>
                 <div className="flex justify-between mb-2">
-                  <span className="text-sm">Выше нормы</span>
+                  <span className="text-sm">{t('zones.aboveNormal')}</span>
                   <span className="text-sm font-semibold">{zones.above_normal}%</span>
                 </div>
                 <Progress value={zones.above_normal} className="h-2 [&>div]:bg-red-500" />
@@ -365,24 +367,24 @@ export default function BiomarkerDetail() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Статистика</CardTitle>
+              <CardTitle>{t('statistics.title')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Измерений</p>
+                  <p className="text-sm text-muted-foreground">{t('statistics.measurements')}</p>
                   <p className="text-2xl font-bold">{statistics.count}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Среднее</p>
+                  <p className="text-sm text-muted-foreground">{t('statistics.average')}</p>
                   <p className="text-2xl font-bold">{statistics.average}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Минимум</p>
+                  <p className="text-sm text-muted-foreground">{t('statistics.min')}</p>
                   <p className="text-2xl font-bold">{statistics.min}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Максимум</p>
+                  <p className="text-sm text-muted-foreground">{t('statistics.max')}</p>
                   <p className="text-2xl font-bold">{statistics.max}</p>
                 </div>
               </div>
@@ -395,7 +397,7 @@ export default function BiomarkerDetail() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <TrendingUp className="h-5 w-5 text-emerald-500" />
-                  Время в оптимальной зоне
+                  {t('optimalZone.title')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -406,7 +408,7 @@ export default function BiomarkerDetail() {
                         {timeInOptimalZone}%
                       </span>
                       <span className="text-lg text-muted-foreground mb-2">
-                        ваших измерений
+                        {t('optimalZone.yourMeasurements')}
                       </span>
                     </div>
                     <Progress 
@@ -415,10 +417,10 @@ export default function BiomarkerDetail() {
                     />
                     <p className="text-sm text-muted-foreground">
                       {timeInOptimalZone >= 80 
-                        ? '🎉 Отлично! Большинство ваших измерений в оптимальной зоне.'
+                        ? `🎉 ${t('optimalZone.excellent')}`
                         : timeInOptimalZone >= 50
-                        ? '👍 Хороший результат. Продолжайте работать над улучшением.'
-                        : '⚠️ Меньше половины измерений в оптимальной зоне. Рекомендуем консультацию специалиста.'
+                        ? `👍 ${t('optimalZone.good')}`
+                        : `⚠️ ${t('optimalZone.needsAttention')}`
                       }
                     </p>
                   </>
@@ -426,7 +428,7 @@ export default function BiomarkerDetail() {
                   <div className="text-center py-4">
                     <Info className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
                     <p className="text-sm text-muted-foreground">
-                      Настройте оптимальный диапазон, чтобы увидеть эту статистику
+                      {t('optimalZone.noData')}
                     </p>
                     <Button
                       variant="outline"
@@ -434,7 +436,7 @@ export default function BiomarkerDetail() {
                       onClick={() => setShowSettings(true)}
                       className="mt-3 border-purple-500/50 hover:bg-purple-500/10"
                     >
-                      Настроить диапазон
+                      {t('configureRange')}
                     </Button>
                   </div>
                 )}
@@ -466,7 +468,7 @@ export default function BiomarkerDetail() {
                     isLatest && "border-primary border-2 bg-primary/5"
                   )}>
                     {isLatest && (
-                      <Badge className="mb-2 bg-primary">Текущее значение</Badge>
+                      <Badge className="mb-2 bg-primary">{t('history.currentValue')}</Badge>
                     )}
                     <div className="flex items-center justify-between">
                       <div className="space-y-1">
@@ -475,7 +477,7 @@ export default function BiomarkerDetail() {
                         </p>
                         {result.raw_test_name !== biomarker.display_name && (
                           <p className="text-xs text-muted-foreground">
-                            Исходное название: {result.raw_test_name}
+                            {t('history.originalName')}: {result.raw_test_name}
                           </p>
                         )}
                         {result.laboratory_name && (
@@ -488,12 +490,12 @@ export default function BiomarkerDetail() {
                         <p className="text-2xl font-bold">{result.normalized_value} {result.normalized_unit}</p>
                         {result.value !== result.normalized_value && (
                           <p className="text-sm text-muted-foreground">
-                            (исходно: {result.value} {result.unit})
+                            ({t('history.original')}: {result.value} {result.unit})
                           </p>
                         )}
                         {(result.ref_range_min !== null && result.ref_range_max !== null) && (
                           <div className="mt-2">
-                            <p className="text-xs text-muted-foreground">Референс лаборатории</p>
+                            <p className="text-xs text-muted-foreground">{t('history.labReference')}</p>
                             <p className="text-sm font-medium">
                               {result.ref_range_min} - {result.ref_range_max} {result.ref_range_unit}
                             </p>
@@ -511,15 +513,15 @@ export default function BiomarkerDetail() {
         <TabsContent value="about">
           <Card>
             <CardHeader>
-              <CardTitle>О показателе</CardTitle>
+              <CardTitle>{t('about.title')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <h3 className="font-semibold mb-2">Референсные значения</h3>
+                <h3 className="font-semibold mb-2">{t('about.referenceRanges')}</h3>
                 <div className="space-y-1 text-sm">
-                  <p>Норма: {reference_ranges.min} - {reference_ranges.max} {biomarker.unit}</p>
+                  <p>{t('about.normal')}: {reference_ranges.min} - {reference_ranges.max} {biomarker.unit}</p>
                   {reference_ranges.optimal_min && reference_ranges.optimal_max && (
-                    <p>Оптимально: {reference_ranges.optimal_min} - {reference_ranges.optimal_max} {biomarker.unit}</p>
+                    <p>{t('about.optimal')}: {reference_ranges.optimal_min} - {reference_ranges.optimal_max} {biomarker.unit}</p>
                   )}
                 </div>
               </div>
