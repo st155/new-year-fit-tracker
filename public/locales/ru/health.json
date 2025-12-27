@@ -19,5 +19,17 @@
     "supabaseAuth": "Supabase Auth",
     "supabaseDb": "База данных Supabase",
     "supabaseUrl": "Supabase URL"
+  },
+  "summary": {
+    "title": "Здоровье (средние показатели)",
+    "recovery": "Восстановление",
+    "sleep": "Сон",
+    "strain": "Strain",
+    "hrv": "HRV",
+    "restingHr": "Пульс покоя",
+    "sleepEfficiency": "Эффективность сна",
+    "hours": "ч",
+    "ms": "мс",
+    "bpm": "уд/мин"
   }
 }
