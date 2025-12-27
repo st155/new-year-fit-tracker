@@ -151,34 +151,34 @@ const Auth = () => {
               </h1>
             </div>
             <h2 className="text-3xl lg:text-4xl font-bold text-foreground">
-              {t('auth.heroTitle')}
+              {t('heroTitle')}
             </h2>
             <p className="text-lg text-muted-foreground max-w-md mx-auto lg:mx-0">
-              {t('auth.heroSubtitle')}
+              {t('heroSubtitle')}
             </p>
             <p className="text-sm text-muted-foreground">
-              {t('auth.challengeDetails')}
+              {t('challengeDetails')}
             </p>
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">{t('auth.features.title')}</h3>
+            <h3 className="text-lg font-semibold">{t('features.title')}</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="p-4 rounded-xl bg-card/50 border border-border/50">
                 <Target className="h-6 w-6 text-primary mb-2 mx-auto" />
-                <p className="text-sm text-muted-foreground">{t('auth.features.goals')}</p>
+                <p className="text-sm text-muted-foreground">{t('features.goals')}</p>
               </div>
               <div className="p-4 rounded-xl bg-card/50 border border-border/50">
                 <Trophy className="h-6 w-6 text-primary mb-2 mx-auto" />
-                <p className="text-sm text-muted-foreground">{t('auth.features.tracking')}</p>
+                <p className="text-sm text-muted-foreground">{t('features.tracking')}</p>
               </div>
               <div className="p-4 rounded-xl bg-card/50 border border-border/50">
                 <Users className="h-6 w-6 text-primary mb-2 mx-auto" />
-                <p className="text-sm text-muted-foreground">{t('auth.features.leaderboard')}</p>
+                <p className="text-sm text-muted-foreground">{t('features.leaderboard')}</p>
               </div>
               <div className="p-4 rounded-xl bg-card/50 border border-border/50">
                 <Dumbbell className="h-6 w-6 text-primary mb-2 mx-auto" />
-                <p className="text-sm text-muted-foreground">{t('auth.features.trainer')}</p>
+                <p className="text-sm text-muted-foreground">{t('features.trainer')}</p>
               </div>
             </div>
           </div>
@@ -187,9 +187,9 @@ const Auth = () => {
         {/* Auth Form */}
         <Card className="w-full max-w-md mx-auto">
           <CardHeader className="space-y-2">
-            <CardTitle className="text-2xl text-center">{t('auth.welcomeBack')}</CardTitle>
+            <CardTitle className="text-2xl text-center">{t('welcomeBack')}</CardTitle>
             <CardDescription className="text-center">
-              {t('auth.signInSubtitle')}
+              {t('signInSubtitle')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -215,7 +215,7 @@ const Auth = () => {
                   <GoogleIcon />
                 )}
                 <span className="ml-2">
-                  {isGoogleLoading ? t('auth.signingIn') : t('auth.signInWithGoogle')}
+                  {isGoogleLoading ? t('signingIn') : t('signInWithGoogle')}
                 </span>
               </Button>
 
@@ -233,8 +233,8 @@ const Auth = () => {
 
             <Tabs defaultValue="signin" className="space-y-4 mt-4">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">{t('auth.signIn')}</TabsTrigger>
-                <TabsTrigger value="signup">{t('auth.signUp')}</TabsTrigger>
+                <TabsTrigger value="signin">{t('signIn')}</TabsTrigger>
+                <TabsTrigger value="signup">{t('signUp')}</TabsTrigger>
               </TabsList>
               
               <TabsContent value="signin">
@@ -304,22 +304,22 @@ const Auth = () => {
                 ) : (
                   <form onSubmit={handleSignIn} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="signin-email">{t('auth.email')}</Label>
+                      <Label htmlFor="signin-email">{t('email')}</Label>
                       <Input
                         id="signin-email"
                         type="email"
-                        placeholder={t('auth.enterEmail')}
+                        placeholder={t('enterEmail')}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="signin-password">{t('auth.password')}</Label>
+                      <Label htmlFor="signin-password">{t('password')}</Label>
                       <Input
                         id="signin-password"
                         type="password"
-                        placeholder={t('auth.enterPassword')}
+                        placeholder={t('enterPassword')}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
@@ -353,7 +353,7 @@ const Auth = () => {
                       className="w-full" 
                       disabled={isLoading}
                     >
-                      {isLoading ? t('auth.signingIn') : t('auth.signIn')}
+                      {isLoading ? t('signingIn') : t('signIn')}
                     </Button>
                     <Button
                       type="button"
