@@ -32,10 +32,10 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
       return;
     }
 
-    if (file.size > 15 * 1024 * 1024) {
+    if (file.size > 100 * 1024 * 1024) {
       toast({
         title: "File too large",
-        description: "Maximum file size is 15 MB",
+        description: "Maximum file size is 100 MB",
         variant: "destructive"
       });
       return;
@@ -260,7 +260,7 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
         </div>
 
         <p className="text-xs text-muted-foreground mt-4">
-          PDF format only, max 15 MB
+          PDF format only, max 100 MB
         </p>
       </CardContent>
     </Card>
