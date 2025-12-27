@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sparkles, TrendingUp, AlertCircle, Trophy, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -15,6 +16,7 @@ interface AIInsight {
 
 export const AIInsights = () => {
   const { user } = useAuth();
+  const { t } = useTranslation('dashboard');
   const [insights, setInsights] = useState<AIInsight[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -57,8 +59,8 @@ export const AIInsights = () => {
           if (todayMetrics.length > 0) {
             generatedInsights.push({
               type: 'highlight',
-              title: "🔥 Достижение дня",
-              message: `Вы записали ${todayMetrics.length} метрик сегодня! Продолжайте в том же духе.`,
+              title: t('insights.todayHighlight'),
+              message: t('insights.metricsToday', { count: todayMetrics.length }),
               priority: 'high'
             });
           }
@@ -80,8 +82,8 @@ export const AIInsights = () => {
           if (staleGoals.length > 0) {
             generatedInsights.push({
               type: 'action_required',
-              title: "⚠️ Goals Need Attention",
-              message: `${staleGoals.length} goal${staleGoals.length > 1 ? 's' : ''} haven't been updated in over a week. Time to log progress!`,
+              title: t('insights.goalsAttention'),
+              message: t('insights.goalsStale', { count: staleGoals.length }),
               priority: 'high'
             });
           }
@@ -96,8 +98,8 @@ export const AIInsights = () => {
           if (activeHabits.length > 0) {
             generatedInsights.push({
               type: 'recommendation',
-              title: "💪 Habit Streak Power",
-              message: `You're maintaining ${activeHabits.length} active habits. Consistency is key to success!`,
+              title: t('insights.habitStreak'),
+              message: t('insights.habitActive', { count: activeHabits.length }),
               priority: 'medium'
             });
           }
@@ -107,8 +109,8 @@ export const AIInsights = () => {
         if (metricsData.data && metricsData.data.length >= 5) {
           generatedInsights.push({
             type: 'achievement',
-            title: "🏆 Активная неделя",
-            message: `Вы записали ${metricsData.data.length} метрик на этой неделе. Вы в огне!`,
+            title: t('insights.activeWeek'),
+            message: t('insights.weeklyMetrics', { count: metricsData.data.length }),
             priority: 'low'
           });
         }
@@ -117,8 +119,8 @@ export const AIInsights = () => {
         if (generatedInsights.length === 0) {
           generatedInsights.push({
             type: 'recommendation',
-            title: "🎯 Get Started",
-            message: "Start logging your metrics and completing habits to see personalized insights here!",
+            title: t('insights.getStarted'),
+            message: t('insights.getStartedDesc'),
             priority: 'medium'
           });
         }
@@ -164,7 +166,7 @@ export const AIInsights = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5" />
-            AI Insights
+            {t('insights.title')}
           </CardTitle>
         </CardHeader>
         <CardContent className="flex items-center justify-center py-8">
@@ -179,9 +181,9 @@ export const AIInsights = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Sparkles className="h-5 w-5" />
-          AI Insights
+          {t('insights.title')}
           <Badge variant="secondary" className="ml-auto">
-            Smart Analysis
+            {t('insights.badge')}
           </Badge>
         </CardTitle>
       </CardHeader>

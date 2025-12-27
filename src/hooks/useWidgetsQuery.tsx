@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 export interface Widget {
   id: string;
@@ -44,6 +45,7 @@ const DEFAULT_WIDGETS = [
 export function useWidgetsQuery(userId: string | undefined) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useTranslation('dashboard');
 
   return useQuery({
     queryKey: widgetKeys.list(userId!),
@@ -88,8 +90,8 @@ export function useWidgetsQuery(userId: string | undefined) {
           
           // Don't throw - return empty array and show user-friendly message
           toast({
-            title: 'Виджеты не найдены',
-            description: 'Добавьте виджеты вручную через настройки дашборда',
+            title: t('widgets.notFound'),
+            description: t('widgets.addManually'),
             variant: 'default',
           });
           return [];
@@ -142,6 +144,7 @@ export function useWidgetDataQuery(
 export function useAddWidgetMutation() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useTranslation('dashboard');
 
   return useMutation({
     mutationFn: async ({ userId, metricName }: { 
@@ -176,14 +179,14 @@ export function useAddWidgetMutation() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: widgetKeys.list(variables.userId) });
       toast({
-        title: 'Виджет добавлен',
+        title: t('widgets.added'),
         description: variables.metricName,
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Ошибка',
-        description: error.message || 'Не удалось добавить виджет',
+        title: t('widgets.error'),
+        description: error.message || t('widgets.addError'),
         variant: 'destructive',
       });
     },
@@ -196,6 +199,7 @@ export function useAddWidgetMutation() {
 export function useRemoveWidgetMutation() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useTranslation('dashboard');
 
   return useMutation({
     mutationFn: async ({ userId, widgetId }: { userId: string; widgetId: string }) => {
@@ -209,13 +213,13 @@ export function useRemoveWidgetMutation() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: widgetKeys.list(variables.userId) });
       toast({
-        title: 'Виджет удален',
+        title: t('widgets.deleted'),
       });
     },
     onError: () => {
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось удалить виджет',
+        title: t('widgets.error'),
+        description: t('widgets.deleteError'),
         variant: 'destructive',
       });
     },
