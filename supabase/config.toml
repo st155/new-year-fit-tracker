@@ -270,3 +270,6 @@ verify_jwt = false
 
 [functions.populate-dashboards]
 verify_jwt = false
+
+[functions.backfill-whoop-all]
+verify_jwt = false
