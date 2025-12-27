@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,7 +23,7 @@ import {
   History
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 
 interface WhoopStatus {
   connected: boolean;
@@ -39,18 +40,21 @@ interface SyncResult {
   days_synced: number;
 }
 
-const SYNC_PERIODS = [
-  { value: '7', label: '7 дней', description: 'Неделя' },
-  { value: '14', label: '14 дней', description: '2 недели' },
-  { value: '28', label: '28 дней', description: '4 недели' },
-  { value: '90', label: '90 дней', description: '3 месяца' },
+const getSyncPeriods = (t: (key: string) => string) => [
+  { value: '7', label: t('whoopDirect.syncPeriods.7days'), description: t('whoopDirect.syncPeriods.week') },
+  { value: '14', label: t('whoopDirect.syncPeriods.14days'), description: t('whoopDirect.syncPeriods.2weeks') },
+  { value: '28', label: t('whoopDirect.syncPeriods.28days'), description: t('whoopDirect.syncPeriods.4weeks') },
+  { value: '90', label: t('whoopDirect.syncPeriods.90days'), description: t('whoopDirect.syncPeriods.3months') },
 ];
 
 export function WhoopDirectIntegration() {
+  const { t, i18n } = useTranslation('integrations');
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
+  const SYNC_PERIODS = getSyncPeriods(t);
   const [status, setStatus] = useState<WhoopStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(false);
@@ -114,8 +118,8 @@ export function WhoopDirectIntegration() {
     if (wasConnecting && status?.connected) {
       sessionStorage.removeItem('whoop_connecting');
       toast({
-        title: 'Whoop подключен!',
-        description: 'Данные начнут синхронизироваться автоматически',
+        title: t('whoopDirect.connectionSuccess'),
+        description: t('whoopDirect.autoSync'),
       });
       queryClient.invalidateQueries({ queryKey: ['unified-metrics'] });
     }
@@ -209,8 +213,8 @@ export function WhoopDirectIntegration() {
       if (isMobile) {
         console.log('📱 [WhoopConnect] Mobile detected, using redirect flow...');
         toast({
-          title: 'Переход на страницу авторизации',
-          description: 'Завершите авторизацию Whoop и вернитесь автоматически',
+          title: t('whoopDirect.redirectingToAuth'),
+          description: t('whoopDirect.completeAuth'),
         });
         
         // Small delay to show toast
@@ -235,8 +239,8 @@ export function WhoopDirectIntegration() {
       if (!popup) {
         console.error('❌ [WhoopConnect] Popup blocked');
         toast({
-          title: 'Popup заблокирован',
-          description: 'Пожалуйста, разрешите всплывающие окна для этого сайта',
+          title: t('whoopDirect.popupBlocked'),
+          description: t('whoopDirect.allowPopups'),
           variant: 'destructive',
         });
         setConnecting(false);
@@ -271,8 +275,8 @@ export function WhoopDirectIntegration() {
           if (event.data.success) {
             console.log('✅ [WhoopConnect] Connection successful!');
             toast({
-              title: 'Whoop подключен!',
-              description: 'Данные начнут синхронизироваться автоматически',
+              title: t('whoopDirect.connectionSuccess'),
+              description: t('whoopDirect.autoSync'),
             });
             
             // Refresh status and queries
@@ -282,8 +286,8 @@ export function WhoopDirectIntegration() {
           } else {
             console.error('❌ [WhoopConnect] Connection failed:', event.data.error);
             toast({
-              title: 'Ошибка подключения',
-              description: event.data.error || 'Не удалось подключить Whoop',
+              title: t('whoopDirect.connectionError'),
+              description: event.data.error || t('whoopDirect.couldNotConnect'),
               variant: 'destructive',
             });
           }
@@ -309,8 +313,8 @@ export function WhoopDirectIntegration() {
             console.log('✅ [WhoopConnect] Fallback: Connected!');
             setStatus(data);
             toast({
-              title: 'Whoop подключен!',
-              description: 'Данные начнут синхронизироваться автоматически',
+              title: t('whoopDirect.connectionSuccess'),
+              description: t('whoopDirect.autoSync'),
             });
             queryClient.invalidateQueries({ queryKey: ['unified-metrics'] });
             queryClient.invalidateQueries({ queryKey: ['device-metrics'] });
@@ -326,8 +330,8 @@ export function WhoopDirectIntegration() {
         } else {
           console.log('⚠️ [WhoopConnect] Fallback checks exhausted, connection status unknown');
           toast({
-            title: 'Проверьте подключение',
-            description: 'Откройте страницу снова, чтобы увидеть статус Whoop',
+            title: t('whoopDirect.checkConnection'),
+            description: t('whoopDirect.reopenPage'),
           });
         }
         return false;
@@ -363,8 +367,8 @@ export function WhoopDirectIntegration() {
     } catch (error: any) {
       console.error('❌ [WhoopConnect] Error:', error);
       toast({
-        title: 'Ошибка',
-        description: error.message || 'Не удалось начать авторизацию',
+        title: t('whoopDirect.error'),
+        description: error.message || t('whoopDirect.couldNotStartAuth'),
         variant: 'destructive',
       });
       setConnecting(false);
@@ -393,8 +397,8 @@ export function WhoopDirectIntegration() {
       setLastSyncResult(result);
 
       toast({
-        title: 'Синхронизация завершена',
-        description: `${result.metrics_count} метрик, ${result.workouts_count} тренировок за ${daysBack} дней`,
+        title: t('whoopDirect.syncComplete'),
+        description: t('whoopDirect.syncResult', { metrics: result.metrics_count, workouts: result.workouts_count, days: daysBack }),
       });
 
       // Refresh queries
@@ -405,8 +409,8 @@ export function WhoopDirectIntegration() {
     } catch (error: any) {
       console.error('Sync failed:', error);
       toast({
-        title: 'Ошибка синхронизации',
-        description: error.message || 'Не удалось синхронизировать данные',
+        title: t('whoopDirect.syncError'),
+        description: error.message || t('whoopDirect.couldNotSync'),
         variant: 'destructive',
       });
     } finally {
@@ -416,7 +420,7 @@ export function WhoopDirectIntegration() {
   };
 
   const disconnect = async () => {
-    const confirmed = window.confirm('Вы уверены, что хотите отключить Whoop?');
+    const confirmed = window.confirm(t('whoopDirect.confirmDisconnect'));
     if (!confirmed) return;
 
     setDisconnecting(true);
@@ -428,8 +432,8 @@ export function WhoopDirectIntegration() {
       if (error) throw error;
 
       toast({
-        title: 'Whoop отключен',
-        description: 'Вы можете подключить его снова в любое время',
+        title: t('whoopDirect.disconnected'),
+        description: t('whoopDirect.canReconnect'),
       });
 
       setStatus({ connected: false });
@@ -438,8 +442,8 @@ export function WhoopDirectIntegration() {
     } catch (error: any) {
       console.error('Disconnect failed:', error);
       toast({
-        title: 'Ошибка',
-        description: error.message || 'Не удалось отключить Whoop',
+        title: t('whoopDirect.error'),
+        description: error.message || t('whoopDirect.couldNotDisconnect'),
         variant: 'destructive',
       });
     } finally {
@@ -472,20 +476,20 @@ export function WhoopDirectIntegration() {
             </div>
             <div>
               <CardTitle className="text-lg flex items-center gap-2">
-                Whoop Direct
+                {t('whoopDirect.title')}
                 <Badge variant="outline" className="text-xs border-yellow-500/50 text-yellow-500">
                   Beta
                 </Badge>
               </CardTitle>
               <CardDescription>
-                Прямое подключение без Terra (только для VIP)
+                {t('whoopDirect.description')}
               </CardDescription>
             </div>
           </div>
           {status?.connected && (
             <Badge variant="default" className="bg-green-500/20 text-green-500 border-green-500/30">
               <CheckCircle className="h-3 w-3 mr-1" />
-              Подключено
+              {t('whoopDirect.connected')}
             </Badge>
           )}
         </div>
@@ -497,7 +501,7 @@ export function WhoopDirectIntegration() {
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Токен истёк. Пожалуйста, переподключите Whoop.
+                  {t('whoopDirect.tokenExpired')}
                 </AlertDescription>
               </Alert>
             )}
@@ -507,10 +511,10 @@ export function WhoopDirectIntegration() {
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Clock className="h-4 w-4" />
                   <span>
-                    Последняя синхронизация:{' '}
+                    {t('whoopDirect.lastSync')}{' '}
                     {formatDistanceToNow(new Date(status.last_sync_at), { 
                       addSuffix: true, 
-                      locale: ru 
+                      locale: dateLocale 
                     })}
                   </span>
                 </div>
@@ -519,10 +523,10 @@ export function WhoopDirectIntegration() {
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <CheckCircle className="h-4 w-4" />
                   <span>
-                    Подключено:{' '}
+                    {t('whoopDirect.connectedAt')}{' '}
                     {formatDistanceToNow(new Date(status.connected_at), { 
                       addSuffix: true, 
-                      locale: ru 
+                      locale: dateLocale 
                     })}
                   </span>
                 </div>
@@ -533,7 +537,7 @@ export function WhoopDirectIntegration() {
               <Alert className="bg-green-500/10 border-green-500/30">
                 <CheckCircle className="h-4 w-4 text-green-500" />
                 <AlertDescription className="text-green-600 dark:text-green-400">
-                  Загружено: {lastSyncResult.metrics_count} метрик, {lastSyncResult.workouts_count} тренировок за {lastSyncResult.days_synced} дней
+                  {t('whoopDirect.loaded', { metrics: lastSyncResult.metrics_count, workouts: lastSyncResult.workouts_count, days: lastSyncResult.days_synced })}
                 </AlertDescription>
               </Alert>
             )}
@@ -548,12 +552,12 @@ export function WhoopDirectIntegration() {
                 {syncing ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Синхронизация...
+                    {t('whoopDirect.syncing')}
                   </>
                 ) : (
                   <>
                     <RefreshCw className="h-4 w-4 mr-2" />
-                    Синхронизировать (7 дней)
+                    {t('whoopDirect.sync7days')}
                   </>
                 )}
               </Button>
@@ -574,7 +578,7 @@ export function WhoopDirectIntegration() {
             <div className="border-t border-border pt-4 space-y-3">
               <div className="flex items-center gap-2 text-sm font-medium">
                 <History className="h-4 w-4" />
-                Загрузить историю
+                {t('whoopDirect.loadHistory')}
               </div>
               
               <div className="flex gap-2">
@@ -600,12 +604,12 @@ export function WhoopDirectIntegration() {
                   {syncingHistory ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Загрузка данных...
+                      {t('whoopDirect.loadingData')}
                     </>
                   ) : (
                     <>
                       <Download className="h-4 w-4 mr-2" />
-                      Загрузить данные
+                      {t('whoopDirect.loadData')}
                     </>
                   )}
                 </Button>
@@ -613,7 +617,7 @@ export function WhoopDirectIntegration() {
 
               {parseInt(selectedPeriod) >= 90 && (
                 <p className="text-xs text-muted-foreground">
-                  ⚠️ Загрузка за 3 месяца может занять несколько минут
+                  {t('whoopDirect.longLoadWarning')}
                 </p>
               )}
             </div>
@@ -623,8 +627,7 @@ export function WhoopDirectIntegration() {
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Эта интеграция работает напрямую с Whoop API, минуя Terra. 
-                Данные обновляются каждые 15 минут автоматически.
+                {t('whoopDirect.integrationInfo')}
               </AlertDescription>
             </Alert>
 
@@ -636,12 +639,12 @@ export function WhoopDirectIntegration() {
               {connecting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Подключение...
+                  {t('whoopDirect.connecting')}
                 </>
               ) : (
                 <>
                   <ExternalLink className="h-4 w-4 mr-2" />
-                  Подключить Whoop напрямую
+                  {t('whoopDirect.connectDirect')}
                 </>
               )}
             </Button>
