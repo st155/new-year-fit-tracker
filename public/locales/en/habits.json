@@ -54,5 +54,9 @@
       "hours": "{{hours}}h {{mins}}m",
       "minutes": "{{mins}}m"
     }
+  },
+  "miniChart": {
+    "completed": "Completed",
+    "lastDays": "over last {{days}} days"
   }
 }

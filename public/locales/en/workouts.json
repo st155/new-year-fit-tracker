@@ -101,5 +101,23 @@
     "planCreated": "Plan created!",
     "createError": "Error creating plan",
     "continue": "Continue"
+  },
+  "dayCard": {
+    "today": "Today",
+    "progress": "Progress",
+    "startWorkout": "Start Workout",
+    "exercises_one": "{{count}} exercise",
+    "exercises_other": "{{count}} exercises"
+  },
+  "lastWorkout": {
+    "noData": "No recorded workouts",
+    "startFirst": "Start your first workout!",
+    "workout": "Workout",
+    "volume": "volume"
+  },
+  "units": {
+    "min": "min",
+    "km": "km",
+    "kcal": "kcal"
   }
 }

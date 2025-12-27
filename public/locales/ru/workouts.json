@@ -101,5 +101,25 @@
     "planCreated": "План создан!",
     "createError": "Ошибка создания плана",
     "continue": "Продолжить"
+  },
+  "dayCard": {
+    "today": "Сегодня",
+    "progress": "Прогресс",
+    "startWorkout": "Начать тренировку",
+    "exercises_one": "{{count}} упражнение",
+    "exercises_few": "{{count}} упражнения",
+    "exercises_many": "{{count}} упражнений",
+    "exercises_other": "{{count}} упражнений"
+  },
+  "lastWorkout": {
+    "noData": "Нет записанных тренировок",
+    "startFirst": "Начните свою первую тренировку!",
+    "workout": "Тренировка",
+    "volume": "объём"
+  },
+  "units": {
+    "min": "мин",
+    "km": "км",
+    "kcal": "ккал"
   }
 }

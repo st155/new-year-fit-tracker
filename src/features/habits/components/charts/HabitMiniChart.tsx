@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { format, subDays, startOfDay } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
 interface HabitMiniChartProps {
@@ -10,8 +11,11 @@ interface HabitMiniChartProps {
 }
 
 export function HabitMiniChart({ completions, days = 7, className }: HabitMiniChartProps) {
+  const { t, i18n } = useTranslation('habits');
   // Null-safe guard against undefined/null completions
   const safeCompletions = Array.isArray(completions) ? completions : [];
+  
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
   
   const chartData = useMemo(() => {
     const today = startOfDay(new Date());
@@ -26,13 +30,13 @@ export function HabitMiniChart({ completions, days = 7, className }: HabitMiniCh
       
       data.push({
         date: dateStr,
-        label: format(date, 'EEE', { locale: ru }),
+        label: format(date, 'EEE', { locale: dateLocale }),
         completed: hasCompletion
       });
     }
     
     return data;
-  }, [safeCompletions, days]);
+  }, [safeCompletions, days, dateLocale]);
 
   const completionRate = useMemo(() => {
     const completed = chartData.filter(d => d.completed).length;
@@ -95,7 +99,7 @@ export function HabitMiniChart({ completions, days = 7, className }: HabitMiniCh
       {/* Stats */}
       <div className="text-center">
         <div className="text-xs text-muted-foreground">
-          Выполнено <span className="font-semibold text-foreground">{completionRate}%</span> за последние {days} дней
+          {t('miniChart.completed')} <span className="font-semibold text-foreground">{completionRate}%</span> {t('miniChart.lastDays', { days })}
         </div>
       </div>
     </div>

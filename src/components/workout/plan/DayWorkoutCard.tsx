@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,7 @@ export function DayWorkoutCard({
   onExerciseInfo,
   onLogExercise,
 }: DayWorkoutCardProps) {
+  const { t } = useTranslation('workouts');
   const [isExpanded, setIsExpanded] = useState(isToday);
   const totalExercises = exercises.length;
   const progressPercentage = (completedExercises / totalExercises) * 100;
@@ -77,7 +79,7 @@ export function DayWorkoutCard({
                 {isToday && (
                   <Badge variant="outline" className="bg-warning/10 border-warning/30">
                     <Flame className="w-3 h-3 mr-1" />
-                    Сегодня
+                    {t('dayCard.today')}
                   </Badge>
                 )}
               </div>
@@ -89,7 +91,7 @@ export function DayWorkoutCard({
                 {estimatedMinutes && (
                   <Badge variant="secondary" className="text-xs">
                     <Clock className="w-3 h-3 mr-1" />
-                    {estimatedMinutes}-{estimatedMinutes + 15} мин
+                    {estimatedMinutes}-{estimatedMinutes + 15} {t('units.min')}
                   </Badge>
                 )}
               </div>
@@ -123,7 +125,7 @@ export function DayWorkoutCard({
           {completedExercises > 0 && (
             <div className="mt-3 space-y-1">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">Прогресс</span>
+                <span className="text-muted-foreground">{t('dayCard.progress')}</span>
                 <span className="font-medium">{completedExercises}/{totalExercises}</span>
               </div>
               <div className="h-1.5 bg-muted/20 rounded-full overflow-hidden">
@@ -205,7 +207,7 @@ export function DayWorkoutCard({
                     size="lg"
                   >
                     <Play className="w-4 h-4 mr-2" />
-                    Начать тренировку
+                    {t('dayCard.startWorkout')}
                   </Button>
                 )}
               </CardContent>
@@ -216,7 +218,7 @@ export function DayWorkoutCard({
         {!isExpanded && (
           <CardContent className="pt-3 pb-4">
             <p className="text-sm text-muted-foreground text-center">
-              ⚡ {totalExercises} {totalExercises === 1 ? 'упражнение' : 'упражнений'}
+              ⚡ {totalExercises} {t('dayCard.exercises', { count: totalExercises })}
             </p>
           </CardContent>
         )}
