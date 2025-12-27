@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { useHabitsQuery } from '@/features/habits';
 import { useHabitProgressQuery } from '@/features/habits/hooks';
@@ -8,7 +9,7 @@ import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Flame, TrendingUp, Calendar, Target, Download, FileText } from 'lucide-react';
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import { useMemo, useState } from 'react';
 import { HabitProgressChart } from '@/features/habits/components/legacy/HabitProgressChart';
 import { HabitCalendarHeatmap } from '@/features/habits/components/legacy/HabitCalendarHeatmap';
@@ -18,11 +19,14 @@ import { toast } from 'sonner';
 import { exportHabitToPDF } from '@/lib/exporters/pdf-exporter';
 
 export default function HabitDetail() {
+  const { t, i18n } = useTranslation('habitDetail');
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: habits, isLoading } = useHabitsQuery({ enabled: !!user?.id });
   const [isExporting, setIsExporting] = useState(false);
+
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
 
   const habit = useMemo(() => {
     return habits?.find(h => h.id === id);
@@ -57,10 +61,10 @@ export default function HabitDetail() {
     return (
       <div className="container py-6">
         <div className="text-center space-y-4">
-          <h1 className="text-2xl font-bold">Привычка не найдена</h1>
+          <h1 className="text-2xl font-bold">{t('notFound')}</h1>
           <Button onClick={() => navigate('/habits-v3')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Вернуться к привычкам
+            {t('backToHabits')}
           </Button>
         </div>
       </div>
@@ -117,7 +121,7 @@ export default function HabitDetail() {
     link.download = `habit-${habit.name}-${format(new Date(), 'yyyy-MM-dd')}.csv`;
     link.click();
     
-    toast.success('CSV экспортирован');
+    toast.success(t('export.csvSuccess'));
   };
 
   const handleExportPDF = async () => {
@@ -136,10 +140,10 @@ export default function HabitDetail() {
         })),
         longestStreak,
       });
-      toast.success('PDF отчет создан');
+      toast.success(t('export.pdfSuccess'));
     } catch (error) {
       console.error('PDF export failed:', error);
-      toast.error('Ошибка при создании PDF');
+      toast.error(t('export.pdfError'));
     } finally {
       setIsExporting(false);
     }
@@ -181,7 +185,7 @@ export default function HabitDetail() {
             className="glass-card border-white/20"
           >
             <Download className="mr-2 h-4 w-4" />
-            CSV
+            {t('export.csv')}
           </Button>
           <Button
             variant="outline"
@@ -190,7 +194,7 @@ export default function HabitDetail() {
             className="glass-card border-white/20"
           >
             <FileText className="mr-2 h-4 w-4" />
-            {isExporting ? 'Создание...' : 'PDF Отчет'}
+            {isExporting ? t('export.creating') : t('export.pdf')}
           </Button>
         </div>
       </div>
@@ -204,7 +208,7 @@ export default function HabitDetail() {
             </div>
             <div>
               <div className="text-2xl font-bold">{stats.current_streak}</div>
-              <div className="text-xs text-muted-foreground">Текущая серия</div>
+              <div className="text-xs text-muted-foreground">{t('stats.currentStreak')}</div>
             </div>
           </div>
         </Card>
@@ -216,7 +220,7 @@ export default function HabitDetail() {
             </div>
             <div>
               <div className="text-2xl font-bold">{longestStreak}</div>
-              <div className="text-xs text-muted-foreground">Лучшая серия</div>
+              <div className="text-xs text-muted-foreground">{t('stats.bestStreak')}</div>
             </div>
           </div>
         </Card>
@@ -228,7 +232,7 @@ export default function HabitDetail() {
             </div>
             <div>
               <div className="text-2xl font-bold">{stats.total_completions}</div>
-              <div className="text-xs text-muted-foreground">Всего выполнений</div>
+              <div className="text-xs text-muted-foreground">{t('stats.totalCompletions')}</div>
             </div>
           </div>
         </Card>
@@ -240,7 +244,7 @@ export default function HabitDetail() {
             </div>
             <div>
               <div className="text-2xl font-bold">{Math.round(stats.completion_rate)}%</div>
-              <div className="text-xs text-muted-foreground">Процент выполнения</div>
+              <div className="text-xs text-muted-foreground">{t('stats.completionRate')}</div>
             </div>
           </div>
         </Card>
@@ -248,7 +252,7 @@ export default function HabitDetail() {
 
       {/* Progress Chart */}
       <Card className="glass-card border-white/10 p-6">
-        <h2 className="text-xl font-bold mb-4">График прогресса (90 дней)</h2>
+        <h2 className="text-xl font-bold mb-4">{t('charts.progress90Days')}</h2>
         {isProgressLoading ? (
           <Skeleton className="h-64" />
         ) : progressData && progressData.length > 0 ? (
@@ -260,7 +264,7 @@ export default function HabitDetail() {
           />
         ) : (
           <div className="text-center py-12 text-muted-foreground">
-            Нет данных для отображения
+            {t('charts.noData')}
           </div>
         )}
       </Card>
@@ -278,7 +282,7 @@ export default function HabitDetail() {
 
       {/* History Table */}
       <Card className="glass-card border-white/10 p-6">
-        <h2 className="text-xl font-bold mb-4">История выполнений</h2>
+        <h2 className="text-xl font-bold mb-4">{t('history.title')}</h2>
         {isProgressLoading ? (
           <Skeleton className="h-48" />
         ) : progressData && progressData.length > 0 ? (
@@ -293,16 +297,16 @@ export default function HabitDetail() {
                 >
                   <div className="flex items-center gap-3">
                     <Badge variant="secondary" className="bg-habit-positive/20">
-                      {format(new Date(day.date), 'd MMM yyyy', { locale: ru })}
+                      {format(new Date(day.date), 'd MMM yyyy', { locale: dateLocale })}
                     </Badge>
                     <span className="text-sm text-muted-foreground">
-                      {format(new Date(day.date), 'EEEE', { locale: ru })}
+                      {format(new Date(day.date), 'EEEE', { locale: dateLocale })}
                     </span>
                   </div>
                   {day.streak_day && day.streak_day > 1 && (
                     <Badge variant="outline" className="border-habit-negative/50">
                       <Flame className="mr-1 h-3 w-3 text-habit-negative" />
-                      {day.streak_day} дней подряд
+                      {day.streak_day} {t('history.daysInARow')}
                     </Badge>
                   )}
                 </div>
@@ -310,7 +314,7 @@ export default function HabitDetail() {
           </div>
         ) : (
           <div className="text-center py-12 text-muted-foreground">
-            История пуста
+            {t('history.empty')}
           </div>
         )}
       </Card>

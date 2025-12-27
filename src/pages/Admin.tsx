@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { DataQualityMonitoring } from '@/components/admin/DataQualityMonitoring';
 import { TerraTokenAdmin } from '@/components/admin/TerraTokenAdmin';
@@ -7,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ShieldAlert, Activity, Link2 } from 'lucide-react';
 
 export default function Admin() {
+  const { t } = useTranslation('admin');
   const { user, isTrainer } = useAuth();
 
   // Check if user is admin or trainer
@@ -22,7 +24,7 @@ export default function Admin() {
         <Alert variant="destructive">
           <ShieldAlert className="h-4 w-4" />
           <AlertDescription>
-            You don't have permission to access this page. Admin and trainer access only.
+            {t('accessDenied')}
           </AlertDescription>
         </Alert>
       </div>
@@ -35,11 +37,11 @@ export default function Admin() {
         <TabsList>
           <TabsTrigger value="data-quality" className="gap-2">
             <Activity className="h-4 w-4" />
-            Data Quality
+            {t('tabs.dataQuality')}
           </TabsTrigger>
           <TabsTrigger value="terra-tokens" className="gap-2">
             <Link2 className="h-4 w-4" />
-            Terra Tokens
+            {t('tabs.terraTokens')}
           </TabsTrigger>
         </TabsList>
         

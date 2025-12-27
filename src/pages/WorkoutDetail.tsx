@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useWorkoutDetail } from "@/hooks/useWorkoutDetail";
@@ -15,6 +16,7 @@ import StrengthSummaryCard from "@/components/workout/detail/StrengthSummaryCard
 import { motion } from "framer-motion";
 
 export default function WorkoutDetail() {
+  const { t } = useTranslation('workoutDetail');
   const { workoutId } = useParams<{ workoutId: string }>();
   const navigate = useNavigate();
   const { data, isLoading, error } = useWorkoutDetail(workoutId || '');
@@ -40,9 +42,9 @@ export default function WorkoutDetail() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <p className="text-muted-foreground mb-4">Тренировка не найдена</p>
+          <p className="text-muted-foreground mb-4">{t('notFound')}</p>
           <Button onClick={() => navigate('/workouts')} variant="outline">
-            Вернуться назад
+            {t('backButton')}
           </Button>
         </div>
       </div>
@@ -74,7 +76,7 @@ export default function WorkoutDetail() {
             <div>
               <h1 className="text-3xl font-bold text-foreground">{workoutName}</h1>
               <p className="text-muted-foreground text-sm mt-1">
-                {isStrength ? 'Силовая тренировка' : 'Детальная информация о тренировке'}
+                {isStrength ? t('strengthWorkout') : t('detailedInfo')}
               </p>
             </div>
           </div>

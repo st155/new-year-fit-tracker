@@ -1,0 +1,27 @@
+{
+  "notFound": "Привычка не найдена",
+  "backToHabits": "Вернуться к привычкам",
+  "stats": {
+    "currentStreak": "Текущая серия",
+    "bestStreak": "Лучшая серия",
+    "totalCompletions": "Всего выполнений",
+    "completionRate": "Процент выполнения"
+  },
+  "charts": {
+    "progress90Days": "График прогресса (90 дней)",
+    "noData": "Нет данных для отображения"
+  },
+  "history": {
+    "title": "История выполнений",
+    "empty": "История пуста",
+    "daysInARow": "дней подряд"
+  },
+  "export": {
+    "csv": "CSV",
+    "pdf": "PDF Отчет",
+    "creating": "Создание...",
+    "csvSuccess": "CSV экспортирован",
+    "pdfSuccess": "PDF отчет создан",
+    "pdfError": "Ошибка при создании PDF"
+  }
+}

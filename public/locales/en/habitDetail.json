@@ -1,0 +1,27 @@
+{
+  "notFound": "Habit not found",
+  "backToHabits": "Back to habits",
+  "stats": {
+    "currentStreak": "Current streak",
+    "bestStreak": "Best streak",
+    "totalCompletions": "Total completions",
+    "completionRate": "Completion rate"
+  },
+  "charts": {
+    "progress90Days": "Progress chart (90 days)",
+    "noData": "No data to display"
+  },
+  "history": {
+    "title": "Completion history",
+    "empty": "History is empty",
+    "daysInARow": "days in a row"
+  },
+  "export": {
+    "csv": "CSV",
+    "pdf": "PDF Report",
+    "creating": "Creating...",
+    "csvSuccess": "CSV exported",
+    "pdfSuccess": "PDF report created",
+    "pdfError": "Error creating PDF"
+  }
+}

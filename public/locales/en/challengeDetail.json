@@ -1,0 +1,44 @@
+{
+  "backToList": "Back to challenges",
+  "notFound": "Challenge not found",
+  "participating": "Participating",
+  "join": "Join",
+  "joining": "Joining...",
+  "leave": "Leave",
+  "leaveConfirm": {
+    "title": "Leave challenge?",
+    "description": "Are you sure you want to leave? Your progress and points will be saved, but you will no longer participate in the competition.",
+    "cancel": "Cancel",
+    "confirm": "Leave"
+  },
+  "stats": {
+    "start": "Start",
+    "remaining": "Remaining",
+    "goals": "Goals",
+    "days": "days",
+    "finished": "Finished"
+  },
+  "tabs": {
+    "about": "About",
+    "feed": "Feed",
+    "chat": "Chat",
+    "leaderboard": "Leaderboard"
+  },
+  "report": {
+    "preview": "Preview",
+    "results": "Results",
+    "view": "View",
+    "report": "Report"
+  },
+  "success": {
+    "joined": "You joined the challenge!",
+    "goalsCreated": "Goals created: {{count}}",
+    "left": "You left the challenge"
+  },
+  "errors": {
+    "joinFailed": "Failed to join challenge",
+    "leaveFailed": "Failed to leave challenge",
+    "notFoundParticipation": "Could not find challenge participation",
+    "checkPermissions": "Check your permissions"
+  }
+}
