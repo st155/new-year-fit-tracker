@@ -150,9 +150,9 @@ const getSourceDisplayName = (source: string): string => {
 };
 
 // Определение цвета рамки по качеству значения метрики
+// ВАЖНО: Используем более мягкие пороги, чтобы не показывать красные плитки для нормальных персональных значений
 const getMetricQualityColor = (metricName: string, value: number): string | null => {
   const name = metricName.toLowerCase();
-  console.log('[DEBUG getMetricQualityColor]', metricName, '→', name, '| value:', value);
   
   // Recovery Score: <33 = красный, 33-66 = желтый, >66 = зеленый
   if (name.includes('recovery')) {
@@ -161,76 +161,75 @@ const getMetricQualityColor = (metricName: string, value: number): string | null
     return '#10b981';
   }
   
-  // Sleep Efficiency: <75 = красный, 75-85 = желтый, ≥85 = зеленый
+  // Sleep Efficiency: <70 = красный, 70-80 = желтый, ≥80 = зеленый (смягчили)
   if (name.includes('sleep') && name.includes('efficiency')) {
-    if (value < 75) return '#ef4444';
-    if (value < 85) return '#eab308';
+    if (value < 70) return '#ef4444';
+    if (value < 80) return '#eab308';
     return '#10b981';
   }
   
-  // Sleep Duration: <6ч = красный, 6-7ч = желтый, ≥7ч = зеленый
+  // Sleep Duration: <5.5ч = красный, 5.5-6.5ч = желтый, ≥6.5ч = зеленый (смягчили)
   if (name.includes('sleep') && name.includes('duration')) {
-    if (value < 6) return '#ef4444';
-    if (value < 7) return '#eab308';
+    if (value < 5.5) return '#ef4444';
+    if (value < 6.5) return '#eab308';
     return '#10b981';
   }
   
-  // Resting HR: <35 или >100 = красный, 40-85 = норма
+  // Resting HR: Очень широкий диапазон нормы (35-90 bpm)
+  // Для спортсменов 35-50 это отлично, для обычных людей 60-80 тоже норма
   if ((name.includes('resting') && name.includes('heart')) || name.includes('resting hr') || name.includes('пульс в покое')) {
-    if (value < 35 || value > 100) return '#ef4444';
-    if (value < 45 || value > 85) return '#eab308';
-    return '#10b981';
+    if (value < 30 || value > 100) return '#ef4444'; // Только экстремальные значения
+    return '#10b981'; // Всё остальное - норма (35-100 bpm)
   }
   
-  // Steps: <5000 = красный, <8000 = желтый, >=10000 = зеленый
+  // Steps: <3000 = красный, <5000 = желтый, >=8000 = зеленый (смягчили)
   if (name.includes('step') || name.includes('шаг')) {
-    if (value < 5000) return '#ef4444';
-    if (value < 8000) return '#eab308';
-    if (value >= 10000) return '#10b981';
-    return null;
+    if (value < 3000) return '#ef4444';
+    if (value < 5000) return '#eab308';
+    if (value >= 8000) return '#10b981';
+    return null; // 5000-8000 нейтрально
   }
   
-  // Body Fat Percentage: зависит от пола, упрощенно 15-28% = норма
+  // Body Fat Percentage: широкий диапазон нормы 8-30%
   if ((name.includes('body') && name.includes('fat')) || name.includes('процент жира') || name.includes('жир')) {
-    if (value < 10 || value > 35) return '#ef4444';
-    if (value < 15 || value > 28) return '#eab308';
-    return '#10b981';
+    if (value < 5 || value > 40) return '#ef4444'; // Только экстремальные значения
+    if (value >= 8 && value <= 25) return '#10b981'; // Атлетический и здоровый диапазон
+    return null; // 5-8% и 25-40% - нейтрально
   }
   
-  // HRV: >60 = зеленый, 40-60 = желтый, <40 = красный
+  // HRV: Широкий диапазон нормы, т.к. сильно зависит от возраста и физподготовки
+  // HRV 20-30 может быть нормой для пожилых, 80-150 для молодых спортсменов
   if (name.includes('hrv')) {
-    if (value < 40) return '#ef4444';
-    if (value < 60) return '#eab308';
-    return '#10b981';
+    if (value < 15) return '#ef4444'; // Только очень низкий HRV
+    if (value < 25) return '#eab308'; // Низковат, но не критично
+    return '#10b981'; // 25+ = норма (убрали верхний порог)
   }
   
-  // Day Strain: <10 = желтый (мало), 10-18 = зеленый (норма), >18 = желтый (много)
+  // Day Strain: Нет плохих значений - любой strain это нормально
+  // <8 = день отдыха (норма), 8-15 = обычный день, >15 = активный день
   if ((name.includes('strain') && !name.includes('workout')) || name.includes('нагрузка')) {
-    if (value < 10 || value > 18) return '#eab308';
-    return '#10b981';
+    return null; // Не показываем цвет - любой strain нормален
   }
   
-  // Active Calories: <200 = красный, 200-499 = желтый, >=500 = зеленый
+  // Active Calories: <100 = красный, 100-300 = желтый, >=300 = зеленый (смягчили)
   if ((name.includes('active') && name.includes('calor')) || name.includes('активные калории')) {
-    if (value < 200) return '#ef4444';
-    if (value < 500) return '#eab308';
+    if (value < 100) return '#ef4444';
+    if (value < 300) return '#eab308';
     return '#10b981';
   }
   
-  // Max Heart Rate: <120 = желтый (низкая интенсивность), >180 = красный
+  // Max Heart Rate: Не показываем цвет - это просто факт, не хорошо/плохо
   if ((name.includes('max') && name.includes('heart')) || name.includes('max hr') || name.includes('макс')) {
-    if (value < 120) return '#eab308';
-    if (value > 180) return '#ef4444';
-    return null; // Норма
+    return null;
   }
   
   return null;
 };
 
 // Получение текстового индикатора качества метрики
+// Используем более мягкие оценки, учитывая индивидуальные особенности
 const getQualityLabel = (metricName: string, value: number): { icon: string; text: string; color: string } | null => {
   const name = metricName.toLowerCase();
-  console.log('[DEBUG getQualityLabel]', metricName, '→', name, '| value:', value);
   
   if (name.includes('recovery')) {
     if (value < 33) return { icon: '🔴', text: 'Низкое восстановление', color: '#ef4444' };
@@ -239,70 +238,73 @@ const getQualityLabel = (metricName: string, value: number): { icon: string; tex
   }
   
   if (name.includes('sleep') && name.includes('efficiency')) {
-    if (value < 75) return { icon: '😴', text: 'Плохой сон', color: '#ef4444' };
-    if (value < 85) return { icon: '😐', text: 'Норма', color: '#eab308' };
-    if (value < 95) return { icon: '😊', text: 'Хороший сон', color: '#10b981' };
-    return { icon: '🌟', text: 'Отличный сон', color: '#10b981' };
+    if (value < 70) return { icon: '😴', text: 'Плохой сон', color: '#ef4444' };
+    if (value < 80) return { icon: '😐', text: 'Норма', color: '#eab308' };
+    return { icon: '😊', text: 'Хороший сон', color: '#10b981' };
   }
   
   if (name.includes('sleep') && name.includes('duration')) {
-    if (value < 6) return { icon: '😴', text: 'Мало сна', color: '#ef4444' };
-    if (value < 7) return { icon: '😐', text: 'Недостаточно', color: '#eab308' };
+    if (value < 5.5) return { icon: '😴', text: 'Мало сна', color: '#ef4444' };
+    if (value < 6.5) return { icon: '😐', text: 'Недостаточно', color: '#eab308' };
     if (value < 8) return { icon: '😊', text: 'Хорошо', color: '#10b981' };
     return { icon: '🌟', text: 'Отлично', color: '#10b981' };
   }
   
+  // HRV: Более мягкие пороги
   if (name.includes('hrv')) {
-    if (value < 40) return { icon: '🔴', text: 'Низкое', color: '#ef4444' };
-    if (value < 60) return { icon: '⚠️', text: 'Среднее', color: '#eab308' };
+    if (value < 15) return { icon: '🔴', text: 'Очень низкое', color: '#ef4444' };
+    if (value < 25) return { icon: '⚠️', text: 'Низковато', color: '#eab308' };
+    if (value < 50) return { icon: '😊', text: 'Норма', color: '#10b981' };
     return { icon: '✅', text: 'Отличное', color: '#10b981' };
   }
   
+  // Day Strain: Нет плохих значений
   if (name.includes('strain') && !name.includes('workout')) {
-    if (value < 10) return { icon: '⚠️', text: 'Низкая нагрузка', color: '#eab308' };
-    if (value <= 18) return { icon: '✅', text: 'Норма', color: '#10b981' };
-    return { icon: '⚠️', text: 'Высокая нагрузка', color: '#eab308' };
+    if (value < 8) return { icon: '😌', text: 'День отдыха', color: '#10b981' };
+    if (value <= 14) return { icon: '💪', text: 'Активный день', color: '#10b981' };
+    return { icon: '🔥', text: 'Интенсивный день', color: '#10b981' };
   }
   
   // Steps
   if (name.includes('step')) {
-    if (value < 5000) return { icon: '🔴', text: 'Очень мало', color: '#ef4444' };
-    if (value < 8000) return { icon: '⚠️', text: 'Недостаточно', color: '#eab308' };
+    if (value < 3000) return { icon: '🔴', text: 'Очень мало', color: '#ef4444' };
+    if (value < 5000) return { icon: '⚠️', text: 'Маловато', color: '#eab308' };
     if (value >= 10000) return { icon: '✅', text: 'Отлично', color: '#10b981' };
-    return { icon: '😊', text: 'Хорошо', color: '#10b981' };
+    if (value >= 8000) return { icon: '😊', text: 'Хорошо', color: '#10b981' };
+    return null; // 5000-8000 нейтрально
   }
   
-  // Body Fat Percentage
+  // Body Fat Percentage - широкий диапазон нормы
   if (name.includes('body') && name.includes('fat')) {
-    if (value < 10) return { icon: '⚠️', text: 'Слишком низкий', color: '#ef4444' };
-    if (value < 15) return { icon: '📊', text: 'Атлетический', color: '#10b981' };
+    if (value < 5) return { icon: '⚠️', text: 'Критически низкий', color: '#ef4444' };
+    if (value < 10) return { icon: '🏃', text: 'Соревновательный', color: '#10b981' };
+    if (value < 15) return { icon: '💪', text: 'Атлетический', color: '#10b981' };
     if (value < 20) return { icon: '✅', text: 'Отличный', color: '#10b981' };
-    if (value < 28) return { icon: '😊', text: 'Норма', color: '#10b981' };
+    if (value < 25) return { icon: '😊', text: 'Здоровый', color: '#10b981' };
+    if (value < 30) return { icon: '📊', text: 'Норма', color: '#10b981' };
     if (value < 35) return { icon: '⚠️', text: 'Повышенный', color: '#eab308' };
     return { icon: '🔴', text: 'Высокий', color: '#ef4444' };
   }
   
   // Active Calories
   if (name.includes('active') && name.includes('calories')) {
-    if (value < 200) return { icon: '🔴', text: 'Мало активности', color: '#ef4444' };
-    if (value < 500) return { icon: '⚠️', text: 'Средняя активность', color: '#eab308' };
-    return { icon: '✅', text: 'Отличная активность', color: '#10b981' };
+    if (value < 100) return { icon: '🔴', text: 'Мало активности', color: '#ef4444' };
+    if (value < 300) return { icon: '⚠️', text: 'Средняя активность', color: '#eab308' };
+    return { icon: '✅', text: 'Хорошая активность', color: '#10b981' };
   }
   
-  // Max Heart Rate
+  // Max Heart Rate - просто информация, не оценка
   if (name.includes('max') && name.includes('heart')) {
-    if (value < 120) return { icon: '⚠️', text: 'Низкая интенсивность', color: '#eab308' };
-    if (value > 180) return { icon: '🔴', text: 'Очень высокий', color: '#ef4444' };
-    return { icon: '💪', text: 'Норма', color: '#10b981' };
+    return null; // Не показываем оценку
   }
   
-  // Resting Heart Rate (дополнительные детали)
+  // Resting Heart Rate - широкий диапазон нормы
   if ((name.includes('resting') && name.includes('heart')) || name.includes('resting hr') || name.includes('пульс в покое')) {
-    if (value < 40) return { icon: '⚠️', text: 'Очень низкий', color: '#ef4444' };
+    if (value < 30) return { icon: '⚠️', text: 'Очень низкий', color: '#ef4444' };
     if (value < 50) return { icon: '🏃', text: 'Атлетический', color: '#10b981' };
     if (value < 60) return { icon: '✅', text: 'Отличный', color: '#10b981' };
-    if (value < 70) return { icon: '😊', text: 'Хороший', color: '#10b981' };
-    if (value < 85) return { icon: '📊', text: 'Норма', color: '#10b981' };
+    if (value < 75) return { icon: '😊', text: 'Хороший', color: '#10b981' };
+    if (value < 90) return { icon: '📊', text: 'Норма', color: '#10b981' };
     if (value < 100) return { icon: '⚠️', text: 'Повышенный', color: '#eab308' };
     return { icon: '🔴', text: 'Высокий', color: '#ef4444' };
   }
