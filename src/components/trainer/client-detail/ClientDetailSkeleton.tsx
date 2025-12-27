@@ -2,12 +2,15 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface ClientDetailSkeletonProps {
   onBack?: () => void;
 }
 
 export function ClientDetailSkeleton({ onBack }: ClientDetailSkeletonProps) {
+  const { t } = useTranslation('trainerDashboard');
+
   return (
     <div className="space-y-6">
       {/* Header with Actions */}
@@ -15,7 +18,7 @@ export function ClientDetailSkeleton({ onBack }: ClientDetailSkeletonProps) {
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" onClick={onBack} disabled={!onBack}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Назад
+            {t('common.back')}
           </Button>
         </div>
         

@@ -179,5 +179,23 @@
     "manualInstructions": "Для обновления данных требуется ручное измерение на устройстве",
     "manualInput": "Ручной ввод",
     "daysAgo": "{{days}}д назад"
+  },
+  "conflictDialog": {
+    "title": "Разрешите конфликт данных",
+    "description": "Для метрики \"{{metricName}}\" обнаружены разные значения из разных источников. Выберите наиболее точное значение.",
+    "noInfo": "Нет дополнительной информации",
+    "freshData": "Свежие данные",
+    "reliableSource": "Надежный источник",
+    "crossValidated": "Согласуется с другими источниками",
+    "frequentMeasurements": "Регулярные измерения",
+    "standardData": "Стандартные данные",
+    "confidenceHigh": "Высокая",
+    "confidenceMedium": "Средняя",
+    "confidenceLow": "Низкая",
+    "recommended": "Рекомендуется",
+    "confidence": "Уверенность: {{value}}%",
+    "cancel": "Отменить",
+    "ignore": "Игнорировать конфликт",
+    "apply": "Применить выбор"
   }
 }

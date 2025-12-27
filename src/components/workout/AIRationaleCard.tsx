@@ -1,7 +1,10 @@
 import { motion } from 'framer-motion';
 import { Bot } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export function AIRationaleCard() {
+  const { t } = useTranslation('workouts');
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -16,7 +19,7 @@ export function AIRationaleCard() {
           </div>
           <div className="flex-1">
             <p className="text-sm text-gray-300 leading-relaxed">
-              Наш алгоритм создает персонализированную программу, используя информацию о тебе и твоих целях.
+              {t('aiRationale.description')}
             </p>
           </div>
         </div>

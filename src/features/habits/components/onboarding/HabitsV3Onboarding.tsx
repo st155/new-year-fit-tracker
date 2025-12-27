@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ArrowRight, ArrowLeft, Brain, List, Target, Sparkles, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface HabitsV3OnboardingProps {
   open: boolean;
@@ -13,6 +14,7 @@ interface HabitsV3OnboardingProps {
 const TOTAL_STEPS = 5;
 
 export function HabitsV3Onboarding({ open, onComplete }: HabitsV3OnboardingProps) {
+  const { t } = useTranslation('habits');
   const [step, setStep] = useState(1);
 
   const handleNext = () => {
@@ -40,7 +42,7 @@ export function HabitsV3Onboarding({ open, onComplete }: HabitsV3OnboardingProps
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between">
-            <DialogTitle>Привычки 3.0</DialogTitle>
+            <DialogTitle>{t('onboarding.title')}</DialogTitle>
             <Button
               variant="ghost"
               size="icon"
@@ -52,7 +54,7 @@ export function HabitsV3Onboarding({ open, onComplete }: HabitsV3OnboardingProps
           </div>
           <Progress value={progress} className="mt-2" />
           <p className="text-xs text-muted-foreground mt-1">
-            Шаг {step} из {TOTAL_STEPS}
+            {t('onboarding.step', { step, total: TOTAL_STEPS })}
           </p>
         </DialogHeader>
 
@@ -65,11 +67,11 @@ export function HabitsV3Onboarding({ open, onComplete }: HabitsV3OnboardingProps
             transition={{ duration: 0.3 }}
             className="py-6"
           >
-            {step === 1 && <Step1Welcome />}
-            {step === 2 && <Step2TimeOfDay />}
-            {step === 3 && <Step3SwipeGestures />}
-            {step === 4 && <Step4ViewModes />}
-            {step === 5 && <Step5XPLevels />}
+            {step === 1 && <Step1Welcome t={t} />}
+            {step === 2 && <Step2TimeOfDay t={t} />}
+            {step === 3 && <Step3SwipeGestures t={t} />}
+            {step === 4 && <Step4ViewModes t={t} />}
+            {step === 5 && <Step5XPLevels t={t} />}
           </motion.div>
         </AnimatePresence>
 
@@ -81,17 +83,17 @@ export function HabitsV3Onboarding({ open, onComplete }: HabitsV3OnboardingProps
             className="gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
-            Назад
+            {t('onboarding.back')}
           </Button>
           
           <div className="flex gap-2">
             {step < TOTAL_STEPS && (
               <Button variant="outline" onClick={handleSkip}>
-                Пропустить
+                {t('onboarding.skip')}
               </Button>
             )}
             <Button onClick={handleNext} className="gap-2">
-              {step === TOTAL_STEPS ? 'Начать!' : 'Далее'}
+              {step === TOTAL_STEPS ? t('onboarding.start') : t('onboarding.next')}
               {step < TOTAL_STEPS && <ArrowRight className="h-4 w-4" />}
             </Button>
           </div>
@@ -101,45 +103,47 @@ export function HabitsV3Onboarding({ open, onComplete }: HabitsV3OnboardingProps
   );
 }
 
-function Step1Welcome() {
+interface StepProps {
+  t: ReturnType<typeof useTranslation>['t'];
+}
+
+function Step1Welcome({ t }: StepProps) {
   return (
     <div className="text-center space-y-6">
       <div className="text-7xl">🎯</div>
       <div className="space-y-3">
         <h2 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
-          Добро пожаловать!
+          {t('onboarding.welcome')}
         </h2>
         <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-          Мощная система отслеживания привычек с умной организацией, 
-          геймификацией и социальными функциями
+          {t('onboarding.welcomeDesc')}
         </p>
       </div>
       <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto mt-8">
         <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
           <div className="text-3xl mb-2">🧠</div>
-          <p className="text-sm font-medium">Умная организация</p>
+          <p className="text-sm font-medium">{t('onboarding.smartOrg')}</p>
         </div>
         <div className="p-4 rounded-lg bg-purple-500/5 border border-purple-500/20">
           <div className="text-3xl mb-2">⚡</div>
-          <p className="text-sm font-medium">Быстрые жесты</p>
+          <p className="text-sm font-medium">{t('onboarding.quickGestures')}</p>
         </div>
         <div className="p-4 rounded-lg bg-green-500/5 border border-green-500/20">
           <div className="text-3xl mb-2">✨</div>
-          <p className="text-sm font-medium">Геймификация</p>
+          <p className="text-sm font-medium">{t('onboarding.gamification')}</p>
         </div>
       </div>
     </div>
   );
 }
 
-function Step2TimeOfDay() {
+function Step2TimeOfDay({ t }: StepProps) {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h3 className="text-2xl font-bold mb-3">Умная организация</h3>
+        <h3 className="text-2xl font-bold mb-3">{t('onboarding.smartOrgTitle')}</h3>
         <p className="text-muted-foreground">
-          Привычки автоматически группируются по времени суток: утро, день и вечер. 
-          Фокусируйтесь на том, что важно прямо сейчас.
+          {t('onboarding.smartOrgDesc')}
         </p>
       </div>
       
@@ -149,8 +153,8 @@ function Step2TimeOfDay() {
           whileHover={{ scale: 1.02 }}
         >
           <div className="text-4xl mb-3">☀️</div>
-          <p className="font-semibold mb-1">Утренние привычки</p>
-          <p className="text-xs text-muted-foreground">6:00 - 12:00</p>
+          <p className="font-semibold mb-1">{t('onboarding.timeSlots.morning')}</p>
+          <p className="text-xs text-muted-foreground">{t('onboarding.timeSlots.morningTime')}</p>
         </motion.div>
         
         <motion.div 
@@ -158,8 +162,8 @@ function Step2TimeOfDay() {
           whileHover={{ scale: 1.02 }}
         >
           <div className="text-4xl mb-3">☕</div>
-          <p className="font-semibold mb-1">Дневные привычки</p>
-          <p className="text-xs text-muted-foreground">12:00 - 18:00</p>
+          <p className="font-semibold mb-1">{t('onboarding.timeSlots.afternoon')}</p>
+          <p className="text-xs text-muted-foreground">{t('onboarding.timeSlots.afternoonTime')}</p>
         </motion.div>
         
         <motion.div 
@@ -167,8 +171,8 @@ function Step2TimeOfDay() {
           whileHover={{ scale: 1.02 }}
         >
           <div className="text-4xl mb-3">🌙</div>
-          <p className="font-semibold mb-1">Вечерние привычки</p>
-          <p className="text-xs text-muted-foreground">18:00 - 23:00</p>
+          <p className="font-semibold mb-1">{t('onboarding.timeSlots.evening')}</p>
+          <p className="text-xs text-muted-foreground">{t('onboarding.timeSlots.eveningTime')}</p>
         </motion.div>
         
         <motion.div 
@@ -176,22 +180,21 @@ function Step2TimeOfDay() {
           whileHover={{ scale: 1.02 }}
         >
           <div className="text-4xl mb-3">🌃</div>
-          <p className="font-semibold mb-1">Ночные привычки</p>
-          <p className="text-xs text-muted-foreground">23:00 - 6:00</p>
+          <p className="font-semibold mb-1">{t('onboarding.timeSlots.night')}</p>
+          <p className="text-xs text-muted-foreground">{t('onboarding.timeSlots.nightTime')}</p>
         </motion.div>
       </div>
     </div>
   );
 }
 
-function Step3SwipeGestures() {
+function Step3SwipeGestures({ t }: StepProps) {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h3 className="text-2xl font-bold mb-3">Быстрые жесты</h3>
+        <h3 className="text-2xl font-bold mb-3">{t('onboarding.gesturesTitle')}</h3>
         <p className="text-muted-foreground">
-          Используйте свайп вправо для мгновенной отметки привычек. 
-          Минимум действий - максимум эффективности!
+          {t('onboarding.gesturesDesc')}
         </p>
       </div>
       
@@ -212,8 +215,8 @@ function Step3SwipeGestures() {
               <Target className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <p className="font-semibold">Привычка</p>
-              <p className="text-xs text-muted-foreground">Свайп для действия</p>
+              <p className="font-semibold">{t('onboarding.gestures.habit')}</p>
+              <p className="text-xs text-muted-foreground">{t('onboarding.gestures.swipeHint')}</p>
             </div>
           </div>
         </motion.div>
@@ -223,32 +226,32 @@ function Step3SwipeGestures() {
         <div className="flex items-center gap-3 p-4 rounded-lg bg-green-500/5 border border-green-500/20">
           <ArrowRight className="h-5 w-5 text-green-500 flex-shrink-0" />
           <div>
-            <p className="font-medium">Свайп вправо</p>
-            <p className="text-sm text-muted-foreground">Быстро отметить выполнение</p>
+            <p className="font-medium">{t('onboarding.gestures.swipeRight')}</p>
+            <p className="text-sm text-muted-foreground">{t('onboarding.gestures.swipeRightDesc')}</p>
           </div>
         </div>
         
         <div className="flex items-center gap-3 p-4 rounded-lg bg-orange-500/5 border border-orange-500/20">
           <ArrowLeft className="h-5 w-5 text-orange-500 flex-shrink-0" />
           <div>
-            <p className="font-medium">Свайп влево</p>
-            <p className="text-sm text-muted-foreground">Открыть быстрое меню</p>
+            <p className="font-medium">{t('onboarding.gestures.swipeLeft')}</p>
+            <p className="text-sm text-muted-foreground">{t('onboarding.gestures.swipeLeftDesc')}</p>
           </div>
         </div>
         
         <div className="flex items-center gap-3 p-4 rounded-lg bg-blue-500/5 border border-blue-500/20">
           <Target className="h-5 w-5 text-blue-500 flex-shrink-0" />
           <div>
-            <p className="font-medium">Короткое нажатие</p>
-            <p className="text-sm text-muted-foreground">Раскрыть виджет для быстрых действий</p>
+            <p className="font-medium">{t('onboarding.gestures.tap')}</p>
+            <p className="text-sm text-muted-foreground">{t('onboarding.gestures.tapDesc')}</p>
           </div>
         </div>
         
         <div className="flex items-center gap-3 p-4 rounded-lg bg-purple-500/5 border border-purple-500/20">
           <Target className="h-5 w-5 text-purple-500 flex-shrink-0" />
           <div>
-            <p className="font-medium">Долгое нажатие (0.8с)</p>
-            <p className="text-sm text-muted-foreground">Просмотр деталей и статистики</p>
+            <p className="font-medium">{t('onboarding.gestures.longPress')}</p>
+            <p className="text-sm text-muted-foreground">{t('onboarding.gestures.longPressDesc')}</p>
           </div>
         </div>
       </div>
@@ -256,14 +259,13 @@ function Step3SwipeGestures() {
   );
 }
 
-function Step4ViewModes() {
+function Step4ViewModes({ t }: StepProps) {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h3 className="text-2xl font-bold mb-3">Гибкие режимы просмотра</h3>
+        <h3 className="text-2xl font-bold mb-3">{t('onboarding.viewModesTitle')}</h3>
         <p className="text-muted-foreground">
-          Переключайтесь между режимами: умный вид с группировкой, компактный список, 
-          социальная лента, режим фокуса или временная линия.
+          {t('onboarding.viewModesDesc')}
         </p>
       </div>
       
@@ -277,9 +279,9 @@ function Step4ViewModes() {
               <Brain className="h-6 w-6 text-primary" />
             </div>
             <div className="flex-1">
-              <p className="font-semibold text-lg mb-1">🧠 Умный вид</p>
+              <p className="font-semibold text-lg mb-1">{t('onboarding.viewModes.smart')}</p>
               <p className="text-sm text-muted-foreground">
-                Организация по времени суток с автоматической группировкой и приоритизацией
+                {t('onboarding.viewModes.smartDesc')}
               </p>
             </div>
           </div>
@@ -294,9 +296,9 @@ function Step4ViewModes() {
               <List className="h-6 w-6 text-blue-500" />
             </div>
             <div className="flex-1">
-              <p className="font-semibold text-lg mb-1">📋 Компактный список</p>
+              <p className="font-semibold text-lg mb-1">{t('onboarding.viewModes.list')}</p>
               <p className="text-sm text-muted-foreground">
-                Плотный список с фильтрацией для быстрого просмотра всех привычек
+                {t('onboarding.viewModes.listDesc')}
               </p>
             </div>
           </div>
@@ -311,9 +313,9 @@ function Step4ViewModes() {
               <Target className="h-6 w-6 text-purple-500" />
             </div>
             <div className="flex-1">
-              <p className="font-semibold text-lg mb-1">🎯 Режим фокуса</p>
+              <p className="font-semibold text-lg mb-1">{t('onboarding.viewModes.focus')}</p>
               <p className="text-sm text-muted-foreground">
-                Полноэкранный режим для концентрации на одной привычке с таймером
+                {t('onboarding.viewModes.focusDesc')}
               </p>
             </div>
           </div>
@@ -323,54 +325,53 @@ function Step4ViewModes() {
   );
 }
 
-function Step5XPLevels() {
+function Step5XPLevels({ t }: StepProps) {
   return (
     <div className="text-center space-y-6">
       <div className="text-7xl">✨</div>
       <div className="space-y-3">
         <h3 className="text-2xl font-bold bg-gradient-to-r from-yellow-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-          Система прогресса
+          {t('onboarding.progressTitle')}
         </h3>
         <p className="text-muted-foreground max-w-xl mx-auto">
-          Зарабатывайте опыт за каждую выполненную привычку, повышайте уровень 
-          и получайте достижения. Превратите привычки в увлекательную игру!
+          {t('onboarding.progressDesc')}
         </p>
       </div>
       
       <div className="grid grid-cols-2 gap-4 max-w-lg mx-auto">
         <div className="p-5 rounded-xl bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/20">
           <Sparkles className="h-8 w-8 mx-auto mb-3 text-yellow-500" />
-          <p className="font-semibold mb-2">Базовый XP</p>
-          <p className="text-sm text-muted-foreground">За каждую выполненную привычку</p>
+          <p className="font-semibold mb-2">{t('onboarding.xp.base')}</p>
+          <p className="text-sm text-muted-foreground">{t('onboarding.xp.baseDesc')}</p>
         </div>
         
         <div className="p-5 rounded-xl bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-orange-500/20">
           <div className="text-3xl mb-3">🔥</div>
-          <p className="font-semibold mb-2">Бонус за серию</p>
-          <p className="text-sm text-muted-foreground">+20% за стрик от 7 дней</p>
+          <p className="font-semibold mb-2">{t('onboarding.xp.streak')}</p>
+          <p className="text-sm text-muted-foreground">{t('onboarding.xp.streakDesc')}</p>
         </div>
         
         <div className="p-5 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20">
           <div className="text-3xl mb-3">💪</div>
-          <p className="font-semibold mb-2">Сложность</p>
-          <p className="text-sm text-muted-foreground">Больше XP за сложные привычки</p>
+          <p className="font-semibold mb-2">{t('onboarding.xp.difficulty')}</p>
+          <p className="text-sm text-muted-foreground">{t('onboarding.xp.difficultyDesc')}</p>
         </div>
         
         <div className="p-5 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20">
           <div className="text-3xl mb-3">📈</div>
-          <p className="font-semibold mb-2">Прогресс</p>
-          <p className="text-sm text-muted-foreground">Каждые 1000 XP = новый уровень</p>
+          <p className="font-semibold mb-2">{t('onboarding.xp.progress')}</p>
+          <p className="text-sm text-muted-foreground">{t('onboarding.xp.progressDesc')}</p>
         </div>
       </div>
       
       <div className="p-6 rounded-xl bg-gradient-to-r from-primary/10 via-purple-500/10 to-pink-500/10 border-2 border-primary/20 mt-8">
         <p className="text-sm font-medium text-muted-foreground mb-2">
-          Отслеживайте прогресс в режиме реального времени
+          {t('onboarding.trackProgress')}
         </p>
         <div className="flex items-center justify-center gap-3">
-          <div className="text-2xl font-bold text-primary">Lvl 1</div>
+          <div className="text-2xl font-bold text-primary">{t('onboarding.level', { level: 1 })}</div>
           <Progress value={0} className="w-32" />
-          <div className="text-sm text-muted-foreground">0 / 1000 XP</div>
+          <div className="text-sm text-muted-foreground">{t('onboarding.xpProgress', { current: 0, max: 1000 })}</div>
         </div>
       </div>
     </div>
