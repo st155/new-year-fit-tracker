@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +40,7 @@ interface Client {
 }
 
 export function TrainerBroadcasts() {
+  const { t } = useTranslation("trainer");
   const { user } = useAuth();
   const [broadcasts, setBroadcasts] = useState<TrainerBroadcast[]>([]);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
@@ -77,7 +79,7 @@ export function TrainerBroadcasts() {
       setBroadcasts(data as TrainerBroadcast[] || []);
     } catch (error: any) {
       console.error('Error loading broadcasts:', error);
-      toast.error('Ошибка загрузки рассылок');
+      toast.error(t("broadcasts.loadError"));
     } finally {
       setLoading(false);
     }
@@ -135,7 +137,7 @@ export function TrainerBroadcasts() {
 
   const handleCreateBroadcast = async () => {
     if (!user || !newBroadcast.subject.trim() || !newBroadcast.message.trim()) {
-      toast.error('Заполните все обязательные поля');
+      toast.error(t("broadcasts.fillRequiredFields"));
       return;
     }
 
@@ -156,13 +158,13 @@ export function TrainerBroadcasts() {
 
       if (error) throw error;
 
-      toast.success('Рассылка создана');
+      toast.success(t("broadcasts.broadcastCreated"));
       setIsCreateDialogOpen(false);
       resetForm();
       loadBroadcasts();
     } catch (error: any) {
       console.error('Error creating broadcast:', error);
-      toast.error('Ошибка создания рассылки');
+      toast.error(t("broadcasts.broadcastCreateFailed"));
     }
   };
 
@@ -185,11 +187,11 @@ export function TrainerBroadcasts() {
         })
         .eq('id', broadcastId);
 
-      toast.success(`Рассылка отправлена ${data?.sent_count || 0} получателям`);
+      toast.success(t("broadcasts.broadcastSent", { count: data?.sent_count || 0 }));
       loadBroadcasts();
     } catch (error: any) {
       console.error('Error sending broadcast:', error);
-      toast.error('Ошибка отправки рассылки');
+      toast.error(t("broadcasts.broadcastSendFailed"));
       
       // Обновляем статус на failed
       await supabase
@@ -214,27 +216,27 @@ export function TrainerBroadcasts() {
   const getRecipientText = (broadcast: TrainerBroadcast) => {
     switch (broadcast.recipient_type) {
       case 'all_clients':
-        return 'Все подопечные';
+        return t("broadcasts.allClients");
       case 'challenge_participants':
         const challenge = challenges.find(c => c.id === broadcast.challenge_id);
-        return `Участники: ${challenge?.title || 'Неизвестный челлендж'}`;
+        return `${t("broadcasts.challengeParticipants")}: ${challenge?.title || t("broadcasts.unknownChallenge")}`;
       case 'specific_clients':
-        return `Выбранные клиенты (${broadcast.specific_clients?.length || 0})`;
+        return t("broadcasts.selectedClients", { count: broadcast.specific_clients?.length || 0 });
       default:
-        return 'Неизвестно';
+        return t("broadcasts.unknown");
     }
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'draft':
-        return <Badge variant="secondary">Черновик</Badge>;
+        return <Badge variant="secondary">{t("broadcasts.status.draft")}</Badge>;
       case 'sending':
-        return <Badge variant="default">Отправляется</Badge>;
+        return <Badge variant="default">{t("broadcasts.status.sending")}</Badge>;
       case 'sent':
-        return <Badge variant="default" className="bg-green-100 text-green-800">Отправлено</Badge>;
+        return <Badge variant="default" className="bg-green-100 text-green-800">{t("broadcasts.status.sent")}</Badge>;
       case 'failed':
-        return <Badge variant="destructive">Ошибка</Badge>;
+        return <Badge variant="destructive">{t("broadcasts.status.failed")}</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -244,45 +246,45 @@ export function TrainerBroadcasts() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Email-рассылки</h2>
-          <p className="text-muted-foreground">Отправляйте уведомления и сообщения группе подопечных</p>
+          <h2 className="text-2xl font-bold">{t("broadcasts.title")}</h2>
+          <p className="text-muted-foreground">{t("broadcasts.subtitle")}</p>
         </div>
         
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
-              Создать рассылку
+              {t("broadcasts.createBroadcast")}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Создать email-рассылку</DialogTitle>
+              <DialogTitle>{t("broadcasts.createTitle")}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="subject">Тема письма *</Label>
+                <Label htmlFor="subject">{t("broadcasts.subjectLabel")}</Label>
                 <Input
                   id="subject"
                   value={newBroadcast.subject}
                   onChange={(e) => setNewBroadcast({ ...newBroadcast, subject: e.target.value })}
-                  placeholder="Например: Важное сообщение от тренера"
+                  placeholder={t("broadcasts.subjectPlaceholder")}
                 />
               </div>
 
               <div>
-                <Label htmlFor="message">Сообщение *</Label>
+                <Label htmlFor="message">{t("broadcasts.messageLabel")}</Label>
                 <Textarea
                   id="message"
                   value={newBroadcast.message}
                   onChange={(e) => setNewBroadcast({ ...newBroadcast, message: e.target.value })}
-                  placeholder="Введите текст сообщения..."
+                  placeholder={t("broadcasts.messagePlaceholder")}
                   className="min-h-32"
                 />
               </div>
 
               <div>
-                <Label htmlFor="recipient_type">Получатели</Label>
+                <Label htmlFor="recipient_type">{t("broadcasts.recipientsLabel")}</Label>
                 <Select
                   value={newBroadcast.recipient_type}
                   onValueChange={(value: any) => setNewBroadcast({ ...newBroadcast, recipient_type: value })}
@@ -291,21 +293,21 @@ export function TrainerBroadcasts() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all_clients">Все подопечные</SelectItem>
-                    <SelectItem value="challenge_participants">Участники челленджа</SelectItem>
+                    <SelectItem value="all_clients">{t("broadcasts.allClients")}</SelectItem>
+                    <SelectItem value="challenge_participants">{t("broadcasts.challengeParticipants")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {newBroadcast.recipient_type === 'challenge_participants' && (
                 <div>
-                  <Label htmlFor="challenge_id">Челлендж</Label>
+                  <Label htmlFor="challenge_id">{t("broadcasts.selectChallenge")}</Label>
                   <Select
                     value={newBroadcast.challenge_id}
                     onValueChange={(value) => setNewBroadcast({ ...newBroadcast, challenge_id: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Выберите челлендж" />
+                      <SelectValue placeholder={t("broadcasts.selectChallenge")} />
                     </SelectTrigger>
                     <SelectContent>
                       {challenges.map((challenge) => (
@@ -322,14 +324,14 @@ export function TrainerBroadcasts() {
                 <div className="flex items-start gap-2">
                   <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5" />
                   <div className="text-sm text-blue-800">
-                    <p className="font-medium">Примечание:</p>
-                    <p>После создания рассылки вы сможете отправить её всем получателям одним кликом.</p>
+                    <p className="font-medium">{t("broadcasts.note")}</p>
+                    <p>{t("broadcasts.noteText")}</p>
                   </div>
                 </div>
               </div>
 
               <Button onClick={handleCreateBroadcast} className="w-full">
-                Создать рассылку
+                {t("broadcasts.create")}
               </Button>
             </div>
           </DialogContent>
@@ -353,9 +355,9 @@ export function TrainerBroadcasts() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-8">
             <Mail className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium">Нет рассылок</h3>
+            <h3 className="text-lg font-medium">{t("broadcasts.noBroadcasts")}</h3>
             <p className="text-muted-foreground text-center">
-              Создайте первую email-рассылку для ваших подопечных
+              {t("broadcasts.createFirst")}
             </p>
           </CardContent>
         </Card>
@@ -375,7 +377,7 @@ export function TrainerBroadcasts() {
                       </Badge>
                       {broadcast.sent_count > 0 && (
                         <Badge variant="outline">
-                          Отправлено: {broadcast.sent_count}
+                          {t("broadcasts.sentCount", { count: broadcast.sent_count })}
                         </Badge>
                       )}
                     </div>
@@ -389,7 +391,7 @@ export function TrainerBroadcasts() {
                       className="flex items-center gap-2"
                     >
                       <Send className="h-4 w-4" />
-                      Отправить
+                      {t("broadcasts.send")}
                     </Button>
                   )}
                 </div>
@@ -399,12 +401,12 @@ export function TrainerBroadcasts() {
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>
                     <Calendar className="h-3 w-3 inline mr-1" />
-                    Создано: {new Date(broadcast.created_at).toLocaleDateString()}
+                    {t("broadcasts.created")} {new Date(broadcast.created_at).toLocaleDateString()}
                   </span>
                   {broadcast.sent_at && (
                     <span>
                       <Mail className="h-3 w-3 inline mr-1" />
-                      Отправлено: {new Date(broadcast.sent_at).toLocaleDateString()}
+                      {t("broadcasts.sentAt")} {new Date(broadcast.sent_at).toLocaleDateString()}
                     </span>
                   )}
                 </div>

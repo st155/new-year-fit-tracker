@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -33,6 +34,7 @@ export function ChallengeParticipantsList({
   onRefresh,
   challengeName
 }: ChallengeParticipantsListProps) {
+  const { t } = useTranslation("trainer");
   const navigate = useNavigate();
   const { setSelectedClient } = useClientContext();
   const [removing, setRemoving] = useState<string | null>(null);
@@ -49,11 +51,11 @@ export function ChallengeParticipantsList({
 
       if (error) throw error;
 
-      toast.success("Участник удален из челленджа");
+      toast.success(t("participants.participantRemoved"));
       onRefresh();
     } catch (error) {
       console.error("Error removing participant:", error);
-      toast.error("Не удалось удалить участника");
+      toast.error(t("participants.participantRemoveFailed"));
     } finally {
       setRemoving(null);
     }
@@ -71,7 +73,7 @@ export function ChallengeParticipantsList({
     setSelectedClient(clientData, {
       type: 'challenges',
       challengeId,
-      challengeName: challengeName || 'Челлендж'
+      challengeName: challengeName || 'Challenge'
     });
     
     navigate(`/trainer-dashboard?tab=clients&client=${participant.user_id}`);
@@ -80,16 +82,16 @@ export function ChallengeParticipantsList({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="font-semibold">Участники челленджа</h4>
+        <h4 className="font-semibold">{t("participants.title")}</h4>
         <Button size="sm" onClick={() => setAddDialogOpen(true)}>
           <UserPlus className="h-4 w-4 mr-1" />
-          Добавить участника
+          {t("participants.addParticipant")}
         </Button>
       </div>
 
       {participants.length === 0 ? (
         <Card className="p-8 text-center">
-          <p className="text-muted-foreground">Нет участников в этом челлендже</p>
+          <p className="text-muted-foreground">{t("participants.noParticipants")}</p>
         </Card>
       ) : (
         participants.map((participant) => (
@@ -109,7 +111,7 @@ export function ChallengeParticipantsList({
                   </p>
                 </div>
                 <Badge variant="secondary" className="ml-2">
-                  {new Date(participant.joined_at).toLocaleDateString("ru-RU")}
+                  {new Date(participant.joined_at).toLocaleDateString()}
                 </Badge>
               </div>
 
@@ -120,7 +122,7 @@ export function ChallengeParticipantsList({
                     onClick={() => handleViewClientGoals(participant)}
                   >
                   <Target className="h-4 w-4 mr-2" />
-                  Цели
+                  {t("participants.goals")}
                 </Button>
                 <Button
                   variant="ghost"
@@ -129,7 +131,7 @@ export function ChallengeParticipantsList({
                   disabled={removing === participant.user_id}
                 >
                   <UserMinus className="h-4 w-4 mr-2" />
-                  Удалить
+                  {t("participants.remove")}
                 </Button>
               </div>
             </div>

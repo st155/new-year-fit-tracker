@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,7 @@ interface AddParticipantDialogProps {
 }
 
 export function AddParticipantDialog({ open, onOpenChange, challengeId, onSuccess }: AddParticipantDialogProps) {
+  const { t } = useTranslation("trainer");
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
@@ -100,8 +102,8 @@ export function AddParticipantDialog({ open, onOpenChange, challengeId, onSucces
       if (error) throw error;
 
       toast({
-        title: "Успех",
-        description: "Участник добавлен в челлендж",
+        title: t("participants.success"),
+        description: t("participants.participantAdded"),
       });
 
       setExistingParticipants([...existingParticipants, clientId]);
@@ -109,8 +111,8 @@ export function AddParticipantDialog({ open, onOpenChange, challengeId, onSucces
     } catch (error: any) {
       console.error("Error adding participant:", error);
       toast({
-        title: "Ошибка",
-        description: error.message || "Не удалось добавить участника",
+        title: t("challenges.error"),
+        description: error.message || t("participants.participantAddFailed"),
         variant: "destructive",
       });
     } finally {
@@ -130,14 +132,14 @@ export function AddParticipantDialog({ open, onOpenChange, challengeId, onSucces
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Добавить участника</DialogTitle>
+          <DialogTitle>{t("participants.addTitle")}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Поиск клиента..."
+              placeholder={t("participants.searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
@@ -152,7 +154,7 @@ export function AddParticipantDialog({ open, onOpenChange, challengeId, onSucces
             <div className="space-y-2 max-h-[400px] overflow-y-auto">
               {filteredClients.length === 0 ? (
                 <p className="text-center text-muted-foreground py-8">
-                  {searchQuery ? "Клиенты не найдены" : "Нет доступных клиентов"}
+                  {searchQuery ? t("participants.noClientsFound") : t("participants.noClientsAvailable")}
                 </p>
               ) : (
                 filteredClients.map((client) => {
@@ -187,11 +189,11 @@ export function AddParticipantDialog({ open, onOpenChange, challengeId, onSucces
                         variant={isParticipant ? "secondary" : "default"}
                       >
                         {isParticipant ? (
-                          "Уже участвует"
+                          t("participants.alreadyParticipating")
                         ) : (
                           <>
                             <UserPlus className="h-4 w-4 mr-1" />
-                            Добавить
+                            {t("participants.add")}
                           </>
                         )}
                       </Button>
