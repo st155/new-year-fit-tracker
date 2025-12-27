@@ -69,5 +69,26 @@
     "reason2": "Want to start connection from scratch",
     "cancel": "Cancel",
     "confirmResetBtn": "Confirm reset"
+  },
+  "whoop": {
+    "processing": "Processing Whoop authorization...",
+    "authDenied": "Authorization denied",
+    "noCodeReceived": "Authorization code not received",
+    "noStateReceived": "State parameter not received",
+    "connectedSuccess": "Whoop connected successfully!",
+    "exchangingCode": "Exchanging authorization code...",
+    "tokenExchangeError": "Token exchange error",
+    "startingSync": "Starting initial sync...",
+    "connectionFailed": "Failed to connect Whoop",
+    "connecting": "Connecting Whoop",
+    "success": "Success!",
+    "error": "Error",
+    "windowWillClose": "Window will close in",
+    "redirecting": "Redirecting in",
+    "seconds": "sec",
+    "syncWillStart": "Whoop data will start syncing automatically.",
+    "closeWindow": "Close window",
+    "returnToIntegrations": "Return to integrations page",
+    "tryAgain": "Try again"
   }
 }

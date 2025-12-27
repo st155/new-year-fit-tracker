@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -21,6 +22,7 @@ interface DocumentComparisonProps {
 }
 
 export const DocumentComparison = ({ documents }: DocumentComparisonProps) => {
+  const { t } = useTranslation('common');
   const [selectedDocs, setSelectedDocs] = useState<string[]>([]);
   const [isComparing, setIsComparing] = useState(false);
   const [comparisonResult, setComparisonResult] = useState<string | null>(null);
@@ -40,8 +42,8 @@ export const DocumentComparison = ({ documents }: DocumentComparisonProps) => {
   const handleCompare = async () => {
     if (selectedDocs.length < 2) {
       toast({
-        title: "Ошибка",
-        description: "Выберите минимум 2 документа для сравнения",
+        title: t('errors.generic'),
+        description: t('docComparison.selectMinTwo'),
         variant: "destructive"
       });
       return;
@@ -57,13 +59,13 @@ export const DocumentComparison = ({ documents }: DocumentComparisonProps) => {
 
       setComparisonResult(data.analysis);
       toast({
-        title: "Сравнение завершено",
-        description: "AI анализ различий готов"
+        title: t('docComparison.comparisonComplete'),
+        description: t('docComparison.aiAnalysisReady')
       });
     } catch (error: any) {
       console.error('Comparison error:', error);
       toast({
-        title: "Ошибка сравнения",
+        title: t('docComparison.comparisonError'),
         description: error.message,
         variant: "destructive"
       });
@@ -81,20 +83,20 @@ export const DocumentComparison = ({ documents }: DocumentComparisonProps) => {
       <DialogTrigger asChild>
         <Button variant="outline" className="gap-2">
           <GitCompare className="h-4 w-4" />
-          Сравнить документы
+          {t('docComparison.compareDocuments')}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>Сравнение медицинских документов</DialogTitle>
+          <DialogTitle>{t('docComparison.title')}</DialogTitle>
           <DialogDescription>
-            Выберите документы для AI-анализа различий
+            {t('docComparison.description')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4">
           <Card className="p-4">
-            <h3 className="font-medium mb-3">Выберите документы ({selectedDocs.length} выбрано):</h3>
+            <h3 className="font-medium mb-3">{t('docComparison.selectDocuments', { count: selectedDocs.length })}:</h3>
             <ScrollArea className="h-48">
               <div className="space-y-2">
                 {processedDocs.map(doc => (
@@ -121,19 +123,19 @@ export const DocumentComparison = ({ documents }: DocumentComparisonProps) => {
             {isComparing ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Анализ...
+                {t('docComparison.analyzing')}
               </>
             ) : (
               <>
                 <GitCompare className="h-4 w-4" />
-                Сравнить
+                {t('docComparison.compare')}
               </>
             )}
           </Button>
 
           {comparisonResult && (
             <Card className="p-4">
-              <h3 className="font-medium mb-3">Результат сравнения:</h3>
+              <h3 className="font-medium mb-3">{t('docComparison.result')}:</h3>
               <ScrollArea className="h-96">
                 <div className="prose prose-sm max-w-none whitespace-pre-wrap">
                   {comparisonResult}

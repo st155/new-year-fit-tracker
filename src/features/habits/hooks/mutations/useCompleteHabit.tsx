@@ -4,6 +4,7 @@
 
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { toast as sonnerToast } from 'sonner';
@@ -84,6 +85,7 @@ function calculateStreak(completions: { completed_at: string }[]): number {
 
 export function useCompleteHabit() {
   const [isCompleting, setIsCompleting] = useState(false);
+  const { t } = useTranslation('habits');
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -282,10 +284,10 @@ export function useCompleteHabit() {
         // Show completion toast
         let description = `+${result.xpEarned} XP`;
         if (result.streakCount > 1)
-          description += ` • ${result.streakCount} дней подряд`;
+          description += ` • ${t('completion.streak', { count: result.streakCount })}`;
 
         toast({
-          title: 'Привычка выполнена!',
+          title: t('completion.success'),
           description,
         });
 
@@ -295,8 +297,8 @@ export function useCompleteHabit() {
     onError: (error) => {
       console.error('[useCompleteHabit] Error:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось отметить привычку',
+        title: t('common:errors.generic'),
+        description: t('error.title'),
         variant: 'destructive',
       });
     },

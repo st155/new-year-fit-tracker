@@ -171,5 +171,25 @@
     "minAgo": "{{minutes}} min ago",
     "hoursAgo": "{{hours}} h ago",
     "daysAgo": "{{days}} d ago"
+  },
+  "docComparison": {
+    "compareDocuments": "Compare documents",
+    "title": "Medical document comparison",
+    "description": "Select documents for AI analysis of differences",
+    "selectDocuments": "Select documents ({{count}} selected)",
+    "selectMinTwo": "Select at least 2 documents to compare",
+    "comparisonComplete": "Comparison complete",
+    "aiAnalysisReady": "AI analysis of differences ready",
+    "comparisonError": "Comparison error",
+    "analyzing": "Analyzing...",
+    "compare": "Compare",
+    "result": "Comparison result"
+  },
+  "likes": {
+    "loginToLike": "Log in to like",
+    "toggleError": "Could not change like status"
+  },
+  "healthAnalysis": {
+    "updateSuccess": "Health analysis successfully updated"
   }
 }

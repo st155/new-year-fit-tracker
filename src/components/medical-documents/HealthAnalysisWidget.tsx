@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
@@ -26,6 +27,7 @@ interface HealthAnalysis {
 }
 
 export function HealthAnalysisWidget() {
+  const { t } = useTranslation('common');
   const [isGenerating, setIsGenerating] = useState(false);
   const queryClient = useQueryClient();
 
@@ -73,11 +75,11 @@ export function HealthAnalysisWidget() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['health-analysis-latest'] });
-      toast.success('Анализ здоровья успешно обновлен');
+      toast.success(t('healthAnalysis.updateSuccess'));
       setIsGenerating(false);
     },
     onError: (error: Error) => {
-      toast.error(`Ошибка: ${error.message}`);
+      toast.error(`${t('errors.generic')}: ${error.message}`);
       setIsGenerating(false);
     }
   });

@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,10 +17,11 @@ interface ResultMessage {
 }
 
 export default function WhoopOAuthCallback() {
+  const { t } = useTranslation('integrations');
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [status, setStatus] = useState<Status>('loading');
-  const [message, setMessage] = useState('Обработка авторизации Whoop...');
+  const [message, setMessage] = useState('');
   const [countdown, setCountdown] = useState<number | null>(null);
   const processedRef = useRef(false);
   
@@ -27,6 +29,11 @@ export default function WhoopOAuthCallback() {
   const isPopup = window.opener !== null;
 
   console.log('🪟 [WhoopCallback] Mounted, isPopup:', isPopup);
+
+  useEffect(() => {
+    // Set initial message
+    setMessage(t('whoop.processing'));
+  }, [t]);
 
   useEffect(() => {
     if (processedRef.current) {
@@ -48,25 +55,25 @@ export default function WhoopOAuthCallback() {
 
     if (error) {
       console.error('❌ [WhoopCallback] OAuth error:', error, errorDescription);
-      handleError(errorDescription || error || 'Авторизация отклонена');
+      handleError(errorDescription || error || t('whoop.authDenied'));
       return;
     }
 
     if (!code) {
       console.error('❌ [WhoopCallback] No code received');
-      handleError('Код авторизации не получен');
+      handleError(t('whoop.noCodeReceived'));
       return;
     }
 
     if (!state) {
       console.error('❌ [WhoopCallback] No state received');
-      handleError('State параметр не получен');
+      handleError(t('whoop.noStateReceived'));
       return;
     }
 
     processedRef.current = true;
     exchangeToken(code, state);
-  }, [searchParams]);
+  }, [searchParams, t]);
 
   const sendResultToParent = (result: ResultMessage) => {
     if (isPopup && window.opener) {
@@ -109,7 +116,7 @@ export default function WhoopOAuthCallback() {
   const handleSuccess = (whoopUserId?: string) => {
     console.log('✅ [WhoopCallback] Success! Whoop user ID:', whoopUserId);
     setStatus('success');
-    setMessage('Whoop успешно подключен!');
+    setMessage(t('whoop.connectedSuccess'));
 
     sendResultToParent({
       type: 'whoop-auth-result',
@@ -156,7 +163,7 @@ export default function WhoopOAuthCallback() {
 
   const exchangeToken = async (code: string, state: string) => {
     try {
-      setMessage('Обмен кода авторизации...');
+      setMessage(t('whoop.exchangingCode'));
       console.log('🔄 [WhoopCallback] Starting token exchange...');
 
       const currentOrigin = window.location.origin;
@@ -184,14 +191,14 @@ export default function WhoopOAuthCallback() {
       console.log('📋 [WhoopCallback] Exchange response:', { data, error });
 
       if (error) {
-        throw new Error(error.message || 'Ошибка обмена токена');
+        throw new Error(error.message || t('whoop.tokenExchangeError'));
       }
 
       if (data?.error) {
         throw new Error(data.error);
       }
 
-      setMessage('Запуск начальной синхронизации...');
+      setMessage(t('whoop.startingSync'));
       console.log('✅ [WhoopCallback] Token exchange successful, starting sync...');
 
       // Trigger initial sync (non-blocking) - this still needs auth but popup may not have session
@@ -200,7 +207,7 @@ export default function WhoopOAuthCallback() {
 
     } catch (error: any) {
       console.error('❌ [WhoopCallback] Exchange error:', error);
-      handleError(error.message || 'Не удалось подключить Whoop');
+      handleError(error.message || t('whoop.connectionFailed'));
     }
   };
 
@@ -240,9 +247,9 @@ export default function WhoopOAuthCallback() {
             )}
           </div>
           <CardTitle className="text-xl">
-            {status === 'loading' && 'Подключение Whoop'}
-            {status === 'success' && 'Успешно!'}
-            {status === 'error' && 'Ошибка'}
+            {status === 'loading' && t('whoop.connecting')}
+            {status === 'success' && t('whoop.success')}
+            {status === 'error' && t('whoop.error')}
           </CardTitle>
         </CardHeader>
         <CardContent className="text-center space-y-4">
@@ -252,14 +259,14 @@ export default function WhoopOAuthCallback() {
             <div className="space-y-2">
               <Progress value={(countdown / (status === 'success' ? 3 : 3)) * 100} className="h-2" />
               <p className="text-xs text-muted-foreground">
-                {isPopup ? 'Окно закроется' : 'Перенаправление'} через {countdown} сек...
+                {isPopup ? t('whoop.windowWillClose') : t('whoop.redirecting')} {countdown} {t('whoop.seconds')}...
               </p>
             </div>
           )}
 
           {status === 'success' && (
             <p className="text-sm text-green-600 dark:text-green-400">
-              Данные Whoop начнут синхронизироваться автоматически.
+              {t('whoop.syncWillStart')}
             </p>
           )}
 
@@ -270,7 +277,7 @@ export default function WhoopOAuthCallback() {
               variant="default"
               className="w-full"
             >
-              {isPopup ? 'Закрыть окно' : 'Вернуться на страницу интеграций'}
+              {isPopup ? t('whoop.closeWindow') : t('whoop.returnToIntegrations')}
             </Button>
           )}
 
@@ -283,7 +290,7 @@ export default function WhoopOAuthCallback() {
                 className="w-full"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
-                Попробовать снова
+                {t('whoop.tryAgain')}
               </Button>
               <Button 
                 onClick={handleClose} 
@@ -291,7 +298,7 @@ export default function WhoopOAuthCallback() {
                 className="w-full"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                {isPopup ? 'Закрыть окно' : 'Вернуться на страницу интеграций'}
+                {isPopup ? t('whoop.closeWindow') : t('whoop.returnToIntegrations')}
               </Button>
             </div>
           )}
