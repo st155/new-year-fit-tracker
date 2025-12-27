@@ -242,6 +242,28 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
     xp_reward: 250,
     requirement: { type: 'active_habits', value: 10 }
   },
+  
+  // Role-based achievements
+  {
+    id: 'trainer',
+    name: 'Тренер',
+    description: 'Сертифицированный тренер команды',
+    category: 'special',
+    icon: '🏋️‍♂️',
+    rarity: 'legendary',
+    xp_reward: 500,
+    requirement: { type: 'special_role', value: 1 }
+  },
+  {
+    id: 'early_adopter',
+    name: 'Первопроходец',
+    description: 'Один из первых пользователей платформы',
+    category: 'special',
+    icon: '🚀',
+    rarity: 'epic',
+    xp_reward: 200,
+    requirement: { type: 'early_adopter', value: 1 }
+  },
 ];
 
 /**
