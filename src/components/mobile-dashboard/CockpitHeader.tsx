@@ -76,12 +76,17 @@ export function CockpitHeader() {
   return (
     <header className="flex items-center justify-between px-4 py-3 h-14">
       <div className="flex items-center gap-3">
-        <Avatar className="h-9 w-9">
-          {avatarUrl && <AvatarImage src={avatarUrl} alt={firstName} />}
-          <AvatarFallback className="bg-primary/20 text-primary text-sm font-medium">
-            {initials}
-          </AvatarFallback>
-        </Avatar>
+        <Link 
+          to="/profile" 
+          className="focus:outline-none focus:ring-2 focus:ring-primary/50 rounded-full"
+        >
+          <Avatar className="h-9 w-9 ring-2 ring-primary/20 transition-transform active:scale-95">
+            {avatarUrl && <AvatarImage src={avatarUrl} alt={firstName} />}
+            <AvatarFallback className="bg-primary/20 text-primary text-sm font-medium">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+        </Link>
         <span className="text-sm text-muted-foreground">
           {getGreeting()}, <span className="text-foreground font-medium">{firstName}</span>
         </span>
