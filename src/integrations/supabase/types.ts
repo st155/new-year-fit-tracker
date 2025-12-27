@@ -5958,6 +5958,51 @@ export type Database = {
           },
         ]
       }
+      user_metric_baselines: {
+        Row: {
+          calculation_date: string | null
+          created_at: string | null
+          days_of_data: number | null
+          id: string
+          is_active: boolean | null
+          metric_name: string
+          personal_average: number | null
+          personal_best: number | null
+          personal_high: number | null
+          personal_low: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          calculation_date?: string | null
+          created_at?: string | null
+          days_of_data?: number | null
+          id?: string
+          is_active?: boolean | null
+          metric_name: string
+          personal_average?: number | null
+          personal_best?: number | null
+          personal_high?: number | null
+          personal_low?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          calculation_date?: string | null
+          created_at?: string | null
+          days_of_data?: number | null
+          id?: string
+          is_active?: boolean | null
+          metric_name?: string
+          personal_average?: number | null
+          personal_best?: number | null
+          personal_high?: number | null
+          personal_low?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_metrics: {
         Row: {
           created_at: string

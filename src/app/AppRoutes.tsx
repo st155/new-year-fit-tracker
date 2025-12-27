@@ -15,6 +15,7 @@ import { logger } from "@/lib/logger";
 import { DevDebugBar } from "@/components/dev/DevDebugBar";
 import { AsyncErrorBoundary } from "@/components/error/AsyncErrorBoundary";
 import { ROUTE_SMOKE } from "@/lib/safe-flags";
+import { AutoBaselineCalculator } from "@/components/metrics/AutoBaselineCalculator";
 
 import Auth from "@/pages/Auth";
 import DebugPage from "@/pages/DebugPage";
@@ -436,6 +437,8 @@ export const AppRoutes = () => {
         
         <Route path="*" element={<NotFound />} />
         </Routes>
+        {/* Auto-calculate personal baselines when logged in */}
+        {user && <AutoBaselineCalculator />}
         {/* <DevDebugBar /> */}
         <Sonner />
         <InstallPrompt />
