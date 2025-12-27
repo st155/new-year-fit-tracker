@@ -33,6 +33,7 @@ import {
   User
 } from "lucide-react";
 import { TerraClientDiagnostics } from "./integrations/TerraClientDiagnostics";
+import { WhoopDirectClientDiagnostics } from "./integrations/WhoopDirectClientDiagnostics";
 import { formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
 
@@ -299,12 +300,13 @@ export function IntegrationsMonitor({ clients, loading = false }: IntegrationsMo
                   <TableHead>Последняя активность</TableHead>
                   <TableHead>Статус</TableHead>
                   <TableHead className="w-[80px]">Terra</TableHead>
+                  <TableHead className="w-[80px]">Whoop Direct</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredClients.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                       Клиенты не найдены
                     </TableCell>
                   </TableRow>
@@ -383,6 +385,13 @@ export function IntegrationsMonitor({ clients, loading = false }: IntegrationsMo
 
                         <TableCell>
                           <TerraClientDiagnostics 
+                            clientId={client.client_id} 
+                            clientName={client.full_name}
+                          />
+                        </TableCell>
+
+                        <TableCell>
+                          <WhoopDirectClientDiagnostics 
                             clientId={client.client_id} 
                             clientName={client.full_name}
                           />
