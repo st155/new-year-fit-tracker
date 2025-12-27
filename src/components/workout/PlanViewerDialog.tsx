@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -33,7 +34,7 @@ interface PlanWorkout {
   exercises: WorkoutExercise[];
 }
 
-const DAY_NAMES = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
 
 export default function PlanViewerDialog({
   open,
@@ -43,7 +44,10 @@ export default function PlanViewerDialog({
   weekNumber = 1,
   totalWeeks = 12,
 }: PlanViewerDialogProps) {
+  const { t } = useTranslation('workouts');
   const { getImageUrl } = useExerciseImages();
+  
+  const dayNames = DAY_KEYS.map(key => t(`dayNames.${key}`));
 
   const { data: workouts = [], isLoading } = useQuery({
     queryKey: ['plan-workouts', planId],
@@ -87,9 +91,9 @@ export default function PlanViewerDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <Dumbbell className="w-5 h-5 text-cyan-400" />
-            <span>{planName || 'Тренировочный план'}</span>
+            <span>{planName || t('planViewer.defaultTitle')}</span>
             <Badge variant="outline" className="ml-auto">
-              Неделя {weekNumber} из {totalWeeks}
+              {t('planViewer.weekOfTotal', { week: weekNumber, total: totalWeeks })}
             </Badge>
           </DialogTitle>
         </DialogHeader>
@@ -102,19 +106,19 @@ export default function PlanViewerDialog({
           ) : workouts.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>Нет упражнений в плане</p>
+              <p>{t('planViewer.noExercises')}</p>
             </div>
           ) : (
             <div className="space-y-6">
               {/* Week schedule overview */}
               <div className="flex gap-2 justify-center py-4 border-b border-neutral-800">
-                {DAY_NAMES.map((day, idx) => {
+                {dayNames.map((day, idx) => {
                   const hasWorkout = trainingDays.includes(idx);
                   const isToday = idx === new Date().getDay();
                   
                   return (
                     <div
-                      key={day}
+                      key={DAY_KEYS[idx]}
                       className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all ${
                         hasWorkout
                           ? isToday
@@ -142,7 +146,7 @@ export default function PlanViewerDialog({
                       >
                         <div className="flex items-center gap-3 mb-4">
                           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center text-sm font-bold text-neutral-950">
-                            {DAY_NAMES[dayIndex]}
+                            {dayNames[dayIndex]}
                           </div>
                           <div>
                             <h3 className="font-semibold text-foreground">
@@ -174,12 +178,12 @@ export default function PlanViewerDialog({
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                   <span>{exercise.sets} × {exercise.reps}</span>
                                   {exercise.weight && (
-                                    <span className="text-cyan-400">@ {exercise.weight} кг</span>
+                                    <span className="text-cyan-400">{t('planViewer.weight', { weight: exercise.weight })}</span>
                                   )}
                                   {exercise.rest_seconds && (
                                     <span className="flex items-center gap-1">
                                       <Clock className="w-3 h-3" />
-                                      {exercise.rest_seconds}с
+                                      {t('planViewer.rest', { seconds: exercise.rest_seconds })}
                                     </span>
                                   )}
                                 </div>

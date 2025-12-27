@@ -39,5 +39,21 @@
     "recovery": "Recovery",
     "wellness": "Wellness",
     "other": "Other"
+  },
+  "planViewer": {
+    "defaultTitle": "Training Plan",
+    "weekOfTotal": "Week {{week}} of {{total}}",
+    "noExercises": "No exercises in plan",
+    "weight": "@ {{weight}} kg",
+    "rest": "{{seconds}}s"
+  },
+  "dayNames": {
+    "sun": "Sun",
+    "mon": "Mon",
+    "tue": "Tue",
+    "wed": "Wed",
+    "thu": "Thu",
+    "fri": "Fri",
+    "sat": "Sat"
   }
 }

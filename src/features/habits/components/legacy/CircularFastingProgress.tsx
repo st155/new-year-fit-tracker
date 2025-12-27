@@ -1,7 +1,7 @@
+import { useTranslation } from 'react-i18next';
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Utensils } from "lucide-react";
-
 interface CircularFastingProgressProps {
   progress: number;
   elapsedMinutes: number;
@@ -21,6 +21,7 @@ export function CircularFastingProgress({
   status,
   className,
 }: CircularFastingProgressProps) {
+  const { t } = useTranslation('common');
   const size = 340;
   const strokeWidth = 24;
   const radius = (size - strokeWidth) / 2;
@@ -41,9 +42,9 @@ export function CircularFastingProgress({
   };
 
   const getStatusText = () => {
-    if (status.isFasting) return "Голодание";
-    if (status.isEating) return "Окно питания";
-    return "Не активно";
+    if (status.isFasting) return t('fasting.statusFasting');
+    if (status.isEating) return t('fasting.statusEating');
+    return t('fasting.statusInactive');
   };
 
   const isGoalReached = status.isFasting && elapsedMinutes >= targetMinutes;
@@ -123,8 +124,8 @@ export function CircularFastingProgress({
           </div>
           <div className="text-sm text-muted-foreground mt-1">
             {status.isFasting && `${Math.round(progress)}%`}
-            {status.isEating && "идёт приём пищи"}
-            {!status.isFasting && !status.isEating && "готов начать"}
+            {status.isEating && t('fasting.eatingInProgress')}
+            {!status.isFasting && !status.isEating && t('fasting.readyToStart')}
           </div>
         </div>
       </div>

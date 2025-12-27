@@ -39,5 +39,21 @@
     "recovery": "Восстановление",
     "wellness": "Wellness",
     "other": "Другое"
+  },
+  "planViewer": {
+    "defaultTitle": "Тренировочный план",
+    "weekOfTotal": "Неделя {{week}} из {{total}}",
+    "noExercises": "Нет упражнений в плане",
+    "weight": "@ {{weight}} кг",
+    "rest": "{{seconds}}с"
+  },
+  "dayNames": {
+    "sun": "Вс",
+    "mon": "Пн",
+    "tue": "Вт",
+    "wed": "Ср",
+    "thu": "Чт",
+    "fri": "Пт",
+    "sat": "Сб"
   }
 }
