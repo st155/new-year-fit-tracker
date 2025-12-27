@@ -1,0 +1,67 @@
+{
+  "title": "Фитнес дата",
+  "subtitle": "Ваши метрики здоровья и активности",
+  "loading": "Загрузка фитнес-данных...",
+  
+  "tabs": {
+    "overview": "Обзор",
+    "connections": "Подключения",
+    "health": "Здоровье",
+    "details": "Детали",
+    "integrations": "Интеграции"
+  },
+  
+  "timeFilters": {
+    "today": "Сегодня",
+    "week": "Неделя",
+    "month": "Месяц",
+    "back": "← Назад",
+    "forward": "Вперед →"
+  },
+  
+  "charts": {
+    "recoveryTrend": "Тренд восстановления",
+    "dayStrain": "Day Strain",
+    "strainLevel": "Уровень напряжения",
+    "heartRate": "Heart Rate",
+    "heartRateDesc": "Частота сердечных сокращений",
+    "sleepStages": "Sleep Stages",
+    "sleepStagesDesc": "Фазы сна за выбранный период",
+    "average": "Среднее"
+  },
+  
+  "emptyStates": {
+    "noRecovery": "Нет данных Recovery Score",
+    "noDataForDevice": "Нет данных от {{device}} за выбранный период",
+    "noDataForPeriod": "Нет данных за выбранный период",
+    "noDataToDisplay": "Нет данных для отображения",
+    "tryAnotherDevice": "Нет данных от {{device}} за выбранный период. Попробуйте выбрать другое устройство или временной период.",
+    "tryAnotherPeriod": "Нет данных за выбранный период. Попробуйте выбрать другой временной период."
+  },
+  
+  "integrations": {
+    "title": "Интеграции устройств",
+    "description": "Управление подключениями и синхронизацией данных"
+  },
+  
+  "sleep": {
+    "deep": "Глубокий сон",
+    "light": "Лёгкий сон",
+    "rem": "REM сон",
+    "awake": "Пробуждения"
+  },
+
+  "metrics": {
+    "recovery": "Recovery",
+    "dayStrain": "Day Strain",
+    "heartRate": "Heart Rate",
+    "sleepScore": "Sleep Score",
+    "steps": "Steps",
+    "calories": "Calories"
+  },
+
+  "vo2max": {
+    "title": "VO2 Max",
+    "description": "Загрузите результаты тестирования VO2 Max"
+  }
+}
