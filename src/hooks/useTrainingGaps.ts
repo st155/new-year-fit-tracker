@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { aiTrainingApi } from '@/lib/api';
 import { toast } from 'sonner';
 import { useEffect, useState } from 'react';
+import i18n from '@/i18n';
 
 export interface MuscleAnalysis {
   name: string;
@@ -117,11 +118,11 @@ export function useGenerateTravelWorkout() {
     },
     onError: (error: Error) => {
       if (error.message.includes('429')) {
-        toast.error('Слишком много запросов. Попробуйте через минуту.');
+        toast.error(i18n.t('trainer:trainingGaps.tooManyRequests'));
       } else if (error.message.includes('402')) {
-        toast.error('Требуется пополнение баланса AI.');
+        toast.error(i18n.t('trainer:trainingGaps.aiCreditsRequired'));
       } else {
-        toast.error('Не удалось сгенерировать тренировку');
+        toast.error(i18n.t('trainer:trainingGaps.generateError'));
       }
     }
   });
@@ -179,10 +180,10 @@ export function useSaveGeneratedWorkout() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['workout-logs'] });
-      toast.success('Тренировка сохранена!');
+      toast.success(i18n.t('trainer:trainingGaps.workoutSaved'));
     },
     onError: () => {
-      toast.error('Не удалось сохранить тренировку');
+      toast.error(i18n.t('trainer:trainingGaps.saveError'));
     }
   });
 }

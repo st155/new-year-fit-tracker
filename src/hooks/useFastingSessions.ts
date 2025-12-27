@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import i18n from '@/i18n';
 
 export interface FastingSession {
   id: string;
@@ -103,11 +104,11 @@ export function useStartFasting() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: fastingKeys.active(variables.userId) });
       queryClient.invalidateQueries({ queryKey: fastingKeys.history(variables.userId) });
-      toast.success('Голодание начато! 🔥');
+      toast.success(i18n.t('common:fasting.started'));
     },
     onError: (error) => {
       console.error('Error starting fasting:', error);
-      toast.error('Ошибка при начале голодания');
+      toast.error(i18n.t('common:fasting.startError'));
     },
   });
 }
@@ -152,14 +153,14 @@ export function useEndFasting() {
         const duration = Math.round(
           (new Date(data.end_time!).getTime() - new Date(data.start_time).getTime()) / (1000 * 60 * 60)
         );
-        toast.success(`Голодание завершено! ${duration}ч ${duration >= 24 ? '🏆' : '✅'}`);
+        toast.success(i18n.t('common:fasting.completed', { hours: duration }) + ` ${duration >= 24 ? '🏆' : '✅'}`);
       } else {
-        toast.info('Голодание прервано');
+        toast.info(i18n.t('common:fasting.interrupted'));
       }
     },
     onError: (error) => {
       console.error('Error ending fasting:', error);
-      toast.error('Ошибка при завершении голодания');
+      toast.error(i18n.t('common:fasting.endError'));
     },
   });
 }

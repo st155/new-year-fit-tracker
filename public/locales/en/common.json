@@ -110,5 +110,12 @@
     "kg": "kg",
     "minutes": "min",
     "format": "Format: MM:SS (e.g., 4:40 = 4 min 40 sec)"
+  },
+  "fasting": {
+    "started": "Fasting started! 🔥",
+    "startError": "Error starting fasting",
+    "completed": "Fasting completed! {{hours}}h",
+    "interrupted": "Fasting interrupted",
+    "endError": "Error ending fasting"
   }
 }

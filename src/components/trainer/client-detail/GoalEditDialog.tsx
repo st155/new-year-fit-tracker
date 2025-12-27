@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+
+const GOAL_TYPE_KEYS = ['strength', 'cardio', 'endurance', 'body_composition', 'flexibility'] as const;
+const UNIT_KEYS = ['kg', 'reps', 'percent', 'sec', 'min', 'km'] as const;
 
 interface Goal {
   id: string;
@@ -24,6 +28,7 @@ interface GoalEditDialogProps {
 }
 
 export function GoalEditDialog({ goal, open, onOpenChange, onSuccess }: GoalEditDialogProps) {
+  const { t } = useTranslation('trainer');
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     goal_name: goal.goal_name,
@@ -50,12 +55,12 @@ export function GoalEditDialog({ goal, open, onOpenChange, onSuccess }: GoalEdit
 
       if (error) throw error;
 
-      toast.success('Цель обновлена');
+      toast.success(t('goalEdit.success'));
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
       console.error('Error updating goal:', error);
-      toast.error('Ошибка обновления цели');
+      toast.error(t('goalEdit.error'));
     } finally {
       setLoading(false);
     }
@@ -65,12 +70,12 @@ export function GoalEditDialog({ goal, open, onOpenChange, onSuccess }: GoalEdit
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Редактировать цель</DialogTitle>
+          <DialogTitle>{t('goalEdit.title')}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label>Название цели</Label>
+            <Label>{t('goalEdit.nameLabel')}</Label>
             <Input
               value={formData.goal_name}
               onChange={(e) => setFormData(prev => ({ ...prev, goal_name: e.target.value }))}
@@ -79,7 +84,7 @@ export function GoalEditDialog({ goal, open, onOpenChange, onSuccess }: GoalEdit
           </div>
 
           <div>
-            <Label>Тип цели</Label>
+            <Label>{t('goalEdit.typeLabel')}</Label>
             <Select
               value={formData.goal_type}
               onValueChange={(value) => setFormData(prev => ({ ...prev, goal_type: value }))}
@@ -88,18 +93,16 @@ export function GoalEditDialog({ goal, open, onOpenChange, onSuccess }: GoalEdit
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="strength">Сила</SelectItem>
-                <SelectItem value="cardio">Кардио</SelectItem>
-                <SelectItem value="endurance">Выносливость</SelectItem>
-                <SelectItem value="body_composition">Состав тела</SelectItem>
-                <SelectItem value="flexibility">Гибкость</SelectItem>
+                {GOAL_TYPE_KEYS.map((key) => (
+                  <SelectItem key={key} value={key}>{t(`goalTypes.${key}`)}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Целевое значение</Label>
+              <Label>{t('goalEdit.targetLabel')}</Label>
               <Input
                 type="number"
                 step="0.1"
@@ -110,7 +113,7 @@ export function GoalEditDialog({ goal, open, onOpenChange, onSuccess }: GoalEdit
             </div>
 
             <div>
-              <Label>Единица измерения</Label>
+              <Label>{t('goalEdit.unitLabel')}</Label>
               <Select
                 value={formData.target_unit}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, target_unit: value }))}
@@ -119,12 +122,9 @@ export function GoalEditDialog({ goal, open, onOpenChange, onSuccess }: GoalEdit
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="кг">кг</SelectItem>
-                  <SelectItem value="раз">раз</SelectItem>
-                  <SelectItem value="%">%</SelectItem>
-                  <SelectItem value="сек">сек</SelectItem>
-                  <SelectItem value="мин">мин</SelectItem>
-                  <SelectItem value="км">км</SelectItem>
+                  {UNIT_KEYS.map((key) => (
+                    <SelectItem key={key} value={t(`units.${key}`)}>{t(`units.${key}`)}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -132,11 +132,11 @@ export function GoalEditDialog({ goal, open, onOpenChange, onSuccess }: GoalEdit
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Отмена
+              {t('goalEdit.cancel')}
             </Button>
             <Button type="submit" disabled={loading}>
               {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Сохранить
+              {t('goalEdit.save')}
             </Button>
           </DialogFooter>
         </form>

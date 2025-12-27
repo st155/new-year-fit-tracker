@@ -1,4 +1,52 @@
 {
+  "goalEdit": {
+    "title": "Edit Goal",
+    "nameLabel": "Goal Name",
+    "typeLabel": "Goal Type",
+    "targetLabel": "Target Value",
+    "unitLabel": "Unit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "success": "Goal updated",
+    "error": "Failed to update goal"
+  },
+  "goalTypes": {
+    "strength": "Strength",
+    "cardio": "Cardio",
+    "endurance": "Endurance",
+    "body_composition": "Body Composition",
+    "flexibility": "Flexibility"
+  },
+  "units": {
+    "kg": "kg",
+    "reps": "reps",
+    "percent": "%",
+    "sec": "sec",
+    "min": "min",
+    "km": "km"
+  },
+  "trainingGaps": {
+    "tooManyRequests": "Too many requests. Please try in a minute.",
+    "aiCreditsRequired": "AI credits need to be topped up.",
+    "generateError": "Failed to generate workout",
+    "workoutSaved": "Workout saved!",
+    "saveError": "Failed to save workout"
+  },
+  "addClientToPlan": {
+    "title": "Add client to plan",
+    "planLabel": "Plan:",
+    "startDate": "Start date",
+    "searchPlaceholder": "Search clients...",
+    "noClients": "You have no clients yet",
+    "notFound": "No clients found",
+    "alreadyAdded": "Added",
+    "cancel": "Cancel",
+    "adding": "Adding...",
+    "addClient": "Add client",
+    "loadError": "Failed to load clients",
+    "success": "Client \"{{name}}\" added to plan",
+    "addError": "Failed to add client"
+  },
   "ai": {
     "newConversation": "New conversation",
     "noConversations": "No conversations",
