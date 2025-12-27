@@ -4,9 +4,9 @@
  */
 
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { format, startOfWeek, addDays, isSameDay, isToday } from "date-fns";
-import { ru } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Flame } from "lucide-react";
 
@@ -16,9 +16,18 @@ interface WeeklyStripProps {
   onDayClick?: (date: Date) => void;
 }
 
-const dayLabels = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
-
 export function WeeklyStrip({ workoutDates, streak, onDayClick }: WeeklyStripProps) {
+  const { t } = useTranslation('common');
+  
+  const dayLabels = [
+    t('dayNamesShort.mon'),
+    t('dayNamesShort.tue'),
+    t('dayNamesShort.wed'),
+    t('dayNamesShort.thu'),
+    t('dayNamesShort.fri'),
+    t('dayNamesShort.sat'),
+    t('dayNamesShort.sun')
+  ];
   const weekDays = useMemo(() => {
     const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
     return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -39,7 +48,7 @@ export function WeeklyStrip({ workoutDates, streak, onDayClick }: WeeklyStripPro
         >
           <Flame className="w-4 h-4 text-orange-500" />
           <span className="text-sm font-medium text-orange-500">
-            {streak} дней подряд!
+            {t('streak.daysInRow', { count: streak })}
           </span>
         </motion.div>
       )}

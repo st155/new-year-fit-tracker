@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format, startOfWeek, eachDayOfInterval, getDay, parseISO } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
 interface MetricHeatmapProps {
@@ -20,6 +21,8 @@ export function MetricHeatmap({
   availableMetrics,
   timeRange 
 }: MetricHeatmapProps) {
+  const { t, i18n } = useTranslation('trainerDashboard');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
   const heatmapData = useMemo(() => {
     if (!selectedMetric || data.length === 0) return [];
 
@@ -65,7 +68,15 @@ export function MetricHeatmap({
     return 'bg-red-500';
   };
 
-  const weekDays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+  const weekDays = [
+    t('common:dayNamesShort.mon'),
+    t('common:dayNamesShort.tue'),
+    t('common:dayNamesShort.wed'),
+    t('common:dayNamesShort.thu'),
+    t('common:dayNamesShort.fri'),
+    t('common:dayNamesShort.sat'),
+    t('common:dayNamesShort.sun')
+  ];
 
   if (availableMetrics.length === 0) return null;
 
@@ -73,10 +84,10 @@ export function MetricHeatmap({
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Тепловая карта активности</CardTitle>
+          <CardTitle>{t('heatmap.title')}</CardTitle>
           <Select value={selectedMetric} onValueChange={onMetricChange}>
             <SelectTrigger className="w-64">
-              <SelectValue placeholder="Выберите метрику" />
+              <SelectValue placeholder={t('heatmap.selectMetric')} />
             </SelectTrigger>
             <SelectContent>
               {availableMetrics.map(metric => (
@@ -105,7 +116,7 @@ export function MetricHeatmap({
             <div key={weekIndex} className="grid grid-cols-8 gap-1">
               {/* Week label */}
               <div className="text-xs text-muted-foreground flex items-center">
-                {format(week[0].date, 'MMM dd', { locale: ru })}
+                {format(week[0].date, 'MMM dd', { locale: dateLocale })}
               </div>
               
               {/* Days */}
@@ -116,7 +127,7 @@ export function MetricHeatmap({
                     'aspect-square rounded-sm transition-all hover:ring-2 hover:ring-primary cursor-pointer',
                     getIntensityColor(day.value)
                   )}
-                  title={`${format(day.date, 'dd MMM yyyy', { locale: ru })}: ${day.value?.toFixed(1) ?? 'Нет данных'}`}
+                  title={`${format(day.date, 'dd MMM yyyy', { locale: dateLocale })}: ${day.value?.toFixed(1) ?? t('heatmap.noData')}`}
                 />
               ))}
             </div>
@@ -124,7 +135,7 @@ export function MetricHeatmap({
 
           {/* Legend */}
           <div className="flex items-center justify-end gap-2 pt-4 text-xs text-muted-foreground">
-            <span>Меньше</span>
+            <span>{t('heatmap.less')}</span>
             <div className="flex gap-1">
               <div className="w-4 h-4 rounded-sm bg-red-500" />
               <div className="w-4 h-4 rounded-sm bg-orange-500" />
@@ -132,7 +143,7 @@ export function MetricHeatmap({
               <div className="w-4 h-4 rounded-sm bg-green-400" />
               <div className="w-4 h-4 rounded-sm bg-green-500" />
             </div>
-            <span>Больше</span>
+            <span>{t('heatmap.more')}</span>
           </div>
         </div>
       </CardContent>

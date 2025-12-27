@@ -327,6 +327,9 @@
     "completed": "Выполнено",
     "missed": "Пропущено"
   },
+  "streak": {
+    "daysInRow": "{{count}} дней подряд!"
+  },
   "validation": {
     "required": "Поле обязательно для заполнения",
     "minLength": "Минимум {{min}} символов",
