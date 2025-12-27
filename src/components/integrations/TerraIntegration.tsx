@@ -512,13 +512,14 @@ export function TerraIntegration() {
         variant: 'destructive',
       });
     }
+  };
 
   // Полная деавторизация (удаление и на Terra, и локально)
   const deauthenticateProvider = async (provider: string) => {
     if (!user) return;
     
     const confirmed = window.confirm(
-      `Вы уверены, что хотите полностью удалить подключение ${PROVIDER_NAMES[provider]}?\n\nЭто отзовёт OAuth-токен на стороне ${PROVIDER_NAMES[provider]} и удалит запись. После этого вы сможете подключить устройство заново.`
+      t("terra.confirmDeauth", { provider: PROVIDER_NAMES[provider] })
     );
     
     if (!confirmed) return;
@@ -548,6 +549,7 @@ export function TerraIntegration() {
         variant: 'destructive',
       });
     }
+  };
 
   // Полный сброс Terra (очистка всех сессий на стороне Terra + локальных токенов)
   const purgeProvider = async (provider: string) => {
