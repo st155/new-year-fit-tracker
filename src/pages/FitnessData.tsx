@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { AnimatedPage } from '@/components/layout/AnimatedPage';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -49,6 +50,7 @@ import { VO2MaxUpload } from '@/components/body-composition/VO2MaxUpload';
 type TimeFilter = 'today' | 'week' | 'month';
 
 export default function FitnessData() {
+  const { t } = useTranslation('fitnessData');
   const { user } = useAuth();
   const { deviceFilter } = useMetricsView();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -386,7 +388,7 @@ export default function FitnessData() {
   const handleNextPeriod = () => setDateOffset(prev => Math.max(0, prev - 1));
 
   if (isLoading) {
-    return <PageLoader message="Загрузка фитнес-данных..." />;
+    return <PageLoader message={t('loading')} />;
   }
 
   const latestRecovery = processedMetrics.recovery.length > 0 
@@ -427,9 +429,9 @@ export default function FitnessData() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Фитнес дата</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
           <p className="text-muted-foreground mt-2">
-            Ваши метрики здоровья и активности
+            {t('subtitle')}
           </p>
         </div>
         <div className="flex items-center gap-4">
@@ -442,19 +444,19 @@ export default function FitnessData() {
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="flex w-full overflow-x-auto scrollbar-hide md:grid md:grid-cols-5 gap-1">
           <TabsTrigger value="overview" className="flex-shrink-0 px-3 text-xs md:text-sm">
-            Обзор
+            {t('tabs.overview')}
           </TabsTrigger>
           <TabsTrigger value="connections" className="flex-shrink-0 px-3 text-xs md:text-sm">
-            Подключения
+            {t('tabs.connections')}
           </TabsTrigger>
           <TabsTrigger value="health" className="flex-shrink-0 px-3 text-xs md:text-sm">
-            Здоровье
+            {t('tabs.health')}
           </TabsTrigger>
           <TabsTrigger value="details" className="flex-shrink-0 px-3 text-xs md:text-sm">
-            Детали
+            {t('tabs.details')}
           </TabsTrigger>
           <TabsTrigger value="integrations" className="flex-shrink-0 px-3 text-xs md:text-sm">
-            Интеграции
+            {t('tabs.integrations')}
           </TabsTrigger>
         </TabsList>
 
@@ -469,21 +471,21 @@ export default function FitnessData() {
                 size="sm"
                 onClick={() => { setTimeFilter('today'); setDateOffset(0); }}
               >
-                Сегодня
+                {t('timeFilters.today')}
               </Button>
               <Button
                 variant={timeFilter === 'week' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => { setTimeFilter('week'); setDateOffset(0); }}
               >
-                Неделя
+                {t('timeFilters.week')}
               </Button>
               <Button
                 variant={timeFilter === 'month' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => { setTimeFilter('month'); setDateOffset(0); }}
               >
-                Месяц
+                {t('timeFilters.month')}
               </Button>
             </div>
 
@@ -498,7 +500,7 @@ export default function FitnessData() {
               size="sm"
               onClick={handlePreviousPeriod}
             >
-              ← Назад
+              {t('timeFilters.back')}
             </Button>
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-muted-foreground" />
@@ -510,7 +512,7 @@ export default function FitnessData() {
               onClick={handleNextPeriod}
               disabled={dateOffset === 0}
             >
-              Вперед →
+              {t('timeFilters.forward')}
             </Button>
           </div>
 
@@ -535,7 +537,7 @@ export default function FitnessData() {
                 
                 {/* Recovery trend chart */}
                 <div className="mt-6 pt-6 border-t border-white/10">
-                  <Text className="text-sm text-muted-foreground mb-4">Тренд восстановления</Text>
+                  <Text className="text-sm text-muted-foreground mb-4">{t('charts.recoveryTrend')}</Text>
                   <ResponsiveContainer width="100%" height={160}>
                     <RechartsAreaChart data={processedMetrics.recovery}>
                       <CartesianGrid 
@@ -575,11 +577,11 @@ export default function FitnessData() {
           {(!latestRecovery || !latestRecovery.value || processedMetrics.recovery.length === 0) && (
             <EmptyState
               icon={Activity}
-              title="Нет данных Recovery Score"
+              title={t('emptyStates.noRecovery')}
               description={
                 deviceFilter !== 'all'
-                  ? `Нет данных от ${deviceFilter.toUpperCase()} за выбранный период`
-                  : 'Нет данных за выбранный период'
+                  ? t('emptyStates.noDataForDevice', { device: deviceFilter.toUpperCase() })
+                  : t('emptyStates.noDataForPeriod')
               }
             />
           )}
@@ -588,11 +590,11 @@ export default function FitnessData() {
           {processedMetrics.cards.length === 0 && (
             <EmptyState
               icon={Activity}
-              title="Нет данных для отображения"
+              title={t('emptyStates.noDataToDisplay')}
               description={
                 deviceFilter !== 'all'
-                  ? `Нет данных от ${deviceFilter.toUpperCase()} за выбранный период. Попробуйте выбрать другое устройство или временной период.`
-                  : 'Нет данных за выбранный период. Попробуйте выбрать другой временной период.'
+                  ? t('emptyStates.tryAnotherDevice', { device: deviceFilter.toUpperCase() })
+                  : t('emptyStates.tryAnotherPeriod')
               }
             />
           )}
@@ -638,8 +640,8 @@ export default function FitnessData() {
                       <Zap className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <CardTitle className="text-lg">Day Strain</CardTitle>
-                      <CardDescription className="text-xs">Уровень напряжения</CardDescription>
+                      <CardTitle className="text-lg">{t('charts.dayStrain')}</CardTitle>
+                      <CardDescription className="text-xs">{t('charts.strainLevel')}</CardDescription>
                     </div>
                   </div>
                 </CardHeader>
@@ -683,8 +685,8 @@ export default function FitnessData() {
                       <Heart className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <CardTitle className="text-lg">Heart Rate</CardTitle>
-                      <CardDescription className="text-xs">Частота сердечных сокращений</CardDescription>
+                      <CardTitle className="text-lg">{t('charts.heartRate')}</CardTitle>
+                      <CardDescription className="text-xs">{t('charts.heartRateDesc')}</CardDescription>
                     </div>
                   </div>
                 </CardHeader>
@@ -732,11 +734,11 @@ export default function FitnessData() {
                     <Moon className="h-5 w-5 text-white" />
                   </div>
                   <div className="flex-1">
-                    <CardTitle className="text-lg">Sleep Stages</CardTitle>
-                    <CardDescription className="text-xs">Фазы сна за выбранный период</CardDescription>
+                    <CardTitle className="text-lg">{t('charts.sleepStages')}</CardTitle>
+                    <CardDescription className="text-xs">{t('charts.sleepStagesDesc')}</CardDescription>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-muted-foreground">Среднее</p>
+                    <p className="text-xs text-muted-foreground">{t('charts.average')}</p>
                     <p className="text-lg font-bold">
                       {Math.round(processedMetrics.sleep.reduce((sum, s) => sum + (s.total || 0), 0) / processedMetrics.sleep.length / 60)}h
                     </p>
@@ -791,9 +793,9 @@ export default function FitnessData() {
           
           <Card>
             <CardHeader>
-              <CardTitle>Интеграции устройств</CardTitle>
+              <CardTitle>{t('integrations.title')}</CardTitle>
               <CardDescription>
-                Управление подключениями и синхронизацией данных
+                {t('integrations.description')}
               </CardDescription>
             </CardHeader>
             <CardContent>

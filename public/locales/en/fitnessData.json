@@ -1,0 +1,67 @@
+{
+  "title": "Fitness Data",
+  "subtitle": "Your health and activity metrics",
+  "loading": "Loading fitness data...",
+  
+  "tabs": {
+    "overview": "Overview",
+    "connections": "Connections",
+    "health": "Health",
+    "details": "Details",
+    "integrations": "Integrations"
+  },
+  
+  "timeFilters": {
+    "today": "Today",
+    "week": "Week",
+    "month": "Month",
+    "back": "← Back",
+    "forward": "Forward →"
+  },
+  
+  "charts": {
+    "recoveryTrend": "Recovery Trend",
+    "dayStrain": "Day Strain",
+    "strainLevel": "Strain level",
+    "heartRate": "Heart Rate",
+    "heartRateDesc": "Heart rate over time",
+    "sleepStages": "Sleep Stages",
+    "sleepStagesDesc": "Sleep phases for selected period",
+    "average": "Average"
+  },
+  
+  "emptyStates": {
+    "noRecovery": "No Recovery Score data",
+    "noDataForDevice": "No data from {{device}} for selected period",
+    "noDataForPeriod": "No data for selected period",
+    "noDataToDisplay": "No data to display",
+    "tryAnotherDevice": "No data from {{device}} for selected period. Try selecting another device or time period.",
+    "tryAnotherPeriod": "No data for selected period. Try selecting a different time period."
+  },
+  
+  "integrations": {
+    "title": "Device Integrations",
+    "description": "Manage connections and data synchronization"
+  },
+  
+  "sleep": {
+    "deep": "Deep Sleep",
+    "light": "Light Sleep",
+    "rem": "REM Sleep",
+    "awake": "Awake"
+  },
+
+  "metrics": {
+    "recovery": "Recovery",
+    "dayStrain": "Day Strain",
+    "heartRate": "Heart Rate",
+    "sleepScore": "Sleep Score",
+    "steps": "Steps",
+    "calories": "Calories"
+  },
+
+  "vo2max": {
+    "title": "VO2 Max",
+    "description": "Upload your VO2 Max test results"
+  }
+}
