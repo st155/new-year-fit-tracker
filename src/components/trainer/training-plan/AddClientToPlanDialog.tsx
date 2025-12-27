@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -45,6 +46,7 @@ export function AddClientToPlanDialog({
   existingClientIds,
   onSuccess,
 }: AddClientToPlanDialogProps) {
+  const { t } = useTranslation('trainer');
   const { user } = useAuth();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,7 +69,7 @@ export function AddClientToPlanDialog({
       await loadClientsDirectly();
     } catch (error) {
       console.error('Error loading clients:', error);
-      toast.error('Не удалось загрузить клиентов');
+      toast.error(t('addClientToPlan.loadError'));
     } finally {
       setLoading(false);
     }
@@ -111,7 +113,7 @@ export function AddClientToPlanDialog({
       setClients(profilesData || []);
     } catch (error) {
       console.error('Error in fallback client load:', error);
-      toast.error('Не удалось загрузить клиентов');
+      toast.error(t('addClientToPlan.loadError'));
     }
   };
 
@@ -134,15 +136,14 @@ export function AddClientToPlanDialog({
       if (error) throw error;
 
       const selectedClient = clients.find((c) => c.user_id === selectedClientId);
-      toast.success(`Клиент "${selectedClient?.full_name || selectedClient?.username}" добавлен к плану`);
+      toast.success(t('addClientToPlan.success', { name: selectedClient?.full_name || selectedClient?.username }));
       onSuccess();
       onOpenChange(false);
       setSelectedClientId(null);
       setSearchQuery('');
     } catch (error: unknown) {
       console.error('Error assigning client:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Не удалось добавить клиента';
-      toast.error(errorMessage);
+      toast.error(t('addClientToPlan.addError'));
     } finally {
       setAssigning(false);
     }
@@ -169,9 +170,9 @@ export function AddClientToPlanDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[85vh]">
         <DialogHeader>
-          <DialogTitle>Добавить клиента к плану</DialogTitle>
+          <DialogTitle>{t('addClientToPlan.title')}</DialogTitle>
           <DialogDescription>
-            План: {planName}
+            {t('addClientToPlan.planLabel')} {planName}
           </DialogDescription>
         </DialogHeader>
 
@@ -180,7 +181,7 @@ export function AddClientToPlanDialog({
           <div className="space-y-2">
             <Label htmlFor="start-date" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
-              Дата начала
+              {t('addClientToPlan.startDate')}
             </Label>
             <Input
               id="start-date"
@@ -195,7 +196,7 @@ export function AddClientToPlanDialog({
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Поиск клиентов..."
+              placeholder={t('addClientToPlan.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
@@ -211,7 +212,7 @@ export function AddClientToPlanDialog({
             ) : filteredClients.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <User className="h-10 w-10 mx-auto mb-3 opacity-50" />
-                <p>{searchQuery ? 'Клиенты не найдены' : 'У вас пока нет клиентов'}</p>
+                <p>{searchQuery ? t('addClientToPlan.notFound') : t('addClientToPlan.noClients')}</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -250,7 +251,7 @@ export function AddClientToPlanDialog({
                           {isAlreadyAssigned ? (
                             <Badge variant="secondary">
                               <Check className="h-3 w-3 mr-1" />
-                              Добавлен
+                              {t('addClientToPlan.alreadyAdded')}
                             </Badge>
                           ) : isSelected ? (
                             <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
@@ -269,16 +270,16 @@ export function AddClientToPlanDialog({
           {/* Actions */}
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Отмена
+              {t('addClientToPlan.cancel')}
             </Button>
             <Button onClick={handleAssign} disabled={!selectedClientId || assigning}>
               {assigning ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Добавляю...
+                  {t('addClientToPlan.adding')}
                 </>
               ) : (
-                'Добавить клиента'
+                t('addClientToPlan.addClient')
               )}
             </Button>
           </div>

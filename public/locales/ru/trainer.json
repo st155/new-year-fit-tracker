@@ -1,4 +1,52 @@
 {
+  "goalEdit": {
+    "title": "Редактировать цель",
+    "nameLabel": "Название цели",
+    "typeLabel": "Тип цели",
+    "targetLabel": "Целевое значение",
+    "unitLabel": "Единица измерения",
+    "cancel": "Отмена",
+    "save": "Сохранить",
+    "success": "Цель обновлена",
+    "error": "Ошибка обновления цели"
+  },
+  "goalTypes": {
+    "strength": "Сила",
+    "cardio": "Кардио",
+    "endurance": "Выносливость",
+    "body_composition": "Состав тела",
+    "flexibility": "Гибкость"
+  },
+  "units": {
+    "kg": "кг",
+    "reps": "раз",
+    "percent": "%",
+    "sec": "сек",
+    "min": "мин",
+    "km": "км"
+  },
+  "trainingGaps": {
+    "tooManyRequests": "Слишком много запросов. Попробуйте через минуту.",
+    "aiCreditsRequired": "Требуется пополнение баланса AI.",
+    "generateError": "Не удалось сгенерировать тренировку",
+    "workoutSaved": "Тренировка сохранена!",
+    "saveError": "Не удалось сохранить тренировку"
+  },
+  "addClientToPlan": {
+    "title": "Добавить клиента к плану",
+    "planLabel": "План:",
+    "startDate": "Дата начала",
+    "searchPlaceholder": "Поиск клиентов...",
+    "noClients": "У вас пока нет клиентов",
+    "notFound": "Клиенты не найдены",
+    "alreadyAdded": "Добавлен",
+    "cancel": "Отмена",
+    "adding": "Добавляю...",
+    "addClient": "Добавить клиента",
+    "loadError": "Не удалось загрузить клиентов",
+    "success": "Клиент \"{{name}}\" добавлен к плану",
+    "addError": "Не удалось добавить клиента"
+  },
   "ai": {
     "newConversation": "Новый разговор",
     "noConversations": "Нет разговоров",
