@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +36,7 @@ export function QuickMeasurementDialog({
   onOpenChange, 
   onMeasurementAdded 
 }: QuickMeasurementDialogProps) {
+  const { t } = useTranslation('goals');
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -70,8 +72,8 @@ export function QuickMeasurementDialog({
   const addMeasurement = async () => {
     if (!form.value.trim()) {
       toast({
-        title: "Ошибка",
-        description: "Введите значение измерения",
+        title: t('quickMeasurement.error'),
+        description: t('quickMeasurement.enterValue'),
         variant: "destructive",
       });
       return;
@@ -79,8 +81,8 @@ export function QuickMeasurementDialog({
 
     if (!user?.id) {
       toast({
-        title: "Ошибка",
-        description: "Пользователь не авторизован",
+        title: t('quickMeasurement.error'),
+        description: t('quickMeasurement.notAuthorized'),
         variant: "destructive",
       });
       return;
@@ -88,8 +90,8 @@ export function QuickMeasurementDialog({
 
     if (!goal?.id) {
       toast({
-        title: "Ошибка",
-        description: "Цель не найдена",
+        title: t('quickMeasurement.error'),
+        description: t('quickMeasurement.goalNotFound'),
         variant: "destructive",
       });
       return;
@@ -105,8 +107,8 @@ export function QuickMeasurementDialog({
     
     if (selectedDate > maxFutureDate) {
       toast({
-        title: "Некорректная дата",
-        description: "Нельзя добавлять измерения так далеко в будущее. Проверьте год!",
+        title: t('quickMeasurement.invalidDate'),
+        description: t('quickMeasurement.invalidDateDesc'),
         variant: "destructive",
       });
       return;
@@ -148,8 +150,8 @@ export function QuickMeasurementDialog({
         result = data;
 
         toast({
-          title: "Обновлено!",
-          description: `Измерение для "${goal.goal_name}" обновлено (было: ${existingMeasurement.value}, стало: ${parsedValue})`,
+          title: t('quickMeasurement.updated'),
+          description: t('quickMeasurement.updatedDesc', { name: goal.goal_name, oldValue: existingMeasurement.value, newValue: parsedValue }),
         });
       } else {
         const repsValue = isStrength && form.reps ? parseInt(form.reps) : null;
@@ -178,8 +180,8 @@ export function QuickMeasurementDialog({
         result = data;
 
         toast({
-          title: "Успешно!",
-          description: `Измерение для "${goal.goal_name}" добавлено: ${parsedValue} ${goal.target_unit}`,
+          title: t('quickMeasurement.success'),
+          description: t('quickMeasurement.successDesc', { name: goal.goal_name, value: parsedValue, unit: goal.target_unit }),
         });
       }
 
@@ -208,18 +210,18 @@ export function QuickMeasurementDialog({
     } catch (error: any) {
       console.error('Error saving measurement:', error);
       
-      let errorMessage = "Не удалось сохранить измерение. Попробуйте еще раз.";
+      let errorMessage = t('quickMeasurement.saveErrorDefault');
       
       if (error?.code === '23503') {
-        errorMessage = "Ошибка связи с целью. Попробуйте перезагрузить страницу.";
+        errorMessage = t('quickMeasurement.errorGoalLink');
       } else if (error?.code === '42501') {
-        errorMessage = "Недостаточно прав для добавления измерения.";
+        errorMessage = t('quickMeasurement.errorPermission');
       } else if (error?.message) {
         errorMessage = error.message;
       }
 
       toast({
-        title: "Ошибка при сохранении",
+        title: t('quickMeasurement.saveError'),
         description: errorMessage,
         variant: "destructive",
       });
@@ -249,10 +251,10 @@ export function QuickMeasurementDialog({
 
   const getValuePlaceholder = () => {
     if (isTimeUnit(goal.target_unit)) {
-      return "Например: 4:40 (4 мин 40 сек)";
+      return t('quickMeasurement.exampleTime');
     }
     
-    return `Введите значение в ${goal.target_unit}`;
+    return t('quickMeasurement.enterValueIn', { unit: goal.target_unit });
   };
 
   const isNumericGoal = () => {
@@ -276,7 +278,7 @@ export function QuickMeasurementDialog({
   const formatDate = () => {
     const today = new Date().toISOString().split('T')[0];
     if (form.measurement_date === today) {
-      return "Сегодня";
+      return t('quickMeasurement.today');
     }
     return new Date(form.measurement_date).toLocaleDateString('ru-RU', { 
       day: 'numeric', 
@@ -296,7 +298,7 @@ export function QuickMeasurementDialog({
         <div className="space-y-3 pt-1 pb-2 overflow-y-auto max-h-[65vh]">
           {/* Goal Info */}
           <div className="text-sm text-muted-foreground">
-            🎯 Цель: {isStrength 
+            🎯 {t('quickMeasurement.goalLabel')}: {isStrength 
               ? formatStrengthGoal(goal.target_value, goal.target_unit, goal.target_reps)
               : `${goal.target_value} ${goal.target_unit}`}
           </div>
@@ -305,12 +307,12 @@ export function QuickMeasurementDialog({
           <div className={isStrength ? "grid grid-cols-2 gap-3" : ""}>
             <div>
               <Label htmlFor="quick-value" className="text-sm">
-                {isStrength ? "Вес (кг)" : "Результат"}
+                {isStrength ? t('quickMeasurement.weightKg') : t('quickMeasurement.result')}
               </Label>
               <Input
                 id="quick-value"
                 type="text"
-                placeholder={isStrength ? "Например: 100" : getValuePlaceholder()}
+                placeholder={isStrength ? t('quickMeasurement.exampleWeight') : getValuePlaceholder()}
                 value={form.value}
                 onChange={(e) => setForm(prev => ({ ...prev, value: e.target.value }))}
                 className="text-2xl h-14 font-semibold"
@@ -321,13 +323,13 @@ export function QuickMeasurementDialog({
             {isStrength && (
               <div>
                 <Label htmlFor="quick-reps" className="text-sm">
-                  Повторения
+                  {t('quickMeasurement.reps')}
                 </Label>
                 <Input
                   id="quick-reps"
                   type="number"
                   min="1"
-                  placeholder={goal.target_reps ? `Цель: ${goal.target_reps}` : "1"}
+                  placeholder={goal.target_reps ? t('quickMeasurement.goalReps', { reps: goal.target_reps }) : "1"}
                   value={form.reps}
                   onChange={(e) => setForm(prev => ({ ...prev, reps: e.target.value }))}
                   className="text-2xl h-14 font-semibold"
@@ -340,7 +342,7 @@ export function QuickMeasurementDialog({
             <p className="text-xs text-muted-foreground mt-1">
               {goal.target_unit}
               {isTimeUnit(goal.target_unit) && 
-                " • Формат: ММ:СС (например: 4:40 = 4 мин 40 сек)"}
+                ` • ${t('quickMeasurement.timeFormat')}`}
             </p>
           )}
 
@@ -427,14 +429,14 @@ export function QuickMeasurementDialog({
           {showDatePicker && (
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>Выберите дату</span>
+                <span>{t('quickMeasurement.selectDate')}</span>
                 <span className={cn(
                   "font-semibold",
                   new Date(form.measurement_date).getFullYear() !== new Date().getFullYear() && "text-destructive"
                 )}>
                   {new Date(form.measurement_date).getFullYear() === new Date().getFullYear() 
-                    ? "✓ Текущий год" 
-                    : "⚠️ Проверьте год!"}
+                    ? `✓ ${t('quickMeasurement.currentYear')}` 
+                    : `⚠️ ${t('quickMeasurement.checkYear')}`}
                 </span>
               </div>
               <Input
@@ -459,16 +461,16 @@ export function QuickMeasurementDialog({
                 className="w-full justify-start text-sm h-9"
               >
                 <ChevronDown className={`h-4 w-4 mr-2 transition-transform ${showOptional ? 'rotate-180' : ''}`} />
-                {showOptional ? 'Скрыть' : 'Добавить'} заметку или фото
+                {showOptional ? t('quickMeasurement.hide') : t('quickMeasurement.add')} {t('quickMeasurement.noteOrPhoto')}
               </Button>
             </CollapsibleTrigger>
             
             <CollapsibleContent className="space-y-3 pt-2">
               <div>
-                <Label htmlFor="quick-notes" className="text-sm">Заметки</Label>
+                <Label htmlFor="quick-notes" className="text-sm">{t('quickMeasurement.notes')}</Label>
                 <Textarea
                   id="quick-notes"
-                  placeholder="Добавьте заметки о тренировке..."
+                  placeholder={t('quickMeasurement.notesPlaceholder')}
                   value={form.notes}
                   onChange={(e) => setForm(prev => ({ ...prev, notes: e.target.value }))}
                   rows={2}
@@ -479,12 +481,12 @@ export function QuickMeasurementDialog({
               <div>
                 <Label className="flex items-center gap-2 mb-2 text-sm">
                   <Camera className="h-3 w-3" />
-                  Фото прогресса
+                  {t('quickMeasurement.progressPhoto')}
                 </Label>
                 <PhotoUpload
                   onPhotoUploaded={(url) => setForm(prev => ({ ...prev, photo_url: url }))}
                   existingPhotoUrl={form.photo_url}
-                  label="Добавить фото"
+                  label={t('quickMeasurement.addPhoto')}
                 />
               </div>
             </CollapsibleContent>
@@ -498,7 +500,7 @@ export function QuickMeasurementDialog({
             disabled={isSubmitting}
             className="text-sm"
           >
-            Отмена
+            {t('quickMeasurement.cancel')}
           </Button>
           <Button
             onClick={addMeasurement}
@@ -511,12 +513,12 @@ export function QuickMeasurementDialog({
             {showSuccess ? (
               <>
                 <Check className="h-4 w-4 mr-2" />
-                Готово!
+                {t('quickMeasurement.done')}
               </>
             ) : isSubmitting ? (
-              "Добавляю..."
+              t('quickMeasurement.adding')
             ) : (
-              "Добавить"
+              t('quickMeasurement.addButton')
             )}
           </Button>
         </div>

@@ -56,5 +56,19 @@
     "stepsPerDay": "Steps: {{value}} per day",
     "sleepHours": "Sleep: {{value}} hours",
     "recoveryPercent": "Recovery: {{value}}%"
+  },
+  "report": {
+    "resultsOf": "Results of {{name}}",
+    "shareText": "I took {{rank}} place in the {{name}} challenge with {{points}} points!",
+    "linkCopied": "Link copied",
+    "loading": "Loading report...",
+    "unavailable": "Report Unavailable",
+    "unavailableDesc": "Could not load the challenge report",
+    "toChallenges": "To Challenges",
+    "back": "Back",
+    "share": "Share",
+    "previewAlert": "This is a preview report. The challenge is still ongoing, final results will be available after completion.",
+    "thankYou": "Thank you for participating in the challenge!",
+    "findNewChallenge": "Find New Challenge"
   }
 }

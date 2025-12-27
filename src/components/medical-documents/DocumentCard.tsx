@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,7 +16,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Download, Trash2, FileText, Calendar, Loader2, AlertCircle, CheckCircle2, Info, Eye, RefreshCw, Pill } from 'lucide-react';
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { DocumentType } from '@/hooks/useMedicalDocuments';
 import { useNavigate } from 'react-router-dom';
@@ -41,18 +42,6 @@ interface DocumentCardProps {
   onParseRecommendations?: (id: string) => void;
   isParsingRecommendations?: boolean;
 }
-
-const documentTypeLabels: Record<DocumentType, string> = {
-  inbody: 'InBody',
-  blood_test: 'Анализ крови',
-  fitness_report: 'Мед. заключение',
-  progress_photo: 'Фото прогресса',
-  vo2max: 'VO2max',
-  caliper: 'Калипер',
-  prescription: 'Рецепт',
-  training_program: 'Программа',
-  other: 'Другое',
-};
 
 const documentTypeColors: Record<DocumentType, string> = {
   blood_test: 'border-red-500/50 shadow-glow-rose',
@@ -87,7 +76,9 @@ export const DocumentCard = ({
   onParseRecommendations,
   isParsingRecommendations,
 }: DocumentCardProps) => {
+  const { t, i18n } = useTranslation('medicalDocs');
   const navigate = useNavigate();
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
 
   const formatFileSize = (bytes: number | null) => {
     if (!bytes) return 'N/A';
@@ -114,19 +105,19 @@ export const DocumentCard = ({
       {/* Tags & Status */}
       <div className="flex flex-wrap gap-1.5 mb-3">
         <Badge variant="outline" className="text-xs">
-          {documentTypeLabels[documentType]}
+          {t(`types.${documentType}`)}
         </Badge>
         
         {/* Processing Status */}
         {processingStatus === 'pending' && (
           <Badge variant="outline" className="text-xs text-yellow-600 bg-yellow-50/10">
-            ⏳ Ожидает обработки
+            ⏳ {t('status.pending')}
           </Badge>
         )}
         {processingStatus === 'processing' && (
           <Badge variant="outline" className="text-xs text-blue-600 bg-blue-50/10">
             <Loader2 className="h-3 w-3 animate-spin mr-1" />
-            Обрабатывается AI
+            {t('status.processingAI')}
           </Badge>
         )}
         {processingStatus === 'error' && (
@@ -134,24 +125,24 @@ export const DocumentCard = ({
             <HoverCardTrigger asChild>
               <Badge variant="outline" className="text-xs text-red-600 bg-red-50/10 cursor-help">
                 <AlertCircle className="h-3 w-3 mr-1" />
-                Ошибка обработки
+                {t('status.error')}
               </Badge>
             </HoverCardTrigger>
             <HoverCardContent className="w-80">
-              <p className="text-sm text-red-600">{processingError || 'Произошла ошибка при обработке'}</p>
+              <p className="text-sm text-red-600">{processingError || t('status.errorDefault')}</p>
             </HoverCardContent>
           </HoverCard>
         )}
         {processingStatus === 'completed' && aiProcessed && (
           <Badge variant="outline" className="text-xs text-green-600 bg-green-50/10">
             <CheckCircle2 className="h-3 w-3 mr-1" />
-            AI обработан
+            {t('status.aiProcessed')}
           </Badge>
         )}
         
         {hiddenFromTrainer && (
           <Badge variant="outline" className="text-xs text-blue-600 bg-blue-50/10">
-            🔒 Скрыто от тренера
+            🔒 {t('status.hiddenFromTrainer')}
           </Badge>
         )}
         
@@ -170,7 +161,7 @@ export const DocumentCard = ({
             <div className="group cursor-help mb-3">
               <div className="flex items-center gap-1 mb-1">
                 <Info className="h-3 w-3 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">AI Анализ</span>
+                <span className="text-xs text-muted-foreground">{t('card.aiAnalysis')}</span>
               </div>
               <p className="text-sm text-foreground/80 line-clamp-2 group-hover:text-foreground transition-colors">
                 {aiSummary}
@@ -178,7 +169,7 @@ export const DocumentCard = ({
             </div>
           </HoverCardTrigger>
           <HoverCardContent className="w-96">
-            <h4 className="font-semibold mb-2">🤖 AI Анализ документа</h4>
+            <h4 className="font-semibold mb-2">🤖 {t('card.aiAnalysisDocument')}</h4>
             <p className="text-sm text-muted-foreground whitespace-pre-wrap">
               {aiSummary}
             </p>
@@ -203,7 +194,7 @@ export const DocumentCard = ({
           {documentDate && (
             <span className="flex items-center gap-1">
               <Calendar className="h-3 w-3" />
-              {format(new Date(documentDate), 'dd MMM', { locale: ru })}
+              {format(new Date(documentDate), 'dd MMM', { locale: dateLocale })}
             </span>
           )}
           <span>{formatFileSize(fileSize)}</span>
@@ -221,7 +212,7 @@ export const DocumentCard = ({
                 onParseRecommendations(id);
               }}
               disabled={isParsingRecommendations}
-              title="Извлечь рекомендации врача"
+              title={t('actions.extractRecommendations')}
             >
               {isParsingRecommendations ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -241,7 +232,7 @@ export const DocumentCard = ({
                 e.stopPropagation();
                 onRetry(id);
               }}
-              title={processingStatus === 'error' ? 'Повторить обработку' : 'Переобработать документ'}
+              title={processingStatus === 'error' ? t('actions.retryProcessing') : t('actions.reprocessDocument')}
             >
               <RefreshCw className="h-3.5 w-3.5" />
             </Button>
@@ -268,33 +259,33 @@ export const DocumentCard = ({
               e.stopPropagation();
               onDownload(storagePath, fileName);
             }}
-            title="Скачать"
+            title={t('actions.download')}
           >
             <Download className="h-3.5 w-3.5" />
           </Button>
 
           <AlertDialog>
             <AlertDialogTrigger asChild onClick={(e) => e.stopPropagation()}>
-              <Button variant="ghost" size="icon" className="h-7 w-7" title="Удалить">
+              <Button variant="ghost" size="icon" className="h-7 w-7" title={t('actions.delete')}>
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent onClick={(e) => e.stopPropagation()}>
               <AlertDialogHeader>
-                <AlertDialogTitle>Удалить документ?</AlertDialogTitle>
+                <AlertDialogTitle>{t('dialog.deleteTitle')}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Это действие необратимо. Документ будет удалён навсегда.
+                  {t('dialog.deleteDescription')}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Отмена</AlertDialogCancel>
+                <AlertDialogCancel>{t('dialog.cancel')}</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={(e) => {
                     e.stopPropagation();
                     onDelete(id);
                   }}
                 >
-                  Удалить
+                  {t('dialog.delete')}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
