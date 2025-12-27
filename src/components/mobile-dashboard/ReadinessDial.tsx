@@ -29,9 +29,9 @@ export function ReadinessDial({ className }: ReadinessDialProps) {
   const circumference = Math.PI * radius; // Half circle
   const progress = (recovery / 100) * circumference;
   
-  // HRV and RHR from metrics (using strain and sleep as proxies if not available)
-  const hrv = Math.round(metrics?.strain * 3 + 30) || 45; // Approximation
-  const rhr = Math.round(55 - (metrics?.recovery * 0.1)) || 52; // Approximation
+  // HRV and RHR from real metrics
+  const hrv = metrics?.hrv || 0;
+  const rhr = metrics?.rhr || 0;
 
   if (loading) {
     return (
@@ -123,12 +123,12 @@ export function ReadinessDial({ className }: ReadinessDialProps) {
       >
         <div className="flex items-center gap-2">
           <span className="text-muted-foreground">HRV</span>
-          <span className="font-medium text-foreground">{hrv}ms</span>
+          <span className="font-medium text-foreground">{hrv ? `${Math.round(hrv)}ms` : '—'}</span>
         </div>
         <div className="h-4 w-px bg-border" />
         <div className="flex items-center gap-2">
           <span className="text-muted-foreground">RHR</span>
-          <span className="font-medium text-foreground">{rhr} bpm</span>
+          <span className="font-medium text-foreground">{rhr ? `${Math.round(rhr)} bpm` : '—'}</span>
         </div>
       </motion.div>
     </motion.div>

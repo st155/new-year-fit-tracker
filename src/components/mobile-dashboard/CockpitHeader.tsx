@@ -12,28 +12,48 @@ export function CockpitHeader() {
   const { user } = useAuth();
   const { data: profile } = useProfileQuery(user?.id);
   
-  // Fetch active integrations count
+  // Fetch active integrations count (Terra + direct WHOOP)
   const { data: integrationData } = useQuery({
     queryKey: ['header-integrations-status', user?.id],
     queryFn: async () => {
       if (!user?.id) return { count: 0, needsSync: false };
       
-      const { data } = await supabase
+      // Fetch Terra integrations
+      const { data: terraData } = await supabase
         .from('terra_tokens')
         .select('provider, is_active, last_sync_date')
         .eq('user_id', user.id)
         .eq('is_active', true);
 
-      if (!data || data.length === 0) return { count: 0, needsSync: false };
+      // Fetch direct WHOOP integrations
+      const { data: whoopData } = await supabase
+        .from('whoop_tokens')
+        .select('whoop_user_id, updated_at')
+        .eq('user_id', user.id);
 
       const now = new Date();
-      const needsSync = data.some(t => {
+      
+      // Check Terra sync status
+      const terraNeedsSync = (terraData || []).some(t => {
         if (!t.last_sync_date) return true;
         const hoursSinceSync = (now.getTime() - new Date(t.last_sync_date).getTime()) / (1000 * 60 * 60);
         return hoursSinceSync > 24;
       });
 
-      return { count: data.length, needsSync };
+      // Check WHOOP sync status
+      const whoopNeedsSync = (whoopData || []).some(t => {
+        if (!t.updated_at) return true;
+        const hoursSinceUpdate = (now.getTime() - new Date(t.updated_at).getTime()) / (1000 * 60 * 60);
+        return hoursSinceUpdate > 48;
+      });
+
+      const terraCount = terraData?.length || 0;
+      const whoopCount = whoopData?.length || 0;
+
+      return { 
+        count: terraCount + whoopCount, 
+        needsSync: terraNeedsSync || whoopNeedsSync 
+      };
     },
     enabled: !!user?.id,
     staleTime: 60000

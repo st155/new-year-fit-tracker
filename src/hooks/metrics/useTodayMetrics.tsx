@@ -7,6 +7,8 @@ export interface TodayMetrics {
   workouts: number;
   recovery: number;
   strain: number;
+  hrv: number;
+  rhr: number;
 }
 
 export function useTodayMetrics(userId: string | undefined) {
@@ -44,7 +46,9 @@ export function useTodayMetrics(userId: string | undefined) {
       sleepHours: grouped.get('Sleep Duration')?.value || 0,
       workouts: workoutCount,
       recovery: grouped.get('Recovery Score')?.value || 0,
-      strain: grouped.get('Day Strain')?.value || 0
+      strain: grouped.get('Day Strain')?.value || 0,
+      hrv: grouped.get('HRV RMSSD')?.value || grouped.get('Sleep HRV RMSSD')?.value || 0,
+      rhr: grouped.get('Resting Heart Rate')?.value || 0
     };
   }, [metrics]);
 

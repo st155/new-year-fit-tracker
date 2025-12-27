@@ -31,15 +31,22 @@ export function IntegrationsCard() {
     queryFn: async (): Promise<Integration[]> => {
       if (!user?.id) return [];
       
-      const { data } = await supabase
+      // Fetch Terra integrations
+      const { data: terraData } = await supabase
         .from('terra_tokens')
         .select('provider, is_active, last_sync_date')
         .eq('user_id', user.id);
 
-      if (!data) return [];
+      // Fetch direct WHOOP integrations
+      const { data: whoopData } = await supabase
+        .from('whoop_tokens')
+        .select('whoop_user_id, updated_at')
+        .eq('user_id', user.id);
 
       const now = new Date();
-      return data.map(conn => {
+      
+      // Process Terra integrations
+      const terraIntegrations: Integration[] = (terraData || []).map(conn => {
         const hoursSinceSync = conn.last_sync_date 
           ? (now.getTime() - new Date(conn.last_sync_date).getTime()) / (1000 * 60 * 60)
           : 999;
@@ -55,6 +62,21 @@ export function IntegrationsCard() {
           status
         };
       });
+
+      // Process direct WHOOP integrations
+      const whoopIntegrations: Integration[] = (whoopData || []).map(token => {
+        const hoursSinceUpdate = token.updated_at 
+          ? (now.getTime() - new Date(token.updated_at).getTime()) / (1000 * 60 * 60)
+          : 999;
+
+        return {
+          name: 'WHOOP',
+          provider: 'whoop-direct',
+          status: hoursSinceUpdate < 48 ? 'active' : 'needs_sync'
+        };
+      });
+
+      return [...whoopIntegrations, ...terraIntegrations];
     },
     enabled: !!user?.id,
     staleTime: 60000
