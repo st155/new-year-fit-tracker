@@ -1,4 +1,5 @@
 import { useState, lazy, Suspense } from "react";
+import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
 import { User, Bell, Activity, Dumbbell, Heart } from "lucide-react";
 import { MetricCard } from "./MetricCard";
@@ -54,6 +55,7 @@ interface InBodyDetailViewProps {
 }
 
 export function InBodyDetailView({ analysis, previousAnalysis, onClose }: InBodyDetailViewProps) {
+  const { t } = useTranslation('body');
   const { user } = useAuth();
   const { data: allAnalyses = [] } = useInBodyAnalyses(user?.id);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
@@ -112,7 +114,7 @@ export function InBodyDetailView({ analysis, previousAnalysis, onClose }: InBody
               <User className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold metric-glow">INBODY SCAN</h1>
+              <h1 className="text-2xl font-bold metric-glow">{t('detail.inbodyScan')}</h1>
               <p className="text-sm text-muted-foreground">
                 {format(new Date(analysis.test_date), 'MMMM dd, yyyy').toUpperCase()}
               </p>
@@ -131,7 +133,7 @@ export function InBodyDetailView({ analysis, previousAnalysis, onClose }: InBody
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
               <Activity className="h-4 w-4 text-white" />
             </div>
-            <h2 className="text-lg font-semibold metric-glow">AI АНАЛИЗ</h2>
+            <h2 className="text-lg font-semibold metric-glow">{t('detail.aiAnalysis')}</h2>
           </div>
           <p className="text-muted-foreground leading-relaxed">
             {analysis.ai_summary}
@@ -139,7 +141,7 @@ export function InBodyDetailView({ analysis, previousAnalysis, onClose }: InBody
           
           {Array.isArray(analysis.ai_insights) && analysis.ai_insights.length > 0 && (
             <div className="mt-4 space-y-2">
-              <h3 className="text-sm font-semibold text-primary">Ключевые выводы:</h3>
+              <h3 className="text-sm font-semibold text-primary">{t('detail.keyInsights')}</h3>
               <ul className="space-y-2">
                 {analysis.ai_insights.map((insight, idx) => (
                   <li key={idx} className="flex items-start gap-2">
@@ -156,7 +158,7 @@ export function InBodyDetailView({ analysis, previousAnalysis, onClose }: InBody
       {/* Body Composition Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <MetricCard
-          title="Weight"
+          title={t('metrics.weight')}
           value={weightChange?.value ?? 0}
           unit="KG"
           change={weightChange?.change}
@@ -164,7 +166,7 @@ export function InBodyDetailView({ analysis, previousAnalysis, onClose }: InBody
           icon={<Activity className="h-5 w-5" />}
         />
         <MetricCard
-          title="Skeletal Muscle Mass"
+          title={t('metrics.skeletalMuscleMass')}
           value={smmChange?.value ?? 0}
           unit="KG"
           change={smmChange?.change}
@@ -172,7 +174,7 @@ export function InBodyDetailView({ analysis, previousAnalysis, onClose }: InBody
           icon={<Dumbbell className="h-5 w-5" />}
         />
         <MetricCard
-          title="Body Fat Mass"
+          title={t('metrics.bodyFatMass')}
           value={bfmChange?.value ?? 0}
           unit="KG"
           change={bfmChange?.change}
@@ -197,8 +199,8 @@ export function InBodyDetailView({ analysis, previousAnalysis, onClose }: InBody
           <div className="p-4 border-b border-white/10 space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold metric-glow">SEGMENTAL ANALYSIS</h2>
-                <p className="text-xs text-muted-foreground mt-1">Muscle mass distribution</p>
+                <h2 className="text-lg font-semibold metric-glow">{t('detail.segmentalAnalysis')}</h2>
+                <p className="text-xs text-muted-foreground mt-1">{t('detail.muscleDistribution')}</p>
               </div>
             </div>
             
@@ -226,17 +228,17 @@ export function InBodyDetailView({ analysis, previousAnalysis, onClose }: InBody
           
           {/* Segment Details */}
           <div className="p-4 grid grid-cols-2 md:grid-cols-3 gap-3 border-t border-white/10">
-            <SegmentDetail label="Right Arm" percent={analysis.right_arm_percent} />
-            <SegmentDetail label="Left Arm" percent={analysis.left_arm_percent} />
-            <SegmentDetail label="Trunk" percent={analysis.trunk_percent} />
-            <SegmentDetail label="Right Leg" percent={analysis.right_leg_percent} />
-            <SegmentDetail label="Left Leg" percent={analysis.left_leg_percent} />
+            <SegmentDetail label={t('segments.rightArm')} percent={analysis.right_arm_percent} />
+            <SegmentDetail label={t('segments.leftArm')} percent={analysis.left_arm_percent} />
+            <SegmentDetail label={t('segments.trunk')} percent={analysis.trunk_percent} />
+            <SegmentDetail label={t('segments.rightLeg')} percent={analysis.right_leg_percent} />
+            <SegmentDetail label={t('segments.leftLeg')} percent={analysis.left_leg_percent} />
           </div>
         </div>
 
         {/* Vital Stats */}
         <div className="space-y-4">
-          <MetricCard title="BMI" className="h-fit">
+          <MetricCard title={t('metrics.bmi')} className="h-fit">
             <CircularProgress
               value={analysis.bmi ?? 0}
               max={40}
@@ -244,7 +246,7 @@ export function InBodyDetailView({ analysis, previousAnalysis, onClose }: InBody
             />
           </MetricCard>
 
-          <MetricCard title="Body Fat %" className="h-fit">
+          <MetricCard title={t('metrics.bodyFat')} className="h-fit">
             <WaveChart
               value={analysis.percent_body_fat ?? 0}
               status={bodyFatStatus.label}
@@ -252,7 +254,7 @@ export function InBodyDetailView({ analysis, previousAnalysis, onClose }: InBody
             />
           </MetricCard>
 
-          <MetricCard title="Visceral Fat" className="h-fit">
+          <MetricCard title={t('metrics.visceralFat')} className="h-fit">
             <WaveChart
               value={analysis.visceral_fat_area ?? 0}
               status={visceralFatStatus.label}
@@ -265,22 +267,22 @@ export function InBodyDetailView({ analysis, previousAnalysis, onClose }: InBody
       {/* Additional Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <MetricCard
-          title="Total Body Water"
+          title={t('metrics.totalBodyWater')}
           value={analysis.total_body_water ?? 0}
           unit="L"
         />
         <MetricCard
-          title="Protein"
+          title={t('metrics.protein')}
           value={analysis.protein ?? 0}
           unit="KG"
         />
         <MetricCard
-          title="Minerals"
+          title={t('metrics.minerals')}
           value={analysis.minerals ?? 0}
           unit="KG"
         />
         <MetricCard
-          title="Basal Metabolic Rate"
+          title={t('metrics.basalMetabolicRate')}
           value={analysis.bmr ?? 0}
           unit="kcal"
         />

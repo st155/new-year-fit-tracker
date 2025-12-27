@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, Droplet, Flame, Scale, TrendingDown, TrendingUp } from "lucide-react";
 
@@ -13,12 +14,14 @@ interface BodyCompositionMetricsProps {
 }
 
 export function BodyCompositionMetrics({ latestData }: BodyCompositionMetricsProps) {
+  const { t } = useTranslation('body');
+  
   if (!latestData) {
     return (
       <Card>
         <CardContent className="pt-6">
           <p className="text-center text-muted-foreground">
-            No measurements yet. Add your first measurement to get started!
+            {t('metricsCard.noMeasurements')}
           </p>
         </CardContent>
       </Card>
@@ -27,28 +30,28 @@ export function BodyCompositionMetrics({ latestData }: BodyCompositionMetricsPro
 
   const metrics = [
     {
-      title: "Weight",
+      title: t('metrics.weight'),
       value: latestData.weight,
       unit: "kg",
       icon: Scale,
       color: "text-primary",
     },
     {
-      title: "Body Fat",
+      title: t('metrics.bodyFat'),
       value: latestData.body_fat_percentage,
       unit: "%",
       icon: TrendingDown,
       color: "text-orange-500",
     },
     {
-      title: "Muscle Mass",
+      title: t('metrics.muscleMass'),
       value: latestData.muscle_mass,
       unit: "kg",
       icon: Activity,
       color: "text-green-500",
     },
     {
-      title: "Lean Mass",
+      title: t('metrics.leanMass'),
       value: (latestData.weight - (latestData.weight * latestData.body_fat_percentage / 100)).toFixed(1),
       unit: "kg",
       icon: TrendingUp,
@@ -59,7 +62,7 @@ export function BodyCompositionMetrics({ latestData }: BodyCompositionMetricsPro
   return (
     <div className="space-y-4">
       <div className="text-sm text-muted-foreground">
-        Last measured: {new Date(latestData.measurement_date).toLocaleDateString()}
+        {t('metricsCard.lastMeasured')}: {new Date(latestData.measurement_date).toLocaleDateString()}
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
