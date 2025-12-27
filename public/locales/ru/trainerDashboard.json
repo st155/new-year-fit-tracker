@@ -1,0 +1,19 @@
+{
+  "accessCheck": "Проверка доступа тренера...",
+  "accessDenied": "Доступ запрещен. Активируйте тренерскую роль в профиле.",
+  "loadError": "Ошибка загрузки клиентов",
+  "breadcrumbs": {
+    "home": "Главная"
+  },
+  "tabs": {
+    "aiHub": "AI Hub",
+    "clients": "Клиенты",
+    "plans": "Планы",
+    "calendar": "Календарь",
+    "challenges": "Челленджи",
+    "integrations": "Интеграции",
+    "analytics": "Аналитика",
+    "settings": "Настройки",
+    "trainer": "Тренер"
+  }
+}

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,7 @@ interface TrainerClient {
 }
 
 function TrainerDashboardContent() {
+  const { t } = useTranslation('trainerDashboard');
   const { user } = useAuth();
   const { role, isTrainer, loading: roleLoading } = useUserRole();
   const navigate = useNavigate();
@@ -87,12 +89,12 @@ function TrainerDashboardContent() {
         isTrainer,
         redirectingTo: '/profile'
       });
-      toast.error('Доступ запрещен. Активируйте тренерскую роль в профиле.');
+      toast.error(t('accessDenied'));
       navigate('/profile', { replace: true });
     } else if (!roleLoading && isTrainer) {
       console.log('✅ [TrainerDashboard] Access granted');
     }
-  }, [isTrainer, roleLoading, navigate, user?.id, role]);
+  }, [isTrainer, roleLoading, navigate, user?.id, role, t]);
 
   useEffect(() => {
     loadClients();
@@ -159,7 +161,7 @@ function TrainerDashboardContent() {
       setClients(formattedClients);
     } catch (error) {
       console.error('❌ [TrainerDashboard] Error loading clients:', error);
-      toast.error('Ошибка загрузки клиентов');
+      toast.error(t('loadError'));
     } finally {
       setLoading(false);
     }
@@ -182,7 +184,7 @@ function TrainerDashboardContent() {
   // Show loading state while checking role
   if (roleLoading) {
     console.log('⏳ [TrainerDashboard] Loading role');
-    return <PageLoader message="Проверка доступа тренера..." />;
+    return <PageLoader message={t('accessCheck')} />;
   }
 
   // Don't render if not a trainer (will redirect)
@@ -195,7 +197,7 @@ function TrainerDashboardContent() {
 
   // Build breadcrumbs
   const breadcrumbs: Breadcrumb[] = [
-    { label: 'Главная', path: '/', icon: <Home className="h-4 w-4" /> }
+    { label: t('breadcrumbs.home'), path: '/', icon: <Home className="h-4 w-4" /> }
   ];
 
   const tabIcons: Record<string, JSX.Element> = {
@@ -209,24 +211,24 @@ function TrainerDashboardContent() {
   };
 
   const tabLabels: Record<string, string> = {
-    'clients': 'Клиенты',
-    'plans': 'Планы',
-    'calendar': 'Календарь',
-    'challenges': 'Челленджи',
-    'integrations': 'Интеграции',
-    'analytics': 'Аналитика',
-    'settings': 'Настройки',
+    'clients': t('tabs.clients'),
+    'plans': t('tabs.plans'),
+    'calendar': t('tabs.calendar'),
+    'challenges': t('tabs.challenges'),
+    'integrations': t('tabs.integrations'),
+    'analytics': t('tabs.analytics'),
+    'settings': t('tabs.settings'),
   };
 
   if (!selectedClient) {
     breadcrumbs.push({
-      label: tabLabels[activeTab] || 'Тренер',
+      label: tabLabels[activeTab] || t('tabs.trainer'),
       icon: tabIcons[activeTab],
     });
   } else {
     if (previousTab) {
       breadcrumbs.push({
-        label: tabLabels[previousTab] || 'Тренер',
+        label: tabLabels[previousTab] || t('tabs.trainer'),
         icon: tabIcons[previousTab],
       });
     }
@@ -270,56 +272,56 @@ function TrainerDashboardContent() {
                 className="gap-1 whitespace-nowrap flex-shrink-0 bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 rounded-lg transition-all font-medium shadow-lg shadow-purple-500/25"
               >
                 <Sparkles className="h-4 w-4" />
-                AI Hub
+                {t('tabs.aiHub')}
               </TabsTrigger>
               <TabsTrigger 
                 value="clients" 
                 className="gap-1 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
               >
                 <Users className="h-4 w-4" />
-                Клиенты
+                {t('tabs.clients')}
               </TabsTrigger>
               <TabsTrigger 
                 value="plans" 
                 className="gap-1 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
               >
                 <TrendingUp className="h-4 w-4" />
-                Планы
+                {t('tabs.plans')}
               </TabsTrigger>
               <TabsTrigger 
                 value="calendar" 
                 className="gap-1 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
               >
                 <Calendar className="h-4 w-4" />
-                Календарь
+                {t('tabs.calendar')}
               </TabsTrigger>
               <TabsTrigger 
                 value="challenges" 
                 className="gap-1 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
               >
                 <Trophy className="h-4 w-4" />
-                Челленджи
+                {t('tabs.challenges')}
               </TabsTrigger>
               <TabsTrigger 
                 value="integrations" 
                 className="gap-1 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
               >
                 <Activity className="h-4 w-4" />
-                Интеграции
+                {t('tabs.integrations')}
               </TabsTrigger>
               <TabsTrigger 
                 value="analytics" 
                 className="gap-1 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
               >
                 <BarChart3 className="h-4 w-4" />
-                Аналитика
+                {t('tabs.analytics')}
               </TabsTrigger>
               <TabsTrigger 
                 value="settings" 
                 className="gap-1 whitespace-nowrap flex-shrink-0 data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg transition-all"
               >
                 <Settings className="h-4 w-4" />
-                Настройки
+                {t('tabs.settings')}
               </TabsTrigger>
             </TabsList>
 

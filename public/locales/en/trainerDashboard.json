@@ -1,0 +1,19 @@
+{
+  "accessCheck": "Checking trainer access...",
+  "accessDenied": "Access denied. Activate trainer role in profile.",
+  "loadError": "Error loading clients",
+  "breadcrumbs": {
+    "home": "Home"
+  },
+  "tabs": {
+    "aiHub": "AI Hub",
+    "clients": "Clients",
+    "plans": "Plans",
+    "calendar": "Calendar",
+    "challenges": "Challenges",
+    "integrations": "Integrations",
+    "analytics": "Analytics",
+    "settings": "Settings",
+    "trainer": "Trainer"
+  }
+}
