@@ -1,0 +1,23 @@
+{
+  "tabs": {
+    "today": "Today",
+    "progress": "Progress",
+    "logbook": "Logbook"
+  },
+  "buttons": {
+    "wellnessPlan": "Wellness Plan",
+    "recordWorkout": "Record Workout",
+    "recordStrength": "Record Strength Workout",
+    "recordStrengthShort": "Record Strength",
+    "travelWorkout": "Travel Workout",
+    "createWellnessSchedule": "Create Wellness Schedule"
+  },
+  "cards": {
+    "recordActivity": "Record Activity"
+  },
+  "errors": {
+    "cannotStartWorkout": "Cannot start workout",
+    "restDay": "Today is a rest day",
+    "noActivePlan": "No active training plan"
+  }
+}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { SupplementsHeroSection } from "@/components/biostack/SupplementsHeroSection";
 import { SecondaryNavigation } from "@/components/biostack/SecondaryNavigation";
@@ -16,7 +17,6 @@ import { MobileSupplementsTracker } from "@/components/mobile-supplements";
 
 type ViewMode = "dashboard" | "correlation" | "history" | "import" | "library";
 
-// Map URL tab params to ViewMode
 const tabToViewMode: Record<string, ViewMode> = {
   protocols: "history",
   history: "history",
@@ -27,22 +27,18 @@ const tabToViewMode: Record<string, ViewMode> = {
 };
 
 export default function Supplements() {
+  const { t } = useTranslation('supplements');
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const [searchParams] = useSearchParams();
   
-  // Auto-check for completed protocols on mount
   useCheckCompletedProtocols();
-  
-  // Monitor new lab alerts for linked biomarkers
   useNewLabAlerts();
   
-  // Initialize viewMode from URL tab param
   const tabParam = searchParams.get("tab");
   const initialViewMode = tabParam && tabToViewMode[tabParam] ? tabToViewMode[tabParam] : "dashboard";
   const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
   
-  // Sync viewMode with URL changes
   useEffect(() => {
     const tab = searchParams.get("tab");
     if (tab && tabToViewMode[tab]) {
@@ -50,40 +46,27 @@ export default function Supplements() {
     }
   }, [searchParams]);
 
-  // Mobile view
   if (isMobile) {
     return <MobileSupplementsTracker />;
   }
 
   return (
     <div className="container mx-auto py-8 space-y-8">
-      {/* Protocol Lifecycle Alerts */}
       {user?.id && <LifecycleAlertsPanel userId={user.id} />}
       
-      {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight mb-2">
-          BioStack V3.0
-        </h1>
-        <p className="text-muted-foreground">
-          Your biohacking correlation engine - Track what works, optimize what doesn't
-        </p>
+        <h1 className="text-3xl font-bold tracking-tight mb-2">{t('title')}</h1>
+        <p className="text-muted-foreground">{t('subtitle')}</p>
       </div>
 
-      {/* Conditional Content based on viewMode */}
       {viewMode === "dashboard" && (
         <>
-          {/* Hero Section with Metrics */}
-<SupplementsHeroSection 
+          <SupplementsHeroSection 
             onActiveProtocolsClick={() => setViewMode("history")}
             onAdherenceRateClick={() => setViewMode("correlation")}
             onOptimizedClick={() => setViewMode("correlation")}
           />
-
-          {/* Unified Today's Supplements View */}
           <TodaysSupplements />
-
-          {/* Secondary Navigation */}
           <SecondaryNavigation
             onCorrelationEngine={() => setViewMode("correlation")}
             onHistory={() => setViewMode("history")}

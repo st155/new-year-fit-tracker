@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { motion } from "framer-motion";
@@ -16,6 +17,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyStateV3 } from "@/components/ui/empty-state-v3";
 
 export default function Challenges() {
+  const { t } = useTranslation('challenges');
   const { user } = useAuth();
   const { challenges, isLoading, error, refetch } = useChallengesQuery(user?.id);
   
@@ -89,20 +91,19 @@ export default function Challenges() {
               <div className="p-3 rounded-xl bg-gradient-primary">
                 <Sparkles className="h-6 w-6 text-white" />
               </div>
-              <DialogTitle className="text-2xl">Добро пожаловать в Elite10! 🎉</DialogTitle>
+              <DialogTitle className="text-2xl">{t('welcomeTitle')}</DialogTitle>
             </div>
             <DialogDescription className="text-base pt-2">
-              Присоединяйтесь к челленджу и начните свой путь к идеальной форме. 
-              Выберите челлендж, который вам нравится, и мы создадим для вас персональные цели.
+              {t('welcomeDescription')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
             <Button variant="ghost" onClick={handleSkipOnboarding}>
-              Пропустить
+              {t('skip')}
             </Button>
             <Button onClick={handleContinue} className="gap-2">
               <Trophy className="h-4 w-4" />
-              Выбрать челлендж
+              {t('chooseChallenge')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -119,8 +120,8 @@ export default function Challenges() {
                 <Trophy className="h-8 w-8 text-white" />
               </div>
               <div>
-                <h1 className="text-4xl md:text-5xl font-bold text-white">Challenges</h1>
-                <p className="text-white/90 text-lg">Push your limits and achieve greatness</p>
+                <h1 className="text-4xl md:text-5xl font-bold text-white">{t('title')}</h1>
+                <p className="text-white/90 text-lg">{t('subtitle')}</p>
               </div>
             </div>
             {user && (
@@ -130,7 +131,7 @@ export default function Challenges() {
                 size="lg"
               >
                 <Plus className="h-5 w-5 mr-2" />
-                Создать
+                {t('create')}
               </Button>
             )}
           </div>
@@ -142,7 +143,7 @@ export default function Challenges() {
                 <Target className="h-8 w-8 text-white" />
                 <div>
                   <p className="text-2xl font-bold text-white">{activeCount}</p>
-                  <p className="text-sm text-white/80">Active Challenges</p>
+                  <p className="text-sm text-white/80">{t('activeChallenges')}</p>
                 </div>
               </CardContent>
             </Card>
@@ -151,7 +152,7 @@ export default function Challenges() {
                 <Users className="h-8 w-8 text-white" />
                 <div>
                   <p className="text-2xl font-bold text-white">{participatingCount}</p>
-                  <p className="text-sm text-white/80">Your Challenges</p>
+                  <p className="text-sm text-white/80">{t('yourChallenges')}</p>
                 </div>
               </CardContent>
             </Card>
@@ -160,7 +161,7 @@ export default function Challenges() {
                 <TrendingUp className="h-8 w-8 text-white" />
                 <div>
                   <p className="text-2xl font-bold text-white">9</p>
-                  <p className="text-sm text-white/80">Goals per Challenge</p>
+                  <p className="text-sm text-white/80">{t('goalsPerChallenge')}</p>
                 </div>
               </CardContent>
             </Card>
@@ -172,11 +173,11 @@ export default function Challenges() {
       {error ? (
         <EmptyStateV3
           variant="default"
-          title="Ошибка загрузки челленджей"
-          description={error.message || 'Не удалось загрузить челленджи. Попробуйте обновить страницу.'}
+          title={t('errors.loadError')}
+          description={error.message || t('errors.loadErrorDescription')}
           illustration="animated-icon"
           action={{
-            label: "Обновить",
+            label: t('refresh'),
             onClick: () => refetch(),
             icon: Trophy
           }}
@@ -184,28 +185,28 @@ export default function Challenges() {
       ) : !challenges || challenges.length === 0 ? (
         <EmptyStateV3
           variant="challenges"
-          title="Нет активных челленджей"
-          description="Создайте свой челлендж и пригласите друзей, или дождитесь новых от других участников"
+          title={t('empty.noActiveChallenges')}
+          description={t('empty.noActiveChallengesDescription')}
           illustration="animated-icon"
           action={{
-            label: "Создать челлендж",
+            label: t('empty.createChallenge'),
             onClick: () => setShowCreateDialog(true),
             icon: Plus
           }}
           secondaryAction={{
-            label: "Обновить",
+            label: t('refresh'),
             onClick: () => refetch()
           }}
-          motivationalQuote="Каждый челлендж - это шаг к лучшей версии себя!"
+          motivationalQuote={t('empty.motivationalQuote')}
         />
       ) : filteredChallenges.length === 0 ? (
         <EmptyStateV3
           variant="search"
-          title="Нет челленджей в этой категории"
-          description={`Попробуйте выбрать другой фильтр или создайте новый челлендж`}
+          title={t('empty.noChallengesInCategory')}
+          description={t('empty.noChallengesInCategoryDescription')}
           illustration="animated-icon"
           action={{
-            label: "Сбросить фильтр",
+            label: t('empty.resetFilter'),
             onClick: () => setFilter('all'),
             icon: Target
           }}
@@ -214,15 +215,15 @@ export default function Challenges() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold mb-2">Available Challenges</h2>
-              <p className="text-muted-foreground">Choose a challenge and start your journey</p>
+              <h2 className="text-2xl font-bold mb-2">{t('availableChallenges')}</h2>
+              <p className="text-muted-foreground">{t('availableDescription')}</p>
             </div>
             <Tabs value={filter} onValueChange={(v) => setFilter(v as any)}>
               <TabsList>
-                <TabsTrigger value="all">Все</TabsTrigger>
-                <TabsTrigger value="mine">Мои</TabsTrigger>
-                <TabsTrigger value="active">Активные</TabsTrigger>
-                <TabsTrigger value="completed">Завершенные</TabsTrigger>
+                <TabsTrigger value="all">{t('filters.all')}</TabsTrigger>
+                <TabsTrigger value="mine">{t('filters.mine')}</TabsTrigger>
+                <TabsTrigger value="active">{t('filters.active')}</TabsTrigger>
+                <TabsTrigger value="completed">{t('filters.completed')}</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>

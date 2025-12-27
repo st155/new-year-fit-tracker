@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { useChallengeGoalsQuery as useChallengeGoals, ChallengeGoal } from '@/features/goals';
 import { AnimatedPage } from '@/components/layout/AnimatedPage';
@@ -26,6 +27,7 @@ import {
 } from "@/components/ui/accordion";
 
 export default function Progress() {
+  const { t } = useTranslation('progress');
   const { user } = useAuth();
   const navigate = useNavigate();
   const { data: goals, isLoading, error, refetch } = useChallengeGoals(user?.id);
@@ -43,9 +45,9 @@ export default function Progress() {
     const timer = setTimeout(() => {
       setShowLoader(false);
       if (isLoading) {
-        toast.info('Данные загружаются дольше обычного', {
+        toast.info(t('dataLoadingSlow'), {
           action: {
-            label: 'Обновить',
+            label: t('refresh'),
             onClick: () => window.location.reload()
           }
         });
@@ -57,7 +59,7 @@ export default function Progress() {
     }
 
     return () => clearTimeout(timer);
-  }, [isLoading]);
+  }, [isLoading, t]);
 
   // Calculate overview stats
   const overviewStats = useMemo(() => {
@@ -157,7 +159,7 @@ export default function Progress() {
   }, [goals]);
 
   if (isLoading && showLoader) {
-    return <PageLoader message="Загрузка прогресса..." />;
+    return <PageLoader message={t('loading')} />;
   }
 
   // Error or empty state
@@ -167,13 +169,13 @@ export default function Progress() {
         <div className="max-w-7xl mx-auto">
           <EmptyState
             icon={<Users className="h-12 w-12" />}
-            title={error ? "Ошибка загрузки данных" : "Нет целей для отслеживания"}
+            title={error ? t('errors.loadError') : t('empty.noGoals')}
             description={error 
-              ? "Не удалось загрузить прогресс. Попробуйте обновить страницу."
-              : "Присоединитесь к челленджу, чтобы автоматически создать цели и начать отслеживать свой прогресс"
+              ? t('errors.loadErrorDescription')
+              : t('empty.noGoalsDescription')
             }
             action={{
-              label: error ? "Обновить страницу" : "Присоединиться к челленджу",
+              label: error ? t('empty.refreshPage') : t('empty.joinChallenge'),
               onClick: () => error ? window.location.reload() : navigate("/challenges")
             }}
           />
@@ -188,9 +190,9 @@ export default function Progress() {
         {/* Compact Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold">Прогресс</h1>
+            <h1 className="text-xl sm:text-2xl font-bold">{t('title')}</h1>
             <p className="text-xs text-muted-foreground">
-              {goals?.length || 0} {goals?.length === 1 ? 'цель' : 'целей'} из челленджей
+              {t('goalsFromChallenges', { count: goals?.length || 0 })}
             </p>
           </div>
           
@@ -201,7 +203,7 @@ export default function Progress() {
             className="gap-2 w-full sm:w-auto touch-friendly"
           >
             <RefreshCw className="h-4 w-4" />
-            <span className="sm:inline">Обновить</span>
+            <span className="sm:inline">{t('refresh')}</span>
           </Button>
         </div>
 
@@ -217,9 +219,9 @@ export default function Progress() {
                 <AccordionTrigger className="text-sm hover:no-underline py-3">
                   <div className="flex items-center gap-2">
                     <BarChart3 className="h-4 w-4" />
-                    <span>Аналитика и статистика</span>
+                    <span>{t('analytics.title')}</span>
                     <span className="text-xs text-muted-foreground">
-                      (дисциплины, очки, базовая линия)
+                      ({t('analytics.subtitle')})
                     </span>
                   </div>
                 </AccordionTrigger>
@@ -245,7 +247,7 @@ export default function Progress() {
               animate="animate"
             >
               <h3 className="text-sm font-semibold mb-2 text-muted-foreground">
-                Все цели ({goals.length})
+                {t('allGoals')} ({goals.length})
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {goals.map((goal, index) => (

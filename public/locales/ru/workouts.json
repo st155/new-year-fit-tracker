@@ -1,0 +1,23 @@
+{
+  "tabs": {
+    "today": "Сегодня",
+    "progress": "Прогресс",
+    "logbook": "Журнал"
+  },
+  "buttons": {
+    "wellnessPlan": "Wellness-план",
+    "recordWorkout": "Записать тренировку",
+    "recordStrength": "Записать силовую тренировку",
+    "recordStrengthShort": "Записать силовую",
+    "travelWorkout": "Тренировка в поездке",
+    "createWellnessSchedule": "Создать Wellness-расписание"
+  },
+  "cards": {
+    "recordActivity": "Записать активность"
+  },
+  "errors": {
+    "cannotStartWorkout": "Невозможно начать тренировку",
+    "restDay": "Сегодня день отдыха",
+    "noActivePlan": "Нет активного плана тренировок"
+  }
+}

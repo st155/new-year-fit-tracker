@@ -1,0 +1,13 @@
+{
+  "title": "Goals",
+  "newGoal": "New Goal",
+  "categories": {
+    "fitness": "Fitness",
+    "biostack": "BioStack",
+    "habits": "Habits",
+    "challenge": "Challenge"
+  },
+  "empty": {
+    "noGoals": "No goals in this category"
+  }
+}
