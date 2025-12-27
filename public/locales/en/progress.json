@@ -1,0 +1,24 @@
+{
+  "title": "Progress",
+  "goalsFromChallenges": "{{count}} goals from challenges",
+  "goal": "goal",
+  "goals": "goals",
+  "refresh": "Refresh",
+  "loading": "Loading progress...",
+  "dataLoadingSlow": "Data is taking longer than usual to load",
+  "analytics": {
+    "title": "Analytics & Statistics",
+    "subtitle": "disciplines, points, baseline"
+  },
+  "allGoals": "All Goals",
+  "errors": {
+    "loadError": "Error loading data",
+    "loadErrorDescription": "Failed to load progress. Please try refreshing the page."
+  },
+  "empty": {
+    "noGoals": "No goals to track",
+    "noGoalsDescription": "Join a challenge to automatically create goals and start tracking your progress",
+    "joinChallenge": "Join a Challenge",
+    "refreshPage": "Refresh Page"
+  }
+}

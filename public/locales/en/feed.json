@@ -1,0 +1,9 @@
+{
+  "title": "Activity Feed",
+  "subtitle": "See what's happening in your fitness journey",
+  "loadMore": "Load more",
+  "empty": {
+    "title": "No activity yet",
+    "description": "Start tracking your fitness data to see your activity feed"
+  }
+}

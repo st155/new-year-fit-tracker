@@ -16,7 +16,7 @@ i18n
       loadPath: '/locales/{{lng}}/{{ns}}.json',
     },
     
-    ns: ['common', 'navigation', 'dashboard', 'auth', 'landing', 'leaderboard', 'fitnessData', 'body', 'trainer', 'goals', 'habits', 'home'],
+    ns: ['common', 'navigation', 'dashboard', 'auth', 'landing', 'leaderboard', 'fitnessData', 'body', 'trainer', 'goals', 'habits', 'home', 'challenges', 'progress', 'feed', 'supplements', 'workouts', 'mobileGoals'],
     defaultNS: 'common',
     
     interpolation: {

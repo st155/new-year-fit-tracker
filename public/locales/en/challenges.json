@@ -1,0 +1,34 @@
+{
+  "title": "Challenges",
+  "subtitle": "Push your limits and achieve greatness",
+  "create": "Create",
+  "refresh": "Refresh",
+  "welcomeTitle": "Welcome to Elite10! 🎉",
+  "welcomeDescription": "Join a challenge and start your journey to the perfect shape. Choose a challenge you like, and we'll create personalized goals for you.",
+  "skip": "Skip",
+  "chooseChallenge": "Choose Challenge",
+  "activeChallenges": "Active Challenges",
+  "yourChallenges": "Your Challenges",
+  "goalsPerChallenge": "Goals per Challenge",
+  "availableChallenges": "Available Challenges",
+  "availableDescription": "Choose a challenge and start your journey",
+  "filters": {
+    "all": "All",
+    "mine": "Mine",
+    "active": "Active",
+    "completed": "Completed"
+  },
+  "errors": {
+    "loadError": "Failed to load challenges",
+    "loadErrorDescription": "Could not load challenges. Please try refreshing the page."
+  },
+  "empty": {
+    "noActiveChallenges": "No active challenges",
+    "noActiveChallengesDescription": "Create your own challenge and invite friends, or wait for new ones from other participants",
+    "createChallenge": "Create Challenge",
+    "motivationalQuote": "Every challenge is a step towards a better version of yourself!",
+    "noChallengesInCategory": "No challenges in this category",
+    "noChallengesInCategoryDescription": "Try selecting a different filter or create a new challenge",
+    "resetFilter": "Reset Filter"
+  }
+}

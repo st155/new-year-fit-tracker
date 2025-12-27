@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,7 @@ import { WeeklyGapAnalysis } from "@/components/wellness/WeeklyGapAnalysis";
 import { GenerateTravelWorkoutDialog } from "@/components/wellness/GenerateTravelWorkoutDialog";
 
 export default function WorkoutV31() {
+  const { t } = useTranslation('workouts');
   // ALL HOOKS FIRST - before any conditional returns
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("today");
@@ -81,8 +83,8 @@ export default function WorkoutV31() {
   // Button handlers
   const handleStartWorkout = () => {
     if (!dailyWorkout?.success || dailyWorkout.is_rest_day) {
-      toast.error("Невозможно начать тренировку", {
-        description: dailyWorkout?.is_rest_day ? "Сегодня день отдыха" : "Нет активного плана тренировок"
+      toast.error(t('errors.cannotStartWorkout'), {
+        description: dailyWorkout?.is_rest_day ? t('errors.restDay') : t('errors.noActivePlan')
       });
       return;
     }
@@ -150,7 +152,7 @@ export default function WorkoutV31() {
               className="hidden sm:flex items-center gap-2 border-purple-500/30 text-purple-400 hover:bg-purple-500/10"
             >
               <Calendar className="w-4 h-4" />
-              Wellness-план
+              {t('buttons.wellnessPlan')}
             </Button>
             <Button
               variant="outline"
@@ -159,7 +161,7 @@ export default function WorkoutV31() {
               className="hidden sm:flex items-center gap-2 border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
             >
               <FileText className="w-4 h-4" />
-              Записать тренировку
+              {t('buttons.recordWorkout')}
             </Button>
           </div>
         </div>
@@ -171,19 +173,19 @@ export default function WorkoutV31() {
             value="today"
             className="data-[state=active]:bg-neutral-800 data-[state=active]:text-cyan-400 data-[state=active]:shadow-[0_0_12px_rgba(6,182,212,0.5)]"
           >
-            Сегодня
+            {t('tabs.today')}
           </TabsTrigger>
           <TabsTrigger 
             value="progress"
             className="data-[state=active]:bg-neutral-800 data-[state=active]:text-cyan-400 data-[state=active]:shadow-[0_0_12px_rgba(6,182,212,0.5)]"
           >
-            Прогресс
+            {t('tabs.progress')}
           </TabsTrigger>
           <TabsTrigger 
             value="logbook"
             className="data-[state=active]:bg-neutral-800 data-[state=active]:text-cyan-400 data-[state=active]:shadow-[0_0_12px_rgba(6,182,212,0.5)]"
           >
-            Журнал
+            {t('tabs.logbook')}
           </TabsTrigger>
         </TabsList>
 
@@ -197,7 +199,7 @@ export default function WorkoutV31() {
                   {/* Quick Actions Card */}
                   <Card className="bg-gradient-to-br from-neutral-900 to-neutral-800 border-neutral-700">
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-lg">Записать активность</CardTitle>
+                      <CardTitle className="text-lg">{t('cards.recordActivity')}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <Button
@@ -205,7 +207,7 @@ export default function WorkoutV31() {
                         className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-medium"
                       >
                         <FileText className="w-4 h-4 mr-2" />
-                        Записать силовую тренировку
+                        {t('buttons.recordStrength')}
                       </Button>
                       <Button
                         onClick={() => setTravelWorkoutOpen(true)}
@@ -213,7 +215,7 @@ export default function WorkoutV31() {
                         className="w-full border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
                       >
                         <Plane className="w-4 h-4 mr-2" />
-                        Тренировка в поездке
+                        {t('buttons.travelWorkout')}
                       </Button>
                       <Button
                         onClick={() => setWellnessPlanOpen(true)}
@@ -221,7 +223,7 @@ export default function WorkoutV31() {
                         className="w-full border-purple-500/30 text-purple-400 hover:bg-purple-500/10"
                       >
                         <Sparkles className="w-4 h-4 mr-2" />
-                        Создать Wellness-расписание
+                        {t('buttons.createWellnessSchedule')}
                       </Button>
                     </CardContent>
                   </Card>
@@ -301,7 +303,7 @@ export default function WorkoutV31() {
                     className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-medium"
                   >
                     <FileText className="w-4 h-4 mr-2" />
-                    Записать силовую
+                    {t('buttons.recordStrengthShort')}
                   </Button>
                   <Button
                     onClick={() => setTravelWorkoutOpen(true)}
@@ -309,7 +311,7 @@ export default function WorkoutV31() {
                     className="w-full border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
                   >
                     <Plane className="w-4 h-4 mr-2" />
-                    Тренировка в поездке
+                    {t('buttons.travelWorkout')}
                   </Button>
                   <Button
                     onClick={() => setWellnessPlanOpen(true)}
@@ -317,7 +319,7 @@ export default function WorkoutV31() {
                     className="w-full border-purple-500/30 text-purple-400 hover:bg-purple-500/10"
                   >
                     <Sparkles className="w-4 h-4 mr-2" />
-                    Wellness-расписание
+                    {t('buttons.wellnessPlan')}
                   </Button>
                 </CardContent>
               </Card>

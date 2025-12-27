@@ -1,0 +1,13 @@
+{
+  "title": "Цели",
+  "newGoal": "Новая цель",
+  "categories": {
+    "fitness": "Фитнес",
+    "biostack": "BioStack",
+    "habits": "Привычки",
+    "challenge": "Челлендж"
+  },
+  "empty": {
+    "noGoals": "Нет целей в этой категории"
+  }
+}
