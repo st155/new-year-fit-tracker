@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -32,6 +33,7 @@ const DEFAULT_PREFERENCES: NotificationPreferences = {
 };
 
 export function NotificationSettings() {
+  const { t } = useTranslation('common');
   const { user } = useAuth();
   const [preferences, setPreferences] = useState<NotificationPreferences>(DEFAULT_PREFERENCES);
   const [loading, setLoading] = useState(true);
@@ -73,10 +75,10 @@ export function NotificationSettings() {
 
       if (error) throw error;
 
-      toast.success('Настройки сохранены');
+      toast.success(t('success.saved'));
     } catch (error) {
       console.error('Error saving notification preferences:', error);
-      toast.error('Ошибка сохранения настроек');
+      toast.error(t('errors.saving'));
     } finally {
       setSaving(false);
     }

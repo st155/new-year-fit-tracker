@@ -69,5 +69,26 @@
     "reason2": "Хотите начать подключение с нуля",
     "cancel": "Отмена",
     "confirmResetBtn": "Подтвердить сброс"
+  },
+  "whoop": {
+    "processing": "Обработка авторизации Whoop...",
+    "authDenied": "Авторизация отклонена",
+    "noCodeReceived": "Код авторизации не получен",
+    "noStateReceived": "State параметр не получен",
+    "connectedSuccess": "Whoop успешно подключен!",
+    "exchangingCode": "Обмен кода авторизации...",
+    "tokenExchangeError": "Ошибка обмена токена",
+    "startingSync": "Запуск начальной синхронизации...",
+    "connectionFailed": "Не удалось подключить Whoop",
+    "connecting": "Подключение Whoop",
+    "success": "Успешно!",
+    "error": "Ошибка",
+    "windowWillClose": "Окно закроется через",
+    "redirecting": "Перенаправление через",
+    "seconds": "сек",
+    "syncWillStart": "Данные Whoop начнут синхронизироваться автоматически.",
+    "closeWindow": "Закрыть окно",
+    "returnToIntegrations": "Вернуться на страницу интеграций",
+    "tryAgain": "Попробовать снова"
   }
 }

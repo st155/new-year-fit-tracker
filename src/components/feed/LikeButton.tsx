@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { Heart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -12,6 +13,7 @@ interface LikeButtonProps {
 }
 
 export function LikeButton({ activityId, initialLiked, initialCount, onUpdate }: LikeButtonProps) {
+  const { t } = useTranslation('common');
   const [liked, setLiked] = useState(initialLiked);
   const [count, setCount] = useState(initialCount);
   const [loading, setLoading] = useState(false);
@@ -24,8 +26,8 @@ export function LikeButton({ activityId, initialLiked, initialCount, onUpdate }:
       
       if (!user) {
         toast({
-          title: "Требуется авторизация",
-          description: "Войдите в систему, чтобы ставить лайки",
+          title: t('errors.authRequired'),
+          description: t('likes.loginToLike'),
           variant: "destructive",
         });
         return;
@@ -62,8 +64,8 @@ export function LikeButton({ activityId, initialLiked, initialCount, onUpdate }:
     } catch (error) {
       console.error('Error toggling like:', error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось изменить статус лайка",
+        title: t('errors.generic'),
+        description: t('likes.toggleError'),
         variant: "destructive",
       });
     } finally {

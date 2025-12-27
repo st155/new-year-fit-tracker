@@ -171,5 +171,25 @@
     "minAgo": "{{minutes}} мин назад",
     "hoursAgo": "{{hours}} ч назад",
     "daysAgo": "{{days}} дн назад"
+  },
+  "docComparison": {
+    "compareDocuments": "Сравнить документы",
+    "title": "Сравнение медицинских документов",
+    "description": "Выберите документы для AI-анализа различий",
+    "selectDocuments": "Выберите документы ({{count}} выбрано)",
+    "selectMinTwo": "Выберите минимум 2 документа для сравнения",
+    "comparisonComplete": "Сравнение завершено",
+    "aiAnalysisReady": "AI анализ различий готов",
+    "comparisonError": "Ошибка сравнения",
+    "analyzing": "Анализ...",
+    "compare": "Сравнить",
+    "result": "Результат сравнения"
+  },
+  "likes": {
+    "loginToLike": "Войдите в систему, чтобы ставить лайки",
+    "toggleError": "Не удалось изменить статус лайка"
+  },
+  "healthAnalysis": {
+    "updateSuccess": "Анализ здоровья успешно обновлен"
   }
 }

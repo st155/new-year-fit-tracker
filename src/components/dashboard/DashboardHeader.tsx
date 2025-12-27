@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Sparkles, Settings, ChevronLeft, ChevronRight, Play, Pause, AlertCircle, TrendingUp } from 'lucide-react';
 import { SparklesCore } from '@/components/aceternity';
 import { useNavigate } from 'react-router-dom';
@@ -36,6 +37,7 @@ const getBadgeVariant = (type: string) => {
 };
 
 export function DashboardHeader() {
+  const { t } = useTranslation('common');
   const navigate = useNavigate();
   const { insights, isLoading } = useSmartInsights({ maxInsights: 10 });
   const { preferences, muteInsight } = useInsightPersonalization();
@@ -86,7 +88,7 @@ export function DashboardHeader() {
       <div className="w-full bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 border border-border/50 rounded-lg py-3">
         <div className="flex items-center gap-3 px-4">
           <Sparkles className="h-4 w-4 text-primary animate-pulse" />
-          <span className="text-sm text-muted-foreground">Загрузка инсайтов...</span>
+          <span className="text-sm text-muted-foreground">{t('states.loading')}</span>
         </div>
       </div>
     );
