@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { useTrainerChallengesQuery } from "@/features/challenges";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,6 +36,7 @@ import { useToast } from "@/hooks/use-toast";
 import { toast as sonnerToast } from "sonner";
 
 export function TrainerChallengesManager() {
+  const { t } = useTranslation("trainer");
   const { user } = useAuth();
   const { toast } = useToast();
   const { challenges, isLoading, refetch } = useTrainerChallengesQuery(user?.id);
@@ -64,7 +66,7 @@ export function TrainerChallengesManager() {
         },
         () => {
           console.log("Challenge participants updated");
-          sonnerToast.info("Список участников обновлен");
+          sonnerToast.info(t("challenges.participantsUpdated"));
           refetch();
         }
       )
@@ -74,7 +76,7 @@ export function TrainerChallengesManager() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [selectedChallenge, refetch]);
+  }, [selectedChallenge, refetch, t]);
 
   const handleCompleteChallenge = async (challengeId: string) => {
     try {
@@ -86,16 +88,16 @@ export function TrainerChallengesManager() {
       if (error) throw error;
 
       toast({
-        title: "Успех",
-        description: "Челлендж завершен",
+        title: t("challenges.success"),
+        description: t("challenges.challengeCompleted"),
       });
 
       refetch();
     } catch (error: any) {
       console.error("Error completing challenge:", error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось завершить челлендж",
+        title: t("challenges.error"),
+        description: t("challenges.challengeCompleteFailed"),
         variant: "destructive",
       });
     }
@@ -111,16 +113,16 @@ export function TrainerChallengesManager() {
       if (error) throw error;
 
       toast({
-        title: "Успех",
-        description: "Челлендж активирован",
+        title: t("challenges.success"),
+        description: t("challenges.challengeActivated"),
       });
 
       refetch();
     } catch (error: any) {
       console.error("Error reactivating challenge:", error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось активировать челлендж",
+        title: t("challenges.error"),
+        description: t("challenges.challengeActivateFailed"),
         variant: "destructive",
       });
     }
@@ -153,23 +155,23 @@ export function TrainerChallengesManager() {
       {/* Заголовок */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Мои челленджи</h2>
+          <h2 className="text-2xl font-bold">{t("challenges.title")}</h2>
           <p className="text-muted-foreground">
-            Управляйте челленджами и участниками
+            {t("challenges.subtitle")}
           </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setTemplateManagerOpen(true)}>
             <FileText className="h-4 w-4 mr-2" />
-            Templates
+            {t("challenges.templates")}
           </Button>
           <Button variant="outline" onClick={() => setCreateDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
-            Classic
+            {t("challenges.classic")}
           </Button>
           <Button onClick={() => setCreateAIDialogOpen(true)}>
             <Sparkles className="h-4 w-4 mr-2" />
-            AI Mode
+            {t("challenges.aiMode")}
           </Button>
         </div>
       </div>
@@ -178,7 +180,7 @@ export function TrainerChallengesManager() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Активные челленджи</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("challenges.activeChallenges")}</CardTitle>
             <Trophy className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -188,7 +190,7 @@ export function TrainerChallengesManager() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Всего участников</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("challenges.totalParticipants")}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -198,34 +200,34 @@ export function TrainerChallengesManager() {
           </CardContent>
         </Card>
 
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Всего дисциплин</CardTitle>
-                    <Target className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {challenges.reduce((sum, c) => sum + ((c as any).totalDisciplines || 0), 0)}
-                    </div>
-                  </CardContent>
-                </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{t("challenges.totalDisciplines")}</CardTitle>
+            <Target className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {challenges.reduce((sum, c) => sum + ((c as any).totalDisciplines || 0), 0)}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Список челленджей */}
       <Tabs defaultValue="active" className="w-full">
         <TabsList>
           <TabsTrigger value="active">
-            Активные ({activeChallenges.length})
+            {t("challenges.active")} ({activeChallenges.length})
           </TabsTrigger>
           <TabsTrigger value="completed">
-            Завершенные ({completedChallenges.length})
+            {t("challenges.completed")} ({completedChallenges.length})
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="active" className="space-y-4 mt-4">
           {activeChallenges.length === 0 ? (
             <Card className="p-8 text-center">
-              <p className="text-muted-foreground">Нет активных челленджей</p>
+              <p className="text-muted-foreground">{t("challenges.noActiveChallenges")}</p>
             </Card>
           ) : (
             activeChallenges.map((challenge) => (
@@ -236,7 +238,7 @@ export function TrainerChallengesManager() {
                       <div className="flex items-center gap-2">
                         <CardTitle>{challenge.title}</CardTitle>
                         <Badge variant="outline">
-                          {challenge.is_active ? "Активен" : "Завершен"}
+                          {challenge.is_active ? t("challenges.active") : t("challenges.completed")}
                         </Badge>
                       </div>
                       <CardDescription className="mt-2">
@@ -253,11 +255,11 @@ export function TrainerChallengesManager() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => handleEditChallenge(challenge)}>
                             <Edit className="h-4 w-4 mr-2" />
-                            Edit Challenge
+                            {t("challenges.editChallenge")}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleSaveAsTemplate(challenge)}>
                             <Save className="h-4 w-4 mr-2" />
-                            Save as Template
+                            {t("challenges.saveAsTemplate")}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -269,16 +271,15 @@ export function TrainerChallengesManager() {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Завершить челлендж?</AlertDialogTitle>
+                            <AlertDialogTitle>{t("challenges.completeChallenge")}</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Челлендж станет неактивным и не будет отображаться для участников. 
-                              Вы сможете активировать его снова из раздела "Завершенные".
+                              {t("challenges.completeDescription")}
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel>Отмена</AlertDialogCancel>
+                            <AlertDialogCancel>{t("challenges.cancel")}</AlertDialogCancel>
                             <AlertDialogAction onClick={() => handleCompleteChallenge(challenge.id)}>
-                              Завершить
+                              {t("challenges.complete")}
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
@@ -288,17 +289,17 @@ export function TrainerChallengesManager() {
                   <div className="flex items-center gap-4 text-sm text-muted-foreground mt-4">
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
-                      {new Date(challenge.start_date).toLocaleDateString("ru-RU")} -{" "}
-                      {new Date(challenge.end_date).toLocaleDateString("ru-RU")}
+                      {new Date(challenge.start_date).toLocaleDateString()} -{" "}
+                      {new Date(challenge.end_date).toLocaleDateString()}
                     </div>
                     <div className="flex items-center gap-1">
                       <Users className="h-4 w-4" />
-                      {challenge.participants.length} участников
+                      {challenge.participants.length} {t("challenges.participants")}
                     </div>
-                        <div className="flex items-center gap-1">
-                          <Target className="h-4 w-4" />
-                          {(challenge as any).totalDisciplines || 0} дисциплин
-                        </div>
+                    <div className="flex items-center gap-1">
+                      <Target className="h-4 w-4" />
+                      {(challenge as any).totalDisciplines || 0} {t("challenges.disciplines")}
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -310,7 +311,7 @@ export function TrainerChallengesManager() {
                           size="sm"
                           onClick={() => setSelectedChallenge(null)}
                         >
-                          Скрыть участников
+                          {t("challenges.hideParticipants")}
                         </Button>
                       </div>
                       <ChallengeParticipantsList
@@ -325,7 +326,7 @@ export function TrainerChallengesManager() {
                       variant="outline"
                       onClick={() => setSelectedChallenge(challenge.id)}
                     >
-                      Показать участников
+                      {t("challenges.showParticipants")}
                     </Button>
                   )}
                 </CardContent>
@@ -337,7 +338,7 @@ export function TrainerChallengesManager() {
         <TabsContent value="completed" className="space-y-4 mt-4">
           {completedChallenges.length === 0 ? (
             <Card className="p-8 text-center">
-              <p className="text-muted-foreground">Нет завершенных челленджей</p>
+              <p className="text-muted-foreground">{t("challenges.noCompletedChallenges")}</p>
             </Card>
           ) : (
             completedChallenges.map((challenge) => (
@@ -347,7 +348,7 @@ export function TrainerChallengesManager() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <CardTitle>{challenge.title}</CardTitle>
-                        <Badge variant="secondary">Завершен</Badge>
+                        <Badge variant="secondary">{t("challenges.completed")}</Badge>
                       </div>
                       <CardDescription className="mt-2">
                         {challenge.description}
@@ -359,13 +360,13 @@ export function TrainerChallengesManager() {
                       onClick={() => handleReactivateChallenge(challenge.id)}
                     >
                       <RotateCcw className="h-4 w-4 mr-2" />
-                      Активировать
+                      {t("challenges.activate")}
                     </Button>
                   </div>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground mt-4">
                     <div className="flex items-center gap-1">
                       <Users className="h-4 w-4" />
-                      {challenge.participants.length} участников
+                      {challenge.participants.length} {t("challenges.participants")}
                     </div>
                   </div>
                 </CardHeader>
