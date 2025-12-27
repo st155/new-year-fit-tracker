@@ -30,5 +30,16 @@
     "noChallengesInCategory": "No challenges in this category",
     "noChallengesInCategoryDescription": "Try selecting a different filter or create a new challenge",
     "resetFilter": "Reset Filter"
+  },
+  "posts": {
+    "createPost": "Create Post",
+    "shareProgress": "Share your progress",
+    "placeholder": "Tell about your achievements, share your experience...",
+    "addPhoto": "Add photo",
+    "changePhoto": "Change photo",
+    "publish": "Publish",
+    "publishing": "Publishing...",
+    "writeSmth": "Write something",
+    "createError": "Failed to create post"
   }
 }

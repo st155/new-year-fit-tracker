@@ -1,11 +1,12 @@
 import { useState, useRef } from "react";
-import { Camera, Upload, X, Check, Image } from "lucide-react";
+import { Camera, Upload, X, Image } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 interface PhotoUploadProps {
   onPhotoUploaded?: (photoUrl: string) => void;
@@ -18,10 +19,11 @@ export function PhotoUpload({
   onPhotoUploaded, 
   existingPhotoUrl, 
   className,
-  label = "Добавить фото прогресса"
+  label
 }: PhotoUploadProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation('common');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(existingPhotoUrl || null);
@@ -30,8 +32,8 @@ export function PhotoUpload({
   const handleFileSelect = async (file: File) => {
     if (!user) {
       toast({
-        title: "Ошибка",
-        description: "Необходимо войти в систему",
+        title: t('errors.generic'),
+        description: t('errors.authRequired'),
         variant: "destructive",
       });
       return;
@@ -42,8 +44,8 @@ export function PhotoUpload({
     // Проверка типа файла
     if (!file.type.startsWith('image/')) {
       toast({
-        title: "Ошибка",
-        description: "Пожалуйста, выберите изображение",
+        title: t('errors.generic'),
+        description: t('errors.invalidImage'),
         variant: "destructive",
       });
       return;
@@ -52,8 +54,8 @@ export function PhotoUpload({
     // Проверка размера файла (максимум 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast({
-        title: "Ошибка",
-        description: "Размер файла не должен превышать 5MB",
+        title: t('errors.generic'),
+        description: t('errors.fileTooLarge', { size: 5 }),
         variant: "destructive",
       });
       return;
@@ -97,16 +99,16 @@ export function PhotoUpload({
       console.log('Public URL:', photoUrl);
 
       toast({
-        title: "Успешно!",
-        description: "Фото загружено",
+        title: t('success.uploaded'),
+        description: t('success.photoUploaded'),
       });
 
       onPhotoUploaded?.(photoUrl);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading file:', error);
       toast({
-        title: "Ошибка",
-        description: `Не удалось загрузить фото: ${error.message}`,
+        title: t('errors.generic'),
+        description: `${t('errors.uploadFailed')}: ${error.message}`,
         variant: "destructive",
       });
       setPreviewUrl(existingPhotoUrl || null);
@@ -173,7 +175,7 @@ export function PhotoUpload({
                 className="animate-scale-in"
               >
                 <Camera className="h-4 w-4 mr-1" />
-                Заменить
+                {t('actions.replace')}
               </Button>
               <Button
                 size="sm"
@@ -191,7 +193,7 @@ export function PhotoUpload({
             <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
               <div className="text-center text-white">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
-                <p className="text-sm">Загрузка...</p>
+                <p className="text-sm">{t('states.loading')}</p>
               </div>
             </div>
           )}
@@ -222,22 +224,22 @@ export function PhotoUpload({
             </div>
             
             <div className="space-y-2">
-              <h3 className="font-medium">{label}</h3>
+              <h3 className="font-medium">{label || t('photoUpload.label')}</h3>
               <p className="text-sm text-muted-foreground">
                 {uploading 
-                  ? "Загружаем ваше фото..." 
-                  : "Перетащите фото сюда или нажмите для выбора"
+                  ? t('states.uploading')
+                  : t('photoUpload.dragHint')
                 }
               </p>
               <p className="text-xs text-muted-foreground">
-                Поддерживаются форматы: JPG, PNG, WebP (до 5MB)
+                {t('photoUpload.formats')}
               </p>
             </div>
 
             {!uploading && (
               <Button variant="outline" size="sm" className="animate-scale-in">
                 <Upload className="h-4 w-4 mr-2" />
-                Выбрать файл
+                {t('actions.chooseFile')}
               </Button>
             )}
           </div>

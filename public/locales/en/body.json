@@ -69,7 +69,8 @@
     "analysisComplete": "Analysis completed successfully!",
     "analysisError": "Analysis error",
     "cannotGetPdfAccess": "Cannot get access to PDF file",
-    "cannotConvertPdf": "Cannot convert PDF to images"
+    "cannotConvertPdf": "Cannot convert PDF to images",
+    "measurementHistory": "Measurement History"
   },
   
   "detail": {
@@ -135,5 +136,33 @@
   "metricsCard": {
     "lastMeasured": "Last measured",
     "noMeasurements": "No measurements yet. Add your first measurement to get started!"
+  },
+  
+  "weightTracker": {
+    "title": "Weight Control",
+    "addWeight": "Add Weight",
+    "addMeasurement": "Add Weight Measurement",
+    "addMeasurementDesc": "Enter weight manually or upload a scale photo for automatic recognition",
+    "manualInput": "Manual Input",
+    "aiPhoto": "AI Photo Analysis",
+    "progressPhoto": "Progress Photo",
+    "weight": "Weight (kg)",
+    "saveWeight": "Save Weight",
+    "weightRecognized": "Weight recognized!",
+    "foundWeight": "Found weight: {{weight}} kg",
+    "recognizedWeight": "Recognized weight: {{weight}} kg",
+    "photoScale": "Take a photo of the scale",
+    "addProgressPhoto": "Add photo to track progress",
+    "addFirstMeasurement": "Add your first weight measurement",
+    "lastMeasurement": "since last measurement",
+    "progressToGoal": "Progress to Goal",
+    "weightLoss": "Weight Loss",
+    "weightGain": "Weight Gain",
+    "current": "Current",
+    "target": "Target",
+    "remaining": "Remaining",
+    "loadError": "Failed to load weight data",
+    "enterWeight": "Enter weight value",
+    "addError": "Failed to add weight"
   }
 }

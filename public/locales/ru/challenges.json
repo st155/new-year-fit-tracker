@@ -30,5 +30,16 @@
     "noChallengesInCategory": "Нет челленджей в этой категории",
     "noChallengesInCategoryDescription": "Попробуйте выбрать другой фильтр или создайте новый челлендж",
     "resetFilter": "Сбросить фильтр"
+  },
+  "posts": {
+    "createPost": "Создать пост",
+    "shareProgress": "Поделитесь прогрессом",
+    "placeholder": "Расскажите о своих достижениях, поделитесь опытом...",
+    "addPhoto": "Добавить фото",
+    "changePhoto": "Изменить фото",
+    "publish": "Опубликовать",
+    "publishing": "Публикация...",
+    "writeSmth": "Напишите что-нибудь",
+    "createError": "Не удалось создать пост"
   }
 }

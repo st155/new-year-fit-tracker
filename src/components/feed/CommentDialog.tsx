@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { ru } from "date-fns/locale";
+import { ru, enUS } from "date-fns/locale";
 import { Send, User, MessageCircle, X } from "lucide-react";
 import {
   Dialog,
@@ -22,6 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/primitive";
 import { QuickReplies } from "./QuickReplies";
+import { useTranslation } from "react-i18next";
 
 interface Comment {
   id: string;
@@ -49,6 +50,9 @@ export function CommentDialog({ activityId, open, onOpenChange, onUpdate }: Comm
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const { t, i18n } = useTranslation('common');
+
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
 
   const fetchComments = async () => {
     try {
@@ -86,8 +90,8 @@ export function CommentDialog({ activityId, open, onOpenChange, onUpdate }: Comm
     } catch (error) {
       console.error('Error fetching comments:', error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось загрузить комментарии",
+        title: t('errors.generic'),
+        description: t('errors.loadComments'),
         variant: "destructive",
       });
     } finally {
@@ -105,8 +109,8 @@ export function CommentDialog({ activityId, open, onOpenChange, onUpdate }: Comm
       
       if (!user) {
         toast({
-          title: "Требуется авторизация",
-          description: "Войдите в систему, чтобы оставлять комментарии",
+          title: t('errors.loginRequired'),
+          description: t('errors.loginToComment'),
           variant: "destructive",
         });
         return;
@@ -127,14 +131,14 @@ export function CommentDialog({ activityId, open, onOpenChange, onUpdate }: Comm
       onUpdate();
 
       toast({
-        title: "Комментарий добавлен",
-        description: "Ваш комментарий успешно опубликован",
+        title: t('success.commentAdded'),
+        description: t('success.commentPublished'),
       });
     } catch (error) {
       console.error('Error submitting comment:', error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось добавить комментарий",
+        title: t('errors.generic'),
+        description: t('errors.addComment'),
         variant: "destructive",
       });
     } finally {
@@ -170,8 +174,8 @@ export function CommentDialog({ activityId, open, onOpenChange, onUpdate }: Comm
         ) : comments.length === 0 ? (
           <div className="text-center py-6">
             <MessageCircle className="h-8 w-8 text-muted-foreground mx-auto mb-2 opacity-50" />
-            <p className="text-xs text-muted-foreground">Пока нет комментариев</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">Будьте первым!</p>
+            <p className="text-xs text-muted-foreground">{t('comments.empty')}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">{t('comments.beFirst')}</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -186,12 +190,12 @@ export function CommentDialog({ activityId, open, onOpenChange, onUpdate }: Comm
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 mb-0.5">
                     <span className="font-medium text-[11px] truncate">
-                      {comment.profiles?.full_name || comment.profiles?.username || 'Пользователь'}
+                      {comment.profiles?.full_name || comment.profiles?.username || t('comments.user')}
                     </span>
                     <span className="text-[9px] text-muted-foreground whitespace-nowrap">
                       {formatDistanceToNow(new Date(comment.created_at), {
                         addSuffix: true,
-                        locale: ru,
+                        locale: dateLocale,
                       })}
                     </span>
                   </div>
@@ -208,7 +212,7 @@ export function CommentDialog({ activityId, open, onOpenChange, onUpdate }: Comm
           <QuickReplies onReply={handleQuickReply} />
           
           <Textarea
-            placeholder="Напишите комментарий..."
+            placeholder={t('comments.placeholder')}
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             className="min-h-[60px] max-h-[120px] resize-none text-sm bg-muted/30"
@@ -230,12 +234,12 @@ export function CommentDialog({ activityId, open, onOpenChange, onUpdate }: Comm
             ) : (
               <>
                 <Send className="h-4 w-4 mr-2" />
-                Отправить
+                {t('actions.send')}
               </>
             )}
           </Button>
           <p className="text-[10px] text-muted-foreground px-1">
-            Enter для отправки • Shift+Enter для новой строки
+            {t('comments.enterHint')}
           </p>
         </div>
       </div>
@@ -250,7 +254,7 @@ export function CommentDialog({ activityId, open, onOpenChange, onUpdate }: Comm
             <div className="flex items-center justify-between">
               <DrawerTitle className="flex items-center gap-2 text-base">
                 <MessageCircle className="h-4 w-4" />
-                Комментарии ({comments.length})
+                {t('comments.title')} ({comments.length})
               </DrawerTitle>
               <Button
                 variant="ghost"
@@ -276,7 +280,7 @@ export function CommentDialog({ activityId, open, onOpenChange, onUpdate }: Comm
         <DialogHeader className="pb-2">
           <DialogTitle className="flex items-center gap-2 text-base">
             <MessageCircle className="h-4 w-4" />
-            Комментарии ({comments.length})
+            {t('comments.title')} ({comments.length})
           </DialogTitle>
         </DialogHeader>
         {commentsContent}
