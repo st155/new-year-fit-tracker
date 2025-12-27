@@ -163,6 +163,10 @@
     "step3": "Select \"Export Health Data\"",
     "step4": "Wait for the archive to be created and send it to yourself",
     "step5": "Upload the received ZIP file here",
+    "requestId": "Request ID",
+    "uploadAnother": "Upload another file",
+    "errorProcessing": "Could not process file. Check that it's a valid Apple Health export and try again.",
+    "tryAgain": "Try again",
     "phases": {
       "uploaded": "File uploaded, starting processing...",
       "background": "Background processing started...",

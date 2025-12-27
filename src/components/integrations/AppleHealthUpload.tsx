@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -15,6 +16,7 @@ interface AppleHealthUploadProps {
 }
 
 export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) {
+  const { t } = useTranslation('integrations');
   const { user } = useAuth();
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
@@ -35,8 +37,8 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
     // Информируем о больших файлах
     if (sizeMB > 200) {
       toast({
-        title: 'Большой файл Apple Health',
-        description: `Размер файла: ${sizeMB}MB. Обработка может занять несколько минут. Используется оптимизированный алгоритм для больших файлов.`,
+        title: t('appleHealth.largeFile'),
+        description: t('appleHealth.largeFileDesc', { size: sizeMB }),
         variant: 'default'
       });
     }
@@ -56,8 +58,8 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
       );
       
       toast({
-        title: 'Файл слишком большой',
-        description: `Размер файла: ${sizeMB}MB. Максимальный размер: 2048MB`,
+        title: t('appleHealth.fileTooLarge'),
+        description: t('appleHealth.fileTooLargeDesc', { size: sizeMB }),
         variant: 'destructive'
       });
       return;
@@ -72,8 +74,8 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
       );
       
       toast({
-        title: 'Неверный формат файла',
-        description: 'Загрузите ZIP-архив экспорта Apple Health',
+        title: t('appleHealth.wrongFormat'),
+        description: t('appleHealth.wrongFormatDesc'),
         variant: 'destructive'
       });
       return;
@@ -118,7 +120,7 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
 
       console.log('File uploaded successfully:', uploadData);
       setUploadProgress(60);
-      setProcessingPhase('Файл загружен, начинаем обработку...');
+      setProcessingPhase(t('appleHealth.phases.uploaded'));
       setUploadStatus('processing');
 
       // Отправляем файл на обработку в Edge Function
@@ -140,7 +142,7 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
       
       if (currentRequestId) {
         setUploadProgress(70);
-        setProcessingPhase('Фоновая обработка запущена...');
+        setProcessingPhase(t('appleHealth.phases.background'));
         
         // Проверяем статус обработки каждые 3 секунды
         const statusInterval = setInterval(async () => {
@@ -161,19 +163,19 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
               switch (phase) {
                 case 'apple_health_file_found':
                   setUploadProgress(p => Math.max(p, 75));
-                  setProcessingPhase('Файл найден в хранилище...');
+                  setProcessingPhase(t('appleHealth.phases.fileFound'));
                   break;
                 case 'apple_health_download_success':
                   setUploadProgress(p => Math.max(p, 80));
-                  setProcessingPhase('Файл скачан для обработки...');
+                  setProcessingPhase(t('appleHealth.phases.downloaded'));
                   break;
                 case 'apple_health_streaming_start':
                   setUploadProgress(p => Math.max(p, 72));
-                  setProcessingPhase('Запущена стриминговая обработка большого файла...');
+                  setProcessingPhase(t('appleHealth.phases.streaming'));
                   break;
                 case 'apple_health_streaming_active':
                   setUploadProgress(p => Math.max(p, 80));
-                  setProcessingPhase('Идет потоковая обработка данных Apple Health...');
+                  setProcessingPhase(t('appleHealth.phases.streamingActive'));
                   break;
                 case 'apple_health_streaming_progress': {
                   try {
@@ -181,10 +183,10 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
                     const rp = Number(details.recordsProcessed || 0);
                     const approx = 85 + Math.min(14, Math.floor(rp / 1000));
                     setUploadProgress(p => Math.max(p, Math.min(99, approx)));
-                    setProcessingPhase(`Обрабатываем записи... (${rp}+ шт.)`);
+                    setProcessingPhase(t('appleHealth.phases.streamingProgress', { count: rp }));
                   } catch {
                     setUploadProgress(p => Math.max(p, 88));
-                    setProcessingPhase('Идет стриминговая обработка...');
+                    setProcessingPhase(t('appleHealth.phases.streamingActive'));
                   }
                   break;
                 }
@@ -192,24 +194,24 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
               const phaseData = JSON.parse(String(latestLog.error_details) || '{}');
                 if (phaseData.phase === 'data_extraction') {
                       setUploadProgress(p => Math.max(p, 85));
-                      setProcessingPhase('Извлекаем данные из архива...');
+                      setProcessingPhase(t('appleHealth.phases.extracting'));
                     } else if (phaseData.phase === 'xml_parsing') {
                       setUploadProgress(p => Math.max(p, 90));
-                      setProcessingPhase('Анализируем данные здоровья...');
+                      setProcessingPhase(t('appleHealth.phases.parsing'));
                     } else if (phaseData.phase === 'database_insertion') {
                       setUploadProgress(p => Math.max(p, 95));
-                      setProcessingPhase('Сохраняем данные в базу...');
+                      setProcessingPhase(t('appleHealth.phases.saving'));
                     }
                   break;
                 case 'apple_health_streaming_complete':
                   setUploadProgress(100);
-                  setProcessingPhase('Обработка большого файла завершена!');
+                  setProcessingPhase(t('appleHealth.phases.complete'));
                   setUploadStatus('complete');
                   clearInterval(statusInterval);
                   break;
                 case 'apple_health_processing_complete':
                   setUploadProgress(100);
-                  setProcessingPhase('Обработка завершена!');
+                  setProcessingPhase(t('appleHealth.phases.complete'));
                   setUploadStatus('complete');
                   clearInterval(statusInterval);
                   break;
@@ -231,7 +233,7 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
           if (uploadStatus === 'processing') {
             setUploadProgress(p => Math.max(p, 100));
             setUploadStatus('complete');
-            setProcessingPhase('Обработка может продолжаться в фоновом режиме');
+            setProcessingPhase(t('appleHealth.phases.backgroundContinue'));
           }
         }, 5 * 60 * 1000);
       } else {
@@ -243,8 +245,8 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
       // Показываем информацию о начале фоновой обработки
       const results = processData.results || {};
       toast({
-        title: 'Файл загружен успешно!',
-        description: `Размер: ${(lastFileSizeMB ?? 0)}MB. Обработка началась в фоновом режиме.`
+        title: t('appleHealth.uploadSuccess'),
+        description: t('appleHealth.uploadSuccessDesc', { size: lastFileSizeMB ?? 0 })
       });
 
       onUploadComplete?.(processData);
@@ -282,7 +284,7 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
 
       setUploadStatus('error');
       toast({
-        title: 'Ошибка загрузки',
+        title: t('appleHealth.uploadError'),
         description: errorMessage,
         variant: 'destructive'
       });
@@ -307,10 +309,10 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
           <div className="w-8 h-8 bg-gray-800 rounded flex items-center justify-center text-white font-bold text-sm">
             🍎
           </div>
-          Apple Health Data
+          {t('appleHealth.title')}
         </CardTitle>
         <CardDescription>
-          Загрузите экспорт данных Apple Health для автоматического импорта ваших показателей здоровья
+          {t('appleHealth.description')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -319,13 +321,13 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
             <Alert>
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                <strong>Как экспортировать данные из Apple Health:</strong>
+                <strong>{t('appleHealth.howToExport')}</strong>
                 <ol className="list-decimal list-inside mt-2 space-y-1 text-sm">
-                  <li>Откройте приложение "Здоровье" на iPhone</li>
-                  <li>Нажмите на свой профиль (верхний правый угол)</li>
-                  <li>Выберите "Экспорт данных здоровья"</li>
-                  <li>Дождитесь создания архива и отправьте его себе</li>
-                  <li>Загрузите полученный ZIP-файл сюда</li>
+                  <li>{t('appleHealth.step1')}</li>
+                  <li>{t('appleHealth.step2')}</li>
+                  <li>{t('appleHealth.step3')}</li>
+                  <li>{t('appleHealth.step4')}</li>
+                  <li>{t('appleHealth.step5')}</li>
                 </ol>
               </AlertDescription>
             </Alert>
@@ -345,13 +347,13 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
               >
                 <Upload className="h-12 w-12 text-muted-foreground" />
                 <div>
-                  <h3 className="font-medium">Загрузить файл Apple Health</h3>
+                  <h3 className="font-medium">{t('appleHealth.uploadTitle')}</h3>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Поддерживается только ZIP-архив экспорта (макс. 2GB)
+                    {t('appleHealth.uploadHint')}
                   </p>
                 </div>
                 <Button type="button">
-                  Выбрать файл
+                  {t('appleHealth.selectFile')}
                 </Button>
               </label>
             </div>
@@ -362,7 +364,7 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
           <div className="space-y-4">
             <div className="text-center">
               <h3 className="font-medium mb-2">
-                {uploadStatus === 'uploading' ? 'Загружаем файл...' : 'Обрабатываем данные...'}
+                {uploadStatus === 'uploading' ? t('appleHealth.uploading') : t('appleHealth.processing')}
               </h3>
               <Progress value={uploadProgress} className="mb-2" />
               <p className="text-sm text-muted-foreground">
@@ -375,14 +377,14 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
               )}
               {requestId && (
                 <p className="text-xs text-muted-foreground/70 mt-1">
-                  ID запроса: {requestId.slice(0, 8)}...
+                  {t('appleHealth.requestId', { defaultValue: 'ID запроса' })}: {requestId.slice(0, 8)}...
                 </p>
               )}
             </div>
             <Alert>
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                Обработка больших файлов может занять несколько минут. Пожалуйста, не закрывайте страницу.
+                {t('appleHealth.processingWarning')}
               </AlertDescription>
             </Alert>
           </div>
@@ -405,7 +407,7 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
               </AlertDescription>
             </Alert>
             <Button onClick={resetUpload} variant="outline" className="w-full">
-              Загрузить еще один файл
+              {t('appleHealth.uploadAnother', { defaultValue: 'Загрузить еще один файл' })}
             </Button>
           </div>
         )}
@@ -415,11 +417,11 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
             <Alert variant="destructive">
               <FileX className="h-4 w-4" />
               <AlertDescription>
-                Не удалось обработать файл. Проверьте, что это корректный экспорт Apple Health, и попробуйте снова.
+                {t('appleHealth.errorProcessing', { defaultValue: 'Не удалось обработать файл. Проверьте, что это корректный экспорт Apple Health, и попробуйте снова.' })}
               </AlertDescription>
             </Alert>
             <Button onClick={resetUpload} variant="outline" className="w-full">
-              Попробовать снова
+              {t('appleHealth.tryAgain', { defaultValue: 'Попробовать снова' })}
             </Button>
           </div>
         )}
