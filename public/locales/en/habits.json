@@ -76,5 +76,69 @@
     "title": "Notifications",
     "markAllRead": "Mark all read",
     "empty": "No notifications"
+  },
+  "onboarding": {
+    "title": "Habits 3.0",
+    "step": "Step {{step}} of {{total}}",
+    "back": "Back",
+    "skip": "Skip",
+    "next": "Next",
+    "start": "Start!",
+    "welcome": "Welcome!",
+    "welcomeDesc": "A powerful habit tracking system with smart organization, gamification, and social features",
+    "smartOrg": "Smart Organization",
+    "quickGestures": "Quick Gestures",
+    "gamification": "Gamification",
+    "smartOrgTitle": "Smart Organization",
+    "smartOrgDesc": "Habits are automatically grouped by time of day: morning, afternoon, and evening. Focus on what matters right now.",
+    "timeSlots": {
+      "morning": "Morning Habits",
+      "morningTime": "6:00 AM - 12:00 PM",
+      "afternoon": "Afternoon Habits",
+      "afternoonTime": "12:00 PM - 6:00 PM",
+      "evening": "Evening Habits",
+      "eveningTime": "6:00 PM - 11:00 PM",
+      "night": "Night Habits",
+      "nightTime": "11:00 PM - 6:00 AM"
+    },
+    "gesturesTitle": "Quick Gestures",
+    "gesturesDesc": "Swipe right to instantly mark habits complete. Minimal actions - maximum efficiency!",
+    "gestures": {
+      "habit": "Habit",
+      "swipeHint": "Swipe for action",
+      "swipeRight": "Swipe Right",
+      "swipeRightDesc": "Quickly mark as complete",
+      "swipeLeft": "Swipe Left",
+      "swipeLeftDesc": "Open quick menu",
+      "tap": "Short Tap",
+      "tapDesc": "Expand widget for quick actions",
+      "longPress": "Long Press (0.8s)",
+      "longPressDesc": "View details and statistics"
+    },
+    "viewModesTitle": "Flexible View Modes",
+    "viewModesDesc": "Switch between modes: smart view with grouping, compact list, social feed, focus mode, or timeline.",
+    "viewModes": {
+      "smart": "🧠 Smart View",
+      "smartDesc": "Time-of-day organization with automatic grouping and prioritization",
+      "list": "📋 Compact List",
+      "listDesc": "Dense list with filtering for quick overview of all habits",
+      "focus": "🎯 Focus Mode",
+      "focusDesc": "Full-screen mode for concentration on a single habit with timer"
+    },
+    "progressTitle": "Progress System",
+    "progressDesc": "Earn experience for every completed habit, level up and unlock achievements. Turn habits into an exciting game!",
+    "xp": {
+      "base": "Base XP",
+      "baseDesc": "For every completed habit",
+      "streak": "Streak Bonus",
+      "streakDesc": "+20% for streaks of 7+ days",
+      "difficulty": "Difficulty",
+      "difficultyDesc": "More XP for harder habits",
+      "progress": "Progress",
+      "progressDesc": "Every 1000 XP = new level"
+    },
+    "trackProgress": "Track progress in real time",
+    "level": "Lvl {{level}}",
+    "xpProgress": "{{current}} / {{max}} XP"
   }
 }

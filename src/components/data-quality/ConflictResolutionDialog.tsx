@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 import type { MetricWithConfidence } from '@/lib/data-quality';
 
 interface ConflictResolutionDialogProps {
@@ -27,25 +28,26 @@ export function ConflictResolutionDialog({
   onResolve,
   onDismiss
 }: ConflictResolutionDialogProps) {
+  const { t } = useTranslation('dashboard');
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const getConflictExplanation = (conflict: MetricWithConfidence): string => {
     const factors = conflict.factors;
-    if (!factors) return "Нет дополнительной информации";
+    if (!factors) return t('conflictDialog.noInfo');
     
     const reasons = [];
-    if (factors.dataFreshness > 16) reasons.push("Свежие данные");
-    if (factors.sourceReliability > 32) reasons.push("Надежный источник");
-    if (factors.crossValidation > 16) reasons.push("Согласуется с другими источниками");
-    if (factors.measurementFrequency > 16) reasons.push("Регулярные измерения");
+    if (factors.dataFreshness > 16) reasons.push(t('conflictDialog.freshData'));
+    if (factors.sourceReliability > 32) reasons.push(t('conflictDialog.reliableSource'));
+    if (factors.crossValidation > 16) reasons.push(t('conflictDialog.crossValidated'));
+    if (factors.measurementFrequency > 16) reasons.push(t('conflictDialog.frequentMeasurements'));
     
-    return reasons.length > 0 ? reasons.join(" • ") : "Стандартные данные";
+    return reasons.length > 0 ? reasons.join(" • ") : t('conflictDialog.standardData');
   };
 
   const getConfidenceBadge = (confidence: number) => {
-    if (confidence >= 80) return { variant: 'default' as const, label: 'Высокая' };
-    if (confidence >= 60) return { variant: 'secondary' as const, label: 'Средняя' };
-    return { variant: 'destructive' as const, label: 'Низкая' };
+    if (confidence >= 80) return { variant: 'default' as const, label: t('conflictDialog.confidenceHigh') };
+    if (confidence >= 60) return { variant: 'secondary' as const, label: t('conflictDialog.confidenceMedium') };
+    return { variant: 'destructive' as const, label: t('conflictDialog.confidenceLow') };
   };
 
   const handleResolve = () => {
@@ -59,10 +61,9 @@ export function ConflictResolutionDialog({
     <Dialog open={open && conflicts.length > 0} onOpenChange={onDismiss}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Разрешите конфликт данных</DialogTitle>
+          <DialogTitle>{t('conflictDialog.title')}</DialogTitle>
           <DialogDescription>
-            Для метрики "{metricName}" обнаружены разные значения из разных источников.
-            Выберите наиболее точное значение.
+            {t('conflictDialog.description', { metricName })}
           </DialogDescription>
         </DialogHeader>
         
@@ -103,7 +104,7 @@ export function ConflictResolutionDialog({
                       </Badge>
                       {isRecommended && (
                         <Badge className="bg-green-500">
-                          Рекомендуется
+                          {t('conflictDialog.recommended')}
                         </Badge>
                       )}
                     </div>
@@ -114,7 +115,7 @@ export function ConflictResolutionDialog({
                   </div>
                   
                   <div className="mt-2 text-xs text-muted-foreground">
-                    Уверенность: {Math.round(conflict.confidence)}%
+                    {t('conflictDialog.confidence', { value: Math.round(conflict.confidence) })}
                   </div>
                 </CardContent>
               </Card>
@@ -124,20 +125,20 @@ export function ConflictResolutionDialog({
         
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={onDismiss}>
-            Отменить
+            {t('conflictDialog.cancel')}
           </Button>
           <Button 
             variant="ghost" 
             onClick={onDismiss}
             className="text-muted-foreground"
           >
-            Игнорировать конфликт
+            {t('conflictDialog.ignore')}
           </Button>
           <Button 
             onClick={handleResolve}
             disabled={!selectedId}
           >
-            Применить выбор
+            {t('conflictDialog.apply')}
           </Button>
         </DialogFooter>
       </DialogContent>

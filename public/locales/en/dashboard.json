@@ -179,5 +179,23 @@
     "manualInstructions": "Manual measurement on the device is required to update data",
     "manualInput": "Manual input",
     "daysAgo": "{{days}}d ago"
+  },
+  "conflictDialog": {
+    "title": "Resolve data conflict",
+    "description": "Different values from different sources were found for metric \"{{metricName}}\". Choose the most accurate value.",
+    "noInfo": "No additional information",
+    "freshData": "Fresh data",
+    "reliableSource": "Reliable source",
+    "crossValidated": "Cross-validated with other sources",
+    "frequentMeasurements": "Frequent measurements",
+    "standardData": "Standard data",
+    "confidenceHigh": "High",
+    "confidenceMedium": "Medium",
+    "confidenceLow": "Low",
+    "recommended": "Recommended",
+    "confidence": "Confidence: {{value}}%",
+    "cancel": "Cancel",
+    "ignore": "Ignore conflict",
+    "apply": "Apply selection"
   }
 }

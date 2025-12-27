@@ -10,8 +10,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { WorkoutHistoryItem } from "@/hooks/useWorkoutHistory";
 import { format } from "date-fns";
-import { ru } from "date-fns/locale";
+import { ru, enUS } from "date-fns/locale";
 import { Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface DeleteWorkoutDialogProps {
   workout: WorkoutHistoryItem | null;
@@ -28,33 +29,36 @@ export default function DeleteWorkoutDialog({
   onConfirm,
   isDeleting
 }: DeleteWorkoutDialogProps) {
+  const { t, i18n } = useTranslation('workouts');
+  
   if (!workout) return null;
 
   const isManual = workout.source === 'manual';
-  const dateStr = format(new Date(workout.date), "d MMMM yyyy", { locale: ru });
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
+  const dateStr = format(new Date(workout.date), "d MMMM yyyy", { locale: dateLocale });
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent className="glass-card border-white/10">
         <AlertDialogHeader>
-          <AlertDialogTitle>Удалить тренировку?</AlertDialogTitle>
+          <AlertDialogTitle>{t('deleteDialog.title')}</AlertDialogTitle>
           <AlertDialogDescription className="space-y-2">
             <p>
               <strong>{workout.name}</strong> — {dateStr}
             </p>
             {isManual ? (
               <p className="text-amber-400/80">
-                Будут удалены все записи этой тренировки за выбранную дату.
+                {t('deleteDialog.warningManual')}
               </p>
             ) : (
               <p className="text-muted-foreground">
-                Будет удалена запись тренировки из {workout.sourceLabel}.
+                {t('deleteDialog.warningSource', { source: workout.sourceLabel })}
               </p>
             )}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isDeleting}>Отмена</AlertDialogCancel>
+          <AlertDialogCancel disabled={isDeleting}>{t('deleteDialog.cancel')}</AlertDialogCancel>
           <AlertDialogAction
             onClick={(e) => {
               e.preventDefault();
@@ -66,10 +70,10 @@ export default function DeleteWorkoutDialog({
             {isDeleting ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Удаление...
+                {t('deleteDialog.deleting')}
               </>
             ) : (
-              "Удалить"
+              t('deleteDialog.delete')
             )}
           </AlertDialogAction>
         </AlertDialogFooter>

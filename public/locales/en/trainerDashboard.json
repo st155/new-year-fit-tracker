@@ -161,7 +161,25 @@
   "common": {
     "cancel": "Cancel",
     "add": "Add",
-    "save": "Save"
+    "save": "Save",
+    "back": "Back"
+  },
+  "disciplineTypes": {
+    "reps": "Reps",
+    "time": "Time",
+    "weight": "Weight",
+    "distance": "Distance",
+    "body_fat": "Body fat %",
+    "muscle_mass": "Muscle mass"
+  },
+  "discipline": {
+    "exerciseName": "Exercise name",
+    "exercisePlaceholder": "E.g.: Pull-ups",
+    "type": "Type",
+    "benchmark": "Benchmark (optional)",
+    "benchmarkPlaceholder": "Target value",
+    "unit": "Units",
+    "unitPlaceholder": "kg, reps, seconds..."
   },
   "heartMetrics": {
     "avgHr": "Average HR",

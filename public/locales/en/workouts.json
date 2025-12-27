@@ -1,4 +1,15 @@
 {
+  "aiRationale": {
+    "description": "Our algorithm creates a personalized program using information about you and your goals."
+  },
+  "deleteDialog": {
+    "title": "Delete workout?",
+    "warningManual": "All workout records for the selected date will be deleted.",
+    "warningSource": "Workout record from {{source}} will be deleted.",
+    "cancel": "Cancel",
+    "deleting": "Deleting...",
+    "delete": "Delete"
+  },
   "tabs": {
     "today": "Today",
     "progress": "Progress",

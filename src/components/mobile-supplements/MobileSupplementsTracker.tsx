@@ -7,6 +7,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, Pill } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { DayProgressGauge } from './DayProgressGauge';
 import { TimelineSection } from './TimelineSection';
 import { useTodaysSupplements } from '@/hooks/biostack/useTodaysSupplements';
@@ -32,6 +33,7 @@ const slotToHookKey: Record<TimeSlot, string> = {
 };
 
 export function MobileSupplementsTracker() {
+  const { t } = useTranslation('supplements');
   const { user } = useAuth();
   const { 
     groupedSupplements, 
@@ -132,9 +134,9 @@ export function MobileSupplementsTracker() {
         <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
           <Pill className="w-8 h-8 text-muted-foreground" />
         </div>
-        <h2 className="text-xl font-semibold mb-2">Нет добавок на сегодня</h2>
+        <h2 className="text-xl font-semibold mb-2">{t('mobile.emptyTitle')}</h2>
         <p className="text-muted-foreground text-sm">
-          Добавьте добавки в ваш протокол или стек
+          {t('mobile.emptyDesc')}
         </p>
       </div>
     );
@@ -183,9 +185,9 @@ export function MobileSupplementsTracker() {
           className="mx-4 mt-6 p-6 rounded-2xl bg-green-500/10 border border-green-500/30 text-center"
         >
           <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-3" />
-          <p className="text-lg font-bold text-green-500">Всё сделано! 🎉</p>
+          <p className="text-lg font-bold text-green-500">{t('mobile.allDoneTitle')}</p>
           <p className="text-sm text-muted-foreground mt-1">
-            Все добавки на сегодня приняты
+            {t('mobile.allDoneDesc')}
           </p>
         </motion.div>
       )}

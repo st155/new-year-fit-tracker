@@ -24,6 +24,12 @@
     "evening": "Evening",
     "before_sleep": "Before sleep"
   },
+  "mobile": {
+    "emptyTitle": "No supplements for today",
+    "emptyDesc": "Add supplements to your protocol or stack",
+    "allDoneTitle": "All done! 🎉",
+    "allDoneDesc": "All supplements for today have been taken"
+  },
   "protocols": {
     "active": "Active",
     "aiGenerated": "AI Generated",

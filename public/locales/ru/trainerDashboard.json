@@ -161,7 +161,25 @@
   "common": {
     "cancel": "Отмена",
     "add": "Добавить",
-    "save": "Сохранить"
+    "save": "Сохранить",
+    "back": "Назад"
+  },
+  "disciplineTypes": {
+    "reps": "Повторения",
+    "time": "Время",
+    "weight": "Вес",
+    "distance": "Дистанция",
+    "body_fat": "% жира",
+    "muscle_mass": "Мышечная масса"
+  },
+  "discipline": {
+    "exerciseName": "Название упражнения",
+    "exercisePlaceholder": "Например: Подтягивания",
+    "type": "Тип",
+    "benchmark": "Бенчмарк (опционально)",
+    "benchmarkPlaceholder": "Целевое значение",
+    "unit": "Единицы измерения",
+    "unitPlaceholder": "kg, reps, seconds..."
   },
   "heartMetrics": {
     "avgHr": "Средний пульс",
