@@ -1,4 +1,5 @@
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { ArrowLeft, Share2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ export function ChallengeReportPage() {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation('challenges');
 
   const isPreview = searchParams.get("preview") === "true";
   const { data: report, isLoading, error } = useChallengeReportQuery(challengeId, user?.id, { preview: isPreview });
@@ -25,8 +27,8 @@ export function ChallengeReportPage() {
     if (!report) return;
     
     const shareData = {
-      title: `${report.title} — Итоги`,
-      text: `Я занял ${report.finalRank} место в челлендже "${report.title}" с ${report.totalPoints} очками!`,
+      title: t('report.resultsOf', { name: report.title }),
+      text: t('report.shareText', { rank: report.finalRank, name: report.title, points: report.totalPoints }),
       url: window.location.href
     };
 
@@ -43,20 +45,20 @@ export function ChallengeReportPage() {
   };
 
   if (isLoading) {
-    return <PageLoader message="Загрузка отчёта..." />;
+    return <PageLoader message={t('report.loading')} />;
   }
 
   if (error || !report) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4">
         <div className="text-center space-y-4">
-          <h1 className="text-2xl font-bold">Отчёт недоступен</h1>
+          <h1 className="text-2xl font-bold">{t('report.unavailable')}</h1>
           <p className="text-muted-foreground">
-            {error?.message || "Не удалось загрузить отчёт челленджа"}
+            {error?.message || t('report.unavailableDesc')}
           </p>
           <Button onClick={() => navigate("/challenges")}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            К челленджам
+            {t('report.toChallenges')}
           </Button>
         </div>
       </div>
@@ -74,7 +76,7 @@ export function ChallengeReportPage() {
             onClick={() => navigate(`/challenges/${challengeId}`)}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Назад
+            {t('report.back')}
           </Button>
           <div className="flex items-center gap-2">
             <Button
@@ -83,7 +85,7 @@ export function ChallengeReportPage() {
               onClick={handleShare}
             >
               <Share2 className="h-4 w-4 mr-2" />
-              Поделиться
+              {t('report.share')}
             </Button>
           </div>
         </div>
@@ -99,7 +101,7 @@ export function ChallengeReportPage() {
           <Alert className="border-warning/50 bg-warning/10">
             <Eye className="h-4 w-4 text-warning" />
             <AlertDescription className="text-warning">
-              Это предварительный отчёт. Челлендж ещё продолжается — данные актуальны на сегодня.
+              {t('report.previewAlert')}
             </AlertDescription>
           </Alert>
         )}
@@ -132,14 +134,14 @@ export function ChallengeReportPage() {
           className="text-center py-8 space-y-4"
         >
           <p className="text-muted-foreground text-sm">
-            Спасибо за участие в челлендже!
+            {t('report.thankYou')}
           </p>
           <Button
             size="lg"
             onClick={() => navigate("/challenges")}
             className="bg-gradient-primary hover:opacity-90"
           >
-            Найти новый челлендж
+            {t('report.findNewChallenge')}
           </Button>
         </motion.div>
       </motion.div>
