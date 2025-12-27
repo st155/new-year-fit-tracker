@@ -18,7 +18,7 @@ import {
   MoreVertical
 } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addMonths, subMonths, isSameDay, isToday } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import { useScheduleEvents } from '@/hooks/useScheduleEvents';
 import { ScheduleEventDialog } from './ScheduleEventDialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -38,22 +38,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-
-const EVENT_TYPE_COLORS = {
-  workout: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  consultation: 'bg-green-500/20 text-green-400 border-green-500/30',
-  reminder: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-  other: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-};
-
-const EVENT_TYPE_LABELS = {
-  workout: 'Тренировка',
-  consultation: 'Консультация',
-  reminder: 'Напоминание',
-  other: 'Другое',
-};
+import { useTranslation } from 'react-i18next';
 
 export function TrainerCalendar() {
+  const { t, i18n } = useTranslation('trainer');
+  const locale = i18n.language === 'ru' ? ru : enUS;
+  
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -65,9 +55,20 @@ export function TrainerCalendar() {
   const monthEnd = endOfMonth(currentDate);
   
   const { events, loading, createEvent, updateEvent, deleteEvent, toggleCompleted } = useScheduleEvents(
-    startOfWeek(monthStart, { locale: ru }),
-    endOfWeek(monthEnd, { locale: ru })
+    startOfWeek(monthStart, { locale }),
+    endOfWeek(monthEnd, { locale })
   );
+
+  const EVENT_TYPE_COLORS: Record<string, string> = {
+    workout: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+    consultation: 'bg-green-500/20 text-green-400 border-green-500/30',
+    reminder: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+    other: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+  };
+
+  const getEventTypeLabel = (type: string) => {
+    return t(`calendar.eventTypes.${type}`) || type;
+  };
 
   const handlePreviousMonth = () => {
     setCurrentDate(subMonths(currentDate, 1));
@@ -120,12 +121,12 @@ export function TrainerCalendar() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold">Календарь</h2>
-          <p className="text-muted-foreground">Управление расписанием и событиями</p>
+          <h2 className="text-3xl font-bold">{t('calendar.title')}</h2>
+          <p className="text-muted-foreground">{t('calendar.subtitle')}</p>
         </div>
         <Button onClick={handleCreateEvent} className="gap-2">
           <Plus className="h-4 w-4" />
-          Создать событие
+          {t('calendar.createEvent')}
         </Button>
       </div>
 
@@ -135,7 +136,7 @@ export function TrainerCalendar() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-xl">
-                {format(currentDate, 'LLLL yyyy', { locale: ru })}
+                {format(currentDate, 'LLLL yyyy', { locale })}
               </CardTitle>
               <div className="flex gap-2">
                 <Button variant="outline" size="icon" onClick={handlePreviousMonth}>
@@ -154,7 +155,7 @@ export function TrainerCalendar() {
               onSelect={setSelectedDate}
               month={currentDate}
               onMonthChange={setCurrentDate}
-              locale={ru}
+              locale={locale}
               className="rounded-md border"
               modifiers={{
                 hasEvents: (date) => getEventsForDate(date).length > 0,
@@ -171,14 +172,14 @@ export function TrainerCalendar() {
           <CardHeader>
             <CardTitle className="text-xl flex items-center gap-2">
               <CalendarIcon className="h-5 w-5" />
-              {selectedDate ? format(selectedDate, 'd MMMM', { locale: ru }) : 'События'}
+              {selectedDate ? format(selectedDate, 'd MMMM', { locale }) : t('calendar.events')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {selectedDateEvents.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <CalendarIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p>Нет событий на эту дату</p>
+                <p>{t('calendar.noEvents')}</p>
                 <Button 
                   variant="link" 
                   onClick={() => {
@@ -187,7 +188,7 @@ export function TrainerCalendar() {
                   }}
                   className="mt-2"
                 >
-                  Создать событие
+                  {t('calendar.createEvent')}
                 </Button>
               </div>
             ) : (
@@ -202,7 +203,7 @@ export function TrainerCalendar() {
                         <div className="flex-1 space-y-2">
                           <div className="flex items-center gap-2">
                             <Badge variant="outline" className="text-xs">
-                              {EVENT_TYPE_LABELS[event.event_type]}
+                              {getEventTypeLabel(event.event_type)}
                             </Badge>
                             {event.is_completed && (
                               <CheckCircle2 className="h-4 w-4 text-green-500" />
@@ -222,18 +223,18 @@ export function TrainerCalendar() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => handleEditEvent(event)}>
                               <Edit className="h-4 w-4 mr-2" />
-                              Редактировать
+                              {t('calendar.edit')}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => toggleCompleted(event.id, !event.is_completed)}>
                               <CheckCircle2 className="h-4 w-4 mr-2" />
-                              {event.is_completed ? 'Снять выполнение' : 'Отметить выполненным'}
+                              {event.is_completed ? t('calendar.markIncomplete') : t('calendar.markComplete')}
                             </DropdownMenuItem>
                             <DropdownMenuItem 
                               onClick={() => handleDeleteClick(event.id)}
                               className="text-destructive"
                             >
                               <Trash2 className="h-4 w-4 mr-2" />
-                              Удалить
+                              {t('calendar.delete')}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -243,7 +244,7 @@ export function TrainerCalendar() {
                         <div className="flex items-center gap-2">
                           <Clock className="h-4 w-4" />
                           <span>
-                            {format(new Date(event.start_time), 'HH:mm', { locale: ru })} - {format(new Date(event.end_time), 'HH:mm', { locale: ru })}
+                            {format(new Date(event.start_time), 'HH:mm', { locale })} - {format(new Date(event.end_time), 'HH:mm', { locale })}
                           </span>
                         </div>
 
@@ -268,7 +269,7 @@ export function TrainerCalendar() {
 
                         {event.training_plan && (
                           <div className="text-xs text-muted-foreground">
-                            План: {event.training_plan.name}
+                            {t('calendar.plan')} {event.training_plan.name}
                           </div>
                         )}
 
@@ -296,14 +297,14 @@ export function TrainerCalendar() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Удалить событие?</AlertDialogTitle>
+            <AlertDialogTitle>{t('calendar.deleteEvent')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Это действие нельзя отменить. Событие будет удалено навсегда.
+              {t('calendar.deleteEventDesc')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Отмена</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete}>Удалить</AlertDialogAction>
+            <AlertDialogCancel>{t('calendar.cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete}>{t('calendar.delete')}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

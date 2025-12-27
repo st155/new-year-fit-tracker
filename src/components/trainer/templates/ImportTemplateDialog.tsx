@@ -9,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Upload, FileJson } from "lucide-react";
 import { toast } from "sonner";
 import { type ChallengeTemplate, importTemplateFromJSON, saveImportedTemplate } from "@/features/challenges/utils";
+import { useTranslation } from "react-i18next";
 
 interface ImportTemplateDialogProps {
   open: boolean;
@@ -21,6 +22,7 @@ export function ImportTemplateDialog({
   onOpenChange,
   onSuccess,
 }: ImportTemplateDialogProps) {
+  const { t } = useTranslation('trainer');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [parsedTemplate, setParsedTemplate] = useState<Partial<ChallengeTemplate> | null>(null);
   const [templateName, setTemplateName] = useState('');
@@ -32,7 +34,7 @@ export function ImportTemplateDialog({
     if (!file) return;
 
     if (!file.name.endsWith('.json')) {
-      toast.error('Пожалуйста, выберите JSON файл');
+      toast.error(t('templates.importDialog.selectJsonFile'));
       return;
     }
 
@@ -44,21 +46,21 @@ export function ImportTemplateDialog({
       setParsedTemplate(result.template);
       setTemplateName(result.template.template_name || '');
       setDescription(result.template.description || '');
-      toast.success('Шаблон загружен, проверьте данные');
+      toast.success(t('templates.importDialog.loaded'));
     } else {
-      toast.error(result.error || 'Ошибка чтения файла');
+      toast.error(result.error || t('templates.importDialog.readError'));
       setSelectedFile(null);
     }
   };
 
   const handleImport = async () => {
     if (!parsedTemplate) {
-      toast.error('Нет данных для импорта');
+      toast.error(t('templates.importDialog.noData'));
       return;
     }
 
     if (!templateName.trim()) {
-      toast.error('Введите название шаблона');
+      toast.error(t('templates.saveAs.enterName'));
       return;
     }
 
@@ -74,7 +76,7 @@ export function ImportTemplateDialog({
       const result = await saveImportedTemplate(templateToSave);
 
       if (result.success) {
-        toast.success('Шаблон импортирован');
+        toast.success(t('templates.importDialog.imported'));
         onSuccess?.();
         onOpenChange(false);
         // Reset state
@@ -83,11 +85,11 @@ export function ImportTemplateDialog({
         setTemplateName('');
         setDescription('');
       } else {
-        toast.error(result.error || 'Ошибка импорта');
+        toast.error(result.error || t('templates.importDialog.importError'));
       }
     } catch (error) {
       console.error('Error importing template:', error);
-      toast.error('Ошибка импорта шаблона');
+      toast.error(t('templates.importDialog.importError'));
     } finally {
       setIsImporting(false);
     }
@@ -99,7 +101,7 @@ export function ImportTemplateDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileJson className="w-5 h-5" />
-            Импорт шаблона
+            {t('templates.importDialog.title')}
           </DialogTitle>
         </DialogHeader>
 
@@ -107,7 +109,7 @@ export function ImportTemplateDialog({
           <div className="space-y-6 pr-4">
             {/* File Upload */}
             <div className="space-y-2">
-              <Label htmlFor="file-upload">Загрузить JSON файл</Label>
+              <Label htmlFor="file-upload">{t('templates.importDialog.uploadFile')}</Label>
               <div className="flex gap-2">
                 <Input
                   id="file-upload"
@@ -129,24 +131,24 @@ export function ImportTemplateDialog({
                 {/* Template Name */}
                 <div className="space-y-2">
                   <Label htmlFor="template-name">
-                    Название шаблона <span className="text-destructive">*</span>
+                    {t('templates.importDialog.templateName')} <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="template-name"
                     value={templateName}
                     onChange={(e) => setTemplateName(e.target.value)}
-                    placeholder="Введите название..."
+                    placeholder={t('templates.importDialog.namePlaceholder')}
                   />
                 </div>
 
                 {/* Description */}
                 <div className="space-y-2">
-                  <Label htmlFor="description">Описание</Label>
+                  <Label htmlFor="description">{t('templates.importDialog.description')}</Label>
                   <Textarea
                     id="description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Добавьте описание..."
+                    placeholder={t('templates.importDialog.descriptionPlaceholder')}
                     rows={3}
                   />
                 </div>
@@ -154,7 +156,7 @@ export function ImportTemplateDialog({
                 {/* Preview */}
                 <div className="rounded-lg border p-4 bg-muted/30 space-y-3">
                   <div className="flex items-center justify-between">
-                    <Label>Предпросмотр</Label>
+                    <Label>{t('templates.importDialog.preview')}</Label>
                     {parsedTemplate.category && (
                       <Badge variant="outline">{parsedTemplate.category}</Badge>
                     )}
@@ -162,14 +164,14 @@ export function ImportTemplateDialog({
 
                   {parsedTemplate.duration_weeks && (
                     <p className="text-sm">
-                      <span className="text-muted-foreground">Длительность:</span>{' '}
-                      {parsedTemplate.duration_weeks} недель
+                      <span className="text-muted-foreground">{t('templates.importDialog.duration')}</span>{' '}
+                      {parsedTemplate.duration_weeks} {t('templates.weeks')}
                     </p>
                   )}
 
                   <div className="space-y-2">
                     <p className="text-sm font-medium">
-                      Дисциплины ({parsedTemplate.template_data?.disciplines?.length || 0})
+                      {t('templates.importDialog.disciplines')} ({parsedTemplate.template_data?.disciplines?.length || 0})
                     </p>
                     <div className="space-y-1">
                       {parsedTemplate.template_data?.disciplines?.map((disc, idx) => (
@@ -190,8 +192,7 @@ export function ImportTemplateDialog({
                 {/* Info */}
                 <div className="rounded-lg border p-4 bg-muted/50">
                   <p className="text-sm text-muted-foreground">
-                    💡 Импортированный шаблон будет сохранен как приватный. 
-                    Вы сможете опубликовать его позже в настройках.
+                    💡 {t('templates.importDialog.privateNote')}
                   </p>
                 </div>
               </>
@@ -201,7 +202,7 @@ export function ImportTemplateDialog({
               <div className="rounded-lg border-2 border-dashed p-8 text-center">
                 <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">
-                  Выберите JSON файл шаблона для импорта
+                  {t('templates.importDialog.selectFile')}
                 </p>
               </div>
             )}
@@ -211,14 +212,14 @@ export function ImportTemplateDialog({
         {/* Actions */}
         <div className="flex justify-end gap-2 pt-4 border-t">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Отмена
+            {t('templates.importDialog.cancel')}
           </Button>
           <Button
             onClick={handleImport}
             disabled={!parsedTemplate || isImporting}
           >
             <Upload className="w-4 h-4 mr-2" />
-            {isImporting ? 'Импорт...' : 'Импортировать'}
+            {isImporting ? t('templates.importDialog.importing') : t('templates.importDialog.import')}
           </Button>
         </div>
       </DialogContent>

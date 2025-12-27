@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { useTranslation } from 'react-i18next';
 
 interface AIInputProps {
   selectedClient?: {
@@ -29,6 +30,7 @@ interface ClientSuggestion {
 }
 
 export function AIInput({ selectedClient }: AIInputProps) {
+  const { t } = useTranslation('trainer');
   const { user } = useAuth();
   const { sendMessage, sending } = useAIChat();
   const [input, setInput] = useState('');
@@ -224,14 +226,14 @@ export function AIInput({ selectedClient }: AIInputProps) {
           >
             <Command>
               <CommandInput 
-                placeholder="Поиск клиентов..." 
+                placeholder={t('aiInput.searchClients')}
                 value={mentionSearch}
                 onValueChange={setMentionSearch}
                 autoFocus
               />
               <CommandList>
-                <CommandEmpty>Клиенты не найдены.</CommandEmpty>
-                <CommandGroup heading="Ваши клиенты">
+                <CommandEmpty>{t('aiInput.clientsNotFound')}</CommandEmpty>
+                <CommandGroup heading={t('aiInput.yourClients')}>
                   {filteredClients.map((client) => (
                     <CommandItem
                       key={client.user_id}
@@ -259,7 +261,7 @@ export function AIInput({ selectedClient }: AIInputProps) {
             value={input}
             onChange={(e) => handleInputChange(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Message AI Assistant... (use @ to mention clients)"
+            placeholder={t('aiInput.placeholder')}
             className="resize-none border-0 bg-transparent focus-visible:ring-0 min-h-[24px] max-h-[200px] placeholder:text-muted-foreground/60"
             rows={1}
             disabled={sending}
@@ -321,7 +323,7 @@ export function AIInput({ selectedClient }: AIInputProps) {
             {isListening && (
               <div className="flex items-center gap-2 text-red-500 animate-pulse">
                 <div className="h-2 w-2 rounded-full bg-red-500" />
-                <span>Слушаю...</span>
+                <span>{t('aiInput.listening')}</span>
               </div>
             )}
             
@@ -331,16 +333,16 @@ export function AIInput({ selectedClient }: AIInputProps) {
                   <kbd className="px-2 py-0.5 rounded bg-muted border border-border font-mono">Shift</kbd>
                   <span>+</span>
                   <kbd className="px-2 py-0.5 rounded bg-muted border border-border font-mono">Enter</kbd>
-                  <span>new line</span>
+                  <span>{t('aiInput.newLine')}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <kbd className="px-2 py-0.5 rounded bg-muted border border-border font-mono">@</kbd>
-                  <span>mention client</span>
+                  <span>{t('aiInput.mentionClient')}</span>
                 </div>
                 {browserSupportsSpeechRecognition && (
                   <div className="flex items-center gap-1">
                     <Mic className="h-3 w-3" />
-                    <span>voice input</span>
+                    <span>{t('aiInput.voiceInput')}</span>
                   </div>
                 )}
               </>
@@ -358,7 +360,7 @@ export function AIInput({ selectedClient }: AIInputProps) {
               htmlFor="require-confirmation" 
               className="text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
             >
-              Требовать подтверждение
+              {t('aiInput.requireConfirmation')}
             </Label>
           </div>
         </div>

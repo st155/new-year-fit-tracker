@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { type ChallengeTemplate, incrementTemplateUseCount } from "@/features/challenges/utils";
 import { calculateStandardBenchmark, BENCHMARK_STANDARDS } from "@/lib/benchmark-standards";
+import { useTranslation } from "react-i18next";
 
 interface CreateFromTemplateDialogProps {
   open: boolean;
@@ -21,9 +22,6 @@ interface CreateFromTemplateDialogProps {
   onSuccess?: () => void;
 }
 
-const AUDIENCE_LABELS = ['Beginner', 'Intermediate', 'Advanced', 'Elite'];
-const DIFFICULTY_LABELS = ['Regular', 'Challenging', 'Hard', 'Extreme'];
-
 export function CreateFromTemplateDialog({
   open,
   onOpenChange,
@@ -31,6 +29,7 @@ export function CreateFromTemplateDialog({
   trainerId,
   onSuccess,
 }: CreateFromTemplateDialogProps) {
+  const { t } = useTranslation('trainer');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [durationWeeks, setDurationWeeks] = useState(template.duration_weeks || 8);
@@ -38,6 +37,20 @@ export function CreateFromTemplateDialog({
   const [difficulty, setDifficulty] = useState(template.difficulty_level || 1);
   const [isCreating, setIsCreating] = useState(false);
   const [recalculatedDisciplines, setRecalculatedDisciplines] = useState<any[]>([]);
+
+  const AUDIENCE_LABELS = [
+    t('templates.createFrom.audienceLevels.beginner'),
+    t('templates.createFrom.audienceLevels.intermediate'),
+    t('templates.createFrom.audienceLevels.advanced'),
+    t('templates.createFrom.audienceLevels.elite')
+  ];
+
+  const DIFFICULTY_LABELS = [
+    t('templates.createFrom.difficultyLevels.regular'),
+    t('templates.createFrom.difficultyLevels.challenging'),
+    t('templates.createFrom.difficultyLevels.hard'),
+    t('templates.createFrom.difficultyLevels.extreme')
+  ];
 
   useEffect(() => {
     // Initialize from template
@@ -79,7 +92,7 @@ export function CreateFromTemplateDialog({
 
   const handleCreate = async () => {
     if (!title.trim()) {
-      toast.error('Введите название челленджа');
+      toast.error(t('templates.createFrom.enterName'));
       return;
     }
 
@@ -134,12 +147,12 @@ export function CreateFromTemplateDialog({
         await incrementTemplateUseCount(template.id);
       }
 
-      toast.success('Челлендж создан из шаблона');
+      toast.success(t('templates.createFrom.created'));
       onSuccess?.();
       onOpenChange(false);
     } catch (error: any) {
       console.error('Error creating challenge from template:', error);
-      toast.error('Ошибка создания челленджа');
+      toast.error(t('challenges.error'));
     } finally {
       setIsCreating(false);
     }
@@ -151,7 +164,7 @@ export function CreateFromTemplateDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="w-5 h-5" />
-            Создать из шаблона: {template.template_name}
+            {t('templates.createFrom.title')} {template.template_name}
           </DialogTitle>
         </DialogHeader>
 
@@ -164,18 +177,18 @@ export function CreateFromTemplateDialog({
 
             {/* Title */}
             <div className="space-y-2">
-              <Label htmlFor="title">Название челленджа *</Label>
+              <Label htmlFor="title">{t('templates.createFrom.challengeName')}</Label>
               <Input
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Введите название..."
+                placeholder={t('templates.createFrom.namePlaceholder')}
               />
             </div>
 
             {/* Description */}
             <div className="space-y-2">
-              <Label htmlFor="description">Описание</Label>
+              <Label htmlFor="description">{t('templates.createFrom.description')}</Label>
               <Textarea
                 id="description"
                 value={description}
@@ -186,7 +199,7 @@ export function CreateFromTemplateDialog({
 
             {/* Duration */}
             <div className="space-y-3">
-              <Label>Длительность: {durationWeeks} недель</Label>
+              <Label>{t('templates.createFrom.duration')} {durationWeeks} {t('templates.createFrom.weeks')}</Label>
               <Slider
                 value={[durationWeeks]}
                 onValueChange={(value) => setDurationWeeks(value[0])}
@@ -198,7 +211,7 @@ export function CreateFromTemplateDialog({
 
             {/* Target Audience */}
             <div className="space-y-3">
-              <Label>Целевая аудитория: {AUDIENCE_LABELS[targetAudience]}</Label>
+              <Label>{t('templates.createFrom.targetAudience')} {AUDIENCE_LABELS[targetAudience]}</Label>
               <Slider
                 value={[targetAudience]}
                 onValueChange={(value) => setTargetAudience(value[0])}
@@ -207,13 +220,13 @@ export function CreateFromTemplateDialog({
                 step={1}
               />
               <p className="text-xs text-muted-foreground">
-                Уровень подготовки участников влияет на базовые значения
+                {t('templates.createFrom.audienceHint')}
               </p>
             </div>
 
             {/* Difficulty */}
             <div className="space-y-3">
-              <Label>Сложность: {DIFFICULTY_LABELS[difficulty]}</Label>
+              <Label>{t('templates.createFrom.difficulty')} {DIFFICULTY_LABELS[difficulty]}</Label>
               <Slider
                 value={[difficulty]}
                 onValueChange={(value) => setDifficulty(value[0])}
@@ -222,13 +235,13 @@ export function CreateFromTemplateDialog({
                 step={1}
               />
               <p className="text-xs text-muted-foreground">
-                Сложность влияет на целевые значения дисциплин
+                {t('templates.createFrom.difficultyHint')}
               </p>
             </div>
 
             {/* Disciplines Preview */}
             <div className="space-y-3">
-              <Label>Дисциплины ({recalculatedDisciplines.length})</Label>
+              <Label>{t('templates.createFrom.disciplinesPreview')} ({recalculatedDisciplines.length})</Label>
               <div className="rounded-lg border p-4 bg-muted/30 space-y-2">
                 {recalculatedDisciplines.map((disc, idx) => (
                   <div
@@ -248,7 +261,7 @@ export function CreateFromTemplateDialog({
                 ))}
               </div>
               <p className="text-xs text-muted-foreground">
-                💡 Значения автоматически рассчитаны на основе выбранных параметров
+                💡 {t('templates.createFrom.autoCalculated')}
               </p>
             </div>
           </div>
@@ -257,11 +270,11 @@ export function CreateFromTemplateDialog({
         {/* Actions */}
         <div className="flex justify-end gap-2 pt-4 border-t">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Отмена
+            {t('templates.createFrom.cancel')}
           </Button>
           <Button onClick={handleCreate} disabled={isCreating}>
             <Sparkles className="w-4 h-4 mr-2" />
-            {isCreating ? 'Создание...' : 'Создать челлендж'}
+            {isCreating ? t('templates.createFrom.creating') : t('templates.createFrom.create')}
           </Button>
         </div>
       </DialogContent>
