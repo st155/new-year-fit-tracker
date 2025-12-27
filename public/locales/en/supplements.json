@@ -1,4 +1,27 @@
 {
   "title": "BioStack V3.0",
-  "subtitle": "Your biohacking correlation engine - Track what works, optimize what doesn't"
+  "subtitle": "Your biohacking correlation engine - Track what works, optimize what doesn't",
+  "today": {
+    "title": "Today's Supplements",
+    "pending": "{{count}} pending",
+    "allDone": "All done for today! 🎉",
+    "allTaken": "You've taken all scheduled supplements",
+    "saving": "Saving...",
+    "takeRemaining": "Take remaining ({{count}})",
+    "takeAll": "Take all ({{count}})",
+    "allTakenBtn": "All taken ✓",
+    "selected": "Selected: {{count}}",
+    "deselect": "Deselect",
+    "take": "Take ({{count}})",
+    "selectAllPending": "Select all pending",
+    "manage": "Manage",
+    "scan": "Scan",
+    "aiGenerator": "AI Generator"
+  },
+  "timeGroups": {
+    "morning": "Morning",
+    "afternoon": "Afternoon",
+    "evening": "Evening",
+    "before_sleep": "Before sleep"
+  }
 }

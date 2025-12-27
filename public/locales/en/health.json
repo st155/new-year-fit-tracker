@@ -19,5 +19,17 @@
     "supabaseAuth": "Supabase Auth",
     "supabaseDb": "Supabase Database",
     "supabaseUrl": "Supabase URL"
+  },
+  "summary": {
+    "title": "Health (averages)",
+    "recovery": "Recovery",
+    "sleep": "Sleep",
+    "strain": "Strain",
+    "hrv": "HRV",
+    "restingHr": "Resting HR",
+    "sleepEfficiency": "Sleep efficiency",
+    "hours": "h",
+    "ms": "ms",
+    "bpm": "bpm"
   }
 }

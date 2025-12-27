@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,34 +12,37 @@ import { CompactSupplementChip } from "./CompactSupplementChip";
 import { ProtocolManagementModal } from "./ProtocolManagementModal";
 import { ProductPhotoUploader } from "./ProductPhotoUploader";
 import { cn } from "@/lib/utils";
-const TIME_GROUPS = [
+
+const getTimeGroups = (t: (key: string) => string) => [
   { 
     key: 'morning', 
-    label: 'Утро', 
+    label: t('timeGroups.morning'), 
     icon: Sunrise, 
     color: 'text-amber-500' 
   },
   { 
     key: 'afternoon', 
-    label: 'День', 
+    label: t('timeGroups.afternoon'), 
     icon: Sun, 
     color: 'text-orange-500' 
   },
   { 
     key: 'evening', 
-    label: 'Вечер', 
+    label: t('timeGroups.evening'), 
     icon: Moon, 
     color: 'text-indigo-500' 
   },
   { 
     key: 'before_sleep', 
-    label: 'Перед сном', 
+    label: t('timeGroups.before_sleep'), 
     icon: Moon, 
     color: 'text-purple-500' 
   },
 ];
 
 export function TodaysSupplements() {
+  const { t } = useTranslation('supplements');
+  const TIME_GROUPS = getTimeGroups(t);
   const { groupedSupplements, logIntakeMutation, toggleIntakeMutation, incrementIntakeMutation } = useTodaysSupplements();
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [isBulkUploaderOpen, setIsBulkUploaderOpen] = useState(false);
@@ -93,9 +97,9 @@ export function TodaysSupplements() {
       <Card className="p-8 bg-neutral-950 border border-green-500/20 shadow-[0_0_20px_rgba(34,197,94,0.1)]">
         <div className="text-center space-y-4">
           <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto" />
-          <h3 className="text-xl font-bold text-green-500">Всё сделано на сегодня! 🎉</h3>
+          <h3 className="text-xl font-bold text-green-500">{t('today.allDone')}</h3>
           <p className="text-muted-foreground">
-            Вы приняли все запланированные добавки
+            {t('today.allTaken')}
           </p>
         </div>
       </Card>
@@ -109,10 +113,10 @@ export function TodaysSupplements() {
         <div>
           <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <Pill className="h-6 w-6 text-green-500" />
-            Добавки на сегодня
+            {t('today.title')}
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            {totalPending} ожидает приёма
+            {t('today.pending', { count: totalPending })}
           </p>
         </div>
         
@@ -125,7 +129,7 @@ export function TodaysSupplements() {
             className="border-green-500/30 hover:border-green-500/50 hover:bg-green-500/10"
           >
             <Settings className="h-4 w-4 mr-2" />
-            Управление
+            {t('today.manage')}
           </Button>
           
           <Button 
@@ -135,7 +139,7 @@ export function TodaysSupplements() {
             className="border-blue-500/30 hover:border-blue-500/50 hover:bg-blue-500/10"
           >
             <Camera className="h-4 w-4 mr-2" />
-            Сканировать
+            {t('today.scan')}
           </Button>
           
           <Button 
@@ -145,7 +149,7 @@ export function TodaysSupplements() {
             className="border-purple-500/30 hover:border-purple-500/50 hover:bg-purple-500/10"
           >
             <Sparkles className="h-4 w-4 mr-2" />
-            AI Генератор
+            {t('today.aiGenerator')}
           </Button>
         </div>
       </div>
@@ -215,10 +219,10 @@ export function TodaysSupplements() {
                       )}
                     >
                       {logIntakeMutation.isPending 
-                        ? 'Сохранение...' 
+                        ? t('today.saving')
                         : takenItems.length > 0 
-                          ? `Принять остальные (${pendingItems.length})`
-                          : `Принять всё (${items.length})`
+                          ? t('today.takeRemaining', { count: pendingItems.length })
+                          : t('today.takeAll', { count: items.length })
                       }
                     </Button>
                   ) : (
@@ -228,7 +232,7 @@ export function TodaysSupplements() {
                       className="text-xs bg-green-500 text-white border-green-500 cursor-default shadow-[0_0_10px_rgba(34,197,94,0.3)]"
                     >
                       <CheckCircle2 className="h-4 w-4 mr-1" />
-                      Всё принято ✓
+                      {t('today.allTakenBtn')}
                     </Button>
                   )}
                 </div>
@@ -263,7 +267,7 @@ export function TodaysSupplements() {
         >
           <Card className="px-6 py-4 bg-neutral-950 border border-green-500/50 shadow-[0_0_30px_rgba(34,197,94,0.3)] flex items-center gap-4">
             <span className="text-sm font-medium text-foreground">
-              Выбрано: {selectedItems.size}
+              {t('today.selected', { count: selectedItems.size })}
             </span>
             <div className="flex items-center gap-2">
               <Button
@@ -272,7 +276,7 @@ export function TodaysSupplements() {
                 onClick={handleDeselectAll}
                 className="border-border/50"
               >
-                Снять выделение
+                {t('today.deselect')}
               </Button>
               <Button
                 size="sm"
@@ -280,7 +284,7 @@ export function TodaysSupplements() {
                 disabled={logIntakeMutation.isPending}
                 className="bg-green-500 hover:bg-green-600 text-white shadow-[0_0_20px_rgba(34,197,94,0.4)]"
               >
-                {logIntakeMutation.isPending ? 'Сохранение...' : `Принять (${selectedItems.size})`}
+                {logIntakeMutation.isPending ? t('today.saving') : t('today.take', { count: selectedItems.size })}
               </Button>
             </div>
           </Card>
@@ -295,7 +299,7 @@ export function TodaysSupplements() {
             onClick={handleSelectAll}
             className="border-green-500/30 hover:bg-green-500/10 hover:border-green-500/50"
           >
-            Выбрать все ожидающие
+            {t('today.selectAllPending')}
           </Button>
         </div>
       )}

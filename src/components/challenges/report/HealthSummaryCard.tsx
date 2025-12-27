@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { Heart, Moon, Brain, Activity, Gauge, BatteryCharging } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -10,6 +11,8 @@ interface HealthSummaryCardProps {
 }
 
 export function HealthSummaryCard({ health }: HealthSummaryCardProps) {
+  const { t } = useTranslation('health');
+
   const getRecoveryColor = (value: number) => {
     if (value >= 67) return "text-success";
     if (value >= 34) return "text-yellow-500";
@@ -31,7 +34,7 @@ export function HealthSummaryCard({ health }: HealthSummaryCardProps) {
   const stats = [
     {
       icon: BatteryCharging,
-      label: "Восстановление",
+      label: t('summary.recovery'),
       value: health.avgRecovery,
       suffix: "%",
       colorFn: getRecoveryColor,
@@ -39,15 +42,15 @@ export function HealthSummaryCard({ health }: HealthSummaryCardProps) {
     },
     {
       icon: Moon,
-      label: "Сон",
+      label: t('summary.sleep'),
       value: health.avgSleep,
-      suffix: "ч",
+      suffix: t('summary.hours'),
       colorFn: getSleepColor,
       maxValue: 10
     },
     {
       icon: Gauge,
-      label: "Strain",
+      label: t('summary.strain'),
       value: health.avgStrain,
       suffix: "",
       colorFn: getStrainColor,
@@ -55,23 +58,23 @@ export function HealthSummaryCard({ health }: HealthSummaryCardProps) {
     },
     {
       icon: Brain,
-      label: "HRV",
+      label: t('summary.hrv'),
       value: health.avgHrv,
-      suffix: "мс",
+      suffix: t('summary.ms'),
       colorFn: () => "text-purple-500",
       maxValue: 150
     },
     {
       icon: Heart,
-      label: "Пульс покоя",
+      label: t('summary.restingHr'),
       value: health.avgRestingHr,
-      suffix: "уд/мин",
+      suffix: t('summary.bpm'),
       colorFn: (v: number) => v <= 60 ? "text-success" : v <= 70 ? "text-yellow-500" : "text-orange-500",
       maxValue: 100
     },
     {
       icon: Activity,
-      label: "Эффективность сна",
+      label: t('summary.sleepEfficiency'),
       value: health.avgSleepEfficiency,
       suffix: "%",
       colorFn: (v: number) => v >= 85 ? "text-success" : v >= 70 ? "text-yellow-500" : "text-orange-500",
@@ -89,7 +92,7 @@ export function HealthSummaryCard({ health }: HealthSummaryCardProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Heart className="h-5 w-5 text-destructive" />
-            Здоровье (средние показатели)
+            {t('summary.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
