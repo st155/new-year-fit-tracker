@@ -17,6 +17,8 @@ import { format } from "date-fns";
 import { ru, enUS } from "date-fns/locale";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { useTranslation } from "react-i18next";
+
+const getDateLocale = (lang: string) => lang === 'ru' ? ru : enUS;
 interface WeightEntry {
   id: string;
   weight: number;
@@ -33,6 +35,8 @@ interface WeightTrackerProps {
 export function WeightTracker({ targetWeight, className }: WeightTrackerProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t, i18n } = useTranslation("body");
+  const dateLocale = getDateLocale(i18n.language);
   const [weightEntries, setWeightEntries] = useState<WeightEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -117,8 +121,8 @@ export function WeightTracker({ targetWeight, className }: WeightTrackerProps) {
     } catch (error) {
       console.error('Error fetching weight data:', error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось загрузить данные о весе",
+        title: t("common:errors.generic"),
+        description: t("weightTracker.loadError"),
         variant: "destructive",
       });
     } finally {
@@ -129,8 +133,8 @@ export function WeightTracker({ targetWeight, className }: WeightTrackerProps) {
   const addWeightEntry = async () => {
     if (!currentWeight || !user) {
       toast({
-        title: "Ошибка",
-        description: "Введите значение веса",
+        title: t("common:errors.generic"),
+        description: t("weightTracker.enterWeight"),
         variant: "destructive",
       });
       return;
@@ -184,8 +188,8 @@ export function WeightTracker({ targetWeight, className }: WeightTrackerProps) {
       }
 
       toast({
-        title: "Успешно!",
-        description: "Вес добавлен",
+        title: t("common:success.saved"),
+        description: t("common:success.weightAdded"),
       });
 
       setIsDialogOpen(false);
@@ -196,8 +200,8 @@ export function WeightTracker({ targetWeight, className }: WeightTrackerProps) {
     } catch (error) {
       console.error('Error adding weight:', error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось добавить вес",
+        title: t("common:errors.generic"),
+        description: t("weightTracker.addError"),
         variant: "destructive",
       });
     }
@@ -252,33 +256,33 @@ export function WeightTracker({ targetWeight, className }: WeightTrackerProps) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Scale className="h-5 w-5 text-primary" />
-              <CardTitle>Контроль веса</CardTitle>
+              <CardTitle>{t("weightTracker.title")}</CardTitle>
             </div>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button size="sm" className="bg-gradient-primary hover:opacity-90">
                   <Plus className="h-4 w-4 mr-2" />
-                  Добавить вес
+                  {t("weightTracker.addWeight")}
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
-                  <DialogTitle>Добавить измерение веса</DialogTitle>
+                  <DialogTitle>{t("weightTracker.addMeasurement")}</DialogTitle>
                   <DialogDescription>
-                    Введите вес вручную или загрузите фото весов для автоматического распознавания
+                    {t("weightTracker.addMeasurementDesc")}
                   </DialogDescription>
                 </DialogHeader>
                 
                 <Tabs defaultValue="manual" className="space-y-4">
                   <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="manual">Ручной ввод</TabsTrigger>
-                    <TabsTrigger value="photo">ИИ-анализ фото</TabsTrigger>
-                    <TabsTrigger value="progress">Фото прогресса</TabsTrigger>
+                    <TabsTrigger value="manual">{t("weightTracker.manualInput")}</TabsTrigger>
+                    <TabsTrigger value="photo">{t("weightTracker.aiPhoto")}</TabsTrigger>
+                    <TabsTrigger value="progress">{t("weightTracker.progressPhoto")}</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="manual" className="space-y-4">
                     <div>
-                      <Label htmlFor="weight">Вес (кг)</Label>
+                      <Label htmlFor="weight">{t("weightTracker.weight")}</Label>
                       <Input
                         id="weight"
                         type="number"
@@ -290,7 +294,7 @@ export function WeightTracker({ targetWeight, className }: WeightTrackerProps) {
                     </div>
                     
                     <div>
-                      <Label htmlFor="date">Дата измерения</Label>
+                      <Label htmlFor="date">{t("form.measurementDate")}</Label>
                       <Input
                         id="date"
                         type="date"
@@ -300,7 +304,7 @@ export function WeightTracker({ targetWeight, className }: WeightTrackerProps) {
                     </div>
 
                     <Button onClick={addWeightEntry} className="w-full">
-                      Сохранить вес
+                      {t("weightTracker.saveWeight")}
                     </Button>
                   </TabsContent>
 
@@ -310,22 +314,22 @@ export function WeightTracker({ targetWeight, className }: WeightTrackerProps) {
                         if (result.success && result.extractedData?.weight) {
                           setCurrentWeight(result.extractedData.weight.toString());
                           toast({
-                            title: "Вес распознан!",
-                            description: `Найден вес: ${result.extractedData.weight} кг`,
+                            title: t("weightTracker.weightRecognized"),
+                            description: t("weightTracker.foundWeight", { weight: result.extractedData.weight }),
                           });
                         }
                       }}
                       onPhotoUploaded={setPhotoUrl}
-                      label="Сфотографируйте весы"
+                      label={t("weightTracker.photoScale")}
                     />
                     
                     {currentWeight && (
                       <div className="p-4 bg-green-50 rounded-lg">
                         <p className="text-sm font-medium text-green-800">
-                          Распознанный вес: {currentWeight} кг
+                          {t("weightTracker.recognizedWeight", { weight: currentWeight })}
                         </p>
                         <Button onClick={addWeightEntry} className="mt-2 w-full">
-                          Сохранить вес
+                          {t("weightTracker.saveWeight")}
                         </Button>
                       </div>
                     )}
@@ -334,7 +338,7 @@ export function WeightTracker({ targetWeight, className }: WeightTrackerProps) {
                   <TabsContent value="progress" className="space-y-4">
                     <PhotoUpload
                       onPhotoUploaded={setPhotoUrl}
-                      label="Добавьте фото для отслеживания прогресса"
+                      label={t("weightTracker.addProgressPhoto")}
                     />
                   </TabsContent>
                 </Tabs>
@@ -352,7 +356,7 @@ export function WeightTracker({ targetWeight, className }: WeightTrackerProps) {
                     <span className="text-sm text-muted-foreground">кг</span>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    {format(new Date(weightEntries[0].measurement_date), 'd MMMM yyyy', { locale: ru })}
+                    {format(new Date(weightEntries[0].measurement_date), 'd MMMM yyyy', { locale: dateLocale })}
                   </p>
                 </div>
                 
@@ -373,7 +377,7 @@ export function WeightTracker({ targetWeight, className }: WeightTrackerProps) {
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      за последнее измерение
+                      {t("weightTracker.lastMeasurement")}
                     </p>
                   </div>
                 )}
@@ -382,20 +386,20 @@ export function WeightTracker({ targetWeight, className }: WeightTrackerProps) {
               {progress && (
                 <div className="p-4 bg-muted/30 rounded-lg">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">Прогресс к цели</span>
+                    <span className="text-sm font-medium">{t("weightTracker.progressToGoal")}</span>
                     <Badge variant={progress.isLosing ? "destructive" : "default"}>
-                      {progress.isLosing ? 'Снижение' : 'Набор'} веса
+                      {progress.isLosing ? t("weightTracker.weightLoss") : t("weightTracker.weightGain")}
                     </Badge>
                   </div>
                   <div className="flex items-center gap-4">
                     <span className="text-sm">
-                      Текущий: {progress.current} кг
+                      {t("weightTracker.current")}: {progress.current} {t("common:units.kg")}
                     </span>
                     <span className="text-sm">
-                      Цель: {progress.target} кг
+                      {t("weightTracker.target")}: {progress.target} {t("common:units.kg")}
                     </span>
                     <span className="text-sm font-medium">
-                      Осталось: {progress.remaining.toFixed(1)} кг
+                      {t("weightTracker.remaining")}: {progress.remaining.toFixed(1)} {t("common:units.kg")}
                     </span>
                   </div>
                 </div>
@@ -404,7 +408,7 @@ export function WeightTracker({ targetWeight, className }: WeightTrackerProps) {
           ) : (
             <div className="text-center py-8">
               <Scale className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">Добавьте первое измерение веса</p>
+              <p className="text-muted-foreground">{t("weightTracker.addFirstMeasurement")}</p>
             </div>
           )}
         </CardContent>
@@ -414,14 +418,14 @@ export function WeightTracker({ targetWeight, className }: WeightTrackerProps) {
       {weightEntries.length > 1 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">История измерений</CardTitle>
+            <CardTitle className="text-lg">{t("history.measurementHistory")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-48 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
                   data={weightEntries.slice(0, 10).reverse().map(entry => ({
-                    date: format(new Date(entry.measurement_date), 'd MMM', { locale: ru }),
+                    date: format(new Date(entry.measurement_date), 'd MMM', { locale: dateLocale }),
                     weight: entry.weight,
                     fullDate: entry.measurement_date
                   }))}
@@ -448,9 +452,9 @@ export function WeightTracker({ targetWeight, className }: WeightTrackerProps) {
                         const data = payload[0].payload;
                         return (
                           <div className="bg-background border rounded-lg p-3 shadow-lg">
-                            <p className="font-medium">{data.weight} кг</p>
+                            <p className="font-medium">{data.weight} {t("common:units.kg")}</p>
                             <p className="text-sm text-muted-foreground">
-                              {format(new Date(data.fullDate), 'd MMMM yyyy', { locale: ru })}
+                              {format(new Date(data.fullDate), 'd MMMM yyyy', { locale: dateLocale })}
                             </p>
                           </div>
                         );

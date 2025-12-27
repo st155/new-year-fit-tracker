@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { terraApi, jobsApi } from '@/lib/api/client';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { 
   Loader2, 
   CheckCircle, 
@@ -44,8 +45,10 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import { useForceTerraSync } from '@/hooks/useForceTerraSync';
+
+const getDateLocale = (lang: string) => lang === 'ru' ? ru : enUS;
 
 interface TerraProvider {
   name: string;
@@ -104,6 +107,8 @@ export function TerraIntegration() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t, i18n } = useTranslation("integrations");
+  const dateLocale = getDateLocale(i18n.language);
   const [status, setStatus] = useState<TerraStatus>({ connected: false, providers: [] });
   const [inactiveProviders, setInactiveProviders] = useState<InactiveProvider[]>([]);
   const [loading, setLoading] = useState(true);
@@ -126,13 +131,13 @@ export function TerraIntegration() {
         
         if (event.data.success) {
           toast({
-            title: 'Устройство подключено!',
-            description: `${providerName} успешно подключен.`,
+            title: t("terra.deviceConnected"),
+            description: t("terra.successConnected", { provider: providerName }),
           });
         } else {
           toast({
-            title: 'Ошибка подключения',
-            description: event.data.error || 'Не удалось подключить устройство',
+            title: t("terra.connectionError"),
+            description: event.data.error || t("terra.couldNotConnect"),
             variant: 'destructive',
           });
         }
@@ -194,8 +199,8 @@ export function TerraIntegration() {
       console.log('🔄 Redirecting to Terra widget in same tab (avoids session issues)...');
       
       toast({
-        title: 'Переход на страницу авторизации',
-        description: `Подключаем ${PROVIDER_NAMES[provider] || provider}. Завершите авторизацию в течение 5 минут.`,
+        title: t("terra.redirectingToAuth"),
+        description: t("terra.connectingProvider", { provider: PROVIDER_NAMES[provider] || provider }),
       });
       
       // Small delay to show toast, then redirect
@@ -206,8 +211,8 @@ export function TerraIntegration() {
     } catch (error: any) {
       console.error('❌ Failed to get Terra widget URL:', error);
       toast({
-        title: 'Ошибка',
-        description: error.message || 'Не удалось получить ссылку для авторизации',
+        title: t("common:errors.generic"),
+        description: error.message || t("terra.couldNotConnect"),
         variant: 'destructive',
       });
       setConnectingProvider(null);
@@ -378,32 +383,32 @@ export function TerraIntegration() {
 
   const getConnectionStatus = (provider: TerraProvider) => {
     if (!provider.terraUserId) {
-      return { variant: 'secondary' as const, text: 'Ожидание данных от Terra...' };
+      return { variant: 'secondary' as const, text: t("terra.waitingForData") };
     }
     
     if (!provider.lastSync) {
-      return { variant: 'secondary' as const, text: 'Подключено, ожидание данных' };
+      return { variant: 'secondary' as const, text: t("terra.connectedWaiting") };
     }
     
     const minutesSinceSync = (Date.now() - new Date(provider.lastSync).getTime()) / 60000;
     
     // Свежие данные (< 5 минут)
     if (minutesSinceSync < 5) {
-      return { variant: 'success' as const, text: 'Только что синхронизировано' };
+      return { variant: 'success' as const, text: t("terra.justSynced") };
     }
     
     // Последние 24 часа
     if (minutesSinceSync < 1440) {
-      return { variant: 'success' as const, text: 'Синхронизировано' };
+      return { variant: 'success' as const, text: t("terra.synced") };
     }
     
     // 1-3 дня
     if (minutesSinceSync < 4320) {
-      return { variant: 'outline' as const, text: 'Требует синхронизации' };
+      return { variant: 'outline' as const, text: t("terra.needsSync") };
     }
     
     // > 3 дней
-    return { variant: 'destructive' as const, text: 'Устарело' };
+    return { variant: 'destructive' as const, text: t("terra.outdated") };
   };
 
   const syncData = async () => {
@@ -425,8 +430,8 @@ export function TerraIntegration() {
       console.log('✅ Sync result:', data);
 
       toast({
-        title: 'Синхронизация запущена',
-        description: 'Данные обновляются в фоновом режиме',
+        title: t("terra.syncStarted"),
+        description: t("terra.syncBackground"),
       });
 
       setTimeout(() => {
@@ -447,7 +452,7 @@ export function TerraIntegration() {
     } catch (error: any) {
       console.error('Sync error:', error);
       toast({
-        title: 'Ошибка синхронизации',
+        title: t("terra.syncError"),
         description: error.message,
         variant: 'destructive',
       });
@@ -488,8 +493,8 @@ export function TerraIntegration() {
       queryClient.invalidateQueries({ queryKey: ['metric-values'] });
 
       toast({
-        title: 'Устройство полностью отключено',
-        description: `${PROVIDER_NAMES[provider]} удалён. Можно подключить заново.`,
+        title: t("terra.disconnected"),
+        description: t("terra.canReconnect", { provider: PROVIDER_NAMES[provider] }),
       });
 
       // Обновляем статус
@@ -502,12 +507,11 @@ export function TerraIntegration() {
       setStatus(previousStatus);
       
       toast({
-        title: 'Ошибка отключения',
+        title: t("terra.disconnectError"),
         description: error.message,
         variant: 'destructive',
       });
     }
-  };
 
   // Полная деавторизация (удаление и на Terra, и локально)
   const deauthenticateProvider = async (provider: string) => {
@@ -530,8 +534,8 @@ export function TerraIntegration() {
       queryClient.invalidateQueries({ queryKey: ['device-metrics'] });
 
       toast({
-        title: 'Устройство полностью удалено',
-        description: `${PROVIDER_NAMES[provider]} удалён. Теперь можно подключить заново.`,
+        title: t("terra.deviceDeleted"),
+        description: t("terra.canReconnect", { provider: PROVIDER_NAMES[provider] }),
       });
 
       await checkStatus();
@@ -539,12 +543,11 @@ export function TerraIntegration() {
     } catch (error: any) {
       console.error('Deauthenticate error:', error);
       toast({
-        title: 'Ошибка удаления',
+        title: t("terra.deleteError"),
         description: error.message,
         variant: 'destructive',
       });
     }
-  };
 
   // Полный сброс Terra (очистка всех сессий на стороне Terra + локальных токенов)
   const purgeProvider = async (provider: string) => {
@@ -555,8 +558,8 @@ export function TerraIntegration() {
     
     try {
       toast({
-        title: 'Полный сброс...',
-        description: 'Очищаем все сессии на стороне Terra...',
+        title: t("terra.fullReset"),
+        description: t("terra.clearingTerraSessions"),
       });
       
       const { data, error } = await terraApi.purgeUsers(provider);
@@ -572,15 +575,15 @@ export function TerraIntegration() {
       queryClient.invalidateQueries({ queryKey: ['terra-tokens'] });
 
       toast({
-        title: 'Полный сброс выполнен!',
-        description: `Удалено ${data.terra_users_found || 0} сессий Terra. Теперь выполните следующие шаги перед повторным подключением.`,
+        title: t("terra.resetComplete"),
+        description: t("terra.sessionsDeleted", { count: data.terra_users_found || 0 }),
       });
 
       // Показываем диалог с инструкциями
       setTimeout(() => {
         toast({
-          title: 'Следующие шаги:',
-          description: '1. Очистите cookies для whoop.com/oura.com в Safari\n2. Выйдите и войдите в приложение устройства\n3. Подключите устройство заново',
+          title: t("terra.nextSteps"),
+          description: t("terra.nextStepsDesc"),
           duration: 15000,
         });
       }, 2000);
@@ -590,7 +593,7 @@ export function TerraIntegration() {
     } catch (error: any) {
       console.error('Purge error:', error);
       toast({
-        title: 'Ошибка полного сброса',
+        title: t("terra.resetError"),
         description: error.message,
         variant: 'destructive',
       });
@@ -623,7 +626,7 @@ export function TerraIntegration() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-success" />
-              Подключенные устройства
+              {t("terra.connectedDevices")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -632,12 +635,12 @@ export function TerraIntegration() {
                 {syncing ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Синхронизация...
+                    {t("terra.syncing")}
                   </>
                 ) : (
                   <>
                     <RefreshCw className="h-4 w-4 mr-2" />
-                    Синхронизировать данные
+                    {t("terra.syncData")}
                   </>
                 )}
               </Button>
@@ -658,12 +661,12 @@ export function TerraIntegration() {
                 {forceSyncMutation.isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Загрузка...
+                    {t("terra.loading")}
                   </>
                 ) : (
                   <>
                     <Dumbbell className="w-4 h-4" />
-                    Синхронизировать тренировки (14 дней)
+                    {t("terra.syncWorkouts")}
                   </>
                 )}
               </Button>
@@ -688,14 +691,14 @@ export function TerraIntegration() {
                           </Badge>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Подключен {new Date(provider.connectedAt).toLocaleDateString('ru-RU')}
+                          {t("terra.connected")} {new Date(provider.connectedAt).toLocaleDateString(i18n.language === 'ru' ? 'ru-RU' : 'en-US')}
                         </p>
                         {provider.lastSync && (
                           <p className="text-xs text-muted-foreground">
                             <Clock className="h-3 w-3 inline mr-1" />
                             {formatDistanceToNow(new Date(provider.lastSync), { 
                               addSuffix: true, 
-                              locale: ru 
+                              locale: dateLocale 
                             })}
                           </p>
                         )}
@@ -722,10 +725,10 @@ export function TerraIntegration() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
               <AlertCircle className="h-5 w-5" />
-              Отключенные устройства
+              {t("terra.disconnectedDevices")}
             </CardTitle>
             <CardDescription>
-              Эти устройства были ранее подключены. Нажмите "Активировать" для автоматического переподключения.
+              {t("terra.disconnectedDesc")}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -743,7 +746,7 @@ export function TerraIntegration() {
                     <div>
                       <p className="font-medium">{PROVIDER_NAMES[provider.name]}</p>
                       <p className="text-xs text-muted-foreground">
-                        Отключен • Можно переподключить без повторной авторизации
+                        {t("terra.disconnectedNote")}
                       </p>
                     </div>
                   </div>
@@ -758,12 +761,12 @@ export function TerraIntegration() {
                       {isReactivating ? (
                         <>
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Активация...
+                          {t("terra.activating")}
                         </>
                       ) : (
                         <>
                           <RefreshCw className="h-4 w-4 mr-2" />
-                          Активировать
+                          {t("terra.activate")}
                         </>
                       )}
                     </Button>
@@ -775,12 +778,12 @@ export function TerraIntegration() {
                             size="sm"
                             onClick={() => deauthenticateProvider(provider.name)}
                           >
-                            <Trash2 className="h-4 w-4 mr-1" />
-                            Удалить
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" className="max-w-xs">
-                          <p>Полностью удалить токен авторизации. После этого подключите устройство заново для решения проблем с синхронизацией.</p>
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          {t("common:actions.delete")}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-xs">
+                        <p>{t("terra.deleteTooltip")}</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -795,9 +798,9 @@ export function TerraIntegration() {
       {/* Available Providers */}
       <Card>
         <CardHeader>
-          <CardTitle>Подключить устройство</CardTitle>
+          <CardTitle>{t("terra.connectDevice")}</CardTitle>
           <CardDescription>
-            Подключите фитнес-трекер для автоматической синхронизации данных
+            {t("terra.connectDeviceDesc")}
           </CardDescription>
         </CardHeader>
         
