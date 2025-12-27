@@ -56,6 +56,29 @@
     "testimonialsSection": {
       "title": "Success stories from our participants",
       "subtitle": "Join the community of those who have already achieved their goals"
-    }
+    },
+    "testimonials": [
+      {
+        "name": "Sergey N.",
+        "initials": "SN",
+        "role": "New Year Challenge Participant",
+        "quote": "Lost 15 kg in 3 months! Team support works wonders.",
+        "achievement": "Challenge Winner"
+      },
+      {
+        "name": "Anna K.",
+        "initials": "AK",
+        "role": "CrossFit Athlete",
+        "quote": "Metrics helped optimize my training. PR in every exercise!",
+        "achievement": "+40% strength gains"
+      },
+      {
+        "name": "Igor M.",
+        "initials": "IM",
+        "role": "Marathon Runner",
+        "quote": "VO2max grew from 48 to 55! The app is my digital coach.",
+        "achievement": "Personal marathon record"
+      }
+    ]
   }
 }
