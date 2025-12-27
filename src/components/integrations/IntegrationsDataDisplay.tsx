@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,7 @@ interface ProviderData {
 }
 
 export function IntegrationsDataDisplay() {
+  const { t } = useTranslation('common');
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [providers, setProviders] = useState<ProviderData[]>([]);
@@ -296,7 +298,7 @@ export function IntegrationsDataDisplay() {
   };
 
   const getDataFreshness = (lastSyncDate: string | null) => {
-    if (!lastSyncDate) return { color: 'muted', text: 'Ожидание данных', badge: 'outline' };
+    if (!lastSyncDate) return { color: 'muted', text: t('integrations.awaitingData'), badge: 'outline' };
     
     const diff = Date.now() - new Date(lastSyncDate).getTime();
     const minutes = Math.floor(diff / 60000);
@@ -306,20 +308,20 @@ export function IntegrationsDataDisplay() {
     if (minutes < 60) {
       return { 
         color: 'success', 
-        text: `${minutes} мин назад`,
+        text: t('integrations.minAgo', { minutes }),
         badge: 'default'
       };
     }
     if (hours < 24) {
       return { 
         color: 'warning', 
-        text: `${hours} ч назад`,
+        text: t('integrations.hoursAgo', { hours }),
         badge: 'secondary'
       };
     }
     return { 
       color: 'destructive', 
-      text: `${days} дн назад`,
+      text: t('integrations.daysAgo', { days }),
       badge: 'destructive'
     };
   };
@@ -327,8 +329,8 @@ export function IntegrationsDataDisplay() {
   const handleSyncRequest = async (provider: string) => {
     try {
       toast({
-        title: 'Запуск синхронизации',
-        description: `Запрашиваем данные для ${getProviderDisplayName(provider)}...`,
+        title: t('integrations.syncStarting'),
+        description: t('integrations.syncStartingDesc', { provider: getProviderDisplayName(provider) }),
       });
 
       const { error } = await terraApi.integrate('sync');
@@ -342,8 +344,8 @@ export function IntegrationsDataDisplay() {
       }
 
       toast({
-        title: 'Синхронизация запущена',
-        description: 'Данные обновляются в фоне',
+        title: t('integrations.syncStarted'),
+        description: t('integrations.syncStartedDesc'),
       });
 
       // Refetch after delay
@@ -352,7 +354,7 @@ export function IntegrationsDataDisplay() {
       }, 3000);
     } catch (error: any) {
       toast({
-        title: 'Ошибка синхронизации',
+        title: t('integrations.syncError'),
         description: error.message,
         variant: 'destructive',
       });
@@ -372,7 +374,7 @@ export function IntegrationsDataDisplay() {
     return (
       <Card>
         <CardContent className="pt-6 text-center text-muted-foreground">
-          Нет подключенных интеграций
+          {t('integrations.noIntegrations')}
         </CardContent>
       </Card>
     );
@@ -389,7 +391,7 @@ export function IntegrationsDataDisplay() {
                   {getProviderDisplayName(provider.provider)}
                 </CardTitle>
                 <Badge variant="outline" className="bg-success/10 text-success border-success/30">
-                  Подключено
+                  {t('integrations.connected')}
                 </Badge>
                 {(() => {
                   const freshness = getDataFreshness(provider.lastSync);
@@ -411,7 +413,7 @@ export function IntegrationsDataDisplay() {
                   </span>
                 )}
                 <Button variant="outline" size="sm" onClick={fetchIntegrationsData}>
-                  <RefreshCw className="h-4 w-4 mr-1" /> Обновить
+                  <RefreshCw className="h-4 w-4 mr-1" /> {t('integrations.refresh')}
                 </Button>
               </div>
             </div>
@@ -421,7 +423,7 @@ export function IntegrationsDataDisplay() {
             {/* Metrics Display */}
             {provider.metrics.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">
-                Пока нет данных от этого устройства
+                {t('integrations.noData')}
               </p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

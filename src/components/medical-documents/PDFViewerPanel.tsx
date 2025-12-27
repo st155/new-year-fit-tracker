@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
@@ -17,6 +18,7 @@ interface PDFViewerPanelProps {
 }
 
 export const PDFViewerPanel = ({ documentId, storagePath }: PDFViewerPanelProps) => {
+  const { t } = useTranslation('common');
   const [pdfDoc, setPdfDoc] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
   const [pageNum, setPageNum] = useState(1);
   const [scale, setScale] = useState(1.5);
@@ -45,7 +47,7 @@ export const PDFViewerPanel = ({ documentId, storagePath }: PDFViewerPanelProps)
         .download(storagePath);
 
       if (error || !fileData) {
-        throw new Error('Не удалось загрузить PDF из хранилища');
+        throw new Error(t('pdfViewer.loadError'));
       }
 
       const arrayBuffer = await fileData.arrayBuffer();
@@ -56,8 +58,8 @@ export const PDFViewerPanel = ({ documentId, storagePath }: PDFViewerPanelProps)
       setIsLoading(false);
     } catch (error: any) {
       console.error('Error loading PDF:', error);
-      setLoadError(error.message || 'Ошибка загрузки PDF');
-      toast.error('Ошибка загрузки PDF');
+      setLoadError(error.message || t('pdfViewer.loadErrorTitle'));
+      toast.error(t('pdfViewer.loadErrorTitle'));
       setIsLoading(false);
     }
   };
@@ -105,7 +107,7 @@ export const PDFViewerPanel = ({ documentId, storagePath }: PDFViewerPanelProps)
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <span className="text-sm text-green-400 font-mono">
-            Page {pageNum} / {pdfDoc?.numPages || 0}
+            {t('pdfViewer.page', { current: pageNum, total: pdfDoc?.numPages || 0 })}
           </span>
           <Button
             variant="ghost"
@@ -149,21 +151,21 @@ export const PDFViewerPanel = ({ documentId, storagePath }: PDFViewerPanelProps)
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <Loader2 className="h-8 w-8 animate-spin text-green-400 mx-auto mb-2" />
-              <p className="text-sm text-green-400">Загрузка документа...</p>
+              <p className="text-sm text-green-400">{t('pdfViewer.loading')}</p>
             </div>
           </div>
         ) : loadError ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center max-w-md">
               <div className="mb-4 p-4 border border-red-500/50 rounded-lg bg-red-500/5">
-                <p className="text-red-400 mb-2">❌ Ошибка загрузки PDF</p>
+                <p className="text-red-400 mb-2">❌ {t('pdfViewer.loadErrorTitle')}</p>
                 <p className="text-sm text-muted-foreground">{loadError}</p>
               </div>
               <Button 
                 onClick={loadPDF}
                 className="bg-green-500/10 border-green-500/30 text-green-400 hover:bg-green-500/20"
               >
-                🔄 Попробовать снова
+                🔄 {t('pdfViewer.retry')}
               </Button>
             </div>
           </div>

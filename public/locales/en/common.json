@@ -116,7 +116,12 @@
     "startError": "Error starting fasting",
     "completed": "Fasting completed! {{hours}}h",
     "interrupted": "Fasting interrupted",
-    "endError": "Error ending fasting"
+    "endError": "Error ending fasting",
+    "statusFasting": "Fasting",
+    "statusEating": "Eating Window",
+    "statusInactive": "Inactive",
+    "eatingInProgress": "eating in progress",
+    "readyToStart": "ready to start"
   },
   "documents": {
     "uploadTitle": "Upload Document",
@@ -144,5 +149,27 @@
     "prescription": "Prescription",
     "training_program": "Training Program",
     "other": "Other"
+  },
+  "pdfViewer": {
+    "page": "Page {{current}} / {{total}}",
+    "loading": "Loading document...",
+    "loadError": "Failed to load PDF from storage",
+    "loadErrorTitle": "PDF loading error",
+    "retry": "Try again"
+  },
+  "integrations": {
+    "noIntegrations": "No connected integrations",
+    "connected": "Connected",
+    "noData": "No data from this device yet",
+    "refresh": "Refresh",
+    "syncStarting": "Starting sync",
+    "syncStartingDesc": "Requesting data for {{provider}}...",
+    "syncStarted": "Sync started",
+    "syncStartedDesc": "Data is being updated in the background",
+    "syncError": "Sync error",
+    "awaitingData": "Awaiting data",
+    "minAgo": "{{minutes}} min ago",
+    "hoursAgo": "{{hours}} h ago",
+    "daysAgo": "{{days}} d ago"
   }
 }

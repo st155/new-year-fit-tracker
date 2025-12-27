@@ -116,7 +116,12 @@
     "startError": "Ошибка при начале голодания",
     "completed": "Голодание завершено! {{hours}}ч",
     "interrupted": "Голодание прервано",
-    "endError": "Ошибка при завершении голодания"
+    "endError": "Ошибка при завершении голодания",
+    "statusFasting": "Голодание",
+    "statusEating": "Окно питания",
+    "statusInactive": "Не активно",
+    "eatingInProgress": "идёт приём пищи",
+    "readyToStart": "готов начать"
   },
   "documents": {
     "uploadTitle": "Загрузить документ",
@@ -144,5 +149,27 @@
     "prescription": "Рецепт",
     "training_program": "Программа тренировок",
     "other": "Другое"
+  },
+  "pdfViewer": {
+    "page": "Страница {{current}} / {{total}}",
+    "loading": "Загрузка документа...",
+    "loadError": "Не удалось загрузить PDF из хранилища",
+    "loadErrorTitle": "Ошибка загрузки PDF",
+    "retry": "Попробовать снова"
+  },
+  "integrations": {
+    "noIntegrations": "Нет подключенных интеграций",
+    "connected": "Подключено",
+    "noData": "Пока нет данных от этого устройства",
+    "refresh": "Обновить",
+    "syncStarting": "Запуск синхронизации",
+    "syncStartingDesc": "Запрашиваем данные для {{provider}}...",
+    "syncStarted": "Синхронизация запущена",
+    "syncStartedDesc": "Данные обновляются в фоне",
+    "syncError": "Ошибка синхронизации",
+    "awaitingData": "Ожидание данных",
+    "minAgo": "{{minutes}} мин назад",
+    "hoursAgo": "{{hours}} ч назад",
+    "daysAgo": "{{days}} дн назад"
   }
 }
