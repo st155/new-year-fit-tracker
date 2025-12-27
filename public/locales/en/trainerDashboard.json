@@ -15,5 +15,53 @@
     "analytics": "Analytics",
     "settings": "Settings",
     "trainer": "Trainer"
+  },
+  "clientWorkouts": {
+    "title": "Workout History",
+    "found": "{{count}} workouts found",
+    "noWorkouts": "No workouts for selected period",
+    "allTypes": "All types",
+    "defaultType": "Workout",
+    "unknownSource": "Unknown",
+    "duration": "Duration",
+    "calories": "Calories",
+    "heartRate": "Heart Rate",
+    "source": "Source",
+    "date": "Date",
+    "type": "Type",
+    "kcal": "kcal",
+    "max": "max"
+  },
+  "workoutTypes": {
+    "running": "Running",
+    "cycling": "Cycling",
+    "swimming": "Swimming",
+    "strength": "Strength",
+    "yoga": "Yoga",
+    "hiit": "HIIT",
+    "walking": "Walking",
+    "functional_fitness": "Functional Fitness",
+    "cross_training": "Cross Training",
+    "elliptical": "Elliptical",
+    "rowing": "Rowing",
+    "stair_climbing": "Stair Climbing",
+    "pilates": "Pilates",
+    "dance": "Dance",
+    "martial_arts": "Martial Arts",
+    "basketball": "Basketball",
+    "soccer": "Soccer",
+    "tennis": "Tennis",
+    "golf": "Golf",
+    "hiking": "Hiking",
+    "other": "Other"
+  },
+  "sourceLabels": {
+    "manual": "Manual"
+  },
+  "periodOptions": {
+    "last7days": "Last 7 days",
+    "last30days": "Last 30 days",
+    "last90days": "Last 90 days",
+    "allTime": "All time"
   }
 }

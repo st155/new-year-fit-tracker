@@ -55,5 +55,26 @@
     "thu": "Thu",
     "fri": "Fri",
     "sat": "Sat"
+  },
+  "stats": {
+    "title": "Statistics",
+    "streak": "Streak",
+    "streakDays": " days",
+    "workouts": "Workouts",
+    "time": "Time",
+    "timeHours": " h",
+    "volume": "Volume",
+    "volumeTons": " t",
+    "week": "Week",
+    "month": "Month",
+    "allTime": "All time"
+  },
+  "heartRateZones": {
+    "title": "Heart Rate Zones",
+    "noData": "Heart rate zone data unavailable for this workout",
+    "minutes": "Minutes",
+    "time": "Time",
+    "minAbbr": "min",
+    "hint": "Heart rate zones show workout intensity"
   }
 }

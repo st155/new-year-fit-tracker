@@ -290,5 +290,52 @@
     "change": "Изменить",
     "cropTitle": "Обрезать фото",
     "scale": "Масштаб"
+  },
+  "sync": {
+    "dataUpdated": "Данные обновлены",
+    "syncedSources": "Синхронизировано источников: {{count}}",
+    "withErrors": " ({{count}} ошибок)",
+    "syncError": "Ошибка синхронизации",
+    "checkConnections": "Не удалось обновить данные. Проверьте подключения.",
+    "syncComplete": "Синхронизация завершена",
+    "updatedSources": "Обновлено источников: {{count}}",
+    "partialSync": "Частичная синхронизация",
+    "failedToUpdate": "Не удалось обновить: {{providers}}",
+    "noActiveSources": "Нет активных источников",
+    "connectDevices": "Подключите устройства в разделе Интеграции",
+    "genericError": "Не удалось обновить данные"
+  },
+  "dayNamesShort": {
+    "mon": "Пн",
+    "tue": "Вт",
+    "wed": "Ср",
+    "thu": "Чт",
+    "fri": "Пт",
+    "sat": "Сб",
+    "sun": "Вс"
+  },
+  "dayNamesFull": {
+    "monday": "Понедельник",
+    "tuesday": "Вторник",
+    "wednesday": "Среда",
+    "thursday": "Четверг",
+    "friday": "Пятница",
+    "saturday": "Суббота",
+    "sunday": "Воскресенье"
+  },
+  "calendar": {
+    "completed": "Выполнено",
+    "missed": "Пропущено"
+  },
+  "validation": {
+    "required": "Поле обязательно для заполнения",
+    "minLength": "Минимум {{min}} символов",
+    "maxLength": "Максимум {{max}} символов",
+    "minValue": "Минимальное значение: {{min}}",
+    "maxValue": "Максимальное значение: {{max}}",
+    "invalidEmail": "Некорректный email адрес",
+    "positiveNumber": "Значение должно быть положительным",
+    "futureDate": "Дата должна быть в будущем",
+    "pastDate": "Дата должна быть в прошлом"
   }
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { syncAllSources, shouldSync, canSync, setLastSyncTime } from '@/lib/sync-utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -11,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 export function useAutoSync(userId: string | undefined) {
   const [isSyncing, setIsSyncing] = useState(false);
   const { toast } = useToast();
+  const { t } = useTranslation('common');
 
   // Auto-sync при монтировании компонента (если нужно)
   useEffect(() => {
@@ -44,15 +46,15 @@ export function useAutoSync(userId: string | undefined) {
 
         if (successCount > 0) {
           toast({
-            title: 'Данные обновлены',
-            description: `Синхронизировано источников: ${successCount}${failCount > 0 ? ` (${failCount} ошибок)` : ''}`,
+            title: t('sync.dataUpdated'),
+            description: t('sync.syncedSources', { count: successCount }) + (failCount > 0 ? t('sync.withErrors', { count: failCount }) : ''),
           });
         }
 
         if (failCount > 0 && successCount === 0) {
           toast({
-            title: 'Ошибка синхронизации',
-            description: 'Не удалось обновить данные. Проверьте подключения.',
+            title: t('sync.syncError'),
+            description: t('sync.checkConnections'),
             variant: 'destructive',
           });
         }
@@ -67,7 +69,7 @@ export function useAutoSync(userId: string | undefined) {
     const timeoutId = setTimeout(checkAndSync, 2000);
 
     return () => clearTimeout(timeoutId);
-  }, [userId, toast]);
+  }, [userId, toast, t]);
 
   // Функция для ручной синхронизации (для кнопки "Обновить")
   const syncAllData = useCallback(async () => {
@@ -85,8 +87,8 @@ export function useAutoSync(userId: string | undefined) {
 
       if (successCount > 0) {
         toast({
-          title: 'Синхронизация завершена',
-          description: `Обновлено источников: ${successCount}${failCount > 0 ? ` (${failCount} ошибок)` : ''}`,
+          title: t('sync.syncComplete'),
+          description: t('sync.updatedSources', { count: successCount }) + (failCount > 0 ? t('sync.withErrors', { count: failCount }) : ''),
         });
       }
 
@@ -97,29 +99,29 @@ export function useAutoSync(userId: string | undefined) {
           .join(', ');
         
         toast({
-          title: successCount > 0 ? 'Частичная синхронизация' : 'Ошибка синхронизации',
-          description: `Не удалось обновить: ${failedProviders}`,
+          title: successCount > 0 ? t('sync.partialSync') : t('sync.syncError'),
+          description: t('sync.failedToUpdate', { providers: failedProviders }),
           variant: successCount > 0 ? 'default' : 'destructive',
         });
       }
 
       if (successCount === 0 && failCount === 0) {
         toast({
-          title: 'Нет активных источников',
-          description: 'Подключите устройства в разделе Интеграции',
+          title: t('sync.noActiveSources'),
+          description: t('sync.connectDevices'),
         });
       }
     } catch (error: any) {
       console.error('❌ [useAutoSync] Manual sync failed:', error);
       toast({
-        title: 'Ошибка синхронизации',
-        description: error.message || 'Не удалось обновить данные',
+        title: t('sync.syncError'),
+        description: error.message || t('sync.genericError'),
         variant: 'destructive',
       });
     } finally {
       setIsSyncing(false);
     }
-  }, [userId, isSyncing, toast]);
+  }, [userId, isSyncing, toast, t]);
 
   return {
     isSyncing,

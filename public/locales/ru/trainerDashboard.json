@@ -15,5 +15,53 @@
     "analytics": "Аналитика",
     "settings": "Настройки",
     "trainer": "Тренер"
+  },
+  "clientWorkouts": {
+    "title": "История тренировок",
+    "found": "{{count}} тренировок найдено",
+    "noWorkouts": "Нет тренировок за выбранный период",
+    "allTypes": "Все типы",
+    "defaultType": "Тренировка",
+    "unknownSource": "Неизвестно",
+    "duration": "Длительность",
+    "calories": "Калории",
+    "heartRate": "Пульс",
+    "source": "Источник",
+    "date": "Дата",
+    "type": "Тип",
+    "kcal": "ккал",
+    "max": "макс"
+  },
+  "workoutTypes": {
+    "running": "Бег",
+    "cycling": "Велосипед",
+    "swimming": "Плавание",
+    "strength": "Силовая",
+    "yoga": "Йога",
+    "hiit": "HIIT",
+    "walking": "Ходьба",
+    "functional_fitness": "Функциональный тренинг",
+    "cross_training": "Кросс-тренинг",
+    "elliptical": "Эллиптический тренажер",
+    "rowing": "Гребля",
+    "stair_climbing": "Степпер",
+    "pilates": "Пилатес",
+    "dance": "Танцы",
+    "martial_arts": "Единоборства",
+    "basketball": "Баскетбол",
+    "soccer": "Футбол",
+    "tennis": "Теннис",
+    "golf": "Гольф",
+    "hiking": "Хайкинг",
+    "other": "Другое"
+  },
+  "sourceLabels": {
+    "manual": "Вручную"
+  },
+  "periodOptions": {
+    "last7days": "Последние 7 дней",
+    "last30days": "Последние 30 дней",
+    "last90days": "Последние 90 дней",
+    "allTime": "Все время"
   }
 }

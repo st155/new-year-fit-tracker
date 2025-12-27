@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, startOfWeek, endOfWeek } from "date-fns";
 
 interface HabitCalendarProps {
@@ -9,6 +10,8 @@ interface HabitCalendarProps {
 }
 
 export function HabitCalendar({ completions, currentMonth = new Date() }: HabitCalendarProps) {
+  const { t } = useTranslation('common');
+  
   const calendarDays = useMemo(() => {
     const monthStart = startOfMonth(currentMonth);
     const monthEnd = endOfMonth(currentMonth);
@@ -26,7 +29,15 @@ export function HabitCalendar({ completions, currentMonth = new Date() }: HabitC
     return completionDates.some(d => isSameDay(d, day));
   };
 
-  const weekDays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+  const weekDays = [
+    t('dayNamesShort.mon'),
+    t('dayNamesShort.tue'),
+    t('dayNamesShort.wed'),
+    t('dayNamesShort.thu'),
+    t('dayNamesShort.fri'),
+    t('dayNamesShort.sat'),
+    t('dayNamesShort.sun')
+  ];
 
   return (
     <div className="space-y-2">
@@ -36,8 +47,8 @@ export function HabitCalendar({ completions, currentMonth = new Date() }: HabitC
       
       {/* Week day headers */}
       <div className="grid grid-cols-7 gap-1 mb-1">
-        {weekDays.map(day => (
-          <div key={day} className="text-xs text-muted-foreground text-center">
+        {weekDays.map((day, idx) => (
+          <div key={idx} className="text-xs text-muted-foreground text-center">
             {day}
           </div>
         ))}
@@ -73,11 +84,11 @@ export function HabitCalendar({ completions, currentMonth = new Date() }: HabitC
       <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground mt-2">
         <div className="flex items-center gap-1">
           <div className="w-3 h-3 rounded bg-gradient-to-br from-habit-positive/40 to-habit-positive/20 border border-habit-positive/50" />
-          <span>Выполнено</span>
+          <span>{t('calendar.completed')}</span>
         </div>
         <div className="flex items-center gap-1">
           <div className="w-3 h-3 rounded bg-white/5 border border-white/10" />
-          <span>Пропущено</span>
+          <span>{t('calendar.missed')}</span>
         </div>
       </div>
     </div>

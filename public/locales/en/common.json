@@ -290,5 +290,52 @@
     "change": "Change",
     "cropTitle": "Crop photo",
     "scale": "Scale"
+  },
+  "sync": {
+    "dataUpdated": "Data updated",
+    "syncedSources": "Synced sources: {{count}}",
+    "withErrors": " ({{count}} errors)",
+    "syncError": "Sync error",
+    "checkConnections": "Failed to update data. Check connections.",
+    "syncComplete": "Sync complete",
+    "updatedSources": "Updated sources: {{count}}",
+    "partialSync": "Partial sync",
+    "failedToUpdate": "Failed to update: {{providers}}",
+    "noActiveSources": "No active sources",
+    "connectDevices": "Connect devices in Integrations",
+    "genericError": "Failed to update data"
+  },
+  "dayNamesShort": {
+    "mon": "Mon",
+    "tue": "Tue",
+    "wed": "Wed",
+    "thu": "Thu",
+    "fri": "Fri",
+    "sat": "Sat",
+    "sun": "Sun"
+  },
+  "dayNamesFull": {
+    "monday": "Monday",
+    "tuesday": "Tuesday",
+    "wednesday": "Wednesday",
+    "thursday": "Thursday",
+    "friday": "Friday",
+    "saturday": "Saturday",
+    "sunday": "Sunday"
+  },
+  "calendar": {
+    "completed": "Completed",
+    "missed": "Missed"
+  },
+  "validation": {
+    "required": "This field is required",
+    "minLength": "Minimum {{min}} characters",
+    "maxLength": "Maximum {{max}} characters",
+    "minValue": "Minimum value: {{min}}",
+    "maxValue": "Maximum value: {{max}}",
+    "invalidEmail": "Invalid email address",
+    "positiveNumber": "Value must be positive",
+    "futureDate": "Date must be in the future",
+    "pastDate": "Date must be in the past"
   }
 }
