@@ -58,5 +58,24 @@
   "miniChart": {
     "completed": "Выполнено",
     "lastDays": "за последние {{days}} дней"
+  },
+  "viewSwitcher": {
+    "widgets": "Виджеты",
+    "list": "Список",
+    "analytics": "Аналитика"
+  },
+  "smartView": {
+    "noHabits": "Нет привычек",
+    "noHabitsDesc": "Создайте свою первую привычку и начните строить лучшую версию себя каждый день",
+    "quote": "Привычки - это сложные проценты самосовершенствования",
+    "atRiskAlert_one": "{{count}} привычка требует внимания",
+    "atRiskAlert_few": "{{count}} привычки требуют внимания",
+    "atRiskAlert_many": "{{count}} привычек требуют внимания",
+    "atRiskTitle": "⚠️ Требуют внимания"
+  },
+  "notifications": {
+    "title": "Уведомления",
+    "markAllRead": "Прочитать все",
+    "empty": "Нет уведомлений"
   }
 }

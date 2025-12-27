@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -36,6 +37,7 @@ export function MetricCard({
   onSourceChange,
   onClick 
 }: MetricCardProps) {
+  const { t } = useTranslation('dashboard');
   const [currentSourceIndex, setCurrentSourceIndex] = useState(0);
   const forceSyncMutation = useForceTerraSync();
 
@@ -71,9 +73,9 @@ export function MetricCard({
   
   const getManualDeviceInstructions = (source?: string) => {
     if (source?.toLowerCase() === 'withings') {
-      return 'Для обновления данных:\n1. Встаньте на весы Withings\n2. Дождитесь синхронизации с приложением\n3. Данные появятся здесь через 1-5 минут';
+      return t('metricCard.withingsInstructions');
     }
-    return 'Для обновления данных требуется ручное измерение на устройстве';
+    return t('metricCard.manualInstructions');
   };
 
   return (
@@ -120,7 +122,7 @@ export function MetricCard({
                     <TooltipTrigger asChild>
                       <Badge variant="secondary" className="text-xs gap-1 cursor-help">
                         <UserCircle className="h-3 w-3" />
-                        Ручной ввод
+                        {t('metricCard.manualInput')}
                       </Badge>
                     </TooltipTrigger>
                     <TooltipContent className="max-w-xs">
@@ -134,7 +136,7 @@ export function MetricCard({
                   variant={isManualDevice ? "secondary" : (staleness.isCritical ? "destructive" : "secondary")}
                   className="text-xs"
                 >
-                  {staleness.ageDays}д назад
+                  {t('metricCard.daysAgo', { days: staleness.ageDays })}
                 </Badge>
               )}
               {subtitle && !displaySource && (

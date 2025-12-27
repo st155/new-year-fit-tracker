@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useReprocessAllDocuments } from '@/hooks/medical-documents/useReprocessAllDocuments';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { RefreshCw, CheckCircle2, XCircle, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const ReprocessAllDocumentsDialog = () => {
+  const { t } = useTranslation('medicalDocs');
   const [open, setOpen] = useState(false);
   const [forceReprocess, setForceReprocess] = useState(false);
   const { progress, events, startReprocessing, reset } = useReprocessAllDocuments();
@@ -17,12 +19,12 @@ export const ReprocessAllDocumentsDialog = () => {
   const handleStart = async () => {
     try {
       await startReprocessing(forceReprocess);
-      toast.success('Переобработка завершена', {
-        description: `Успешно: ${progress.succeeded}, Ошибок: ${progress.failed}`,
+      toast.success(t('reprocess.completed'), {
+        description: t('reprocess.stats', { succeeded: progress.succeeded, failed: progress.failed }),
       });
     } catch (error) {
-      toast.error('Ошибка при переобработке', {
-        description: error instanceof Error ? error.message : 'Неизвестная ошибка',
+      toast.error(t('reprocess.error'), {
+        description: error instanceof Error ? error.message : t('reprocess.unknownError'),
       });
     }
   };
@@ -43,14 +45,14 @@ export const ReprocessAllDocumentsDialog = () => {
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2">
           <RefreshCw className="h-4 w-4" />
-          Переобработать все документы
+          {t('reprocess.button')}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Переобработка всех документов</DialogTitle>
+          <DialogTitle>{t('reprocess.title')}</DialogTitle>
           <DialogDescription>
-            Все документы будут переклассифицированы и переименованы с помощью новой системы анализа содержимого
+            {t('reprocess.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -58,9 +60,8 @@ export const ReprocessAllDocumentsDialog = () => {
           {!progress.isProcessing && progress.total === 0 && (
             <div className="flex flex-col items-center justify-center py-8 gap-4">
               <FileText className="h-12 w-12 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground text-center">
-                Нажмите кнопку ниже, чтобы начать переобработку всех ваших документов.<br />
-                Процесс может занять несколько минут.
+              <p className="text-sm text-muted-foreground text-center whitespace-pre-line">
+                {t('reprocess.instruction')}
               </p>
               
               <div className="flex items-center space-x-2 mt-2">
@@ -73,13 +74,13 @@ export const ReprocessAllDocumentsDialog = () => {
                   htmlFor="force-reprocess" 
                   className="text-sm text-muted-foreground cursor-pointer"
                 >
-                  Переобработать все документы (включая уже обработанные)
+                  {t('reprocess.forceLabel')}
                 </Label>
               </div>
 
               <Button onClick={handleStart} size="lg" className="gap-2">
                 <RefreshCw className="h-4 w-4" />
-                Начать переобработку
+                {t('reprocess.start')}
               </Button>
             </div>
           )}
@@ -89,34 +90,34 @@ export const ReprocessAllDocumentsDialog = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">
-                    {progress.isProcessing ? 'Обработка...' : 'Завершено'}
+                    {progress.isProcessing ? t('reprocess.processing') : t('reprocess.done')}
                   </span>
                   <span className="font-medium">
-                    {progress.current} из {progress.total}
+                    {t('reprocess.progress', { current: progress.current, total: progress.total })}
                   </span>
                 </div>
                 <Progress value={progressPercent} className="h-2" />
                 
                 {progress.currentDocument && (
                   <p className="text-xs text-muted-foreground truncate">
-                    Текущий: {progress.currentDocument}
+                    {t('reprocess.current', { filename: progress.currentDocument })}
                   </p>
                 )}
 
                 <div className="flex gap-4 text-sm pt-2">
                   <div className="flex items-center gap-2 text-green-600">
                     <CheckCircle2 className="h-4 w-4" />
-                    <span>Успешно: {progress.succeeded}</span>
+                    <span>{t('reprocess.succeeded')} {progress.succeeded}</span>
                   </div>
                   <div className="flex items-center gap-2 text-red-600">
                     <XCircle className="h-4 w-4" />
-                    <span>Ошибок: {progress.failed}</span>
+                    <span>{t('reprocess.failed')} {progress.failed}</span>
                   </div>
                 </div>
               </div>
 
               <div className="flex-1 overflow-hidden">
-                <h4 className="text-sm font-medium mb-2">Результаты:</h4>
+                <h4 className="text-sm font-medium mb-2">{t('reprocess.results')}</h4>
                 <ScrollArea className="h-[300px] rounded-md border p-4">
                   <div className="space-y-2">
                     {events.map((event, index) => (
@@ -145,7 +146,7 @@ export const ReprocessAllDocumentsDialog = () => {
                                 {event.oldFileName} → {event.newFileName}
                               </p>
                               <p className="text-xs opacity-80">
-                                Категория: {event.category}
+                                {t('reprocess.category', { name: event.category })}
                               </p>
                             </>
                           )}
@@ -165,7 +166,7 @@ export const ReprocessAllDocumentsDialog = () => {
             onClick={handleClose}
             disabled={progress.isProcessing}
           >
-            {progress.isProcessing ? 'Обработка...' : 'Закрыть'}
+            {progress.isProcessing ? t('reprocess.processing') : t('reprocess.close')}
           </Button>
         </div>
       </DialogContent>

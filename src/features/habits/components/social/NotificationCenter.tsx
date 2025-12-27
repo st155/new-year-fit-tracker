@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { useHabitNotifications, useMarkNotificationRead } from '@/hooks/useHabitFeed';
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Bell, CheckCheck, Trophy, Users, Heart, MessageCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 
 const notificationIcons: Record<string, any> = {
   achievement: Trophy,
@@ -26,10 +27,13 @@ const notificationIcons: Record<string, any> = {
 };
 
 export function NotificationCenter() {
+  const { t, i18n } = useTranslation('habits');
   const { user } = useAuth();
   const { data: notifications } = useHabitNotifications(user?.id);
   const markRead = useMarkNotificationRead();
   const [open, setOpen] = useState(false);
+
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
 
   if (!user) return null;
 
@@ -72,7 +76,7 @@ export function NotificationCenter() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">
         <DropdownMenuLabel className="flex items-center justify-between">
-          <span>Уведомления</span>
+          <span>{t('notifications.title')}</span>
           {unreadCount > 0 && (
             <Button 
               variant="ghost" 
@@ -81,7 +85,7 @@ export function NotificationCenter() {
               className="h-auto p-1 text-xs"
             >
               <CheckCheck className="h-3 w-3 mr-1" />
-              Прочитать все
+              {t('notifications.markAllRead')}
             </Button>
           )}
         </DropdownMenuLabel>
@@ -113,7 +117,7 @@ export function NotificationCenter() {
                     <p className="text-xs text-muted-foreground mt-1">
                       {formatDistanceToNow(new Date(notification.created_at), {
                         addSuffix: true,
-                        locale: ru,
+                        locale: dateLocale,
                       })}
                     </p>
                   </div>
@@ -126,7 +130,7 @@ export function NotificationCenter() {
           ) : (
             <div className="p-8 text-center">
               <Bell className="h-12 w-12 mx-auto mb-2 text-muted-foreground opacity-50" />
-              <p className="text-sm text-muted-foreground">Нет уведомлений</p>
+              <p className="text-sm text-muted-foreground">{t('notifications.empty')}</p>
             </div>
           )}
         </ScrollArea>
