@@ -21,6 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { CleanupAppleHealthButton } from "@/components/admin/CleanupAppleHealthButton";
+import { Echo11SyncCard } from "@/components/progress/Echo11SyncCard";
 
 const ProfilePage = () => {
   const { t } = useTranslation();
@@ -341,6 +342,7 @@ const ProfilePage = () => {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
+                <Echo11SyncCard />
                 <CleanupAppleHealthButton />
                 <ProtocolTestingPanel />
               </CardContent>
