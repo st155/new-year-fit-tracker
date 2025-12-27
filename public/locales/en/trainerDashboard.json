@@ -162,5 +162,16 @@
     "cancel": "Cancel",
     "add": "Add",
     "save": "Save"
+  },
+  "heartMetrics": {
+    "avgHr": "Average HR",
+    "restingHr": "Resting HR",
+    "maxHr": "Max HR",
+    "sleepHrv": "Sleep HRV",
+    "hrZonesLow": "HR Zones 1-3",
+    "hrZonesHigh": "HR Zones 4-5"
+  },
+  "units": {
+    "min": "min"
   }
 }

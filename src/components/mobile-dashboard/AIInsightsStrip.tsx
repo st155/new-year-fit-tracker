@@ -1,13 +1,16 @@
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Sparkles, TrendingUp, Target, Zap } from 'lucide-react';
 
 export function AIInsightsStrip() {
+  const { t } = useTranslation('dashboard');
+  
   // TODO: Connect to real data hooks
   const insights = [
-    { icon: <TrendingUp className="h-3.5 w-3.5" />, value: '12', label: 'метрик' },
-    { icon: <Sparkles className="h-3.5 w-3.5" />, value: '5', label: 'источников' },
-    { icon: <Target className="h-3.5 w-3.5" />, value: '3', label: 'цели' },
-    { icon: <Zap className="h-3.5 w-3.5" />, value: '8', label: 'привычек' },
+    { icon: <TrendingUp className="h-3.5 w-3.5" />, value: '12', label: t('aiStrip.metrics') },
+    { icon: <Sparkles className="h-3.5 w-3.5" />, value: '5', label: t('aiStrip.sources') },
+    { icon: <Target className="h-3.5 w-3.5" />, value: '3', label: t('aiStrip.goals') },
+    { icon: <Zap className="h-3.5 w-3.5" />, value: '8', label: t('aiStrip.habits') },
   ];
 
   return (

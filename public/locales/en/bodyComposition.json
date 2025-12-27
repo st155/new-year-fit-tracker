@@ -1,0 +1,42 @@
+{
+  "vo2max": {
+    "title": "Add VO2Max",
+    "subtitle": "Upload a screenshot or enter the value manually",
+    "sources": {
+      "title": "VO2Max Sources:",
+      "oura": "Oura Ring automatically syncs data.",
+      "whoop": "WHOOP doesn't share VO2Max via API — upload a screenshot from the app.",
+      "apple": "Apple Watch shows VO2Max, but Apple Health isn't directly integrated."
+    },
+    "upload": {
+      "label": "Upload Screenshot",
+      "placeholder": "Select photo or screenshot",
+      "success": "Screenshot uploaded! AI is analyzing data...",
+      "fallback": "Screenshot uploaded, but auto-analysis is unavailable. Enter the value manually.",
+      "error": "Failed to upload screenshot",
+      "tooLarge": "File is too large (max 10MB)"
+    },
+    "manual": {
+      "label": "VO2Max (ml/kg/min)",
+      "dateLabel": "Measurement Date",
+      "submit": "Save VO2Max",
+      "success": "VO2Max {{value}} ml/kg/min saved!",
+      "error": "Failed to save VO2Max",
+      "validation": "VO2Max must be between 10 and 100 ml/kg/min"
+    },
+    "or": "or"
+  },
+  "inbody": {
+    "minMeasurements": "Upload at least 2 measurements to display progression charts",
+    "progressTitle": "METRICS PROGRESSION",
+    "weightMuscle": "Weight and Muscle Mass",
+    "bodyFat": "Body Fat Percentage",
+    "visceralFat": "Visceral Fat",
+    "charts": {
+      "weight": "Weight (kg)",
+      "muscle": "Muscle (kg)",
+      "fat": "Fat (%)",
+      "visceralFat": "Visceral fat (cm²)"
+    }
+  }
+}

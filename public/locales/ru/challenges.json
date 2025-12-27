@@ -12,6 +12,19 @@
   "goalsPerChallenge": "Целей на челлендж",
   "availableChallenges": "Доступные челленджи",
   "availableDescription": "Выберите челлендж и начните свой путь",
+  "card": {
+    "featured": "Рекомендуемый",
+    "participating": "Участвую",
+    "available": "Доступно",
+    "participants": "Участники",
+    "goals": "Цели",
+    "ends": "Заканчивается {{time}}",
+    "ended": "Завершён",
+    "endingSoon": "Скоро финиш!",
+    "more": "+{{count}} ещё",
+    "viewProgress": "Смотреть прогресс",
+    "joinChallenge": "Присоединиться к челленджу"
+  },
   "filters": {
     "all": "Все",
     "mine": "Мои",

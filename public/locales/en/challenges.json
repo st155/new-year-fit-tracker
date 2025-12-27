@@ -12,6 +12,19 @@
   "goalsPerChallenge": "Goals per Challenge",
   "availableChallenges": "Available Challenges",
   "availableDescription": "Choose a challenge and start your journey",
+  "card": {
+    "featured": "Featured",
+    "participating": "Participating",
+    "available": "Available",
+    "participants": "Participants",
+    "goals": "Goals",
+    "ends": "Ends {{time}}",
+    "ended": "Ended",
+    "endingSoon": "Ending soon!",
+    "more": "+{{count}} more",
+    "viewProgress": "View Progress",
+    "joinChallenge": "Join Challenge"
+  },
   "filters": {
     "all": "All",
     "mine": "Mine",

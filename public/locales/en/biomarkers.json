@@ -1,0 +1,20 @@
+{
+  "qualitative": {
+    "values": {
+      "negative": "Negative",
+      "trace": "Trace",
+      "positive": "Positive"
+    },
+    "tooltip": {
+      "result": "Result:",
+      "laboratory": "Laboratory:"
+    },
+    "chartHint": "Chart shows qualitative changes in results over time"
+  },
+  "trendChart": {
+    "minLabel": "Min",
+    "maxLabel": "Max",
+    "optMinLabel": "Opt. min",
+    "optMaxLabel": "Opt. max"
+  }
+}

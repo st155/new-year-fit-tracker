@@ -160,5 +160,11 @@
     "good": "Good",
     "fair": "Fair",
     "poor": "Poor"
+  },
+  "aiStrip": {
+    "metrics": "metrics",
+    "sources": "sources",
+    "goals": "goals",
+    "habits": "habits"
   }
 }

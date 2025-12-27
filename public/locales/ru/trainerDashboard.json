@@ -162,5 +162,16 @@
     "cancel": "Отмена",
     "add": "Добавить",
     "save": "Сохранить"
+  },
+  "heartMetrics": {
+    "avgHr": "Средний пульс",
+    "restingHr": "Пульс в покое",
+    "maxHr": "Макс пульс",
+    "sleepHrv": "HRV во сне",
+    "hrZonesLow": "HR зоны 1-3",
+    "hrZonesHigh": "HR зоны 4-5"
+  },
+  "units": {
+    "min": "мин"
   }
 }
