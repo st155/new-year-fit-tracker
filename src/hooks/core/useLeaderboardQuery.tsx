@@ -251,23 +251,52 @@ export function useLeaderboardQuery(
             return null;
           }
 
-          // Fetch points breakdown separately
+          // Fetch points breakdown separately - ВАЖНО: фильтруем по challenge_id!
           const userIds = filteredData.map((entry: any) => entry.user_id);
-          const { data: pointsData } = await supabase
+          const targetChallengeId = challengeId || filteredData[0]?.challenge_id;
+          
+          let pointsQuery = supabase
             .from('challenge_points')
-            .select('user_id, performance_points, recovery_points, synergy_points, activity_score, recovery_score, progress_score, balance_score, points_breakdown')
+            .select('user_id, challenge_id, points, performance_points, recovery_points, synergy_points, activity_score, recovery_score, progress_score, balance_score, points_breakdown')
             .in('user_id', userIds);
+          
+          // Фильтруем по challenge_id если есть
+          if (targetChallengeId) {
+            pointsQuery = pointsQuery.eq('challenge_id', targetChallengeId);
+          }
+          
+          const { data: pointsData } = await pointsQuery;
+
+          console.log('[useLeaderboardQuery] Points data fetched:', {
+            targetChallengeId,
+            pointsCount: pointsData?.length || 0,
+            sample: pointsData?.slice(0, 3).map(p => ({
+              user_id: p.user_id.slice(0, 8),
+              challenge_id: p.challenge_id?.slice(0, 8),
+              points: p.points,
+              activity_score: p.activity_score,
+              recovery_score: p.recovery_score
+            }))
+          });
 
           // Process and enrich data
           const enrichedData = filteredData.map((entry: any, index: number) => {
-            const points = pointsData?.find((p: any) => p.user_id === entry.user_id);
+            // Ищем points для ЭТОГО пользователя и ЭТОГО челленджа
+            const points = pointsData?.find((p: any) => 
+              p.user_id === entry.user_id && 
+              (!targetChallengeId || p.challenge_id === targetChallengeId)
+            );
+            
+            // ВАЖНО: totalPoints берём из challenge_points.points (приоритет), 
+            // а RPC total_points как fallback
+            const totalPoints = points?.points ?? entry.total_points ?? 0;
             
             const baseEntry: Omit<LeaderboardEntry, 'badges' | 'rank'> = {
               userId: entry.user_id,
               username: entry.full_name || entry.username || 'Anonymous',
               fullName: entry.full_name,
               avatarUrl: entry.avatar_url,
-              totalPoints: entry.total_points || 0,
+              totalPoints,
               activeDays: entry.days_with_data || entry.active_days || 0,
               lastActivityDate: entry.last_activity_date,
               streakDays: entry.streak_days || 0,
@@ -307,11 +336,15 @@ export function useLeaderboardQuery(
           
           console.log('✅ [useLeaderboardQuery] RPC enriched data:', {
             total: sortedData.length,
-            sample: sortedData.slice(0, 3).map(e => ({
+            challengeId: targetChallengeId,
+            sample: sortedData.slice(0, 5).map((e, i) => ({
+              rank: i + 1,
               username: e.username,
-              activeDays: e.activeDays,
-              badges: e.badges.length,
-              finalPoints: e.totalPoints
+              totalPoints: e.totalPoints,
+              activityScore: e.activityScore,
+              recoveryScore: e.recoveryScore,
+              progressScore: e.progressScore,
+              balanceScore: e.balanceScore
             }))
           });
           
