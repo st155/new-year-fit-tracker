@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,7 @@ interface FirstMeasurementDialogProps {
 }
 
 export function FirstMeasurementDialog({ goals, open, onClose, onComplete }: FirstMeasurementDialogProps) {
+  const { t } = useTranslation('goals');
   const { user } = useAuth();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [measurements, setMeasurements] = useState<Record<string, number>>({});
@@ -41,7 +43,7 @@ export function FirstMeasurementDialog({ goals, open, onClose, onComplete }: Fir
     const value = measurements[currentGoal.id];
     
     if (!value || value <= 0) {
-      toast.error("Введите корректное значение");
+      toast.error(t('firstMeasurement.invalidValue'));
       return;
     }
 
@@ -78,15 +80,15 @@ export function FirstMeasurementDialog({ goals, open, onClose, onComplete }: Fir
         await createMeasurementsBatch.mutateAsync(measurementInputs);
       }
 
-      toast.success(`✅ Сохранено ${completedCount} начальных измерений!`, {
-        description: "Теперь вы можете отслеживать свой прогресс"
+      toast.success(`✅ ${t('firstMeasurement.success', { count: completedCount })}`, {
+        description: t('firstMeasurement.successDesc')
       });
 
       onComplete();
       onClose();
     } catch (error: any) {
       console.error('Error saving baselines:', error);
-      toast.error("Ошибка сохранения", {
+      toast.error(t('firstMeasurement.error'), {
         description: error.message
       });
     } finally {
@@ -110,10 +112,10 @@ export function FirstMeasurementDialog({ goals, open, onClose, onComplete }: Fir
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Target className="h-5 w-5 text-primary" />
-            Начальные измерения
+            {t('firstMeasurement.title')}
           </DialogTitle>
           <DialogDescription>
-            Шаг {currentIndex + 1} из {goals.length}
+            {t('firstMeasurement.step', { current: currentIndex + 1, total: goals.length })}
           </DialogDescription>
         </DialogHeader>
 
@@ -121,7 +123,7 @@ export function FirstMeasurementDialog({ goals, open, onClose, onComplete }: Fir
           <Progress value={progress} className="h-2" />
           
           <div className="text-sm text-muted-foreground text-center">
-            {completedCount} / {goals.length} измерений добавлено
+            {t('firstMeasurement.progress', { completed: completedCount, total: goals.length })}
           </div>
 
           <div className="space-y-4 py-4">
@@ -135,7 +137,7 @@ export function FirstMeasurementDialog({ goals, open, onClose, onComplete }: Fir
                     id="baseline-value"
                     type="number"
                     step="0.01"
-                    placeholder="Введите текущее значение"
+                    placeholder={t('firstMeasurement.placeholder')}
                     value={measurements[currentGoal?.id] || ''}
                     onChange={(e) => handleValueChange(e.target.value)}
                     className="text-lg"
@@ -150,7 +152,7 @@ export function FirstMeasurementDialog({ goals, open, onClose, onComplete }: Fir
 
             {currentGoal?.target_value && (
               <div className="p-3 bg-muted/50 rounded-lg">
-                <div className="text-sm text-muted-foreground">Цель</div>
+                <div className="text-sm text-muted-foreground">{t('firstMeasurement.targetLabel')}</div>
                 <div className="text-lg font-semibold">
                   {currentGoal.target_value} {currentGoal.target_unit}
                 </div>
@@ -165,7 +167,7 @@ export function FirstMeasurementDialog({ goals, open, onClose, onComplete }: Fir
               disabled={isSubmitting}
               className="flex-1"
             >
-              Пропустить
+              {t('firstMeasurement.skip')}
             </Button>
             <Button
               onClick={handleNext}
@@ -175,15 +177,15 @@ export function FirstMeasurementDialog({ goals, open, onClose, onComplete }: Fir
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Сохранение...
+                  {t('firstMeasurement.saving')}
                 </>
               ) : currentIndex === goals.length - 1 ? (
                 <>
                   <CheckCircle2 className="mr-2 h-4 w-4" />
-                  Завершить
+                  {t('firstMeasurement.finish')}
                 </>
               ) : (
-                'Далее'
+                t('firstMeasurement.next')
               )}
             </Button>
           </div>

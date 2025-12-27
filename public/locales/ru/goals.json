@@ -26,5 +26,40 @@
     "viewChallenges": "Смотреть челленджи",
     "addMeasurement": "Добавить замер"
   },
-  "loading": "Загрузка целей..."
+  "loading": "Загрузка целей...",
+  "edit": {
+    "title": "Редактировать цель",
+    "nameLabel": "Название цели",
+    "namePlaceholder": "Введите название",
+    "typeLabel": "Тип цели",
+    "typePlaceholder": "Выберите тип",
+    "targetLabel": "Целевое значение",
+    "unitLabel": "Единица",
+    "unitPlaceholder": "кг, раз, мин",
+    "saving": "Сохранение...",
+    "save": "Сохранить",
+    "cancel": "Отмена"
+  },
+  "types": {
+    "strength": "Сила",
+    "cardio": "Кардио",
+    "endurance": "Выносливость",
+    "body_composition": "Состав тела",
+    "flexibility": "Гибкость"
+  },
+  "firstMeasurement": {
+    "title": "Начальные измерения",
+    "step": "Шаг {{current}} из {{total}}",
+    "progress": "{{completed}} / {{total}} измерений добавлено",
+    "placeholder": "Введите текущее значение",
+    "targetLabel": "Цель",
+    "skip": "Пропустить",
+    "saving": "Сохранение...",
+    "finish": "Завершить",
+    "next": "Далее",
+    "invalidValue": "Введите корректное значение",
+    "success": "Сохранено {{count}} начальных измерений!",
+    "successDesc": "Теперь вы можете отслеживать свой прогресс",
+    "error": "Ошибка сохранения"
+  }
 }

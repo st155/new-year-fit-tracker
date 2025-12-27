@@ -26,5 +26,40 @@
     "viewChallenges": "View Challenges",
     "addMeasurement": "Add Measurement"
   },
-  "loading": "Loading goals..."
+  "loading": "Loading goals...",
+  "edit": {
+    "title": "Edit Goal",
+    "nameLabel": "Goal Name",
+    "namePlaceholder": "Enter name",
+    "typeLabel": "Goal Type",
+    "typePlaceholder": "Select type",
+    "targetLabel": "Target Value",
+    "unitLabel": "Unit",
+    "unitPlaceholder": "kg, reps, min",
+    "saving": "Saving...",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "types": {
+    "strength": "Strength",
+    "cardio": "Cardio",
+    "endurance": "Endurance",
+    "body_composition": "Body Composition",
+    "flexibility": "Flexibility"
+  },
+  "firstMeasurement": {
+    "title": "Initial Measurements",
+    "step": "Step {{current}} of {{total}}",
+    "progress": "{{completed}} / {{total}} measurements added",
+    "placeholder": "Enter current value",
+    "targetLabel": "Target",
+    "skip": "Skip",
+    "saving": "Saving...",
+    "finish": "Finish",
+    "next": "Next",
+    "invalidValue": "Enter a valid value",
+    "success": "Saved {{count}} initial measurements!",
+    "successDesc": "Now you can track your progress",
+    "error": "Save error"
+  }
 }
