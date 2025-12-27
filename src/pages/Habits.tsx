@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { useHabitsQuery } from '@/features/habits';
 import { useCompleteHabit, useHabitInsights, useDeleteHabit } from '@/features/habits/hooks';
@@ -52,6 +53,7 @@ const LoadingSkeleton = () => (
 );
 
 export default function HabitsV3() {
+  const { t } = useTranslation('habits');
   const { user } = useAuth();
   const navigate = useNavigate();
   const { data: habitsData = [], isLoading, error, refetch } = useHabitsQuery({ enabled: !!user?.id });
@@ -101,7 +103,7 @@ export default function HabitsV3() {
     const result = await completeHabit(habitId, habit);
     if (result?.success) {
       setAnnouncement(
-        `Привычка "${habit.name}" выполнена. +${result.xpEarned} XP. ${result.streakCount > 1 ? `${result.streakCount} дней подряд!` : ''}`
+        `${t('completion.success')}: "${habit.name}". +${result.xpEarned} XP. ${result.streakCount > 1 ? t('completion.streak', { count: result.streakCount }) : ''}`
       );
       
       // Show level up celebration
@@ -155,8 +157,8 @@ export default function HabitsV3() {
     return (
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         <ErrorState
-          title="Не удалось загрузить привычки"
-          message="Произошла ошибка при загрузке данных. Попробуйте обновить страницу."
+          title={t('error.title')}
+          message={t('error.message')}
           onRetry={refetch}
         />
       </div>
@@ -178,7 +180,7 @@ export default function HabitsV3() {
             <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <h1 className="text-3xl font-bold">Привычки 3.0</h1>
+            <h1 className="text-3xl font-bold">{t('title')}</h1>
           </div>
           <div className="flex items-center gap-2">
             <ViewSwitcher value={viewMode} onChange={setViewMode} />
@@ -248,18 +250,18 @@ export default function HabitsV3() {
         <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
           <AlertDialogContent className="glass-card">
             <AlertDialogHeader>
-              <AlertDialogTitle>Удалить привычку навсегда?</AlertDialogTitle>
+              <AlertDialogTitle>{t('delete.title')}</AlertDialogTitle>
               <AlertDialogDescription>
-                Это действие нельзя отменить. Все данные о привычке будут удалены безвозвратно.
+                {t('delete.description')}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Отмена</AlertDialogCancel>
+              <AlertDialogCancel>{t('delete.cancel')}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={confirmDelete}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
-                Удалить
+                {t('delete.confirm')}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -281,13 +283,13 @@ export default function HabitsV3() {
       <FAB
         actions={[
           {
-            label: 'Новая привычка',
+            label: t('actions.newHabit'),
             icon: Plus,
             onClick: () => setCreateDialogOpen(true),
             color: 'text-primary'
           },
           {
-            label: 'Быстрое выполнение',
+            label: t('actions.quickComplete'),
             icon: Zap,
             onClick: () => {
               const firstUncompleted = habits.find(h => !h.completedToday);
@@ -299,7 +301,7 @@ export default function HabitsV3() {
             color: 'text-warning'
           },
           {
-            label: 'Статистика',
+            label: t('actions.statistics'),
             icon: BarChart3,
             onClick: () => navigate('/habits-v3'),
             color: 'text-info'
@@ -313,7 +315,7 @@ export default function HabitsV3() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="shadow-lg">
-                🛠️ Dev Tools
+                🛠️ {t('devTools.title')}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -326,7 +328,7 @@ export default function HabitsV3() {
                   }
                 }}
               >
-                Создать демо команды
+                {t('devTools.createDemoTeams')}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={async () => {
@@ -337,7 +339,7 @@ export default function HabitsV3() {
                 }}
                 disabled={!habits.length}
               >
-                Создать демо события
+                {t('devTools.createDemoEvents')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

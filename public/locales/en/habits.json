@@ -1,0 +1,28 @@
+{
+  "title": "Habits 3.0",
+  "loading": "Loading habits...",
+  "error": {
+    "title": "Failed to load habits",
+    "message": "An error occurred while loading data. Please try refreshing the page."
+  },
+  "delete": {
+    "title": "Delete habit permanently?",
+    "description": "This action cannot be undone. All habit data will be permanently deleted.",
+    "cancel": "Cancel",
+    "confirm": "Delete"
+  },
+  "completion": {
+    "success": "Habit completed",
+    "streak": "{{count}} days in a row!"
+  },
+  "actions": {
+    "newHabit": "New Habit",
+    "quickComplete": "Quick Complete",
+    "statistics": "Statistics"
+  },
+  "devTools": {
+    "title": "Dev Tools",
+    "createDemoTeams": "Create demo teams",
+    "createDemoEvents": "Create demo events"
+  }
+}

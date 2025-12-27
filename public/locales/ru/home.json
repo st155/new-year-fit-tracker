@@ -1,0 +1,21 @@
+{
+  "title": "Мои метрики",
+  "loading": {
+    "profile": "Загрузка профиля...",
+    "widgets": "Загрузка виджетов..."
+  },
+  "noWidgets": "Нет виджетов. Добавьте их через настройки.",
+  "actions": {
+    "refresh": "Обновить",
+    "syncing": "Синхронизация...",
+    "integrations": "Интеграции",
+    "createGoal": "Создать цель",
+    "addHabit": "Добавить привычку",
+    "viewChallenges": "Челленджи",
+    "logWorkout": "Записать тренировку"
+  },
+  "errors": {
+    "habitsLoadFailed": "Habits section failed to load",
+    "leaderboardLoadFailed": "Leaderboard failed to load"
+  }
+}

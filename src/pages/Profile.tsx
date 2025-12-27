@@ -13,7 +13,7 @@ import { ProfileEditor } from "@/components/profile/ProfileEditor";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
+
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/contexts/ProfileContext";
 import { useProfileSummary } from "@/hooks/profile/useProfileSummary";
@@ -238,7 +238,6 @@ const ProfilePage = () => {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <LanguageSwitcher />
               <Button
                 onClick={handleRefresh}
                 disabled={refreshing}

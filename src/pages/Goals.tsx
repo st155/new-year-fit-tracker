@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Target, Trophy, Plus, RefreshCw, Search, Filter } from "lucide-react";
 import { FAB } from '@/components/ui/fab';
 import { useAuth } from "@/hooks/useAuth";
@@ -27,6 +28,7 @@ import {
 type FilterType = 'all' | 'personal' | 'challenges';
 
 export default function Goals() {
+  const { t } = useTranslation('goals');
   const isMobile = useIsMobile();
   
   // Render mobile version
@@ -169,8 +171,8 @@ export default function Goals() {
     <AnimatedPage className="container py-4 sm:py-6 space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Goals</h1>
-          <p className="text-muted-foreground">Track your personal and challenge goals</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <Button variant="outline" size="icon" onClick={() => refetch()} className="touch-friendly">
@@ -178,7 +180,7 @@ export default function Goals() {
           </Button>
           <Button onClick={() => setCreateDialogOpen(true)} className="flex-1 sm:flex-initial touch-friendly">
             <Plus className="h-4 w-4 mr-2" />
-            New Goal
+            {t('newGoal')}
           </Button>
         </div>
       </div>
@@ -192,7 +194,7 @@ export default function Goals() {
             className={cn(filter === 'all' && "bg-gradient-primary", "w-full sm:w-auto touch-friendly")}
           >
             <Filter className="h-4 w-4 mr-2" />
-            Все ({allGoals.length})
+            {t('filters.all')} ({allGoals.length})
           </Button>
           <Button 
             variant={filter === 'personal' ? 'default' : 'outline'}
@@ -200,7 +202,7 @@ export default function Goals() {
             className={cn(filter === 'personal' && "bg-gradient-primary", "w-full sm:w-auto touch-friendly")}
           >
             <Target className="h-4 w-4 mr-2" />
-            Личные ({personalGoals.length})
+            {t('filters.personal')} ({personalGoals.length})
           </Button>
           <Button 
             variant={filter === 'challenges' ? 'default' : 'outline'}
@@ -211,14 +213,14 @@ export default function Goals() {
             )}
           >
             <Trophy className="h-4 w-4 mr-2" />
-            Челленджи ({challengeGoals.length})
+            {t('filters.challenges')} ({challengeGoals.length})
           </Button>
         </div>
         
         <div className="relative w-full sm:w-64">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Поиск целей..."
+            placeholder={t('search')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
@@ -231,8 +233,7 @@ export default function Goals() {
         <div className="bg-muted/50 border border-border rounded-lg p-4">
           <p className="text-sm text-muted-foreground">
             <Trophy className="h-4 w-4 inline mr-2" />
-            Дисциплины челленджа определяются тренером и залочены для редактирования. 
-            Отслеживайте прогресс по каждой дисциплине в разделе <strong>Challenge Progress</strong>.
+            {t('challengeInfo')}
           </p>
         </div>
       )}
@@ -267,33 +268,33 @@ export default function Goals() {
           }
           title={
             searchQuery.trim() 
-              ? "Ничего не найдено" 
+              ? t('empty.noResults')
               : filter === 'personal' 
-                ? "Нет личных целей" 
+                ? t('empty.noPersonal')
                 : filter === 'challenges'
-                  ? "Нет целей челленджа"
-                  : "Нет целей"
+                  ? t('empty.noChallenges')
+                  : t('empty.noGoals')
           }
           description={
             searchQuery.trim()
-              ? "Попробуйте изменить поисковый запрос или добавьте новую цель"
+              ? t('empty.searchHint')
               : filter === 'personal'
-                ? "Создайте свою первую цель и начните отслеживать прогресс"
+                ? t('empty.personalHint')
                 : filter === 'challenges'
-                  ? "Присоединитесь к челленджу, чтобы получить цели автоматически"
-                  : "Создайте личную цель или присоединитесь к челленджу"
+                  ? t('empty.challengeHint')
+                  : t('empty.defaultHint')
           }
           illustration="animated-icon"
           action={
             !searchQuery.trim() && filter === 'challenges'
               ? {
-                  label: "Найти челленджи",
+                  label: t('actions.findChallenges'),
                   onClick: () => navigate('/challenges'),
                   icon: Trophy
                 }
               : !searchQuery.trim() && filter !== 'challenges'
                 ? {
-                    label: "Создать цель",
+                    label: t('actions.createGoal'),
                     onClick: () => setCreateDialogOpen(true),
                     icon: Plus
                   }
@@ -302,7 +303,7 @@ export default function Goals() {
           secondaryAction={
             !searchQuery.trim() && filter === 'all'
               ? {
-                  label: "Смотреть челленджи",
+                  label: t('actions.viewChallenges'),
                   onClick: () => navigate('/challenges')
                 }
               : undefined
@@ -347,13 +348,13 @@ export default function Goals() {
       <FAB
         actions={[
           {
-            label: 'Создать цель',
+            label: t('actions.createGoal'),
             icon: Plus,
             onClick: () => setCreateDialogOpen(true),
             color: 'text-primary'
           },
           {
-            label: 'Добавить замер',
+            label: t('actions.addMeasurement'),
             icon: Target,
             onClick: () => {
               const firstGoal = filteredGoals[0];

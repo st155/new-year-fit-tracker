@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, Suspense, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks';
 import { AnimatedPage } from '@/components/layout/AnimatedPage';
@@ -49,6 +50,7 @@ import { DailyOverviewWidget } from '@/components/dashboard/DailyOverviewWidget'
 import { MobileDashboardV2 } from '@/components/mobile-dashboard';
 
 const Index = () => {
+  const { t } = useTranslation('home');
   const { user, isTrainer, role, loading: authLoading, rolesLoading } = useAuth();
   const isMobile = useIsMobile();
   const { shouldLoad } = useProgressiveLoad();
@@ -229,7 +231,7 @@ const Index = () => {
         <div className="min-h-screen bg-background flex items-center justify-center">
           <div className="text-center space-y-4">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="text-sm text-muted-foreground">Загрузка профиля...</p>
+            <p className="text-sm text-muted-foreground">{t('loading.profile')}</p>
           </div>
         </div>
       </>
@@ -290,7 +292,7 @@ const Index = () => {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           {/* Left: Title */}
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Мои метрики</h1>
+            <h1 className="text-2xl font-bold tracking-tight">{t('title')}</h1>
           </div>
           
           {/* Right: Actions */}
@@ -302,10 +304,10 @@ const Index = () => {
               onClick={handleRefresh}
               disabled={isSyncing || isSyncingRealtime}
               className="md:w-auto md:px-4 md:gap-2 h-10 md:h-9"
-              title="Синхронизировать данные с WHOOP/Garmin"
+              title={t('actions.refresh')}
             >
               <RefreshCw className={`h-4 w-4 ${(isSyncing || isSyncingRealtime) ? 'animate-spin' : ''}`} />
-              <span className="hidden md:inline">{isSyncingRealtime ? 'Синхронизация...' : 'Обновить'}</span>
+              <span className="hidden md:inline">{isSyncingRealtime ? t('actions.syncing') : t('actions.refresh')}</span>
             </Button>
             
             {/* Widget Settings */}
@@ -322,10 +324,10 @@ const Index = () => {
               size="icon"
               onClick={() => navigate('/fitness-data?tab=connections')}
               className="md:w-auto md:px-4 md:gap-2 h-10 md:h-9"
-              title="Интеграции"
+              title={t('actions.integrations')}
             >
               <Plug className="h-4 w-4 text-orange-500" />
-              <span className="hidden md:inline">Интеграции</span>
+              <span className="hidden md:inline">{t('actions.integrations')}</span>
             </Button>
           </div>
         </div>
@@ -361,7 +363,7 @@ const Index = () => {
           {widgets.length === 0 ? (
           <div className="text-center py-12 border rounded-lg">
             <p className="text-muted-foreground mb-4">
-              Нет виджетов. Добавьте их через настройки.
+              {t('noWidgets')}
             </p>
             <WidgetSettings
               widgets={widgets}
@@ -435,7 +437,7 @@ const Index = () => {
         {shouldLoad('high') && (
           <ErrorBoundary fallback={
             <div className="p-4 border border-destructive/50 bg-destructive/10 rounded-lg">
-              <p className="text-sm text-destructive">❌ Habits section failed to load</p>
+              <p className="text-sm text-destructive">❌ {t('errors.habitsLoadFailed')}</p>
             </div>
           }>
             <HabitsV3Section />
@@ -447,7 +449,7 @@ const Index = () => {
           {shouldLoad('low') && showLeaderboard && (
             <ErrorBoundary fallback={
               <div className="p-4 border border-destructive/50 bg-destructive/10 rounded-lg">
-                <p className="text-sm text-destructive">❌ Leaderboard failed to load</p>
+                <p className="text-sm text-destructive">❌ {t('errors.leaderboardLoadFailed')}</p>
               </div>
             }>
               <motion.div 
@@ -468,22 +470,22 @@ const Index = () => {
       <FAB
         actions={[
           {
-            label: 'Создать цель',
+            label: t('actions.createGoal'),
             icon: Target,
             onClick: () => navigate('/goals?action=create'),
           },
           {
-            label: 'Добавить привычку',
+            label: t('actions.addHabit'),
             icon: CheckCircle,
             onClick: () => navigate('/habits-v3?action=create'),
           },
           {
-            label: 'Новый челлендж',
+            label: t('actions.viewChallenges'),
             icon: Trophy,
             onClick: () => navigate('/challenges?action=create'),
           },
           {
-            label: 'Внести данные',
+            label: t('actions.logWorkout'),
             icon: Activity,
             onClick: () => navigate('/fitness-data?tab=manual'),
           },
