@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Upload, FileText, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,13 +18,6 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStage, setUploadStage] = useState<'idle' | 'uploading' | 'saving' | 'complete'>('idle');
   const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleClick = () => {
-    if (!uploading) {
-      fileInputRef.current?.click();
-    }
-  };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -238,32 +231,35 @@ export const InBodyUpload = ({ onUploadSuccess, onSuccess }: InBodyUploadProps) 
           </div>
         )}
 
-        <Button
-          variant="default"
-          size="lg"
-          disabled={uploading}
-          onClick={handleClick}
-        >
-          {uploading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Загрузка...
-            </>
-          ) : (
-            <>
-              <Upload className="mr-2 h-4 w-4" />
-              Выбрать PDF
-            </>
-          )}
-        </Button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".pdf"
-          onChange={handleFileUpload}
-          className="hidden"
-          disabled={uploading}
-        />
+        <label className="cursor-pointer">
+          <Button
+            variant="default"
+            size="lg"
+            disabled={uploading}
+            asChild
+          >
+            <span>
+              {uploading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Загрузка...
+                </>
+              ) : (
+                <>
+                  <Upload className="mr-2 h-4 w-4" />
+                  Выбрать PDF
+                </>
+              )}
+            </span>
+          </Button>
+          <input
+            type="file"
+            accept=".pdf"
+            onChange={handleFileUpload}
+            className="sr-only"
+            disabled={uploading}
+          />
+        </label>
 
         <p className="text-xs text-muted-foreground mt-4">
           PDF format only, max 15 MB
