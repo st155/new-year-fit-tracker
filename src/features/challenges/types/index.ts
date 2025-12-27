@@ -53,22 +53,33 @@ export interface MetricsBadge {
 }
 
 export interface PointsBreakdown {
-  performance: {
-    strain_score: number;
-    activity_volume: number;
-    consistency: number;
+  activity: {
+    calories: number;
+    steps: number;
+    strain: number;
+    workouts: number;
     total: number;
   };
   recovery: {
+    hrv: number;
     recovery_quality: number;
-    sleep_quality: number;
-    heart_health: number;
+    resting_hr: number;
+    sleep_duration: number;
+    sleep_efficiency: number;
     total: number;
   };
-  synergy: {
-    balance_bonus: number;
-    streak_bonus: number;
-    badge_bonus: number;
+  progress: {
+    active_days: number;
+    consistency: number;
+    goals: number;
+    streak: number;
+    total: number;
+  };
+  balance: {
+    harmony: number;
+    performance: number;
+    recovery: number;
+    synergy: number;
     total: number;
   };
 }
