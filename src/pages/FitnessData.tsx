@@ -44,6 +44,7 @@ import { useMetrics } from '@/hooks/composite/data/useMetrics';
 import { motion } from 'framer-motion';
 import { staggerContainer, staggerItem } from '@/lib/animations';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { VO2MaxUpload } from '@/components/body-composition/VO2MaxUpload';
 
 type TimeFilter = 'today' | 'week' | 'month';
 
@@ -785,6 +786,9 @@ export default function FitnessData() {
 
         {/* Tab 5: Integrations */}
         <TabsContent value="integrations" className="mt-6 space-y-6">
+          {/* VO2Max Upload */}
+          <VO2MaxUpload />
+          
           <Card>
             <CardHeader>
               <CardTitle>Интеграции устройств</CardTitle>
