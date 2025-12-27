@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -74,6 +75,7 @@ export function WidgetSettings({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { t } = useTranslation('dashboard');
   
   const { data: aiSuggestions = [], isLoading: aiLoading } = useAIWidgetSuggestions(user?.id, widgets);
 
@@ -88,14 +90,14 @@ export function WidgetSettings({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: widgetKeys.all });
       toast({
-        title: 'Режим обновлен',
-        description: 'Настройки виджета сохранены',
+        title: t('widgets.modeUpdated'),
+        description: t('widgets.settingsSaved'),
       });
     },
     onError: (error) => {
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось обновить настройки виджета',
+        title: t('widgets.error'),
+        description: t('widgets.updateError'),
         variant: 'destructive',
       });
     },
@@ -115,8 +117,8 @@ export function WidgetSettings({
     const exists = widgets.some(w => w.metric_name === selectedMetric);
     if (exists) {
       toast({
-        title: 'Виджет уже добавлен',
-        description: `Метрика "${selectedMetric}" уже есть на дашборде`,
+        title: t('widgets.alreadyAdded'),
+        description: t('widgets.metricExists', { metric: selectedMetric }),
         variant: 'destructive',
       });
       return;
@@ -124,8 +126,8 @@ export function WidgetSettings({
 
     if (widgets.length >= 20) {
       toast({
-        title: 'Достигнут лимит',
-        description: 'Максимум 20 виджетов на дашборде',
+        title: t('widgets.limitReached'),
+        description: t('widgets.maxWidgets'),
         variant: 'destructive',
       });
       return;
@@ -150,13 +152,13 @@ export function WidgetSettings({
       }
       
       toast({
-        title: 'Виджеты добавлены',
-        description: `Добавлено ${toAdd.length} рекомендуемых виджетов`,
+        title: t('widgets.widgetsAdded'),
+        description: t('widgets.addedCount', { count: toAdd.length }),
       });
     } catch (error) {
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось добавить виджеты',
+        title: t('widgets.error'),
+        description: t('widgets.addAllError'),
         variant: 'destructive',
       });
     } finally {
@@ -171,17 +173,17 @@ export function WidgetSettings({
           variant="outline" 
           size="icon"
           className="md:w-auto md:px-3 md:gap-2 h-10 md:h-9"
-          title="Настроить виджеты"
+          title={t('widgets.configureBtn')}
         >
           <Settings className="h-4 w-4 text-green-500" />
-          <span className="hidden md:inline">Настроить виджеты</span>
+          <span className="hidden md:inline">{t('widgets.configureBtn')}</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Настройка виджетов</DialogTitle>
+          <DialogTitle>{t('widgets.dialogTitle')}</DialogTitle>
           <DialogDescription>
-            Добавьте или удалите виджеты. Максимум 20 виджетов.
+            {t('widgets.dialogDesc')}
           </DialogDescription>
         </DialogHeader>
 
@@ -191,12 +193,12 @@ export function WidgetSettings({
             <div className="border rounded-lg p-4 bg-gradient-to-r from-purple-500/10 to-blue-500/10">
               <div className="flex items-center gap-2 mb-3">
                 <Sparkles className="h-5 w-5 text-purple-500" />
-                <h3 className="font-medium">AI рекомендации</h3>
+                <h3 className="font-medium">{t('widgets.aiRecs')}</h3>
                 <Badge variant="secondary">{aiSuggestions.length}</Badge>
               </div>
               
               <p className="text-sm text-muted-foreground mb-4">
-                На основе данных с ваших устройств рекомендуем добавить:
+                {t('widgets.aiRecsDesc')}
               </p>
               
               <div className="flex flex-wrap gap-2 mb-4">
@@ -224,7 +226,7 @@ export function WidgetSettings({
                 ) : (
                   <Sparkles className="w-4 h-4 mr-2" />
                 )}
-                Добавить все рекомендуемые ({Math.min(aiSuggestions.length, 20 - widgets.length)})
+                {t('widgets.addAllRecs', { count: Math.min(aiSuggestions.length, 20 - widgets.length) })}
               </Button>
             </div>
           )}
@@ -232,20 +234,20 @@ export function WidgetSettings({
           {aiLoading && (
             <div className="border rounded-lg p-4 flex items-center justify-center gap-2 text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
-              <span className="text-sm">Анализируем ваши данные...</span>
+              <span className="text-sm">{t('widgets.analyzing')}</span>
             </div>
           )}
 
           {/* Add Widget Section */}
           <div className="border rounded-lg p-4 space-y-4">
-            <h3 className="font-medium">Добавить виджет вручную</h3>
+            <h3 className="font-medium">{t('widgets.addManual')}</h3>
             
             <div className="space-y-4">
               <div className="grid gap-2">
-                <label className="text-sm font-medium">Метрика</label>
+                <label className="text-sm font-medium">{t('widgets.metric')}</label>
                 <Select value={selectedMetric} onValueChange={setSelectedMetric}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Выберите метрику" />
+                    <SelectValue placeholder={t('widgets.selectMetric')} />
                   </SelectTrigger>
                   <SelectContent>
                     {AVAILABLE_METRICS.map((metric) => (
@@ -260,7 +262,7 @@ export function WidgetSettings({
               <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted p-3 rounded-md">
                 <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
                 <span>
-                  Источник данных выбирается автоматически из всех подключенных устройств
+                  {t('widgets.autoSource')}
                 </span>
               </div>
 
@@ -271,13 +273,12 @@ export function WidgetSettings({
                 variant="outline"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Добавить виджет
+                {t('widgets.addWidget')}
               </Button>
             </div>
-
             {widgets.length >= 20 && (
               <p className="text-sm text-destructive">
-                Достигнут максимум виджетов (20)
+                {t('widgets.maxReached')}
               </p>
             )}
           </div>
@@ -285,12 +286,12 @@ export function WidgetSettings({
           {/* Current Widgets List */}
           <div className="border rounded-lg p-4">
             <h3 className="font-medium mb-3">
-              Текущие виджеты ({widgets.length})
+              {t('widgets.currentWidgets', { count: widgets.length })}
             </h3>
             
             {widgets.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
-                Нет виджетов. Добавьте первый виджет выше.
+                {t('widgets.noWidgets')}
               </p>
             ) : (
               <div className="space-y-2">
@@ -302,14 +303,14 @@ export function WidgetSettings({
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm truncate">{widget.metric_name}</p>
                       <p className="text-xs text-muted-foreground">
-                        Позиция: {index + 1}
+                        {t('widgets.position', { pos: index + 1 })}
                       </p>
                     </div>
                     
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-muted-foreground whitespace-nowrap">
-                          Все источники
+                          {t('widgets.allSources')}
                         </span>
                         <Switch
                           checked={widget.display_mode === 'multi'}

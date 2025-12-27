@@ -41,5 +41,20 @@
     "publishing": "Publishing...",
     "writeSmth": "Write something",
     "createError": "Failed to create post"
+  },
+  "difficulty": {
+    "title": "Choose difficulty level 💪",
+    "desc": "Increase your goals for a bigger challenge. Each level increases all benchmarks by 30%.",
+    "basic": "Basic",
+    "basicDesc": "Standard challenge goals",
+    "advanced": "Advanced",
+    "advancedDesc": "+30% to each goal",
+    "extreme": "Extreme",
+    "extremeDesc": "+60% to each goal",
+    "inhuman": "Inhuman",
+    "inhumanDesc": "+90% to each goal",
+    "stepsPerDay": "Steps: {{value}} per day",
+    "sleepHours": "Sleep: {{value}} hours",
+    "recoveryPercent": "Recovery: {{value}}%"
   }
 }

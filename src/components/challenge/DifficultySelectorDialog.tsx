@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -27,33 +28,33 @@ const DIFFICULTY_LEVELS = [
   {
     level: 0,
     icon: "🎯",
-    title: "Базовый",
+    titleKey: "basic",
     multiplier: "1.0x",
-    description: "Стандартные цели челленджа",
+    descKey: "basicDesc",
     gradient: "from-blue-500 to-cyan-500",
   },
   {
     level: 1,
     icon: "🔥",
-    title: "Повышенный",
+    titleKey: "advanced",
     multiplier: "1.3x",
-    description: "+30% к каждой цели",
+    descKey: "advancedDesc",
     gradient: "from-orange-500 to-red-500",
   },
   {
     level: 2,
     icon: "⚡",
-    title: "Экстремальный",
+    titleKey: "extreme",
     multiplier: "1.6x",
-    description: "+60% к каждой цели",
+    descKey: "extremeDesc",
     gradient: "from-purple-500 to-pink-500",
   },
   {
     level: 3,
     icon: "💀",
-    title: "Нечеловеческий",
+    titleKey: "inhuman",
     multiplier: "1.9x",
-    description: "+90% к каждой цели",
+    descKey: "inhumanDesc",
     gradient: "from-red-600 to-black",
   },
 ];
@@ -79,6 +80,7 @@ export function DifficultySelectorDialog({
   disciplines = [],
 }: DifficultySelectorDialogProps) {
   const [selectedLevel, setSelectedLevel] = useState(0);
+  const { t } = useTranslation('challenges');
 
   const getExamples = (level: number) => {
     if (disciplines.length > 0) {
@@ -124,9 +126,9 @@ export function DifficultySelectorDialog({
     const recoveryValue = BENCHMARK_STANDARDS.recovery_score[levelKey].target;
     
     return [
-      `Шаги: ${stepsValue} в день`,
-      `Сон: ${sleepValue} часов`,
-      `Recovery: ${recoveryValue}%`,
+      t('difficulty.stepsPerDay', { value: stepsValue }),
+      t('difficulty.sleepHours', { value: sleepValue }),
+      t('difficulty.recoveryPercent', { value: recoveryValue }),
     ];
   };
 
@@ -135,11 +137,10 @@ export function DifficultySelectorDialog({
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl">
-            Выберите уровень сложности 💪
+            {t('difficulty.title')}
           </DialogTitle>
           <DialogDescription>
-            Увеличьте свои цели для большего вызова. Каждый уровень увеличивает
-            все бенчмарки на 30%.
+            {t('difficulty.desc')}
           </DialogDescription>
         </DialogHeader>
 
@@ -147,7 +148,12 @@ export function DifficultySelectorDialog({
           {DIFFICULTY_LEVELS.map((config) => (
             <DifficultyCard
               key={config.level}
-              {...config}
+              level={config.level}
+              icon={config.icon}
+              title={t(`difficulty.${config.titleKey}`)}
+              multiplier={config.multiplier}
+              description={t(`difficulty.${config.descKey}`)}
+              gradient={config.gradient}
               examples={getExamples(config.level)}
               selected={selectedLevel === config.level}
               onSelect={() => {
