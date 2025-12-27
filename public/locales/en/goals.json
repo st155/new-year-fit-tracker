@@ -1,0 +1,30 @@
+{
+  "title": "Goals",
+  "subtitle": "Track your personal and challenge goals",
+  "newGoal": "New Goal",
+  "refresh": "Refresh",
+  "filters": {
+    "all": "All",
+    "personal": "Personal",
+    "challenges": "Challenges"
+  },
+  "search": "Search goals...",
+  "challengeInfo": "Challenge disciplines are set by the trainer and locked for editing. Track progress for each discipline in the Challenge Progress section.",
+  "empty": {
+    "noResults": "No results found",
+    "noPersonal": "No personal goals",
+    "noChallenges": "No challenge goals",
+    "noGoals": "No goals",
+    "searchHint": "Try changing your search query or add a new goal",
+    "personalHint": "Create your first goal and start tracking progress",
+    "challengeHint": "Join a challenge to get goals automatically",
+    "defaultHint": "Create a personal goal or join a challenge"
+  },
+  "actions": {
+    "createGoal": "Create Goal",
+    "findChallenges": "Find Challenges",
+    "viewChallenges": "View Challenges",
+    "addMeasurement": "Add Measurement"
+  },
+  "loading": "Loading goals..."
+}
