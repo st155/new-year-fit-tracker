@@ -64,5 +64,21 @@
   "ai": {
     "fitnessTitle": "AI Fitness Analysis",
     "uploadTracker": "Upload your tracker photo"
+  },
+  "header": {
+    "greeting": "Hi, {{name}}!",
+    "trainer": "Trainer",
+    "participant": "Participant",
+    "daysLeft": "{{count}} days",
+    "finished": "Finished!",
+    "untilFinish": "until finish",
+    "challengeFinished": "Challenge finished",
+    "completed": "{{percent}}% completed",
+    "noChallenges": "No active challenges",
+    "joinChallenge": "Join",
+    "home": "Home",
+    "fitness": "Fitness",
+    "challenges": "Challenges",
+    "progress": "Progress"
   }
 }

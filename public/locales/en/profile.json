@@ -16,5 +16,26 @@
   "devTools": {
     "title": "Developer Tools",
     "subtitle": "Testing and debugging"
+  },
+  "hero": {
+    "trainer": "Trainer",
+    "trainerTooltip": "Create your own challenges and invite friends!",
+    "level": "Lvl {{level}}",
+    "xp": "{{xp}} XP",
+    "streakDays": "{{count}} days streak",
+    "integrations": "{{count}} integrations",
+    "memberSince": "Since {{date}}",
+    "toLevel": "To level {{level}}",
+    "copyUserId": "Copy User ID",
+    "userIdCopied": "User ID copied",
+    "resetOnboarding": "Reset onboarding",
+    "signOut": "Sign out",
+    "levels": {
+      "master": "Master",
+      "expert": "Expert",
+      "professional": "Professional",
+      "advanced": "Advanced",
+      "beginner": "Beginner"
+    }
   }
 }

@@ -6,6 +6,7 @@ import { Trophy, Loader2, Star, MessageSquare, Heart, FileText, Flame, Target } 
 import { supabase } from "@/integrations/supabase/client";
 import { ParticipantPodium } from "@/components/challenges/ParticipantPodium";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "react-i18next";
 
 interface LeaderboardEntry {
   user_id: string;
@@ -28,6 +29,7 @@ interface ChallengeLeaderboardProps {
 }
 
 export function ChallengeLeaderboard({ challengeId }: ChallengeLeaderboardProps) {
+  const { t } = useTranslation('leaderboard');
   const { user } = useAuth();
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -103,8 +105,8 @@ export function ChallengeLeaderboard({ challengeId }: ChallengeLeaderboardProps)
                 <Trophy className="h-5 w-5 text-white" />
               </div>
               <div>
-                <CardTitle className="text-xl">Топ участники</CardTitle>
-                <CardDescription>Лидеры челленджа</CardDescription>
+                <CardTitle className="text-xl">{t('topParticipants')}</CardTitle>
+                <CardDescription>{t('challengeLeaders')}</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -118,14 +120,14 @@ export function ChallengeLeaderboard({ challengeId }: ChallengeLeaderboardProps)
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Target className="h-5 w-5 text-primary" />
-            Все участники
+            {t('allParticipants')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {restOfLeaderboard.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Star className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p>Нет данных об активности</p>
+              <p>{t('noActivityData')}</p>
             </div>
           ) : (
             restOfLeaderboard.map((entry, index) => {
@@ -152,10 +154,10 @@ export function ChallengeLeaderboard({ challengeId }: ChallengeLeaderboardProps)
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-semibold">
                         {entry.profiles?.full_name || entry.profiles?.username}
-                        {entry.user_id === user?.id && " (Вы)"}
+                        {entry.user_id === user?.id && ` ${t('you')}`}
                       </p>
                       {entry.profiles?.trainer_role && (
-                        <Badge className="text-xs bg-gradient-primary text-white">Тренер</Badge>
+                        <Badge className="text-xs bg-gradient-primary text-white">{t('trainer')}</Badge>
                       )}
                       {entry.difficulty_level && entry.difficulty_level > 0 && (
                         <Badge className="text-xs bg-orange-500 text-white">
@@ -200,35 +202,35 @@ export function ChallengeLeaderboard({ challengeId }: ChallengeLeaderboardProps)
 
       <Card className="glass-card border-muted">
         <CardHeader>
-          <CardTitle className="text-lg">Как зарабатывать очки</CardTitle>
+          <CardTitle className="text-lg">{t('howToEarn')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-primary" />
-                <span className="font-semibold">Пост</span>
+                <span className="font-semibold">{t('post')}</span>
               </div>
               <p className="text-2xl font-bold text-primary">+10</p>
             </div>
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <MessageSquare className="h-4 w-4 text-secondary" />
-                <span className="font-semibold">Комментарий</span>
+                <span className="font-semibold">{t('comment')}</span>
               </div>
               <p className="text-2xl font-bold text-secondary">+5</p>
             </div>
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <Heart className="h-4 w-4 text-destructive" />
-                <span className="font-semibold">Лайк дали</span>
+                <span className="font-semibold">{t('likeReceived')}</span>
               </div>
               <p className="text-2xl font-bold text-destructive">+3</p>
             </div>
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <Heart className="h-4 w-4 text-muted-foreground" />
-                <span className="font-semibold">Лайк поставили</span>
+                <span className="font-semibold">{t('likeGiven')}</span>
               </div>
               <p className="text-2xl font-bold text-muted-foreground">+2</p>
             </div>
