@@ -9,6 +9,7 @@ import { AlertTriangle, Bug, FileX, Wifi, Clock, ChevronDown, ChevronUp, Copy, D
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 interface ErrorLog {
   id: string;
@@ -23,6 +24,7 @@ interface ErrorLog {
 }
 
 export function ErrorLogsViewer() {
+  const { t } = useTranslation('admin');
   const { user } = useAuth();
   const { toast } = useToast();
   const [logs, setLogs] = useState<ErrorLog[]>([]);
@@ -58,8 +60,8 @@ export function ErrorLogsViewer() {
     } catch (error) {
       console.error('Error fetching logs:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось загрузить логи ошибок',
+        title: t('errorLogs.error'),
+        description: t('errorLogs.loadError'),
         variant: 'destructive'
       });
     } finally {
@@ -102,8 +104,8 @@ export function ErrorLogsViewer() {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast({
-      title: 'Скопировано',
-      description: 'Информация скопирована в буфер обмена'
+      title: t('errorLogs.copied'),
+      description: t('errorLogs.copiedDesc')
     });
   };
 
@@ -151,18 +153,18 @@ export function ErrorLogsViewer() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Bug className="h-5 w-5" />
-          Логи ошибок
+          {t('errorLogs.title')}
         </CardTitle>
         <CardDescription>
-          История ошибок и проблем с интеграциями
+          {t('errorLogs.description')}
         </CardDescription>
         <div className="flex items-center gap-4">
           <Select value={selectedSource} onValueChange={setSelectedSource}>
             <SelectTrigger className="w-48">
-              <SelectValue placeholder="Источник" />
+              <SelectValue placeholder={t('errorLogs.source')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Все источники</SelectItem>
+              <SelectItem value="all">{t('errorLogs.allSources')}</SelectItem>
               {sources.map(source => (
                 <SelectItem key={source} value={source}>
                   <div className="flex items-center gap-2">
@@ -175,10 +177,10 @@ export function ErrorLogsViewer() {
           </Select>
           <Button variant="outline" size="sm" onClick={exportLogs}>
             <Download className="h-4 w-4 mr-2" />
-            Экспорт
+            {t('errorLogs.export')}
           </Button>
           <Button variant="outline" size="sm" onClick={fetchErrorLogs}>
-            Обновить
+            {t('errorLogs.refresh')}
           </Button>
         </div>
       </CardHeader>
@@ -186,9 +188,9 @@ export function ErrorLogsViewer() {
         {logs.length === 0 ? (
           <div className="text-center py-8">
             <Bug className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">Нет ошибок</h3>
+            <h3 className="text-lg font-medium mb-2">{t('errorLogs.noErrors')}</h3>
             <p className="text-muted-foreground">
-              Отлично! Ошибок для выбранного фильтра не найдено.
+              {t('errorLogs.noErrorsDesc')}
             </p>
           </div>
         ) : (
@@ -222,7 +224,7 @@ export function ErrorLogsViewer() {
                               {log.error_details && (
                                 <div>
                                   <h4 className="text-xs font-medium text-muted-foreground mb-1">
-                                    Детали ошибки:
+                                    {t('errorLogs.errorDetails')}
                                   </h4>
                                   <pre className="text-xs bg-muted p-2 rounded overflow-x-auto">
                                     {JSON.stringify(log.error_details, null, 2)}
@@ -234,7 +236,7 @@ export function ErrorLogsViewer() {
                                     className="mt-1"
                                   >
                                     <Copy className="h-3 w-3 mr-1" />
-                                    Копировать
+                                    {t('errorLogs.copy')}
                                   </Button>
                                 </div>
                               )}
@@ -263,7 +265,7 @@ export function ErrorLogsViewer() {
                                     className="mt-1"
                                   >
                                     <Copy className="h-3 w-3 mr-1" />
-                                    Копировать
+                                    {t('errorLogs.copy')}
                                   </Button>
                                 </div>
                               )}

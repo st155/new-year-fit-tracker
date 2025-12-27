@@ -166,5 +166,12 @@
     "sources": "sources",
     "goals": "goals",
     "habits": "habits"
+  },
+  "todayActivities": {
+    "title": "Today",
+    "empty": "No scheduled activities"
+  },
+  "units": {
+    "min": "min"
   }
 }

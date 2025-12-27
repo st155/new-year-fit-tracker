@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
+import { useTranslation } from 'react-i18next';
 
 interface RecoveryScoreChartProps {
   score: number;
@@ -10,6 +11,8 @@ interface RecoveryScoreChartProps {
 }
 
 export function RecoveryScoreChart({ score, trend = 0, history = [] }: RecoveryScoreChartProps) {
+  const { t } = useTranslation('fitnessData');
+  
   const getGradientColors = (value: number) => {
     if (value >= 70) return { start: '#4ade80', end: '#10b981' }; // green-400 → emerald-500
     if (value >= 40) return { start: '#facc15', end: '#f97316' }; // yellow-400 → orange-500
@@ -96,7 +99,7 @@ export function RecoveryScoreChart({ score, trend = 0, history = [] }: RecoveryS
               }`}
             >
               <TrendIcon className="h-4 w-4" />
-              <span>{Math.abs(trend)}% vs. предыдущий период</span>
+              <span>{Math.abs(trend)}% {t('recovery.vsPrevious')}</span>
             </motion.div>
           )}
 

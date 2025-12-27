@@ -63,5 +63,8 @@
   "vo2max": {
     "title": "VO2 Max",
     "description": "Загрузите результаты тестирования VO2 Max"
+  },
+  "recovery": {
+    "vsPrevious": "vs. предыдущий период"
   }
 }

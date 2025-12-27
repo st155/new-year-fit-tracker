@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Bell, Mail, Share, Target } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useTranslation } from 'react-i18next';
 
 interface QuickSettingsProps {
   preferences: {
@@ -17,27 +18,6 @@ interface QuickSettingsProps {
   isLoading?: boolean;
 }
 
-const settingsItems = [
-  { 
-    key: 'notifications' as const, 
-    icon: Bell, 
-    label: 'Уведомления',
-    iconColor: 'text-yellow-500'
-  },
-  { 
-    key: 'email_updates' as const, 
-    icon: Mail, 
-    label: 'Email',
-    iconColor: 'text-blue-500'
-  },
-  { 
-    key: 'progress_sharing' as const, 
-    icon: Share, 
-    label: 'Публичный прогресс',
-    iconColor: 'text-purple-500'
-  },
-];
-
 export function QuickSettings({
   preferences,
   trainerMode,
@@ -45,6 +25,29 @@ export function QuickSettings({
   onTrainerModeChange,
   isLoading
 }: QuickSettingsProps) {
+  const { t } = useTranslation('profile');
+
+  const settingsItems = [
+    { 
+      key: 'notifications' as const, 
+      icon: Bell, 
+      label: t('quickSettings.notifications'),
+      iconColor: 'text-yellow-500'
+    },
+    { 
+      key: 'email_updates' as const, 
+      icon: Mail, 
+      label: t('quickSettings.email'),
+      iconColor: 'text-blue-500'
+    },
+    { 
+      key: 'progress_sharing' as const, 
+      icon: Share, 
+      label: t('quickSettings.progressSharing'),
+      iconColor: 'text-purple-500'
+    },
+  ];
+
   if (isLoading) {
     return (
       <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-purple-500/5">
@@ -66,7 +69,7 @@ export function QuickSettings({
     <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-purple-500/5">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center gap-2">
-          ⚡ Быстрые настройки
+          {t('quickSettings.title')}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -126,7 +129,7 @@ export function QuickSettings({
               />
             </div>
             <div className="flex items-center gap-1">
-              <p className="text-xs font-medium">Тренер</p>
+              <p className="text-xs font-medium">{t('quickSettings.trainer')}</p>
               {trainerMode && (
                 <Badge className="text-[10px] px-1 py-0 bg-green-500/20 text-green-600 border-0">
                   ON

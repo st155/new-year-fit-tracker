@@ -37,5 +37,12 @@
       "advanced": "Продвинутый",
       "beginner": "Новичок"
     }
+  },
+  "quickSettings": {
+    "title": "⚡ Быстрые настройки",
+    "notifications": "Уведомления",
+    "email": "Email",
+    "progressSharing": "Публичный прогресс",
+    "trainer": "Тренер"
   }
 }
