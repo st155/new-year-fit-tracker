@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { useMetricDetail } from '@/hooks/useMetricDetail';
 import { AnimatedPage } from '@/components/layout/AnimatedPage';
@@ -44,6 +45,7 @@ const MetricDetail = () => {
   const { metricName } = useParams<{ metricName: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useTranslation('metricDetail');
   
   const { data, isLoading, error } = useMetricDetail(metricName, user?.id);
 
@@ -71,10 +73,10 @@ const MetricDetail = () => {
       <AnimatedPage>
         <div className="min-h-screen bg-background p-4 md:p-6 flex items-center justify-center">
           <div className="text-center space-y-4">
-            <p className="text-destructive">Ошибка загрузки данных метрики</p>
+            <p className="text-destructive">{t('loadError')}</p>
             <Button onClick={() => navigate('/')}>
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Вернуться на главную
+              {t('backHome')}
             </Button>
           </div>
         </div>
@@ -104,7 +106,7 @@ const MetricDetail = () => {
                 {metricName}
               </h1>
               <p className="text-muted-foreground mt-1">
-                Детальная информация о метрике
+                {t('detailedInfo')}
               </p>
             </div>
           </div>
@@ -117,7 +119,7 @@ const MetricDetail = () => {
               borderColor: `${color}30`,
             }}
           >
-            <p className="text-sm text-muted-foreground mb-2">Текущее значение</p>
+            <p className="text-sm text-muted-foreground mb-2">{t('currentValue')}</p>
             <p className="text-5xl font-bold">
               {formatValue(data.currentValue, metricName || '')} 
               <span className="text-2xl font-normal text-muted-foreground ml-2">{unit}</span>

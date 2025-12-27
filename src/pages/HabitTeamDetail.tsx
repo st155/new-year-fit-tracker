@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { useHabitTeams, useTeamMembers, useLeaveTeam } from '@/hooks/useHabitTeams';
 import { useHabitFeed } from '@/hooks/useHabitFeed';
@@ -19,6 +20,7 @@ export default function HabitTeamDetail() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { t } = useTranslation('habitTeamDetail');
   const [showAddMemberDialog, setShowAddMemberDialog] = useState(false);
 
   const { data: myTeams } = useHabitTeams(user?.id);
@@ -37,16 +39,16 @@ export default function HabitTeamDetail() {
     if (!id) return;
     
     if (isOwner) {
-      toast.error('Владелец не может покинуть команду. Удалите команду или передайте права.');
+      toast.error(t('ownerCantLeave'));
       return;
     }
 
     try {
       await leaveTeam.mutateAsync(id);
-      toast.success('Вы покинули команду');
+      toast.success(t('leftTeam'));
       navigate('/habits-v3/teams');
     } catch (error: any) {
-      toast.error(error.message || 'Не удалось покинуть команду');
+      toast.error(error.message || t('leaveError'));
     }
   };
 
@@ -56,9 +58,9 @@ export default function HabitTeamDetail() {
         <div className="max-w-4xl mx-auto">
           <Card className="p-8 text-center">
             <Users className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-            <h2 className="text-2xl font-bold mb-2">Команда не найдена</h2>
+            <h2 className="text-2xl font-bold mb-2">{t('teamNotFound')}</h2>
             <Button onClick={() => navigate('/habits-v3/teams')}>
-              Вернуться к списку команд
+              {t('backToList')}
             </Button>
           </Card>
         </div>
@@ -94,7 +96,7 @@ export default function HabitTeamDetail() {
               <div className="flex items-center gap-2 mt-2">
                 <Badge variant="secondary">
                   <Users className="h-3 w-3 mr-1" />
-                  {team.member_count || 0} / {team.member_limit} участников
+                  {team.member_count || 0} / {team.member_limit} {t('participants')}
                 </Badge>
               </div>
             </div>
@@ -103,13 +105,13 @@ export default function HabitTeamDetail() {
             {canAddMembers && (
               <Button onClick={() => setShowAddMemberDialog(true)}>
                 <UserPlus className="h-4 w-4 mr-2" />
-                Пригласить
+                {t('invite')}
               </Button>
             )}
             {!isOwner && (
               <Button variant="destructive" onClick={handleLeaveTeam}>
                 <LogOut className="h-4 w-4 mr-2" />
-                Покинуть
+                {t('leave')}
               </Button>
             )}
           </div>
@@ -117,9 +119,9 @@ export default function HabitTeamDetail() {
 
         <Tabs defaultValue="feed" className="space-y-4">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="feed">Активность</TabsTrigger>
+            <TabsTrigger value="feed">{t('tabs.activity')}</TabsTrigger>
             <TabsTrigger value="members">
-              Участники ({membersList.length})
+              {t('tabs.members')} ({membersList.length})
             </TabsTrigger>
           </TabsList>
 
@@ -131,9 +133,9 @@ export default function HabitTeamDetail() {
             ) : (
               <Card className="p-8 text-center">
                 <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-semibold mb-2">Пока нет активности</h3>
+                <h3 className="text-lg font-semibold mb-2">{t('noActivity')}</h3>
                 <p className="text-muted-foreground">
-                  Начните выполнять привычки, чтобы появились события в ленте
+                  {t('startHabitsPrompt')}
                 </p>
               </Card>
             )}
@@ -159,7 +161,7 @@ export default function HabitTeamDetail() {
                             <p className="font-medium">
                               {member.profiles?.full_name || 
                                member.profiles?.username || 
-                               'Аноним'}
+                               t('anonymous')}
                             </p>
                             {member.role === 'owner' && (
                               <Crown className="h-4 w-4 text-yellow-500" />
@@ -173,7 +175,7 @@ export default function HabitTeamDetail() {
                         </div>
                       </div>
                       <Badge variant={member.role === 'owner' ? 'default' : 'secondary'}>
-                        {member.role === 'owner' ? 'Владелец' : 'Участник'}
+                        {member.role === 'owner' ? t('roles.owner') : t('roles.member')}
                       </Badge>
                     </div>
                   </Card>
@@ -182,7 +184,7 @@ export default function HabitTeamDetail() {
             ) : (
               <Card className="p-8 text-center">
                 <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-muted-foreground">Участников пока нет</p>
+                <p className="text-muted-foreground">{t('noMembers')}</p>
               </Card>
             )}
           </TabsContent>

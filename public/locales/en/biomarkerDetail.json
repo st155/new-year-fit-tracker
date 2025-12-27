@@ -1,0 +1,60 @@
+{
+  "invalidId": "Invalid biomarker ID",
+  "backToDocs": "Back to documents",
+  "measurementHistory": "Measurement History",
+  "lastValue": "Latest Value",
+  "aiUnavailable": "AI analysis is temporarily unavailable. Only historical data is shown.",
+  "tryRefresh": "Try to refresh",
+  "noDataForAnalysis": "No data for analysis",
+  "customizeOptimalRange": "Customize Optimal Range",
+  "chartTitle": "Change Chart",
+  "tabs": {
+    "trend": "Trend",
+    "statistics": "Statistics",
+    "history": "History",
+    "about": "About"
+  },
+  "status": {
+    "belowNormal": "Below Normal",
+    "aboveNormal": "Above Normal",
+    "optimal": "Optimal",
+    "normal": "Normal"
+  },
+  "zones": {
+    "title": "Zone Distribution",
+    "belowNormal": "Below Normal",
+    "normal": "Normal",
+    "optimal": "Optimal",
+    "aboveNormal": "Above Normal"
+  },
+  "supplementsImpact": "Supplement Impact",
+  "aiAnalysis": "AI Analysis",
+  "statistics": {
+    "title": "Statistics",
+    "measurements": "Measurements",
+    "average": "Average",
+    "min": "Minimum",
+    "max": "Maximum"
+  },
+  "optimalZone": {
+    "title": "Time in Optimal Zone",
+    "yourMeasurements": "of your measurements",
+    "excellent": "Excellent! Most of your measurements are in the optimal zone.",
+    "good": "Good result. Keep working on improvement.",
+    "needsAttention": "Less than half of measurements are in the optimal zone. We recommend consulting a specialist.",
+    "noData": "Not enough data to calculate time in optimal zone"
+  },
+  "recommendations": {
+    "title": "Recommended Supplements",
+    "addToStack": "Add to Stack",
+    "noSupplements": "No recommended supplements for this biomarker"
+  },
+  "about": {
+    "description": "Description",
+    "clinicalSignificance": "Clinical Significance",
+    "referenceRanges": "Reference Ranges",
+    "normal": "Normal",
+    "optimal": "Optimal",
+    "wiki": "Learn more on Wikipedia"
+  }
+}
