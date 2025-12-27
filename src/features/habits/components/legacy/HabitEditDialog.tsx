@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 interface HabitEditDialogProps {
   open: boolean;
@@ -25,6 +26,7 @@ export function HabitEditDialog({
   habit,
   onSuccess 
 }: HabitEditDialogProps) {
+  const { t } = useTranslation('habits');
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [targetValue, setTargetValue] = useState("");
@@ -54,12 +56,12 @@ export function HabitEditDialog({
 
       if (error) throw error;
 
-      toast.success("Привычка обновлена");
+      toast.success(t('edit.success'));
       onSuccess?.();
       onOpenChange(false);
     } catch (error) {
       console.error("Error updating habit:", error);
-      toast.error("Ошибка при обновлении привычки");
+      toast.error(t('edit.error'));
     } finally {
       setIsSubmitting(false);
     }
@@ -69,42 +71,42 @@ export function HabitEditDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="glass-strong border-white/20">
         <DialogHeader>
-          <DialogTitle>Редактировать привычку</DialogTitle>
+          <DialogTitle>{t('edit.title')}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Название</Label>
+            <Label htmlFor="name">{t('edit.nameLabel')}</Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Название привычки"
+              placeholder={t('edit.namePlaceholder')}
               required
               className="glass-card border-white/20"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Описание</Label>
+            <Label htmlFor="description">{t('edit.descLabel')}</Label>
             <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Описание привычки"
+              placeholder={t('edit.descPlaceholder')}
               className="glass-card border-white/20 min-h-[80px]"
             />
           </div>
 
           {(habit?.habit_type === 'numeric_counter' || habit?.habit_type === 'daily_measurement') && (
             <div className="space-y-2">
-              <Label htmlFor="target">Целевое значение</Label>
+              <Label htmlFor="target">{t('edit.targetLabel')}</Label>
               <Input
                 id="target"
                 type="number"
                 value={targetValue}
                 onChange={(e) => setTargetValue(e.target.value)}
-                placeholder="Цель"
+                placeholder={t('edit.targetPlaceholder')}
                 className="glass-card border-white/20"
               />
             </div>
@@ -117,14 +119,14 @@ export function HabitEditDialog({
               onClick={() => onOpenChange(false)}
               className="glass-card border-white/20"
             >
-              Отмена
+              {t('edit.cancel')}
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
               className="bg-gradient-to-r from-primary to-primary-end"
             >
-              {isSubmitting ? "Сохранение..." : "Сохранить"}
+              {isSubmitting ? t('edit.saving') : t('edit.save')}
             </Button>
           </div>
         </form>

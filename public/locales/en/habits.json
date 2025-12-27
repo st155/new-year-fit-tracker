@@ -1,5 +1,19 @@
 {
   "title": "Habits 3.0",
+  "edit": {
+    "title": "Edit Habit",
+    "nameLabel": "Name",
+    "namePlaceholder": "Habit name",
+    "descLabel": "Description",
+    "descPlaceholder": "Habit description",
+    "targetLabel": "Target value",
+    "targetPlaceholder": "Target",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "save": "Save",
+    "success": "Habit updated",
+    "error": "Failed to update habit"
+  },
   "loading": "Loading habits...",
   "error": {
     "title": "Failed to load habits",

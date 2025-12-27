@@ -3,6 +3,7 @@ import type { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/sonner';
 import { useQuery } from '@tanstack/react-query';
+import i18n from 'i18next';
 
 interface AuthContextType {
   user: User | null;
@@ -57,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             localStorage.setItem(`new_user_${session.user.id}`, 'true');
           }
           
-          toast.success(`Signed in as ${session.user.email}`);
+          toast.success(i18n.t('auth:toast.signedInAs', { email: session.user.email }));
         }
         
         // Handle token refresh
@@ -130,13 +131,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (error) {
       if (error.message.includes('already registered')) {
-        toast.error("User already registered. Try signing in instead of signing up.");
+        toast.error(i18n.t('auth:toast.alreadyRegistered'));
       } else if (error.message.includes('Invalid email')) {
-        toast.error("Invalid email. Please check your email address");
+        toast.error(i18n.t('auth:toast.invalidEmail'));
       } else if (error.message.includes('Password')) {
-        toast.error("Password too simple. Password must be at least 6 characters");
+        toast.error(i18n.t('auth:toast.weakPassword'));
       } else {
-        toast.error(`Registration error: ${error.message}`);
+        toast.error(i18n.t('auth:toast.registrationError', { message: error.message }));
       }
     } else {
       // Mark this user as a new user for onboarding
@@ -144,7 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem(`new_user_${data.user.id}`, 'true');
       }
       
-      toast("Check your email. We sent you a confirmation link. If you don't see it, check your spam folder.");
+      toast(i18n.t('auth:toast.checkEmail'));
     }
 
     return { error };
@@ -157,7 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     if (error) {
-      toast.error(`Sign in error: ${error.message}`);
+      toast.error(i18n.t('auth:toast.signInError', { message: error.message }));
       
       // Log failed login attempt for security audit
       if (user?.id) {
@@ -216,18 +217,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.error('📝 Add this URL to Google Cloud Console → OAuth 2.0 Client ID → Authorized redirect URIs:');
           console.error(`   ${supabaseCallbackUrl}`);
           
-          toast.error(
-            "Google OAuth not configured. Please add the Supabase callback URL to your Google Cloud Console. Check browser console for details.",
-            { duration: 6000 }
-          );
+          toast.error(i18n.t('auth:toast.oauthConfigError'), { duration: 6000 });
         } else if (errorMsg.includes('requested path is invalid') || 
                    errorMsg.includes('signature is invalid') ||
                    errorMsg.includes('invalid token')) {
-          toast.error("OAuth Configuration Error. Need to configure Site URL and Redirect URLs in Supabase panel. Contact administrator.");
+          toast.error(i18n.t('auth:toast.oauthSetupError'));
         } else if (errorMsg.includes('network')) {
-          toast.error("Network error. Check your internet connection and try again");
+          toast.error(i18n.t('auth:toast.networkError'));
         } else {
-          toast.error(`Google sign in error: ${error.message}`);
+          toast.error(i18n.t('auth:toast.googleSignInError', { message: error.message }));
         }
       } else {
         console.log('✅ [Google OAuth] Initiated successfully');
@@ -236,7 +234,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { data, error };
     } catch (err: any) {
       console.error('💥 [Google OAuth] Catch error:', err);
-      toast.error("Google sign in error. Try again later or use email sign in");
+      toast.error(i18n.t('auth:toast.googleSignInGenericError'));
       return { error: err };
     }
   };
@@ -245,9 +243,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.signOut();
     
     if (error) {
-      toast.error(`Sign out error: ${error.message}`);
+      toast.error(i18n.t('auth:toast.signOutError', { message: error.message }));
     } else {
-      toast.success("You have successfully signed out");
+      toast.success(i18n.t('auth:toast.signedOut'));
     }
 
     return { error };
@@ -264,9 +262,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     if (error) {
-      toast.error(`Ошибка отправки magic link: ${error.message}`);
+      toast.error(i18n.t('auth:toast.magicLinkError', { message: error.message }));
     } else {
-      toast.success(`Magic link отправлен на ${email}. Проверьте почту!`);
+      toast.success(i18n.t('auth:toast.magicLinkSent', { email }));
     }
 
     return { error };

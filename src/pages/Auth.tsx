@@ -113,9 +113,9 @@ const Auth = () => {
     });
 
     if (error) {
-      toast.error('Ошибка отправки письма: ' + error.message);
+      toast.error(t('resetEmailError', { message: error.message }));
     } else {
-      toast.success('Письмо для сброса пароля отправлено на ' + resetEmail);
+      toast.success(t('resetEmailSent', { email: resetEmail }));
       setShowForgotPassword(false);
       setResetEmail('');
     }
@@ -197,7 +197,7 @@ const Auth = () => {
               <Alert className="mb-4 border-primary/50 bg-primary/5">
                 <AlertCircle className="h-4 w-4 text-primary" />
                 <AlertDescription className="text-sm">
-                  Войдите, чтобы открыть: <span className="font-semibold">{redirectFrom}</span>
+                  {t('loginToOpenPath')} <span className="font-semibold">{redirectFrom}</span>
                 </AlertDescription>
               </Alert>
             )}
