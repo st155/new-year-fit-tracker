@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { cn } from "@/lib/utils";
 
 interface MobileMenuDrawerProps {
@@ -137,6 +138,16 @@ export const MobileMenuDrawer = memo(function MobileMenuDrawer({
           {/* Footer Items */}
           <div className="space-y-1">
             {footerItems.map(renderMenuItem)}
+          </div>
+
+          <Separator className="my-4" />
+
+          {/* Language Selector */}
+          <div className="px-4 py-2">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
+              {t("language", { ns: "common" })}
+            </p>
+            <LanguageSwitcher />
           </div>
         </div>
       </DrawerContent>
