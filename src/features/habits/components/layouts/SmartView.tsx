@@ -1,8 +1,9 @@
+import { useTranslation } from 'react-i18next';
 import { useHabitGrouping } from '@/features/habits/hooks';
 import { TimeSection } from './TimeSection';
 import { OverviewStats } from './OverviewStats';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertTriangle, Plus } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { HabitsProgressSection } from '../sections/HabitsProgressSection';
 import { EmptyStateV3 } from '@/components/ui/empty-state-v3';
 
@@ -25,6 +26,7 @@ export function SmartView({
   onHabitEdit,
   onHabitViewHistory
 }: SmartViewProps) {
+  const { t } = useTranslation('habits');
   const grouped = useHabitGrouping(habits);
 
   // Show empty state when no habits
@@ -32,10 +34,10 @@ export function SmartView({
     return (
       <EmptyStateV3
         variant="habits"
-        title="Нет привычек"
-        description="Создайте свою первую привычку и начните строить лучшую версию себя каждый день"
+        title={t('smartView.noHabits')}
+        description={t('smartView.noHabitsDesc')}
         illustration="animated-icon"
-        motivationalQuote="Привычки - это сложные проценты самосовершенствования"
+        motivationalQuote={t('smartView.quote')}
       />
     );
   }
@@ -69,7 +71,7 @@ export function SmartView({
         <Alert variant="destructive" className="glass-card border-orange-500/50">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            {grouped.atRisk.length} {grouped.atRisk.length === 1 ? 'привычка требует' : 'привычки требуют'} внимания
+            {t('smartView.atRiskAlert', { count: grouped.atRisk.length })}
           </AlertDescription>
         </Alert>
       )}
@@ -132,7 +134,7 @@ export function SmartView({
         <TimeSection
           group={{
             time: 'anytime',
-            title: '⚠️ Требуют внимания',
+            title: t('smartView.atRiskTitle'),
             icon: '⚠️',
             habits: grouped.atRisk,
             estimatedDuration: grouped.atRisk.reduce((sum, h) => sum + (h.estimated_duration_minutes || 0), 0),

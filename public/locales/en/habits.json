@@ -58,5 +58,23 @@
   "miniChart": {
     "completed": "Completed",
     "lastDays": "over last {{days}} days"
+  },
+  "viewSwitcher": {
+    "widgets": "Widgets",
+    "list": "List",
+    "analytics": "Analytics"
+  },
+  "smartView": {
+    "noHabits": "No habits",
+    "noHabitsDesc": "Create your first habit and start building a better version of yourself every day",
+    "quote": "Habits are the compound interest of self-improvement",
+    "atRiskAlert_one": "{{count}} habit needs attention",
+    "atRiskAlert_other": "{{count}} habits need attention",
+    "atRiskTitle": "⚠️ Needs Attention"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all read",
+    "empty": "No notifications"
   }
 }

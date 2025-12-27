@@ -167,11 +167,17 @@
     "goals": "goals",
     "habits": "habits"
   },
-  "todayActivities": {
+"todayActivities": {
     "title": "Today",
     "empty": "No scheduled activities"
   },
   "units": {
     "min": "min"
+  },
+  "metricCard": {
+    "withingsInstructions": "To update data:\n1. Step on your Withings scale\n2. Wait for sync with the app\n3. Data will appear here in 1-5 minutes",
+    "manualInstructions": "Manual measurement on the device is required to update data",
+    "manualInput": "Manual input",
+    "daysAgo": "{{days}}d ago"
   }
 }

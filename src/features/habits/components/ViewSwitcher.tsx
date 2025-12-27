@@ -2,6 +2,7 @@
  * ViewSwitcher - минималистичный иконочный переключатель видов
  */
 
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { LayoutGrid, List, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -13,16 +14,18 @@ interface ViewSwitcherProps {
   onChange: (mode: ViewMode) => void;
 }
 
-const views: { mode: ViewMode; icon: typeof LayoutGrid; label: string }[] = [
-  { mode: 'widgets', icon: LayoutGrid, label: 'Виджеты' },
-  { mode: 'list', icon: List, label: 'Список' },
-  { mode: 'analytics', icon: BarChart3, label: 'Аналитика' },
-];
-
 export function ViewSwitcher({ value, onChange }: ViewSwitcherProps) {
+  const { t } = useTranslation('habits');
+
+  const views: { mode: ViewMode; icon: typeof LayoutGrid; labelKey: string }[] = [
+    { mode: 'widgets', icon: LayoutGrid, labelKey: 'viewSwitcher.widgets' },
+    { mode: 'list', icon: List, labelKey: 'viewSwitcher.list' },
+    { mode: 'analytics', icon: BarChart3, labelKey: 'viewSwitcher.analytics' },
+  ];
+
   return (
     <div className="flex items-center gap-1 p-1 rounded-xl bg-muted/50 backdrop-blur-sm">
-      {views.map(({ mode, icon: Icon, label }) => (
+      {views.map(({ mode, icon: Icon, labelKey }) => (
         <button
           key={mode}
           onClick={() => onChange(mode)}
@@ -32,7 +35,7 @@ export function ViewSwitcher({ value, onChange }: ViewSwitcherProps) {
               ? "text-primary" 
               : "text-muted-foreground hover:text-foreground"
           )}
-          title={label}
+          title={t(labelKey)}
         >
           {value === mode && (
             <motion.div

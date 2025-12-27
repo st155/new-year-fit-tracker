@@ -94,5 +94,33 @@
   },
   "units": {
     "kg": "kg"
+  },
+  "universalTrends": {
+    "title": "Trends & Analytics",
+    "subtitle": "Visualization of your health indicator changes",
+    "bloodTests": "Blood Tests",
+    "bodyComposition": "Body Composition",
+    "imaging": "Imaging Studies"
+  },
+  "reprocess": {
+    "button": "Reprocess all documents",
+    "title": "Reprocess All Documents",
+    "description": "All documents will be reclassified and renamed using the new content analysis system",
+    "instruction": "Click the button below to start reprocessing all your documents.\nThe process may take a few minutes.",
+    "forceLabel": "Reprocess all documents (including already processed)",
+    "start": "Start Reprocessing",
+    "processing": "Processing...",
+    "done": "Done",
+    "progress": "{{current}} of {{total}}",
+    "current": "Current: {{filename}}",
+    "succeeded": "Succeeded:",
+    "failed": "Failed:",
+    "results": "Results:",
+    "category": "Category: {{name}}",
+    "completed": "Reprocessing completed",
+    "stats": "Succeeded: {{succeeded}}, Failed: {{failed}}",
+    "error": "Reprocessing error",
+    "unknownError": "Unknown error",
+    "close": "Close"
   }
 }
