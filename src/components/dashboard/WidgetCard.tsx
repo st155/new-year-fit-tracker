@@ -460,11 +460,7 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
         style={{
           borderWidth: '2px',
           borderStyle: 'solid',
-          borderColor: isDataStale 
-            ? '#ef4444' 
-            : isDataWarning 
-              ? '#eab308' 
-              : primarySourceQuality || 'hsl(var(--border))',
+        borderColor: primarySourceQuality || 'hsl(var(--border))',
         }}
       >
         <CardContent className="p-4 sm:p-6">
@@ -669,11 +665,7 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
       style={{
         borderWidth: '2px',
         borderStyle: 'solid',
-        borderColor: isDataStale 
-          ? '#ef4444' 
-          : isDataWarning 
-            ? '#eab308' 
-            : qualityColor || 'hsl(var(--border))',
+        borderColor: qualityColor || 'hsl(var(--border))',
       }}
     >
       <CardContent className="p-4 sm:p-6">
