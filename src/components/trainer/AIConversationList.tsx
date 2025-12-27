@@ -4,7 +4,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Plus, MessageSquare, Trash2 } from 'lucide-react';
 import { AIConversation } from '@/types/trainer';
 import { formatDistanceToNow } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,11 +33,24 @@ export const AIConversationList = ({
   onNewConversation,
   onDeleteConversation
 }: AIConversationListProps) => {
+  const { t, i18n } = useTranslation('trainer');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
+
+  const getContextModeLabel = (mode: string) => {
+    const modes: Record<string, string> = {
+      goals: t('ai.contextModes.goals'),
+      analysis: t('ai.contextModes.analysis'),
+      challenge: t('ai.contextModes.challenge'),
+      general: t('ai.contextModes.general')
+    };
+    return modes[mode] || modes.general;
+  };
+
   return (
     <div className="space-y-4">
       <Button onClick={onNewConversation} className="w-full" size="sm">
         <Plus className="h-4 w-4 mr-2" />
-        Новый разговор
+        {t('ai.newConversation')}
       </Button>
 
       <ScrollArea className="h-[calc(100vh-400px)]">
@@ -44,7 +58,7 @@ export const AIConversationList = ({
           {conversations.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground text-sm">
               <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              Нет разговоров
+              {t('ai.noConversations')}
             </div>
           ) : (
             conversations.map((conversation) => {
@@ -77,20 +91,17 @@ export const AIConversationList = ({
                       )}
                       
                       <h3 className="font-medium text-sm truncate">
-                        {conversation.title || 'Без названия'}
+                        {conversation.title || t('ai.untitled')}
                       </h3>
                       <p className="text-xs text-muted-foreground">
                         {formatDistanceToNow(new Date(conversation.last_message_at), {
                           addSuffix: true,
-                          locale: ru
+                          locale: dateLocale
                         })}
                       </p>
                       <div className="mt-1">
                         <span className="text-xs px-2 py-0.5 rounded-full bg-muted">
-                          {conversation.context_mode === 'goals' && '🎯 Цели'}
-                          {conversation.context_mode === 'analysis' && '📊 Анализ'}
-                          {conversation.context_mode === 'challenge' && '🏆 Челлендж'}
-                          {conversation.context_mode === 'general' && '💬 Общий'}
+                          {getContextModeLabel(conversation.context_mode)}
                         </span>
                       </div>
                     </div>
@@ -108,18 +119,18 @@ export const AIConversationList = ({
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Удалить разговор?</AlertDialogTitle>
+                        <AlertDialogTitle>{t('ai.deleteConversation')}</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Это действие нельзя отменить. Разговор и все сообщения будут удалены.
+                          {t('ai.deleteDescription')}
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Отмена</AlertDialogCancel>
+                        <AlertDialogCancel>{t('ai.cancel')}</AlertDialogCancel>
                         <AlertDialogAction
                           onClick={() => onDeleteConversation(conversation.id)}
                           className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >
-                          Удалить
+                          {t('ai.delete')}
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>

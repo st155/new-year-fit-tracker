@@ -8,6 +8,7 @@ import { Dumbbell, Plus, Sparkles } from 'lucide-react';
 import { TrainingPlanBuilder } from './TrainingPlanBuilder';
 import { TrainingPlanCard } from './TrainingPlanCard';
 import { CreateTrainingPlanDialogAI } from './CreateTrainingPlanDialogAI';
+import { useTranslation } from 'react-i18next';
 
 interface TrainingPlan {
   id: string;
@@ -32,6 +33,7 @@ export const TrainingPlansList = ({ initialPlanId }: TrainingPlansListProps) => 
   const [trainerId, setTrainerId] = useState<string>('');
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { t } = useTranslation('trainer');
 
   const loadPlans = async () => {
     try {
@@ -76,8 +78,8 @@ export const TrainingPlansList = ({ initialPlanId }: TrainingPlansListProps) => 
       }
       
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось загрузить планы',
+        title: t('trainingPlans.error'),
+        description: t('trainingPlans.loadError'),
         variant: 'destructive'
       });
     } finally {
@@ -117,22 +119,22 @@ export const TrainingPlansList = ({ initialPlanId }: TrainingPlansListProps) => 
   }, []);
 
   if (loading) {
-    return <div className="text-center py-8">Загрузка...</div>;
+    return <div className="text-center py-8">{t('trainingPlans.loading')}</div>;
   }
 
   return (
     <>
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold">Тренировочные планы</h3>
+          <h3 className="text-lg font-semibold">{t('trainingPlans.title')}</h3>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setShowBuilder(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Classic
+              {t('trainingPlans.classic')}
             </Button>
             <Button onClick={() => setShowAIBuilder(true)}>
               <Sparkles className="h-4 w-4 mr-2" />
-              AI Mode
+              {t('trainingPlans.aiMode')}
             </Button>
           </div>
         </div>
@@ -140,18 +142,18 @@ export const TrainingPlansList = ({ initialPlanId }: TrainingPlansListProps) => 
         {plans.length === 0 ? (
           <Card className="p-8 text-center">
             <Dumbbell className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-medium mb-2">Нет тренировочных планов</h3>
+            <h3 className="text-lg font-medium mb-2">{t('trainingPlans.noPlans')}</h3>
             <p className="text-muted-foreground mb-4">
-              Создайте первый план для ваших клиентов
+              {t('trainingPlans.createFirst')}
             </p>
             <div className="flex gap-2 justify-center">
               <Button variant="outline" onClick={() => setShowBuilder(true)}>
                 <Plus className="h-4 w-4 mr-2" />
-                Classic Mode
+                {t('trainingPlans.classic')}
               </Button>
               <Button onClick={() => setShowAIBuilder(true)}>
                 <Sparkles className="h-4 w-4 mr-2" />
-                AI Mode
+                {t('trainingPlans.aiMode')}
               </Button>
             </div>
           </Card>

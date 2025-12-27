@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Calendar, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 interface TrainingPlanBuilderProps {
   open: boolean;
@@ -17,8 +18,6 @@ interface TrainingPlanBuilderProps {
   onSuccess: () => void;
   clients: Array<{ user_id: string; username: string; full_name: string }>;
 }
-
-const DAYS = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
 
 export const TrainingPlanBuilder = ({ open, onClose, onSuccess, clients }: TrainingPlanBuilderProps) => {
   const [planName, setPlanName] = useState('');
@@ -29,6 +28,27 @@ export const TrainingPlanBuilder = ({ open, onClose, onSuccess, clients }: Train
   const [editingDay, setEditingDay] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
+  const { t } = useTranslation('trainer');
+
+  const DAYS = [
+    t('trainingPlans.daysFull.monday'),
+    t('trainingPlans.daysFull.tuesday'),
+    t('trainingPlans.daysFull.wednesday'),
+    t('trainingPlans.daysFull.thursday'),
+    t('trainingPlans.daysFull.friday'),
+    t('trainingPlans.daysFull.saturday'),
+    t('trainingPlans.daysFull.sunday')
+  ];
+
+  const DAYS_SHORT = [
+    t('trainingPlans.days.mon'),
+    t('trainingPlans.days.tue'),
+    t('trainingPlans.days.wed'),
+    t('trainingPlans.days.thu'),
+    t('trainingPlans.days.fri'),
+    t('trainingPlans.days.sat'),
+    t('trainingPlans.days.sun')
+  ];
 
   const handleSaveWorkout = (workout: any) => {
     const existingIndex = workouts.findIndex(w => w.day_of_week === workout.day_of_week);
@@ -47,8 +67,8 @@ export const TrainingPlanBuilder = ({ open, onClose, onSuccess, clients }: Train
   const handleSavePlan = async () => {
     if (!planName.trim() || workouts.length === 0) {
       toast({
-        title: 'Ошибка',
-        description: 'Введите название плана и добавьте хотя бы одну тренировку',
+        title: t('trainingPlans.error'),
+        description: t('trainingPlans.fillRequired'),
         variant: 'destructive'
       });
       return;
@@ -104,13 +124,13 @@ export const TrainingPlanBuilder = ({ open, onClose, onSuccess, clients }: Train
         if (assignError) throw assignError;
         
         toast({
-          title: 'Успешно',
-          description: 'Тренировочный план создан и назначен клиенту'
+          title: t('trainingPlans.success'),
+          description: t('trainingPlans.planCreatedAssigned')
         });
       } else {
         toast({
-          title: 'Успешно',
-          description: 'План создан. Назначьте его клиенту в настройках плана'
+          title: t('trainingPlans.success'),
+          description: t('trainingPlans.planCreatedNotAssigned')
         });
       }
 
@@ -119,8 +139,8 @@ export const TrainingPlanBuilder = ({ open, onClose, onSuccess, clients }: Train
     } catch (error) {
       console.error('Error saving plan:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось сохранить план',
+        title: t('trainingPlans.error'),
+        description: t('trainingPlans.saveError'),
         variant: 'destructive'
       });
     } finally {
@@ -147,26 +167,26 @@ export const TrainingPlanBuilder = ({ open, onClose, onSuccess, clients }: Train
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Создание тренировочного плана</DialogTitle>
+            <DialogTitle>{t('trainingPlans.createPlan')}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-6">
             {/* Основная информация */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Название плана *</Label>
+                <Label>{t('trainingPlans.planName')}</Label>
                 <Input
-                  placeholder="Например: Набор массы - 4 недели"
+                  placeholder={t('trainingPlans.planNamePlaceholder')}
                   value={planName}
                   onChange={(e) => setPlanName(e.target.value)}
                 />
               </div>
 
               <div>
-                <Label>Клиент (необязательно)</Label>
+                <Label>{t('trainingPlans.client')}</Label>
                 <Select value={selectedClient || undefined} onValueChange={setSelectedClient}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Не назначать сейчас" />
+                    <SelectValue placeholder={t('trainingPlans.noClientNow')} />
                   </SelectTrigger>
                   <SelectContent>
                     {clients.map(client => (
@@ -178,7 +198,7 @@ export const TrainingPlanBuilder = ({ open, onClose, onSuccess, clients }: Train
                 </Select>
                 {!selectedClient && (
                   <p className="text-xs text-muted-foreground mt-1">
-                    Вы сможете назначить план клиенту позже
+                    {t('trainingPlans.assignLater')}
                   </p>
                 )}
               </div>
@@ -186,7 +206,7 @@ export const TrainingPlanBuilder = ({ open, onClose, onSuccess, clients }: Train
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Длительность (недели)</Label>
+                <Label>{t('trainingPlans.duration')}</Label>
                 <Input
                   type="number"
                   min="1"
@@ -197,9 +217,9 @@ export const TrainingPlanBuilder = ({ open, onClose, onSuccess, clients }: Train
               </div>
 
               <div>
-                <Label>Описание (опционально)</Label>
+                <Label>{t('trainingPlans.description')}</Label>
                 <Textarea
-                  placeholder="Цели программы, особенности..."
+                  placeholder={t('trainingPlans.descriptionPlaceholder')}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={1}
@@ -209,7 +229,7 @@ export const TrainingPlanBuilder = ({ open, onClose, onSuccess, clients }: Train
 
             {/* Недельный график */}
             <div>
-              <Label className="mb-3 block">Недельный график тренировок</Label>
+              <Label className="mb-3 block">{t('trainingPlans.weeklySchedule')}</Label>
               <div className="grid grid-cols-7 gap-2">
                 {DAYS.map((day, index) => {
                   const workout = getWorkoutForDay(index);
@@ -224,7 +244,7 @@ export const TrainingPlanBuilder = ({ open, onClose, onSuccess, clients }: Train
                       onClick={() => setEditingDay(index)}
                     >
                       <Calendar className={cn('h-4 w-4 mb-1', workout && 'text-primary-foreground')} />
-                      <span className="font-medium">{day.slice(0, 2)}</span>
+                      <span className="font-medium">{DAYS_SHORT[index]}</span>
                       {workout ? (
                         <span className="text-xs mt-1 truncate w-full text-center">
                           {workout.workout_name}
@@ -237,17 +257,17 @@ export const TrainingPlanBuilder = ({ open, onClose, onSuccess, clients }: Train
                 })}
               </div>
               <p className="text-sm text-muted-foreground mt-2">
-                Тренировок добавлено: {workouts.length}/7
+                {t('trainingPlans.workoutsAdded', { count: workouts.length })}
               </p>
             </div>
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={handleClose}>
-              Отмена
+              {t('trainingPlans.cancel')}
             </Button>
             <Button onClick={handleSavePlan} disabled={saving || !planName.trim() || workouts.length === 0}>
-              {saving ? 'Сохранение...' : 'Создать план'}
+              {saving ? t('trainingPlans.saving') : t('trainingPlans.createPlan')}
             </Button>
           </DialogFooter>
         </DialogContent>

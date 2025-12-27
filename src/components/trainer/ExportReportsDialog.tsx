@@ -5,6 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Download, FileText, Table } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 interface ExportReportsDialogProps {
   open: boolean;
@@ -24,6 +25,7 @@ export const ExportReportsDialog = ({
   const [includeMetrics, setIncludeMetrics] = useState(true);
   const [includeGoals, setIncludeGoals] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const { t } = useTranslation('trainer');
 
   const handleExport = async () => {
     setExporting(true);
@@ -52,15 +54,15 @@ export const ExportReportsDialog = ({
         document.body.removeChild(link);
       } else {
         // For PDF, using basic implementation - can be enhanced with jspdf
-        toast.info("PDF export coming soon - use CSV for now");
+        toast.info(t('exportReports.pdfComingSoon'));
         return;
       }
       
-      toast.success(`Report exported as ${format.toUpperCase()}`);
+      toast.success(t('exportReports.exportSuccess', { format: format.toUpperCase() }));
       onOpenChange(false);
     } catch (error) {
       console.error('Export error:', error);
-      toast.error("Failed to export report");
+      toast.error(t('exportReports.exportError'));
     } finally {
       setExporting(false);
     }
@@ -70,15 +72,15 @@ export const ExportReportsDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Export Client Report</DialogTitle>
+          <DialogTitle>{t('exportReports.title')}</DialogTitle>
           <DialogDescription>
-            {clientName ? `Export report for ${clientName}` : "Choose export options"}
+            {clientName ? t('exportReports.description', { name: clientName }) : t('exportReports.chooseOptions')}
           </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label>Format</Label>
+            <Label>{t('exportReports.format')}</Label>
             <div className="flex gap-2">
               <Button
                 variant={format === "pdf" ? "default" : "outline"}
@@ -100,7 +102,7 @@ export const ExportReportsDialog = ({
           </div>
 
           <div className="space-y-3">
-            <Label>Include in export</Label>
+            <Label>{t('exportReports.includeInExport')}</Label>
             <div className="flex items-center space-x-2">
               <Checkbox 
                 id="charts" 
@@ -112,7 +114,7 @@ export const ExportReportsDialog = ({
                 htmlFor="charts" 
                 className={format === "csv" ? "text-muted-foreground" : "cursor-pointer"}
               >
-                Progress charts {format === "csv" && "(PDF only)"}
+                {t('exportReports.progressCharts')} {format === "csv" && t('exportReports.pdfOnly')}
               </Label>
             </div>
             <div className="flex items-center space-x-2">
@@ -122,7 +124,7 @@ export const ExportReportsDialog = ({
                 onCheckedChange={(checked) => setIncludeMetrics(checked as boolean)}
               />
               <Label htmlFor="metrics" className="cursor-pointer">
-                Metrics data
+                {t('exportReports.metricsData')}
               </Label>
             </div>
             <div className="flex items-center space-x-2">
@@ -132,7 +134,7 @@ export const ExportReportsDialog = ({
                 onCheckedChange={(checked) => setIncludeGoals(checked as boolean)}
               />
               <Label htmlFor="goals" className="cursor-pointer">
-                Goals progress
+                {t('exportReports.goalsProgress')}
               </Label>
             </div>
           </div>
@@ -144,14 +146,14 @@ export const ExportReportsDialog = ({
             onClick={() => onOpenChange(false)}
             disabled={exporting}
           >
-            Cancel
+            {t('exportReports.cancel')}
           </Button>
           <Button 
             onClick={handleExport}
             disabled={exporting || (!includeCharts && !includeMetrics && !includeGoals)}
           >
             <Download className="h-4 w-4 mr-2" />
-            {exporting ? "Exporting..." : "Export"}
+            {exporting ? t('exportReports.exporting') : t('exportReports.export')}
           </Button>
         </DialogFooter>
       </DialogContent>

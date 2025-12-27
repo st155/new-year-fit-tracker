@@ -10,6 +10,7 @@ import {
 import { Calendar, User, Dumbbell, MoreVertical, Eye, Edit, Copy, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 interface TrainingPlanCardProps {
   plan: {
@@ -35,6 +36,7 @@ export const TrainingPlanCard = ({
   onDelete
 }: TrainingPlanCardProps) => {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation('trainer');
   
   const handleAction = (e: React.MouseEvent, action: () => void) => {
     e.stopPropagation();
@@ -45,7 +47,15 @@ export const TrainingPlanCard = ({
     navigate(`/training-plans/${plan.id}`);
   };
   
-  const daysOfWeek = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+  const daysOfWeek = [
+    t('trainingPlans.days.mon'),
+    t('trainingPlans.days.tue'),
+    t('trainingPlans.days.wed'),
+    t('trainingPlans.days.thu'),
+    t('trainingPlans.days.fri'),
+    t('trainingPlans.days.sat'),
+    t('trainingPlans.days.sun')
+  ];
   const workoutCount = plan.workout_count || 0;
 
   return (
@@ -83,18 +93,18 @@ export const TrainingPlanCard = ({
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem onClick={(e) => handleAction(e as any, handleCardClick)}>
               <Eye className="h-4 w-4 mr-2" />
-              Просмотр
+              {t('trainingPlans.view')}
             </DropdownMenuItem>
             {onEdit && (
               <DropdownMenuItem onClick={(e) => handleAction(e as any, onEdit)}>
                 <Edit className="h-4 w-4 mr-2" />
-                Редактировать
+                {t('trainingPlans.edit')}
               </DropdownMenuItem>
             )}
             {onDuplicate && (
               <DropdownMenuItem onClick={(e) => handleAction(e as any, onDuplicate)}>
                 <Copy className="h-4 w-4 mr-2" />
-                Дублировать
+                {t('trainingPlans.duplicate')}
               </DropdownMenuItem>
             )}
             {onDelete && (
@@ -103,7 +113,7 @@ export const TrainingPlanCard = ({
                 className="text-destructive focus:text-destructive"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
-                Удалить
+                {t('trainingPlans.deletePlan')}
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>
@@ -114,7 +124,7 @@ export const TrainingPlanCard = ({
       <div className="mb-3">
         <div className="flex items-center gap-2 mb-2 text-xs text-muted-foreground">
           <Dumbbell className="h-3 w-3" />
-          <span>Тренировочные дни</span>
+          <span>{t('trainingPlans.trainingDays')}</span>
         </div>
         <div className="flex gap-1">
           {daysOfWeek.map((day, idx) => (
@@ -136,24 +146,24 @@ export const TrainingPlanCard = ({
       <div className="flex flex-wrap gap-3 text-sm text-muted-foreground mb-3 pt-2 border-t">
         <div className="flex items-center gap-1">
           <Calendar className="h-4 w-4" />
-          {plan.duration_weeks} нед.
+          {plan.duration_weeks} {t('trainingPlans.weeks')}
         </div>
         <div className="flex items-center gap-1">
           <User className="h-4 w-4" />
-          {plan.assigned_count} назн.
+          {plan.assigned_count} {t('trainingPlans.assigned')}
         </div>
         <div className="flex items-center gap-1">
           <Dumbbell className="h-4 w-4" />
-          {workoutCount} трен.
+          {workoutCount} {t('trainingPlans.workouts')}
         </div>
       </div>
 
       <div className="flex items-center justify-between">
         <Badge variant="secondary" className="text-xs">
-          {new Date(plan.created_at).toLocaleDateString('ru-RU')}
+          {new Date(plan.created_at).toLocaleDateString(i18n.language === 'ru' ? 'ru-RU' : 'en-US')}
         </Badge>
         <div className="text-xs text-muted-foreground flex items-center gap-1">
-          Нажмите для просмотра
+          {t('trainingPlans.clickToView')}
           <Eye className="h-3 w-3" />
         </div>
       </div>

@@ -4,10 +4,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { CheckCircle, XCircle, Loader2, Sparkles } from 'lucide-react';
 import { AIPendingAction } from '@/hooks/useAIPendingActions';
 import { formatDistanceToNow } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useClientContext } from '@/contexts/ClientContext';
+import { useTranslation } from 'react-i18next';
 
 interface AIPendingActionsPanelProps {
   pendingActions: AIPendingAction[];
@@ -24,6 +25,8 @@ export const AIPendingActionsPanel = ({
 }: AIPendingActionsPanelProps) => {
   const navigate = useNavigate();
   const { setSelectedClient } = useClientContext();
+  const { t, i18n } = useTranslation('trainer');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
 
   const handleExecute = async (action: AIPendingAction) => {
     try {
@@ -39,9 +42,9 @@ export const AIPendingActionsPanel = ({
       
       // Show success toast with navigation option
       if (clientId) {
-        toast.success("Действие выполнено", {
+        toast.success(t('ai.actionExecuted'), {
           action: {
-            label: "Открыть клиента",
+            label: t('ai.openClient'),
             onClick: () => {
               setSelectedClient(clientId);
               navigate(`/trainer-dashboard?tab=clients&client=${clientId}`);
@@ -49,7 +52,7 @@ export const AIPendingActionsPanel = ({
           }
         });
       } else {
-        toast.success("Действие выполнено");
+        toast.success(t('ai.actionExecuted'));
       }
     } catch (error: any) {
       // Handle specific errors
@@ -70,9 +73,9 @@ export const AIPendingActionsPanel = ({
     return (
       <div className="text-center py-12 text-muted-foreground">
         <Sparkles className="h-12 w-12 mx-auto mb-4 opacity-50" />
-        <h3 className="text-lg font-medium mb-2">Нет ожидающих действий</h3>
+        <h3 className="text-lg font-medium mb-2">{t('ai.noPendingActions')}</h3>
         <p className="text-sm">
-          Когда AI предложит выполнить действия, они появятся здесь для подтверждения
+          {t('ai.pendingActionsDesc')}
         </p>
       </div>
     );
@@ -81,9 +84,9 @@ export const AIPendingActionsPanel = ({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Ожидающие действия</h2>
+        <h2 className="text-lg font-semibold">{t('ai.pendingActions')}</h2>
         <span className="text-sm text-muted-foreground">
-          {pendingActions.length} {pendingActions.length === 1 ? 'действие' : 'действий'}
+          {pendingActions.length} {pendingActions.length === 1 ? t('ai.action') : t('ai.actions')}
         </span>
       </div>
 
@@ -101,7 +104,7 @@ export const AIPendingActionsPanel = ({
                       <span className="text-xs text-muted-foreground">
                         {formatDistanceToNow(new Date(action.created_at), {
                           addSuffix: true,
-                          locale: ru
+                          locale: dateLocale
                         })}
                       </span>
                     </div>
@@ -123,7 +126,7 @@ export const AIPendingActionsPanel = ({
                     ) : (
                       <CheckCircle className="h-4 w-4 mr-2" />
                     )}
-                    Выполнить
+                    {t('ai.execute')}
                   </Button>
                   <Button
                     onClick={() => onReject(action.id)}
@@ -133,14 +136,14 @@ export const AIPendingActionsPanel = ({
                     className="flex-1"
                   >
                     <XCircle className="h-4 w-4 mr-2" />
-                    Отклонить
+                    {t('ai.reject')}
                   </Button>
                 </div>
 
                 {action.action_data && (
                   <details className="text-xs">
                     <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
-                      Детали действия
+                      {t('ai.actionDetails')}
                     </summary>
                     <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-auto">
                       {JSON.stringify(action.action_data, null, 2)}
