@@ -28,6 +28,64 @@ function log(level: 'info' | 'warn' | 'error' | 'debug', message: string, metada
   }
 }
 
+// Verify WHOOP webhook signature (HMAC-SHA256)
+async function verifyWhoopSignature(
+  rawBody: string, 
+  signatureHeader: string | null, 
+  timestampHeader: string | null
+): Promise<{ valid: boolean; error?: string }> {
+  const clientSecret = Deno.env.get('WHOOP_CLIENT_SECRET');
+  
+  if (!clientSecret) {
+    // If secret not configured, skip validation but log warning
+    return { valid: true, error: 'WHOOP_CLIENT_SECRET not configured - signature validation skipped' };
+  }
+  
+  if (!signatureHeader || !timestampHeader) {
+    return { valid: false, error: 'Missing signature headers' };
+  }
+  
+  // Create the signature base string: timestamp + raw body
+  const signatureBase = timestampHeader + rawBody;
+  
+  // Generate HMAC-SHA256
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(clientSecret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  
+  const signature = await crypto.subtle.sign(
+    'HMAC',
+    key,
+    encoder.encode(signatureBase)
+  );
+  
+  // Base64 encode the result
+  const calculatedSignature = btoa(
+    String.fromCharCode(...new Uint8Array(signature))
+  );
+  
+  // Constant-time comparison to prevent timing attacks
+  if (calculatedSignature.length !== signatureHeader.length) {
+    return { valid: false, error: 'Signature length mismatch' };
+  }
+  
+  let isValid = true;
+  for (let i = 0; i < calculatedSignature.length; i++) {
+    if (calculatedSignature[i] !== signatureHeader[i]) {
+      isValid = false;
+    }
+  }
+  
+  return isValid 
+    ? { valid: true } 
+    : { valid: false, error: 'Invalid signature' };
+}
+
 serve(async (req) => {
   const requestId = crypto.randomUUID();
   const startTime = Date.now();
@@ -75,12 +133,13 @@ serve(async (req) => {
       timestamp: new Date().toISOString(),
       requestId,
       service: 'webhook-whoop',
-      version: '2.0',
+      version: '2.1',
       checks: {
         database: tokenError ? 'error' : 'ok',
         activeUsers: tokenCount || 0,
         lastWebhook: lastWebhookTime || 'never',
         recentEventTypes: webhookTypes,
+        signatureValidation: Deno.env.get('WHOOP_CLIENT_SECRET') ? 'enabled' : 'disabled',
       },
       endpoints: {
         webhook: 'POST /',
@@ -128,6 +187,36 @@ serve(async (req) => {
       bodyLength: rawBody.length,
       bodyPreview: rawBody.substring(0, 200),
     });
+    
+    // Verify webhook signature
+    const signatureHeader = req.headers.get('X-WHOOP-Signature');
+    const timestampHeader = req.headers.get('X-WHOOP-Signature-Timestamp');
+    
+    const signatureResult = await verifyWhoopSignature(rawBody, signatureHeader, timestampHeader);
+    
+    if (!signatureResult.valid) {
+      log('warn', 'Webhook signature verification failed', {
+        requestId,
+        error: signatureResult.error,
+        hasSignature: !!signatureHeader,
+        hasTimestamp: !!timestampHeader,
+      });
+      
+      return new Response(JSON.stringify({ 
+        error: 'Unauthorized',
+        message: signatureResult.error 
+      }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    if (signatureResult.error) {
+      // Signature validation skipped (no secret configured)
+      log('warn', signatureResult.error, { requestId });
+    } else {
+      log('info', 'Webhook signature verified', { requestId });
+    }
     
     if (!rawBody || rawBody.trim() === '') {
       log('warn', 'Empty body received', { requestId });
