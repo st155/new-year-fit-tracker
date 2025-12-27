@@ -66,29 +66,13 @@ const Landing = () => {
     }
   };
 
-  const testimonials = [
-    {
-      name: "Сергей Н.",
-      initials: "СН",
-      role: "Участник New Year Challenge",
-      quote: "Сбросил 15 кг за 3 месяца! Командная поддержка творит чудеса.",
-      achievement: "🏆 Победитель челленджа"
-    },
-    {
-      name: "Анна К.",
-      initials: "АК",
-      role: "CrossFit Атлет",
-      quote: "Метрики помогли оптимизировать тренировки. PR в каждом упражнении!",
-      achievement: "💪 +40% силовые показатели"
-    },
-    {
-      name: "Игорь М.",
-      initials: "ИМ",
-      role: "Марафонец",
-      quote: "VO2max вырос с 48 до 55! Приложение - мой цифровой тренер.",
-      achievement: "🏃 Личный рекорд в марафоне"
-    }
-  ];
+  const testimonials = t('landing.testimonials', { returnObjects: true }) as Array<{
+    name: string;
+    initials: string;
+    role: string;
+    quote: string;
+    achievement: string;
+  }>;
 
   console.log('🎬 [Landing] About to RETURN JSX');
   
@@ -111,7 +95,7 @@ const Landing = () => {
               onClick={handleGetStarted}
               className="bg-gradient-primary text-primary-foreground hover:shadow-glow"
             >
-              {user ? 'Перейти в приложение' : t('landing.getStarted')}
+              {user ? t('landing.goToApp') : t('landing.getStarted')}
             </Button>
           </div>
         </div>
@@ -168,7 +152,7 @@ const Landing = () => {
           <div className="glass-card backdrop-blur-xl px-4 py-2 rounded-full border border-primary/30 shadow-glow">
             <div className="flex items-center gap-2">
               <Brain className="h-4 w-4 text-primary" />
-              <span className="text-sm font-semibold text-primary">92% Точность</span>
+              <span className="text-sm font-semibold text-primary">{t('landing.floatingBadges.accuracy')}</span>
             </div>
           </div>
         </motion.div>
@@ -181,7 +165,7 @@ const Landing = () => {
           <div className="glass-card backdrop-blur-xl px-4 py-2 rounded-full border border-accent/30 shadow-glow">
             <div className="flex items-center gap-2">
               <Zap className="h-4 w-4 text-accent" />
-              <span className="text-sm font-semibold text-accent">24/7 Мониторинг</span>
+              <span className="text-sm font-semibold text-accent">{t('landing.floatingBadges.monitoring')}</span>
             </div>
           </div>
         </motion.div>
@@ -235,7 +219,7 @@ const Landing = () => {
                 onClick={handleGetStarted}
               >
                 <span className="flex items-center gap-2">
-                  {user ? 'Перейти в приложение' : t('landing.startFreeTrial')}
+                  {user ? t('landing.goToApp') : t('landing.startFreeTrial')}
                   <ArrowRight className="h-5 w-5" />
                 </span>
               </HoverBorderGradient>
@@ -264,10 +248,10 @@ const Landing = () => {
                   <span className="text-accent font-bold text-lg">SG</span>
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold text-foreground">Hi, Sergey!</h3>
+                  <h3 className="text-2xl font-bold text-foreground">{t('landing.mockDashboard.greeting')}</h3>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <Badge variant="secondary">Participant</Badge>
-                    <span>🏆 New Year Challenge</span>
+                    <Badge variant="secondary">{t('landing.mockDashboard.participant')}</Badge>
+                    <span>🏆 {t('landing.mockDashboard.challenge')}</span>
                   </div>
                 </div>
               </div>
@@ -281,8 +265,8 @@ const Landing = () => {
               >
                 <div className="flex items-center justify-between mb-3">
                   <div>
-                    <span className="text-lg font-bold text-primary">94 DAYS LEFT</span>
-                    <div className="text-sm text-muted-foreground">10% COMPLETED</div>
+                    <span className="text-lg font-bold text-primary">94 {t('landing.mockDashboard.daysLeft')}</span>
+                    <div className="text-sm text-muted-foreground">10% {t('landing.mockDashboard.completed')}</div>
                   </div>
                 </div>
                 <div className="w-full bg-muted/30 rounded-full h-2 overflow-hidden">
@@ -306,13 +290,13 @@ const Landing = () => {
                 >
                   <Card className="border-2 border-metric-body-fat bg-metric-body-fat/5 hover:scale-105 hover:shadow-glow transition-all duration-300">
                   <CardContent className="p-4">
-                    <div className="text-sm font-medium text-muted-foreground mb-2">BODY FAT</div>
+                    <div className="text-sm font-medium text-muted-foreground mb-2">{t('landing.mockDashboard.bodyFat')}</div>
                     <div className="flex items-baseline gap-1 mb-2">
                       <span className="text-2xl font-bold text-foreground">18.5</span>
                       <span className="text-sm text-muted-foreground">%</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">overweight</span>
+                      <span className="text-xs text-muted-foreground">{t('landing.mockDashboard.overweight')}</span>
                       <Badge variant="destructive" className="text-xs">-3%</Badge>
                     </div>
                   </CardContent>
@@ -327,13 +311,13 @@ const Landing = () => {
                 >
                   <Card className="border-2 border-metric-weight bg-metric-weight/5 hover:scale-105 hover:shadow-glow transition-all duration-300">
                   <CardContent className="p-4">
-                    <div className="text-sm font-medium text-muted-foreground mb-2">WEIGHT</div>
+                    <div className="text-sm font-medium text-muted-foreground mb-2">{t('landing.mockDashboard.weight')}</div>
                     <div className="flex items-baseline gap-1 mb-2">
                       <span className="text-2xl font-bold text-foreground">72.0</span>
                       <span className="text-sm text-muted-foreground">kg</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">on track</span>
+                      <span className="text-xs text-muted-foreground">{t('landing.mockDashboard.onTrack')}</span>
                       <Badge variant="destructive" className="text-xs">-2%</Badge>
                     </div>
                   </CardContent>
@@ -348,12 +332,12 @@ const Landing = () => {
                 >
                   <Card className="border-2 border-metric-vo2max bg-metric-vo2max/5 hover:scale-105 hover:shadow-glow transition-all duration-300">
                   <CardContent className="p-4">
-                    <div className="text-sm font-medium text-muted-foreground mb-2">VO₂MAX</div>
+                    <div className="text-sm font-medium text-muted-foreground mb-2">{t('landing.mockDashboard.vo2max')}</div>
                     <div className="flex items-baseline gap-1 mb-2">
                       <span className="text-2xl font-bold text-foreground">52.1</span>
                       <span className="text-sm text-muted-foreground">ML/KG/MIN</span>
                     </div>
-                    <span className="text-xs text-muted-foreground">71 records</span>
+                    <span className="text-xs text-muted-foreground">71 {t('landing.mockDashboard.records')}</span>
                   </CardContent>
                   </Card>
                 </motion.div>
@@ -366,13 +350,13 @@ const Landing = () => {
                 >
                   <Card className="border-2 border-metric-row bg-metric-row/5 hover:scale-105 hover:shadow-glow transition-all duration-300">
                   <CardContent className="p-4">
-                    <div className="text-sm font-medium text-muted-foreground mb-2">2KM ROW</div>
+                    <div className="text-sm font-medium text-muted-foreground mb-2">{t('landing.mockDashboard.row2km')}</div>
                     <div className="flex items-baseline gap-1 mb-2">
                       <span className="text-2xl font-bold text-foreground">7:25</span>
                       <span className="text-sm text-muted-foreground">MIN</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">34 attempts</span>
+                      <span className="text-xs text-muted-foreground">34 {t('landing.mockDashboard.attempts')}</span>
                       <Badge variant="destructive" className="text-xs">-2%</Badge>
                     </div>
                   </CardContent>
@@ -389,8 +373,7 @@ const Landing = () => {
                   className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10"
                 >
                   <div className="bg-card border-4 border-primary rounded-full w-20 h-20 flex flex-col items-center justify-center shadow-[0_0_30px_rgba(6,182,212,0.5)] hover:shadow-[0_0_50px_rgba(6,182,212,0.7)] transition-shadow">
-                    <div className="text-xs text-muted-foreground">TEAM</div>
-                    <div className="text-xs text-muted-foreground">RANK:</div>
+                    <div className="text-xs text-muted-foreground">{t('landing.mockDashboard.teamRank')}:</div>
                     <div className="text-lg font-bold text-primary">#3</div>
                   </div>
                 </motion.div>
@@ -410,10 +393,10 @@ const Landing = () => {
             className="glass-card backdrop-blur-xl p-8 rounded-2xl border border-border/50"
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
-              <StatCard icon={Users} value={1000} label="Активных пользователей" suffix="+" />
-              <StatCard icon={Trophy} value={250} label="Челленджей" suffix="+" />
-              <StatCard icon={Activity} value={50000} label="Тренировок" suffix="+" />
-              <StatCard icon={Target} value={94} label="% Достижения целей" suffix="%" />
+              <StatCard icon={Users} value={1000} label={t('landing.stats.activeUsers')} suffix="+" />
+              <StatCard icon={Trophy} value={250} label={t('landing.stats.challenges')} suffix="+" />
+              <StatCard icon={Activity} value={50000} label={t('landing.stats.workouts')} suffix="+" />
+              <StatCard icon={Target} value={94} label={t('landing.stats.goalRate')} suffix="%" />
             </div>
           </motion.div>
         </div>
@@ -520,15 +503,15 @@ const Landing = () => {
             className="text-center mb-12"
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Истории успеха наших участников
+              {t('landing.testimonialsSection.title')}
             </h2>
             <p className="text-lg text-muted-foreground">
-              Присоединяйтесь к сообществу тех, кто уже достиг своих целей
+              {t('landing.testimonialsSection.subtitle')}
             </p>
           </motion.div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {testimonials.map((t, i) => (
+            {testimonials.map((testimonial, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 30 }}
@@ -540,14 +523,14 @@ const Landing = () => {
               >
                 <div className="flex items-center gap-3 mb-4">
                   <div className="h-12 w-12 rounded-full bg-gradient-to-r from-cyan-500 to-purple-500 flex items-center justify-center text-white font-bold">
-                    {t.initials}
+                    {testimonial.initials}
                   </div>
                   <div>
-                    <div className="font-semibold text-foreground">{t.name}</div>
-                    <div className="text-sm text-muted-foreground">{t.role}</div>
+                    <div className="font-semibold text-foreground">{testimonial.name}</div>
+                    <div className="text-sm text-muted-foreground">{testimonial.role}</div>
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground italic mb-4">"{t.quote}"</p>
+                <p className="text-sm text-muted-foreground italic mb-4">"{testimonial.quote}"</p>
                 <div className="flex gap-1 mb-4">
                   {[...Array(5)].map((_, starIndex) => (
                     <Star key={starIndex} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
@@ -555,7 +538,7 @@ const Landing = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <Trophy className="h-4 w-4 text-primary" />
-                  <span className="text-xs text-primary font-semibold">{t.achievement}</span>
+                  <span className="text-xs text-primary font-semibold">{testimonial.achievement}</span>
                 </div>
               </motion.div>
             ))}
@@ -619,7 +602,7 @@ const Landing = () => {
                   onClick={handleCTAClick}
                 >
                   <span className="flex items-center gap-2">
-                    {user ? 'Перейти в приложение' : t('landing.getStartedForFree')}
+                    {user ? t('landing.goToApp') : t('landing.getStartedForFree')}
                     <ArrowRight className="h-5 w-5" />
                   </span>
                 </HoverBorderGradient>
