@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { hoverLift } from '@/lib/animations-v3';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Trophy, Users, Calendar, CheckCircle2, Clock, Target, UserPlus, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
-import { enUS } from "date-fns/locale";
+import { enUS, ru } from "date-fns/locale";
 import { ChallengePreviewStats } from "./ChallengePreviewStats";
 import { ChallengeMiniProgress } from "./ChallengeMiniProgress";
 import { cn } from "@/lib/utils";
@@ -30,6 +31,9 @@ interface ChallengeCardProps {
 }
 
 export function ChallengeCard({ challenge }: ChallengeCardProps) {
+  const { t, i18n } = useTranslation('challenges');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
+  
   const participantCount = challenge.challenge_participants?.length || 0;
   const endDate = new Date(challenge.end_date);
   const daysLeft = Math.ceil((endDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
@@ -76,17 +80,17 @@ export function ChallengeCard({ challenge }: ChallengeCardProps) {
           <div className="flex items-center gap-2 shrink-0">
             {challenge.isFeatured && (
               <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0">
-                Featured
+                {t('card.featured')}
               </Badge>
             )}
             {challenge.isParticipant ? (
               <Badge className="bg-success/20 text-success border-success/50 animate-pulse">
                 <CheckCircle2 className="h-3 w-3 mr-1" />
-                Участвую
+                {t('card.participating')}
               </Badge>
             ) : (
               <Badge variant="outline">
-                Доступно
+                {t('card.available')}
               </Badge>
             )}
           </div>
@@ -103,7 +107,7 @@ export function ChallengeCard({ challenge }: ChallengeCardProps) {
           <div className="glass rounded-lg p-3 space-y-1">
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <Users className="h-3.5 w-3.5" />
-              <span className="text-xs">Participants</span>
+              <span className="text-xs">{t('card.participants')}</span>
             </div>
             <p className="text-lg font-bold text-primary">{participantCount}</p>
           </div>
@@ -111,7 +115,7 @@ export function ChallengeCard({ challenge }: ChallengeCardProps) {
           <div className="glass rounded-lg p-3 space-y-1">
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <Target className="h-3.5 w-3.5" />
-              <span className="text-xs">Goals</span>
+              <span className="text-xs">{t('card.goals')}</span>
             </div>
             <p className="text-lg font-bold text-secondary">{totalGoals}</p>
           </div>
@@ -131,15 +135,15 @@ export function ChallengeCard({ challenge }: ChallengeCardProps) {
             <Clock className="h-3.5 w-3.5" />
             <span>
               {daysLeft > 0 ? (
-                <>Ends {formatDistanceToNow(endDate, { addSuffix: true, locale: enUS })}</>
+                <>{t('card.ends', { time: formatDistanceToNow(endDate, { addSuffix: false, locale: dateLocale }) })}</>
               ) : (
-                <>Ended</>
+                <>{t('card.ended')}</>
               )}
             </span>
           </div>
           {isEnding && (
             <Badge variant="destructive" className="text-xs py-0">
-              Ending soon!
+              {t('card.endingSoon')}
             </Badge>
           )}
         </div>
@@ -158,7 +162,7 @@ export function ChallengeCard({ challenge }: ChallengeCardProps) {
             </div>
             {participantCount > 3 && (
               <span className="text-xs text-muted-foreground">
-                +{participantCount - 3} more
+                {t('card.more', { count: participantCount - 3 })}
               </span>
             )}
           </div>
@@ -177,12 +181,12 @@ export function ChallengeCard({ challenge }: ChallengeCardProps) {
             {challenge.isParticipant ? (
               <>
                 <Trophy className="h-4 w-4" />
-                View Progress
+                {t('card.viewProgress')}
               </>
             ) : (
               <>
                 <UserPlus className="h-5 w-5" />
-                Присоединиться к челленджу
+                {t('card.joinChallenge')}
               </>
             )}
           </span>

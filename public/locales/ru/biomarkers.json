@@ -1,0 +1,20 @@
+{
+  "qualitative": {
+    "values": {
+      "negative": "Отрицательный",
+      "trace": "Следы",
+      "positive": "Положительный"
+    },
+    "tooltip": {
+      "result": "Результат:",
+      "laboratory": "Лаборатория:"
+    },
+    "chartHint": "График показывает качественные изменения результатов во времени"
+  },
+  "trendChart": {
+    "minLabel": "Мин",
+    "maxLabel": "Макс",
+    "optMinLabel": "Опт. мин",
+    "optMaxLabel": "Опт. макс"
+  }
+}

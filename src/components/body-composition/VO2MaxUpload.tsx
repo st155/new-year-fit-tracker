@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +16,7 @@ interface VO2MaxUploadProps {
 }
 
 export function VO2MaxUpload({ onSuccess }: VO2MaxUploadProps) {
+  const { t } = useTranslation('bodyComposition');
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -32,7 +34,7 @@ export function VO2MaxUpload({ onSuccess }: VO2MaxUploadProps) {
     try {
       const value = parseFloat(manualValue);
       if (isNaN(value) || value < 10 || value > 100) {
-        toast.error('VO2Max должен быть от 10 до 100 мл/кг/мин');
+        toast.error(t('vo2max.manual.validation'));
         return;
       }
 
@@ -73,7 +75,7 @@ export function VO2MaxUpload({ onSuccess }: VO2MaxUploadProps) {
 
       if (error) throw error;
 
-      toast.success(`VO2Max ${value} мл/кг/мин сохранён!`);
+      toast.success(t('vo2max.manual.success', { value }));
       setManualValue('');
       
       // Invalidate queries
@@ -84,7 +86,7 @@ export function VO2MaxUpload({ onSuccess }: VO2MaxUploadProps) {
       onSuccess?.();
     } catch (error) {
       console.error('Error saving VO2Max:', error);
-      toast.error('Не удалось сохранить VO2Max');
+      toast.error(t('vo2max.manual.error'));
     } finally {
       setIsSubmitting(false);
     }
@@ -125,26 +127,26 @@ export function VO2MaxUpload({ onSuccess }: VO2MaxUploadProps) {
 
       if (analysisError) {
         console.warn('AI analysis failed:', analysisError);
-        toast.info('Скриншот загружен, но автоанализ недоступен. Введите значение вручную.');
+        toast.info(t('vo2max.upload.fallback'));
       } else {
-        toast.success('Скриншот загружен! AI анализирует данные...');
+        toast.success(t('vo2max.upload.success'));
       }
 
       queryClient.invalidateQueries({ queryKey: ['metrics'] });
       onSuccess?.();
     } catch (error) {
       console.error('Error uploading screenshot:', error);
-      toast.error('Не удалось загрузить скриншот');
+      toast.error(t('vo2max.upload.error'));
     } finally {
       setIsUploading(false);
     }
-  }, [user?.id, queryClient, onSuccess]);
+  }, [user?.id, queryClient, onSuccess, t]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 10 * 1024 * 1024) {
-        toast.error('Файл слишком большой (макс. 10MB)');
+        toast.error(t('vo2max.upload.tooLarge'));
         return;
       }
       handleScreenshotUpload(file);
@@ -159,9 +161,9 @@ export function VO2MaxUpload({ onSuccess }: VO2MaxUploadProps) {
             <Heart className="h-5 w-5 text-white" />
           </div>
           <div>
-            <CardTitle className="text-lg">Добавить VO2Max</CardTitle>
+            <CardTitle className="text-lg">{t('vo2max.title')}</CardTitle>
             <CardDescription>
-              Загрузите скриншот или введите значение вручную
+              {t('vo2max.subtitle')}
             </CardDescription>
           </div>
         </div>
@@ -170,15 +172,13 @@ export function VO2MaxUpload({ onSuccess }: VO2MaxUploadProps) {
         <Alert className="border-blue-500/30 bg-blue-500/10">
           <Info className="h-4 w-4 text-blue-500" />
           <AlertDescription className="text-sm text-muted-foreground">
-            <strong>Источники VO2Max:</strong> Oura Ring автоматически передаёт данные. 
-            WHOOP не отдаёт VO2Max через API — загрузите скриншот из приложения.
-            Apple Watch показывает VO2Max, но Apple Health не интегрирован напрямую.
+            <strong>{t('vo2max.sources.title')}</strong> {t('vo2max.sources.oura')} {t('vo2max.sources.whoop')} {t('vo2max.sources.apple')}
           </AlertDescription>
         </Alert>
 
         {/* Screenshot upload */}
         <div className="space-y-2">
-          <Label className="text-sm font-medium">Загрузить скриншот</Label>
+          <Label className="text-sm font-medium">{t('vo2max.upload.label')}</Label>
           <div className="flex gap-2">
             <Label
               htmlFor="vo2max-screenshot"
@@ -190,7 +190,7 @@ export function VO2MaxUpload({ onSuccess }: VO2MaxUploadProps) {
                 <>
                   <Camera className="h-5 w-5 text-muted-foreground" />
                   <span className="text-sm text-muted-foreground">
-                    Выберите фото или скриншот
+                    {t('vo2max.upload.placeholder')}
                   </span>
                 </>
               )}
@@ -211,7 +211,7 @@ export function VO2MaxUpload({ onSuccess }: VO2MaxUploadProps) {
             <span className="w-full border-t border-muted-foreground/20" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-card px-2 text-muted-foreground">или</span>
+            <span className="bg-card px-2 text-muted-foreground">{t('vo2max.or')}</span>
           </div>
         </div>
 
@@ -220,7 +220,7 @@ export function VO2MaxUpload({ onSuccess }: VO2MaxUploadProps) {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label htmlFor="vo2max-value" className="text-xs">
-                VO2Max (мл/кг/мин)
+                {t('vo2max.manual.label')}
               </Label>
               <Input
                 id="vo2max-value"
@@ -235,7 +235,7 @@ export function VO2MaxUpload({ onSuccess }: VO2MaxUploadProps) {
             </div>
             <div className="space-y-1">
               <Label htmlFor="vo2max-date" className="text-xs">
-                Дата измерения
+                {t('vo2max.manual.dateLabel')}
               </Label>
               <Input
                 id="vo2max-date"
@@ -255,7 +255,7 @@ export function VO2MaxUpload({ onSuccess }: VO2MaxUploadProps) {
             ) : (
               <Upload className="mr-2 h-4 w-4" />
             )}
-            Сохранить VO2Max
+            {t('vo2max.manual.submit')}
           </Button>
         </form>
       </CardContent>

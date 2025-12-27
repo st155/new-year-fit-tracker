@@ -1,6 +1,7 @@
+import { useTranslation } from 'react-i18next';
 import { CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from 'recharts';
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 
 interface QualitativeDataPoint {
   date: string;
@@ -28,16 +29,6 @@ const qualitativeValueMap: Record<string, number> = {
   'severe': 4,
 };
 
-// Reverse map for Y-axis labels
-const numericToTextMap: Record<number, string> = {
-  1: 'Отрицательный',
-  2: 'Следы',
-  3: 'Положительный',
-  4: '++',
-  5: '+++',
-  6: '++++',
-};
-
 // Color coding based on severity
 const getColorForValue = (numericValue: number): string => {
   if (numericValue === 1) return 'hsl(160, 84%, 39%)'; // green - negative/absent (good)
@@ -45,55 +36,68 @@ const getColorForValue = (numericValue: number): string => {
   return 'hsl(351, 95%, 71%)'; // rose - positive (alert)
 };
 
-const QualitativeTooltip = ({ active, payload }: any) => {
-  if (!active || !payload || !payload.length) return null;
-
-  const data = payload[0].payload;
+export default function QualitativeTrendChart({ history }: Props) {
+  const { t, i18n } = useTranslation('biomarkers');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
   
-  return (
-    <div className="bg-neutral-950 border border-purple-500/50 rounded-lg p-3 shadow-[0_0_15px_rgba(168,85,247,0.4)]">
-      <p className="text-sm font-medium text-foreground mb-1">
-        {format(new Date(data.date), 'd MMMM yyyy', { locale: ru })}
-      </p>
-      <div className="flex items-center gap-2">
-        <div 
-          className="w-3 h-3 rounded-full" 
-          style={{ 
-            backgroundColor: getColorForValue(data.numericValue),
-            boxShadow: `0 0 8px ${getColorForValue(data.numericValue)}`
-          }}
-        />
-        <p className="text-sm text-muted-foreground">
-          Результат: <span className="text-foreground font-medium">{data.text_value}</span>
+  // Reverse map for Y-axis labels using translations
+  const numericToTextMap: Record<number, string> = {
+    1: t('qualitative.values.negative'),
+    2: t('qualitative.values.trace'),
+    3: t('qualitative.values.positive'),
+    4: '++',
+    5: '+++',
+    6: '++++',
+  };
+
+  const QualitativeTooltip = ({ active, payload }: any) => {
+    if (!active || !payload || !payload.length) return null;
+
+    const data = payload[0].payload;
+    
+    return (
+      <div className="bg-neutral-950 border border-purple-500/50 rounded-lg p-3 shadow-[0_0_15px_rgba(168,85,247,0.4)]">
+        <p className="text-sm font-medium text-foreground mb-1">
+          {format(new Date(data.date), 'd MMMM yyyy', { locale: dateLocale })}
         </p>
+        <div className="flex items-center gap-2">
+          <div 
+            className="w-3 h-3 rounded-full" 
+            style={{ 
+              backgroundColor: getColorForValue(data.numericValue),
+              boxShadow: `0 0 8px ${getColorForValue(data.numericValue)}`
+            }}
+          />
+          <p className="text-sm text-muted-foreground">
+            {t('qualitative.tooltip.result')} <span className="text-foreground font-medium">{data.text_value}</span>
+          </p>
+        </div>
+        {data.laboratory && (
+          <p className="text-xs text-muted-foreground mt-1">
+            {t('qualitative.tooltip.laboratory')} {data.laboratory}
+          </p>
+        )}
       </div>
-      {data.laboratory && (
-        <p className="text-xs text-muted-foreground mt-1">
-          Лаборатория: {data.laboratory}
-        </p>
-      )}
+    );
+  };
+
+  const CustomLegend = () => (
+    <div className="flex justify-center gap-4 text-xs mt-4">
+      <div className="flex items-center gap-2">
+        <div className="w-3 h-3 rounded-full bg-emerald-500" style={{ boxShadow: '0 0 6px hsl(160, 84%, 39%)' }} />
+        <span className="text-muted-foreground">{t('qualitative.values.negative')}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <div className="w-3 h-3 rounded-full bg-amber-500" style={{ boxShadow: '0 0 6px hsl(38, 92%, 50%)' }} />
+        <span className="text-muted-foreground">{t('qualitative.values.trace')}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <div className="w-3 h-3 rounded-full bg-rose-500" style={{ boxShadow: '0 0 6px hsl(351, 95%, 71%)' }} />
+        <span className="text-muted-foreground">{t('qualitative.values.positive')}</span>
+      </div>
     </div>
   );
-};
 
-const CustomLegend = () => (
-  <div className="flex justify-center gap-4 text-xs mt-4">
-    <div className="flex items-center gap-2">
-      <div className="w-3 h-3 rounded-full bg-emerald-500" style={{ boxShadow: '0 0 6px hsl(160, 84%, 39%)' }} />
-      <span className="text-muted-foreground">Отрицательный</span>
-    </div>
-    <div className="flex items-center gap-2">
-      <div className="w-3 h-3 rounded-full bg-amber-500" style={{ boxShadow: '0 0 6px hsl(38, 92%, 50%)' }} />
-      <span className="text-muted-foreground">Следы</span>
-    </div>
-    <div className="flex items-center gap-2">
-      <div className="w-3 h-3 rounded-full bg-rose-500" style={{ boxShadow: '0 0 6px hsl(351, 95%, 71%)' }} />
-      <span className="text-muted-foreground">Положительный</span>
-    </div>
-  </div>
-);
-
-export default function QualitativeTrendChart({ history }: Props) {
   // Transform data: map text values to numeric scale
   const chartData = history.map(item => {
     const textValue = item.text_value?.toLowerCase() || '';
@@ -134,7 +138,7 @@ export default function QualitativeTrendChart({ history }: Props) {
           <XAxis
             dataKey="date"
             className="text-xs"
-            tickFormatter={(date) => format(new Date(date), 'd MMM', { locale: ru })}
+            tickFormatter={(date) => format(new Date(date), 'd MMM', { locale: dateLocale })}
             stroke="hsl(var(--muted-foreground))"
           />
           
@@ -163,7 +167,7 @@ export default function QualitativeTrendChart({ history }: Props) {
       
       <div className="text-center">
         <p className="text-sm text-muted-foreground">
-          График показывает качественные изменения результатов во времени
+          {t('qualitative.chartHint')}
         </p>
       </div>
     </div>

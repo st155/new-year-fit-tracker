@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { HealthData } from "./types";
 import { HealthMetricCard } from "./HealthMetricCard";
 
@@ -6,6 +7,8 @@ interface HeartMetricsProps {
 }
 
 export function HeartMetrics({ healthData }: HeartMetricsProps) {
+  const { t } = useTranslation('trainerDashboard');
+  
   const getLatestValue = (key: keyof HealthData) => {
     const latestData = healthData.find(d => d[key] !== undefined && d[key] !== null);
     return latestData?.[key] as number | undefined;
@@ -45,7 +48,7 @@ export function HeartMetrics({ healthData }: HeartMetricsProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <HealthMetricCard
-        title="Средний пульс"
+        title={t('heartMetrics.avgHr')}
         icon="❤️"
         value={getLatestValue('heart_rate_avg') || 0}
         unit="bpm"
@@ -55,7 +58,7 @@ export function HeartMetrics({ healthData }: HeartMetricsProps) {
       />
       
       <HealthMetricCard
-        title="Пульс в покое"
+        title={t('heartMetrics.restingHr')}
         icon="💓"
         value={getLatestValue('resting_heart_rate') || 0}
         unit="bpm"
@@ -65,7 +68,7 @@ export function HeartMetrics({ healthData }: HeartMetricsProps) {
       />
       
       <HealthMetricCard
-        title="Макс пульс"
+        title={t('heartMetrics.maxHr')}
         icon="💗"
         value={getLatestValue('max_heart_rate') || 0}
         unit="bpm"
@@ -85,7 +88,7 @@ export function HeartMetrics({ healthData }: HeartMetricsProps) {
       />
       
       <HealthMetricCard
-        title="HRV во сне"
+        title={t('heartMetrics.sleepHrv')}
         icon="😴"
         value={getLatestValue('sleep_hrv') || 0}
         unit="ms"
@@ -95,20 +98,20 @@ export function HeartMetrics({ healthData }: HeartMetricsProps) {
       />
       
       <HealthMetricCard
-        title="HR зоны 1-3"
+        title={t('heartMetrics.hrZonesLow')}
         icon="📊"
         value={getLatestValue('hr_zones_low') || 0}
-        unit="мин"
+        unit={t('units.min')}
         source={getLatestSource('hr_zones_low_source')}
         data={getChartData('hr_zones_low')}
         trend={getTrend('hr_zones_low')}
       />
       
       <HealthMetricCard
-        title="HR зоны 4-5"
+        title={t('heartMetrics.hrZonesHigh')}
         icon="📈"
         value={getLatestValue('hr_zones_high') || 0}
-        unit="мин"
+        unit={t('units.min')}
         source={getLatestSource('hr_zones_high_source')}
         data={getChartData('hr_zones_high')}
         trend={getTrend('hr_zones_high')}
