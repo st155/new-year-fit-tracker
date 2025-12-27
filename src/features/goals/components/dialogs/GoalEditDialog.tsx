@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,15 +24,10 @@ interface GoalEditDialogProps {
   onSave: () => void;
 }
 
-const goalTypeLabels: Record<string, string> = {
-  strength: 'Сила',
-  cardio: 'Кардио',
-  endurance: 'Выносливость',
-  body_composition: 'Состав тела',
-  flexibility: 'Гибкость'
-};
+const GOAL_TYPE_KEYS = ['strength', 'cardio', 'endurance', 'body_composition', 'flexibility'] as const;
 
 export function GoalEditDialog({ goal, open, onOpenChange, onSave }: GoalEditDialogProps) {
+  const { t } = useTranslation('goals');
   const [formData, setFormData] = useState({
     goal_name: '',
     goal_type: '',
@@ -75,31 +71,31 @@ export function GoalEditDialog({ goal, open, onOpenChange, onSave }: GoalEditDia
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Редактировать цель</DialogTitle>
+          <DialogTitle>{t('edit.title')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="goal_name">Название цели</Label>
+            <Label htmlFor="goal_name">{t('edit.nameLabel')}</Label>
             <Input
               id="goal_name"
               value={formData.goal_name}
               onChange={(e) => setFormData(prev => ({ ...prev, goal_name: e.target.value }))}
-              placeholder="Введите название"
+              placeholder={t('edit.namePlaceholder')}
             />
           </div>
 
           <div className="space-y-2">
-            <Label>Тип цели</Label>
+            <Label>{t('edit.typeLabel')}</Label>
             <Select
               value={formData.goal_type}
               onValueChange={(value) => setFormData(prev => ({ ...prev, goal_type: value }))}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Выберите тип" />
+                <SelectValue placeholder={t('edit.typePlaceholder')} />
               </SelectTrigger>
               <SelectContent>
-                {Object.entries(goalTypeLabels).map(([value, label]) => (
-                  <SelectItem key={value} value={value}>{label}</SelectItem>
+                {GOAL_TYPE_KEYS.map((key) => (
+                  <SelectItem key={key} value={key}>{t(`types.${key}`)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -107,7 +103,7 @@ export function GoalEditDialog({ goal, open, onOpenChange, onSave }: GoalEditDia
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="target_value">Целевое значение</Label>
+              <Label htmlFor="target_value">{t('edit.targetLabel')}</Label>
               <Input
                 id="target_value"
                 type="number"
@@ -118,12 +114,12 @@ export function GoalEditDialog({ goal, open, onOpenChange, onSave }: GoalEditDia
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="target_unit">Единица</Label>
+              <Label htmlFor="target_unit">{t('edit.unitLabel')}</Label>
               <Input
                 id="target_unit"
                 value={formData.target_unit}
                 onChange={(e) => setFormData(prev => ({ ...prev, target_unit: e.target.value }))}
-                placeholder="кг, раз, мин"
+                placeholder={t('edit.unitPlaceholder')}
               />
             </div>
           </div>
@@ -134,14 +130,14 @@ export function GoalEditDialog({ goal, open, onOpenChange, onSave }: GoalEditDia
               disabled={updateGoal.isPending} 
               className="flex-1"
             >
-              {updateGoal.isPending ? 'Сохранение...' : 'Сохранить'}
+              {updateGoal.isPending ? t('edit.saving') : t('edit.save')}
             </Button>
             <Button 
               variant="outline" 
               onClick={() => onOpenChange(false)} 
               className="flex-1"
             >
-              Отмена
+              {t('edit.cancel')}
             </Button>
           </div>
         </div>

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { AIConversation, AIMessage } from '@/types/trainer';
+import i18n from '@/i18n';
 
 export const useAIConversations = (userId: string | undefined) => {
   const [conversations, setConversations] = useState<AIConversation[]>([]);
@@ -40,8 +41,8 @@ export const useAIConversations = (userId: string | undefined) => {
     } catch (error) {
       console.error('Error loading conversations:', error);
       showToast({
-        title: 'Ошибка',
-        description: 'Не удалось загрузить историю разговоров',
+        title: i18n.t('trainer:aiToast.error'),
+        description: i18n.t('trainer:aiToast.errorLoadConversations'),
         variant: 'destructive'
       });
     } finally {
@@ -66,8 +67,8 @@ export const useAIConversations = (userId: string | undefined) => {
     } catch (error) {
       console.error('❌ [loadMessages] Error:', error);
       showToast({
-        title: 'Ошибка',
-        description: 'Не удалось загрузить сообщения',
+        title: i18n.t('trainer:aiToast.error'),
+        description: i18n.t('trainer:aiToast.errorLoadMessages'),
         variant: 'destructive'
       });
     }
@@ -153,8 +154,8 @@ export const useAIConversations = (userId: string | undefined) => {
     if (!userId) {
       console.error('❌ [sendMessage] userId is undefined, aborting');
       showToast({
-        title: 'Ошибка авторизации',
-        description: 'Войдите в систему для использования AI',
+        title: i18n.t('trainer:aiToast.authError'),
+        description: i18n.t('trainer:aiToast.authRequired'),
         variant: 'destructive'
       });
       return null;
@@ -180,7 +181,7 @@ export const useAIConversations = (userId: string | undefined) => {
 
     // Add optimistic assistant "preparing" message
     const optimisticAssistantId = addOptimisticMessage(
-      '🤖 Анализирую данные и готовлю структурированный план...', 
+      i18n.t('trainer:aiToast.analyzing'), 
       'assistant'
     );
     
@@ -198,8 +199,8 @@ export const useAIConversations = (userId: string | undefined) => {
       setSending(false);
       setSendingState('timeout');
       showToast({
-        title: '⏱️ AI не отвечает',
-        description: 'Обновите страницу или попробуйте позже',
+        title: i18n.t('trainer:aiToast.timeout'),
+        description: i18n.t('trainer:aiToast.timeoutDesc'),
         variant: 'destructive'
       });
       if (currentConversation) {
@@ -322,8 +323,8 @@ export const useAIConversations = (userId: string | undefined) => {
                     // Trigger immediate refresh of pending actions
                     if (parsed.pendingActionId) {
                       showToast({
-                        title: '📋 План готов',
-                        description: 'Нажмите "Выполнить" в чате для подтверждения',
+                        title: i18n.t('trainer:aiToast.planReady'),
+                        description: i18n.t('trainer:aiToast.planReadyDesc'),
                         duration: 5000
                       });
                       
@@ -469,26 +470,26 @@ export const useAIConversations = (userId: string | undefined) => {
       // Show specific error messages
       if (error.message?.includes('429') || error.message?.includes('rate limit')) {
         showToast({
-          title: 'AI rate limit exceeded',
-          description: 'Please wait a few minutes and try again.',
+          title: i18n.t('trainer:aiToast.rateLimitTitle'),
+          description: i18n.t('trainer:aiToast.rateLimitDesc'),
           variant: 'destructive'
         });
       } else if (error.message?.includes('402') || error.message?.includes('credits')) {
         showToast({
-          title: 'AI credits exhausted',
-          description: 'Please add more credits to your Lovable workspace.',
+          title: i18n.t('trainer:aiToast.creditsTitle'),
+          description: i18n.t('trainer:aiToast.creditsDesc'),
           variant: 'destructive'
         });
       } else if (error.message?.includes('timeout')) {
         showToast({
-          title: 'Таймаут',
-          description: 'AI не отвечает. Обновите страницу.',
+          title: i18n.t('trainer:aiToast.timeoutTitle'),
+          description: i18n.t('trainer:aiToast.timeoutMessage'),
           variant: 'destructive'
         });
       } else {
         showToast({
-          title: 'Ошибка',
-          description: 'Не удалось отправить сообщение. Попробуйте еще раз.',
+          title: i18n.t('trainer:aiToast.error'),
+          description: i18n.t('trainer:aiToast.sendError'),
           variant: 'destructive'
         });
       }
