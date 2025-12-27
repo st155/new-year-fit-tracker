@@ -83,6 +83,11 @@ export interface LeaderboardEntry {
   performancePoints: number;
   recoveryPoints: number;
   synergyPoints: number;
+  // New ranking scores
+  activityScore: number;
+  recoveryScore: number;
+  progressScore: number;
+  balanceScore: number;
   streakDays: number;
   lastActivityDate: string | null;
   badges: MetricsBadge[];
@@ -109,6 +114,8 @@ export interface LeaderboardEntry {
   workouts_last_7d?: number | null;
   weekly_consistency?: number | null;
 }
+
+export type RankingType = 'overall' | 'activity' | 'recovery' | 'progress' | 'balance';
 
 // ============ Report Types ============
 
