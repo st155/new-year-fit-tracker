@@ -1,0 +1,22 @@
+{
+  "teamNotFound": "Team not found",
+  "backToList": "Back to team list",
+  "participants": "participants",
+  "invite": "Invite",
+  "leave": "Leave",
+  "ownerCantLeave": "Owner cannot leave the team. Delete the team or transfer ownership.",
+  "leftTeam": "You left the team",
+  "leaveError": "Failed to leave the team",
+  "tabs": {
+    "activity": "Activity",
+    "members": "Members"
+  },
+  "noActivity": "No activity yet",
+  "startHabitsPrompt": "Start completing habits to see events in the feed",
+  "noMembers": "No members yet",
+  "roles": {
+    "owner": "Owner",
+    "member": "Member"
+  },
+  "anonymous": "Anonymous"
+}

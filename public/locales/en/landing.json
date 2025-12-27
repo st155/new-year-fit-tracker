@@ -1,48 +1,61 @@
 {
-  "getStarted": "Get Started",
-  "goToApp": "Go to App",
-  "newChallengeSoon": "New challenge coming soon!",
-  "heroTitle1": "Achieve fitness goals",
-  "heroTitle2": "together with your team",
-  "heroSubtitle": "Join challenges, track progress and compete with friends",
-  "startFreeTrial": "Start Free Trial",
-  "watchDemo": "Watch Demo",
-  "stats": {
-    "participants": "Participants",
-    "challenges": "Challenges",
-    "metrics": "Metrics tracked"
-  },
-  "features": {
-    "title": "Everything you need to succeed",
-    "tracking": {
-      "title": "Smart Tracking",
-      "desc": "Automatic data collection from your devices"
+  "landing": {
+    "getStarted": "Get Started",
+    "goToApp": "Go to App",
+    "newChallengeSoon": "🚀 New challenge coming soon!",
+    "heroTitle1": "Achieve fitness goals",
+    "heroTitle2": "together with your team",
+    "heroSubtitle": "Join challenges, track progress and compete with friends",
+    "startFreeTrial": "Start Free Trial",
+    "watchDemo": "Watch Demo",
+    "featuresTitle": "Everything you need to succeed",
+    "featuresSubtitle": "Powerful tools to help you reach your goals",
+    "smartGoalTracking": "Smart Goal Tracking",
+    "smartGoalTrackingDesc": "Automatic data collection and analysis from your devices",
+    "teamLeaderboard": "Team Leaderboard",
+    "teamLeaderboardDesc": "Compete with friends and climb the rankings",
+    "realTimeMetrics": "Real-Time Metrics",
+    "realTimeMetricsDesc": "Track progress instantly with data synchronization",
+    "teamCollaboration": "Team Collaboration",
+    "teamCollaborationDesc": "Work towards goals together with your team",
+    "healthIntegration": "Health Integration",
+    "healthIntegrationDesc": "Whoop, Garmin, Apple Health and other devices",
+    "progressAnalytics": "Progress Analytics",
+    "progressAnalyticsDesc": "AI-powered insights to optimize your training",
+    "ctaTitle": "Ready to start your journey?",
+    "ctaSubtitle": "Join thousands of users already achieving their goals",
+    "getStartedForFree": "Get Started Free",
+    "freeTrialNote": "No credit card required • Cancel anytime",
+    "footerCopyright": "© 2024 Elite10. All rights reserved.",
+    "stats": {
+      "activeUsers": "Active Users",
+      "challenges": "Challenges",
+      "workouts": "Workouts",
+      "goalRate": "% Goal Achievement"
     },
-    "challenges": {
-      "title": "Team Challenges",
-      "desc": "Compete with friends and colleagues"
+    "mockDashboard": {
+      "greeting": "Hi, Sergey!",
+      "participant": "Participant",
+      "challenge": "New Year Challenge",
+      "daysLeft": "DAYS LEFT",
+      "completed": "COMPLETED",
+      "bodyFat": "BODY FAT",
+      "weight": "WEIGHT",
+      "vo2max": "VO₂MAX",
+      "row2km": "2KM ROW",
+      "overweight": "overweight",
+      "onTrack": "on track",
+      "records": "records",
+      "attempts": "attempts",
+      "teamRank": "RANK"
     },
-    "ai": {
-      "title": "AI Analytics",
-      "desc": "Personal recommendations based on your data"
+    "floatingBadges": {
+      "accuracy": "92% Accuracy",
+      "monitoring": "24/7 Monitoring"
     },
-    "integrations": {
-      "title": "Integrations",
-      "desc": "Whoop, Garmin, Apple Health and more"
+    "testimonialsSection": {
+      "title": "Success stories from our participants",
+      "subtitle": "Join the community of those who have already achieved their goals"
     }
-  },
-  "testimonials": {
-    "title": "What our users say"
-  },
-  "cta": {
-    "title": "Ready to start?",
-    "subtitle": "Join thousands of users today",
-    "button": "Start Free Trial"
-  },
-  "footer": {
-    "about": "About",
-    "privacy": "Privacy Policy",
-    "terms": "Terms of Service",
-    "contact": "Contact"
   }
 }

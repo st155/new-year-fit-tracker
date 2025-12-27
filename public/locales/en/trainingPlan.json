@@ -1,6 +1,10 @@
 {
-  "notFound": "Training plan not found",
+  "noIdProvided": "Plan ID not provided",
+  "backToPlans": "Back to plans",
   "loading": "Loading plan...",
+  "notFound": "Plan not found",
+  "notFoundDesc": "The requested plan does not exist or has been deleted",
+  "tryAgain": "Try again",
   "tabs": {
     "workouts": "Workouts",
     "clients": "Clients",
