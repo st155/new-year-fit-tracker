@@ -118,49 +118,116 @@ export const getMetricQualityColor = (metricName: string, value: number): string
   return null;
 };
 
-export const getQualityLabel = (metricName: string, value: number): { icon: string; text: string; color: string } | null => {
+export interface QualityLabelTexts {
+  recovery: {
+    low: string;
+    medium: string;
+    high: string;
+  };
+  sleep: {
+    poor: string;
+    normal: string;
+    good: string;
+  };
+  steps: {
+    veryLow: string;
+    low: string;
+    good: string;
+    excellent: string;
+  };
+}
+
+export interface MetricTooltipTexts {
+  recovery: string;
+  sleepEfficiency: string;
+  hrv: string;
+  steps: string;
+}
+
+// Default Russian texts for quality labels
+function getDefaultQualityTexts(): QualityLabelTexts {
+  return {
+    recovery: {
+      low: 'Низкое восстановление',
+      medium: 'Среднее',
+      high: 'Отличное',
+    },
+    sleep: {
+      poor: 'Плохой сон',
+      normal: 'Норма',
+      good: 'Хороший сон',
+    },
+    steps: {
+      veryLow: 'Очень мало',
+      low: 'Маловато',
+      good: 'Хорошо',
+      excellent: 'Отлично',
+    },
+  };
+}
+
+// Default Russian texts for tooltips
+function getDefaultTooltipTexts(): MetricTooltipTexts {
+  return {
+    recovery: 'Оценка готовности организма к нагрузкам. >66 = отличное, 33-66 = среднее, <33 = низкое восстановление',
+    sleepEfficiency: 'Процент времени, проведенного во сне от времени в постели. >85% = отлично, 75-85% = норма, <75% = плохо',
+    hrv: 'Вариабельность сердечного ритма. Индикатор восстановления и адаптации к стрессу. Чем выше - тем лучше',
+    steps: 'Количество шагов за день. Рекомендуется: >10000 шагов. Минимум: 8000',
+  };
+}
+
+export const getQualityLabel = (
+  metricName: string, 
+  value: number,
+  texts?: QualityLabelTexts
+): { icon: string; text: string; color: string } | null => {
   const name = metricName.toLowerCase();
+  const t = texts || getDefaultQualityTexts();
   
   if (name.includes('recovery')) {
-    if (value < 33) return { icon: '🔴', text: 'Низкое восстановление', color: 'hsl(var(--destructive))' };
-    if (value < 67) return { icon: '⚠️', text: 'Среднее', color: 'hsl(var(--warning))' };
-    return { icon: '✅', text: 'Отличное', color: 'hsl(var(--success))' };
+    if (value < 33) return { icon: '🔴', text: t.recovery.low, color: 'hsl(var(--destructive))' };
+    if (value < 67) return { icon: '⚠️', text: t.recovery.medium, color: 'hsl(var(--warning))' };
+    return { icon: '✅', text: t.recovery.high, color: 'hsl(var(--success))' };
   }
   
   if (name.includes('sleep') && name.includes('efficiency')) {
-    if (value < 70) return { icon: '😴', text: 'Плохой сон', color: 'hsl(var(--destructive))' };
-    if (value < 80) return { icon: '😐', text: 'Норма', color: 'hsl(var(--warning))' };
-    return { icon: '😊', text: 'Хороший сон', color: 'hsl(var(--success))' };
+    if (value < 70) return { icon: '😴', text: t.sleep.poor, color: 'hsl(var(--destructive))' };
+    if (value < 80) return { icon: '😐', text: t.sleep.normal, color: 'hsl(var(--warning))' };
+    return { icon: '😊', text: t.sleep.good, color: 'hsl(var(--success))' };
   }
   
   if (name.includes('step')) {
-    if (value < 3000) return { icon: '🔴', text: 'Очень мало', color: 'hsl(var(--destructive))' };
-    if (value < 5000) return { icon: '⚠️', text: 'Маловато', color: 'hsl(var(--warning))' };
-    if (value >= 10000) return { icon: '✅', text: 'Отлично', color: 'hsl(var(--success))' };
-    if (value >= 8000) return { icon: '😊', text: 'Хорошо', color: 'hsl(var(--success))' };
+    if (value < 3000) return { icon: '🔴', text: t.steps.veryLow, color: 'hsl(var(--destructive))' };
+    if (value < 5000) return { icon: '⚠️', text: t.steps.low, color: 'hsl(var(--warning))' };
+    if (value >= 10000) return { icon: '✅', text: t.steps.excellent, color: 'hsl(var(--success))' };
+    if (value >= 8000) return { icon: '😊', text: t.steps.good, color: 'hsl(var(--success))' };
     return null;
   }
   
   return null;
 };
 
-export const getMetricTooltip = (metricName: string): string | null => {
+export const getMetricTooltip = (
+  metricName: string,
+  texts?: MetricTooltipTexts
+): string | null => {
   const name = metricName.toLowerCase();
+  const t = texts || getDefaultTooltipTexts();
   
   if (name.includes('recovery')) {
-    return 'Оценка готовности организма к нагрузкам. >66 = отличное, 33-66 = среднее, <33 = низкое восстановление';
+    return t.recovery;
   }
   
   if (name.includes('sleep') && name.includes('efficiency')) {
-    return 'Процент времени, проведенного во сне от времени в постели. >85% = отлично, 75-85% = норма, <75% = плохо';
+    return t.sleepEfficiency;
   }
   
   if (name.includes('hrv')) {
-    return 'Вариабельность сердечного ритма. Индикатор восстановления и адаптации к стрессу. Чем выше - тем лучше';
+    return t.hrv;
   }
   
   if (name.includes('step')) {
-    return 'Количество шагов за день. Рекомендуется: >10000 шагов. Минимум: 8000';
+    return t.steps;
   }
   
   return null;

@@ -16,7 +16,14 @@
     "selectAllPending": "Выбрать все ожидающие",
     "manage": "Управление",
     "scan": "Сканировать",
-    "aiGenerator": "AI Генератор"
+    "aiGenerator": "AI Генератор",
+    "takenCount": "✅ Принято: {{count}}",
+    "allAlreadyTaken": "Все выбранные добавки уже приняты сегодня",
+    "saveError": "Ошибка при сохранении",
+    "cancelled": "↩️ Отменено: {{name}}",
+    "taken": "✅ Принято: {{name}}",
+    "intakeAdded": "➕ Добавлен приём: {{name}}",
+    "intakeError": "Ошибка при добавлении приёма"
   },
   "timeGroups": {
     "morning": "Утро",

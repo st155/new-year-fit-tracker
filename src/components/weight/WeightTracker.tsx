@@ -353,7 +353,7 @@ export function WeightTracker({ targetWeight, className }: WeightTrackerProps) {
                 <div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl font-bold">{weightEntries[0].weight}</span>
-                    <span className="text-sm text-muted-foreground">кг</span>
+                    <span className="text-sm text-muted-foreground">{t("common:units.kg")}</span>
                   </div>
                   <p className="text-sm text-muted-foreground">
                     {format(new Date(weightEntries[0].measurement_date), 'd MMMM yyyy', { locale: dateLocale })}
@@ -373,7 +373,7 @@ export function WeightTracker({ targetWeight, className }: WeightTrackerProps) {
                         trend.direction === 'down' ? 'text-green-500' : 'text-muted-foreground'
                       }`}>
                         {trend.direction === 'up' ? '+' : trend.direction === 'down' ? '-' : ''}
-                        {trend.change.toFixed(1)} кг
+                        {trend.change.toFixed(1)} {t("common:units.kg")}
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground">
