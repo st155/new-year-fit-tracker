@@ -356,5 +356,18 @@
   "notifications": {
     "allMarkedRead": "Все уведомления отмечены прочитанными",
     "updateError": "Ошибка при обновлении уведомлений"
+  },
+  "navigation": {
+    "home": "Главная",
+    "progress": "Прогресс",
+    "tips": "Советы",
+    "workouts": "Тренировки",
+    "goals": "Цели",
+    "leaderboard": "Рейтинг",
+    "body": "Тело",
+    "challenges": "Челленджи",
+    "habits": "Привычки",
+    "fitnessData": "Фитнес дата",
+    "more": "Ещё"
   }
 }

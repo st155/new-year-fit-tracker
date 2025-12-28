@@ -156,10 +156,148 @@
   },
   "dataQuality": {
     "title": "Качество данных",
+    "recalculate": "Пересчитать",
+    "overallScore": "Общая оценка",
     "excellent": "Отлично",
     "good": "Хорошо",
     "fair": "Средне",
-    "poor": "Плохо"
+    "poor": "Плохо",
+    "lowQualityMetrics": "{{count}} метрик с низким качеством"
+  },
+  "activity": {
+    "loading": "Загрузка данных активности...",
+    "strain": "Нагрузка",
+    "calories": "Калории",
+    "steps": "Шаги",
+    "activeTime": "Активное время",
+    "strainLevels": {
+      "noData": "Нет данных",
+      "high": "Высокая",
+      "moderate": "Умеренная",
+      "light": "Легкая"
+    },
+    "activityLevels": {
+      "noData": "Нет данных",
+      "active": "Активный день",
+      "moderate": "Умеренная активность",
+      "low": "Низкая активность"
+    },
+    "history": "История активности",
+    "historyDescription": "Динамика активности за последние 7 дней",
+    "kcal": "ккал",
+    "min": "мин"
+  },
+  "appleHealth": {
+    "loading": "Загружаем данные Apple Health...",
+    "noData": "Данные из Apple Health пока не загружены",
+    "dashboardTitle": "Apple Health Dashboard",
+    "dashboardDescription": "Сводка ваших данных здоровья из Apple Health",
+    "totalRecords": "Всего записей",
+    "dataTypes": "Типов данных",
+    "daysOfData": "Дней данных",
+    "lastUpdate": "Последнее обновление",
+    "periods": {
+      "7d": "7 дней",
+      "30d": "30 дней",
+      "90d": "90 дней"
+    },
+    "metrics": {
+      "steps": "Шаги",
+      "heartRate": "Пульс",
+      "weight": "Вес",
+      "vo2max": "VO2 Max",
+      "sleep": "Сон",
+      "calories": "Калории"
+    },
+    "units": {
+      "bpm": "уд/мин",
+      "kg": "кг",
+      "mlkgmin": "мл/кг/мин",
+      "hours": "ч",
+      "kcal": "ккал"
+    },
+    "averageSteps": "Среднее: {{count}} шагов",
+    "averageBpm": "Среднее: {{value}} уд/мин",
+    "averageKg": "Среднее: {{value}} кг",
+    "cardioFitness": "Кардиофитнес",
+    "sleepTime": "Время сна",
+    "activeCalories": "Активные калории",
+    "baseCalories": "Базовые: {{value}} ккал",
+    "availableDataTypes": "Доступные типы данных",
+    "healthRecordTypes": {
+      "stepCount": "Шаги",
+      "vo2max": "VO2 Max",
+      "bodyMass": "Вес",
+      "heartRate": "Пульс",
+      "activeEnergy": "Активные калории",
+      "basalEnergy": "Базовые калории",
+      "exerciseTime": "Время упражнений",
+      "distance": "Дистанция",
+      "sleepAnalysis": "Анализ сна"
+    }
+  },
+  "metricsSettings": {
+    "title": "Настройки показателей",
+    "description": "Выберите, какие метрики отображать на главной странице",
+    "done": "Готово"
+  },
+  "insightSettings": {
+    "title": "Настройки Smart AI Insights",
+    "description": "Настройте, какие типы инсайтов вы хотите видеть",
+    "insightTypes": "Типы инсайтов",
+    "refreshInterval": "Частота обновления",
+    "refreshIntervalHint": "Как часто инсайты будут автоматически обновляться",
+    "intervals": {
+      "30s": "30 секунд",
+      "1m": "1 минута",
+      "2m": "2 минуты",
+      "5m": "5 минут"
+    },
+    "save": "Сохранить",
+    "reset": "Сбросить",
+    "types": {
+      "critical": "Критические",
+      "warning": "Предупреждения",
+      "achievement": "Достижения",
+      "info": "Информация",
+      "recommendation": "Рекомендации",
+      "correlation": "Корреляции",
+      "anomaly": "Аномалии",
+      "prediction": "Предсказания",
+      "social": "Социальные",
+      "trainer": "От тренера",
+      "temporal": "Временные паттерны",
+      "habit_pattern": "Паттерны привычек",
+      "habit_risk": "Риски привычек",
+      "habit_optimization": "Оптимизация привычек",
+      "habit_chain": "Связи привычек"
+    },
+    "typeDescriptions": {
+      "critical": "Проблемы, требующие немедленного внимания",
+      "warning": "Важные предупреждения и напоминания",
+      "achievement": "Ваши успехи и рекорды",
+      "info": "Общая информация и статистика",
+      "recommendation": "Персональные рекомендации",
+      "correlation": "Взаимосвязи между метриками",
+      "anomaly": "Необычные отклонения от нормы",
+      "prediction": "Прогнозы достижения целей",
+      "social": "Челленджи и сравнения",
+      "trainer": "Сообщения от вашего тренера",
+      "temporal": "Временные закономерности",
+      "habit_pattern": "Оптимальные времена и паттерны",
+      "habit_risk": "Привычки под угрозой",
+      "habit_optimization": "Рекомендации по улучшению",
+      "habit_chain": "Связи между привычками"
+    }
+  },
+  "unitRecalculation": {
+    "successTitle": "Единицы пересчитаны",
+    "successDescription": "Обновлено {{count}} записей",
+    "errorTitle": "Ошибка пересчёта",
+    "alertTitle": "Обнаружены неконвертированные единицы измерения",
+    "alertDescription": "Некоторые биомаркеры имеют неправильные единицы измерения, которые необходимо пересчитать",
+    "fixButton": "Исправить единицы измерения",
+    "recalculating": "Пересчитываю..."
   },
   "aiStrip": {
     "metrics": "метрик",

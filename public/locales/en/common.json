@@ -356,5 +356,18 @@
   "notifications": {
     "allMarkedRead": "All notifications marked as read",
     "updateError": "Error updating notifications"
+  },
+  "navigation": {
+    "home": "Home",
+    "progress": "Progress",
+    "tips": "Tips",
+    "workouts": "Workouts",
+    "goals": "Goals",
+    "leaderboard": "Leaderboard",
+    "body": "Body",
+    "challenges": "Challenges",
+    "habits": "Habits",
+    "fitnessData": "Fitness Data",
+    "more": "More"
   }
 }

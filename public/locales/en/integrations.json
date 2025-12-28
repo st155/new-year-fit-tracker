@@ -210,5 +210,170 @@
       "backgroundProcessing": "Data processing is running in background",
       "resultsWillAppear": "Processing results will be saved automatically and appear in your metrics."
     }
+  },
+  "whoopWizard": {
+    "steps": {
+      "1": {
+        "title": "DNS Domain Setup",
+        "description": "Create a CNAME record for your subdomain"
+      },
+      "2": {
+        "title": "Whoop Developer Portal Registration",
+        "description": "Create an app in Whoop Developer Portal"
+      },
+      "3": {
+        "title": "SSL Certificate Request",
+        "description": "Open a ticket in Terra Support for SSL"
+      },
+      "4": {
+        "title": "Terra Dashboard Configuration",
+        "description": "Enter Whoop credentials in Terra Dashboard"
+      },
+      "5": {
+        "title": "Testing",
+        "description": "Test the Whoop connection"
+      }
+    },
+    "copied": "Copied",
+    "copiedToClipboard": "{{label}} copied to clipboard",
+    "error": "Error",
+    "enterSubdomain": "Enter your subdomain",
+    "dnsConfigured": "DNS configured, continue",
+    "back": "Back",
+    "enterClientCredentials": "Enter Client ID and Client Secret",
+    "whoopDataSaved": "Whoop data saved",
+    "ticketCreatedSslReceived": "Ticket created, SSL received",
+    "terraDashboardConfigured": "Terra Dashboard configured",
+    "setupComplete": "Setup complete!",
+    "whoopReady": "Whoop integration ready to use",
+    "finishSetup": "Finish setup",
+    "stepOf": "Step {{current}} of {{total}}",
+    "percentComplete": "{{percent}}% complete",
+    "dnsAlert": "Whoop integration requires your own domain with DNS access",
+    "yourSubdomain": "Your subdomain for Whoop",
+    "instructions": "Instructions:",
+    "dnsStep1": "Go to DNS panel of your provider (GoDaddy, Cloudflare, etc.)",
+    "dnsStep2": "Create a new CNAME record:",
+    "dnsStep3": "Save the record",
+    "dnsStep4": "Wait for DNS propagation (10-30 minutes, max 48 hours)",
+    "checkDns": "Check DNS propagation with command:",
+    "downloadWhoopApp": "Download Whoop app (iOS/Android)",
+    "createAccountWithEmail": "Create an account with email and password",
+    "loginDevPortal": "Login to Developer Portal:",
+    "createTeam": "Create a Team with your details",
+    "createAppWith": "Create an App with the following parameters:",
+    "enableAllScopes": "Enable ALL Scopes:",
+    "copyClientCredentials": "Copy Client ID and Client Secret",
+    "whoopClientId": "Whoop Client ID",
+    "whoopClientSecret": "Whoop Client Secret",
+    "sslTicketTitle": "SSL certificate request in Terra:",
+    "openTerraSupport": "Open Terra Dashboard Support:",
+    "createTicketWith": "Create a ticket with the following text:",
+    "terraResponseTime": "Terra Support will respond within 1-2 business days and ask to add additional CNAME records for SSL validation",
+    "terraDashboardSetup": "Terra Dashboard setup:",
+    "openTerraConnections": "Open Terra Dashboard Connections:",
+    "findWhoop": "Find <strong>WHOOP</strong> in the providers list",
+    "clickConfigureSettings": "Click <strong>Configure</strong> or <strong>Settings</strong>",
+    "enterData": "Enter data:",
+    "fromStep2": "(from step 2)",
+    "saveConfiguration": "Save configuration",
+    "ensureStatus": "Ensure status is \"Configured\" or \"Active\"",
+    "testingComplete": "Setup complete! Now you can test the connection",
+    "testing": "Testing:",
+    "returnToIntegrations": "Return to Integrations page",
+    "clickConnectWhoop": "Click \"Connect Whoop\"",
+    "authorizeViaOAuth": "Authorize via Whoop OAuth",
+    "checkDeviceInList": "Check that device appears in connected list",
+    "runDataSync": "Run data synchronization",
+    "productionApproval": "<strong>Important:</strong> After successful testing, you need to apply for Production Approval in Whoop Developer Portal. The process may take 1-2 weeks."
+  },
+  "dataMonitor": {
+    "error": "Error",
+    "terraUserIdNotFound": "Terra User ID not found",
+    "backfillStarted": "Backfill started",
+    "loadingDataForDays": "Loading data for the last {{days}} days...",
+    "backfillError": "Backfill error",
+    "dataTypes": {
+      "daily": "📊 Daily metrics",
+      "sleep": "😴 Sleep",
+      "activity": "🏃 Activity",
+      "body": "⚖️ Body"
+    },
+    "loadingHistoricalData": "Loading historical data",
+    "processing": "Processing...",
+    "waiting": "Waiting",
+    "progressDays": "Progress: {{processed}} / {{total}} days",
+    "processingDate": "Processing: {{date}}",
+    "dataFreshness": "Data Freshness",
+    "lastReceivedFrom": "Last received data from {{provider}}",
+    "noFreshnessData": "No freshness data",
+    "loadWeekData": "Load week data",
+    "load14Days": "14 days",
+    "load30Days": "30 days",
+    "loadMoreHistoricalData": "Load more historical data:",
+    "dataNotUpdating": "Data not updating",
+    "someDataNotUpdated": "Some data hasn't been updated for over 2 days. Check device connection.",
+    "trySync": "Try to sync"
+  },
+  "widgetLoader": {
+    "preparingConnection": "Preparing to connect {{provider}}",
+    "important5Minutes": "Important: you have 5 minutes!",
+    "timeWarning": "After clicking \"Start\" button, you'll have exactly 5 minutes to complete authorization in {{provider}} app.",
+    "beforeStartChecklist": "Before starting, make sure:",
+    "knowCredentials": "You know your {{provider}} login and password",
+    "stableConnection": "You have a stable internet connection",
+    "loginFirst": "If needed, log in to {{provider}} app in browser first",
+    "sessionExpiredTip": "<strong>Tip:</strong> If you see \"Session Expired\" error, log out and log back in to {{provider}} app, then retry connection.",
+    "readyToStart": "I'm ready — start connection",
+    "backToIntegrations": "Back to integrations",
+    "sessionExpired": "Session expired",
+    "loadingError": "Loading error",
+    "sessionExpiredMessage": "Authorization session expired. This can happen if authorization took more than 5 minutes.",
+    "sessionExpiredTipShort": "<strong>Tip:</strong> Try logging in to {{provider}} in browser first, then retry connection. Make sure to complete within 5 minutes.",
+    "tryAgain": "Try again",
+    "redirectingTo": "Redirecting to {{provider}}...",
+    "loadingWidget": "Loading authorization widget...",
+    "timeRemaining": "Time remaining:",
+    "hurryLessThanMinute": "Hurry! Less than a minute!",
+    "completeAuthInWindow": "Complete authorization in the opened window. If window didn't open, check popup blocker."
+  },
+  "healthMonitor": {
+    "title": "Connection Monitor",
+    "lastCheck": "Last check:",
+    "noActiveConnections": "No active connections to monitor",
+    "refresh": "Refresh",
+    "loading": "Loading...",
+    "syncStatus": {
+      "synced": "Synced",
+      "awaitingFirstSync": "Awaiting first sync",
+      "syncLongAgo": "Sync long overdue",
+      "syncOutdated": "Sync outdated"
+    },
+    "statusBadges": {
+      "healthy": "Healthy",
+      "warning": "Warning",
+      "error": "Error",
+      "unknown": "Unknown"
+    },
+    "stats": {
+      "healthy": "Healthy",
+      "warnings": "Warnings",
+      "errors": "Errors"
+    },
+    "recommendations": "Recommendations",
+    "syncOutdatedTip": "Sync is outdated - click \"Sync\" in connections section",
+    "problemsDetected": "Problems detected - check device status and reconnect if needed"
+  },
+  "prioritySettings": {
+    "error": "Error",
+    "loadError": "Failed to load settings",
+    "success": "Success",
+    "saved": "Priority settings saved",
+    "saveError": "Failed to save settings",
+    "title": "Source Priority Settings",
+    "description": "Set priority of data sources for each metric. Sources with higher priority will be used first during aggregation.",
+    "save": "Save",
+    "aggregationMethod": "Aggregation method:",
+    "priorityOrder": "Source priority (top to bottom):"
   }
 }
