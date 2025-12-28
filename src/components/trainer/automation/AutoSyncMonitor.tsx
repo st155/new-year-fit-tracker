@@ -3,6 +3,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,6 +26,7 @@ interface AutoSyncMonitorProps {
 }
 
 export function AutoSyncMonitor({ clientId }: AutoSyncMonitorProps) {
+  const { t } = useTranslation('trainer');
   const { user } = useAuth();
   const [staleIntegrations, setStaleIntegrations] = useState<StaleIntegration[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,11 +71,11 @@ export function AutoSyncMonitor({ clientId }: AutoSyncMonitorProps) {
         { provider: source.toLowerCase(), dataType: 'body' },
         {
           onSuccess: () => {
-            toast.success(`Синхронизация ${source} запущена для ${clientName}`);
+            toast.success(t('sync.started', { source, name: clientName }));
             setTimeout(loadStaleIntegrations, 3000);
           },
           onError: (error) => {
-            toast.error(`Ошибка синхронизации: ${error.message}`);
+            toast.error(t('sync.error', { message: error.message }));
           },
           onSettled: () => {
             setSyncing(prev => prev.filter(s => s !== source));
@@ -88,7 +90,7 @@ export function AutoSyncMonitor({ clientId }: AutoSyncMonitorProps) {
   const handleAutoSyncAll = async () => {
     if (staleIntegrations.length === 0) return;
     
-    toast.info(`Запуск синхронизации для ${staleIntegrations.length} интеграций...`);
+    toast.info(t('sync.starting', { count: staleIntegrations.length }));
     
     for (const integration of staleIntegrations) {
       await handleSync(integration.source, integration.full_name);
@@ -102,7 +104,7 @@ export function AutoSyncMonitor({ clientId }: AutoSyncMonitorProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <RefreshCw className="h-5 w-5 animate-spin" />
-            Проверка синхронизации...
+            {t('sync.checking')}
           </CardTitle>
         </CardHeader>
       </Card>
@@ -114,7 +116,7 @@ export function AutoSyncMonitor({ clientId }: AutoSyncMonitorProps) {
       <Alert>
         <CheckCircle2 className="h-4 w-4" />
         <AlertDescription>
-          Все интеграции синхронизированы. Последние данные получены в течение 7 дней.
+          {t('sync.allSynced')}
         </AlertDescription>
       </Alert>
     );
@@ -127,10 +129,10 @@ export function AutoSyncMonitor({ clientId }: AutoSyncMonitorProps) {
           <div>
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-warning" />
-              Устаревшие данные
+              {t('sync.staleData')}
             </CardTitle>
             <CardDescription>
-              {staleIntegrations.length} интеграций требуют синхронизации
+              {t('sync.requireSync', { count: staleIntegrations.length })}
             </CardDescription>
           </div>
           <Button
@@ -139,7 +141,7 @@ export function AutoSyncMonitor({ clientId }: AutoSyncMonitorProps) {
             size="sm"
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${syncing.length > 0 ? 'animate-spin' : ''}`} />
-            Синхронизировать все
+            {t('sync.syncAll')}
           </Button>
         </div>
       </CardHeader>
@@ -149,22 +151,22 @@ export function AutoSyncMonitor({ clientId }: AutoSyncMonitorProps) {
             key={idx}
             className="flex items-center justify-between p-3 border rounded-lg"
           >
-            <div className="flex items-center gap-3">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <div className="font-medium">
-                  {integration.full_name} - {integration.source}
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  Последние данные: {integration.days_stale} дней назад
+              <div className="flex items-center gap-3">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <div className="font-medium">
+                    {integration.full_name} - {integration.source}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {t('sync.lastData', { days: integration.days_stale })}
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Badge
-                variant={integration.days_stale > 14 ? 'destructive' : 'outline'}
-              >
-                {integration.days_stale > 14 ? 'Критично' : 'Устарело'}
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant={integration.days_stale > 14 ? 'destructive' : 'outline'}
+                >
+                  {integration.days_stale > 14 ? t('sync.critical') : t('sync.stale')}
               </Badge>
               <Button
                 onClick={() => handleSync(integration.source, integration.full_name)}

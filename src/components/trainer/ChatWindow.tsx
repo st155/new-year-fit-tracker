@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Send } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 
 interface ChatWindowProps {
   messages: Array<{
@@ -34,6 +35,7 @@ export const ChatWindow = ({
   recipientAvatar,
   onSendMessage
 }: ChatWindowProps) => {
+  const { t, i18n } = useTranslation('trainer');
   const [newMessage, setNewMessage] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -68,7 +70,7 @@ export const ChatWindow = ({
         </Avatar>
         <div>
           <p className="font-medium">{recipientName}</p>
-          <p className="text-sm text-muted-foreground">Онлайн</p>
+          <p className="text-sm text-muted-foreground">{t('chat.online')}</p>
         </div>
       </div>
 
@@ -93,7 +95,7 @@ export const ChatWindow = ({
                   <p className="text-xs opacity-70 mt-1">
                     {formatDistanceToNow(new Date(message.created_at), {
                       addSuffix: true,
-                      locale: ru
+                      locale: i18n.language === 'ru' ? ru : enUS
                     })}
                   </p>
                 </div>
@@ -107,7 +109,7 @@ export const ChatWindow = ({
       {/* Ввод */}
       <form onSubmit={handleSubmit} className="p-4 border-t flex gap-2">
         <Input
-          placeholder="Введите сообщение..."
+          placeholder={t('chat.placeholder')}
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
         />

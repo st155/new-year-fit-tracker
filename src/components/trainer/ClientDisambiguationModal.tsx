@@ -1,3 +1,5 @@
+import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -30,6 +32,7 @@ export const ClientDisambiguationModal = ({
   onResolve,
   onClose
 }: ClientDisambiguationModalProps) => {
+  const { t } = useTranslation('trainer');
   const [selections, setSelections] = React.useState<Map<string, ClientCandidate>>(new Map());
   const [rememberChoices, setRememberChoices] = React.useState<Set<string>>(new Set());
 
@@ -67,9 +70,9 @@ export const ClientDisambiguationModal = ({
       const errors = results.filter(r => r.error);
       if (errors.length > 0) {
         console.error('Error saving aliases:', errors);
-        toast.error('Не удалось сохранить некоторые псевдонимы');
+        toast.error(t('disambiguation.saveError'));
       } else {
-        toast.success(`Сохранено ${aliasPromises.length} псевдонимов`);
+        toast.success(t('disambiguation.savedCount', { count: aliasPromises.length }));
       }
     }
 
@@ -87,9 +90,9 @@ export const ClientDisambiguationModal = ({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Уточните упомянутых клиентов</DialogTitle>
+          <DialogTitle>{t('disambiguation.title')}</DialogTitle>
           <DialogDescription>
-            Выберите конкретного клиента для каждого упоминания
+            {t('disambiguation.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -101,7 +104,7 @@ export const ClientDisambiguationModal = ({
             return (
               <div key={disambiguation.mentionedName} className="space-y-3">
                 <div className="font-medium">
-                  Вы упомянули: <span className="text-primary">@{disambiguation.mentionedName}</span>
+                  {t('disambiguation.mentioned')}: <span className="text-primary">@{disambiguation.mentionedName}</span>
                 </div>
                 <div className="space-y-2">
                   {disambiguation.candidates.map((candidate) => {
@@ -164,7 +167,7 @@ export const ClientDisambiguationModal = ({
                       htmlFor={`remember-${disambiguation.mentionedName}`}
                       className="cursor-pointer"
                     >
-                      Запомнить как "<strong>{disambiguation.mentionedName}</strong>" → {selected.full_name}
+                      {t('disambiguation.remember')}: "<strong>{disambiguation.mentionedName}</strong>" → {selected.full_name}
                     </label>
                   </div>
                 )}
@@ -175,16 +178,13 @@ export const ClientDisambiguationModal = ({
 
         <div className="flex justify-end gap-2 pt-4">
           <Button variant="outline" onClick={onClose}>
-            Отмена
+            {t('common:actions.cancel')}
           </Button>
           <Button onClick={handleConfirm} disabled={!allSelected}>
-            Подтвердить выбор
+            {t('disambiguation.confirm')}
           </Button>
         </div>
       </DialogContent>
     </Dialog>
   );
 };
-
-// Don't forget to add React import
-import React from 'react';

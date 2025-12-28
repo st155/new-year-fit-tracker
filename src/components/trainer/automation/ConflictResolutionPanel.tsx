@@ -3,6 +3,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,7 @@ interface ConflictResolutionPanelProps {
 }
 
 export function ConflictResolutionPanel({ clientId }: ConflictResolutionPanelProps) {
+  const { t } = useTranslation('trainer');
   const [conflicts, setConflicts] = useState<MetricConflict[]>([]);
   const [loading, setLoading] = useState(true);
   const [resolving, setResolving] = useState<string[]>([]);
@@ -83,7 +85,7 @@ export function ConflictResolutionPanel({ clientId }: ConflictResolutionPanelPro
       setConflicts(conflictsList);
     } catch (error) {
       console.error('Error loading conflicts:', error);
-      toast.error('Ошибка загрузки конфликтов');
+      toast.error(t('conflicts.loadError'));
     } finally {
       setLoading(false);
     }
@@ -109,13 +111,13 @@ export function ConflictResolutionPanel({ clientId }: ConflictResolutionPanelPro
 
       if (error) throw error;
 
-      toast.success(`Конфликт разрешен: выбран источник ${preferredSource}`);
+      toast.success(t('conflicts.resolved', { source: preferredSource }));
       
       // Reload conflicts
       await loadConflicts();
     } catch (error) {
       console.error('Error resolving conflict:', error);
-      toast.error('Ошибка при разрешении конфликта');
+      toast.error(t('conflicts.resolveError'));
     } finally {
       setResolving(prev => prev.filter(k => k !== key));
     }
@@ -141,7 +143,7 @@ export function ConflictResolutionPanel({ clientId }: ConflictResolutionPanelPro
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Загрузка конфликтов...</CardTitle>
+          <CardTitle>{t('conflicts.loading')}</CardTitle>
         </CardHeader>
       </Card>
     );
@@ -152,7 +154,7 @@ export function ConflictResolutionPanel({ clientId }: ConflictResolutionPanelPro
       <Alert>
         <CheckCircle2 className="h-4 w-4" />
         <AlertDescription>
-          Конфликтов данных не обнаружено. Все метрики имеют согласованные значения.
+          {t('conflicts.noConflicts')}
         </AlertDescription>
       </Alert>
     );
@@ -163,10 +165,10 @@ export function ConflictResolutionPanel({ clientId }: ConflictResolutionPanelPro
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <AlertTriangle className="h-5 w-5 text-warning" />
-          Конфликты данных
+          {t('conflicts.title')}
         </CardTitle>
         <CardDescription>
-          Найдено {conflicts.length} метрик с противоречивыми данными из разных источников
+          {t('conflicts.found', { count: conflicts.length })}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -190,7 +192,7 @@ export function ConflictResolutionPanel({ clientId }: ConflictResolutionPanelPro
                   size="sm"
                   variant="outline"
                 >
-                  Авто-разрешить
+                  {t('conflicts.autoResolve')}
                 </Button>
               </div>
 
@@ -221,7 +223,7 @@ export function ConflictResolutionPanel({ clientId }: ConflictResolutionPanelPro
                         size="sm"
                         variant="ghost"
                       >
-                        Выбрать
+                        {t('conflicts.select')}
                       </Button>
                     </div>
                   );
