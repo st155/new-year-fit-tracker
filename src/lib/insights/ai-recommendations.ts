@@ -17,10 +17,6 @@ interface Habit {
   current_streak: number;
 }
 
-function getHabitName(habit: Habit): string {
-  return habit.name || habit.title || 'Привычка';
-}
-
 interface HabitCompletion {
   id: string;
   habit_id: string;
@@ -37,34 +33,97 @@ export interface HabitRecommendation {
   data?: any;
 }
 
+export interface RecommendationTextOptions {
+  defaultName: string;
+  timeLabels: Record<string, string>;
+  categoryLabels: Record<string, string>;
+  texts: {
+    optimizeTime: (name: string) => string;
+    successRate: (rate: number, time: string) => string;
+    addTimeSlot: (time: string) => string;
+    noHabitsAtTime: (time: string) => string;
+    addCategory: (category: string) => string;
+    diversityHelps: string;
+    simplify: (name: string) => string;
+    lowCompletion: (rate: number) => string;
+    startSmaller: string;
+    combineHabits: string;
+    workTogether: (name1: string, name2: string, score: number) => string;
+    addHabitAtTime: (time: string) => string;
+    doingGreat: (name: string, time: string) => string;
+  };
+}
+
+function getHabitName(habit: Habit, defaultName: string): string {
+  return habit.name || habit.title || defaultName;
+}
+
 /**
  * Generate comprehensive habit recommendations
  */
 export function generateHabitRecommendations(
   habits: Habit[],
   completions: HabitCompletion[],
-  qualityScores: HabitQualityScore[]
+  qualityScores: HabitQualityScore[],
+  textOptions?: RecommendationTextOptions
 ): HabitRecommendation[] {
   const recommendations: HabitRecommendation[] = [];
+  const texts = textOptions || getDefaultTextOptions();
 
   // 1. Time optimization recommendations
-  recommendations.push(...suggestOptimalHabitTimes(habits, completions));
+  recommendations.push(...suggestOptimalHabitTimes(habits, completions, texts));
 
   // 2. Fill gaps in habit coverage
-  recommendations.push(...suggestGapFillers(habits, completions));
+  recommendations.push(...suggestGapFillers(habits, completions, texts));
 
   // 3. Difficulty adjustments
-  recommendations.push(...suggestDifficultyAdjustments(habits, qualityScores));
+  recommendations.push(...suggestDifficultyAdjustments(habits, qualityScores, texts));
 
   // 4. Synergy-based recommendations
-  recommendations.push(...suggestSynergies(habits, completions));
+  recommendations.push(...suggestSynergies(habits, completions, texts));
 
   // 5. Based on successful habits
-  recommendations.push(...suggestBasedOnSuccess(habits, qualityScores));
+  recommendations.push(...suggestBasedOnSuccess(habits, qualityScores, texts));
 
   return recommendations
     .sort((a, b) => b.priority - a.priority)
     .slice(0, 10); // Top 10 recommendations
+}
+
+// Default text options (Russian)
+function getDefaultTextOptions(): RecommendationTextOptions {
+  return {
+    defaultName: 'Привычка',
+    timeLabels: {
+      morning: 'утром',
+      afternoon: 'днём',
+      evening: 'вечером',
+      night: 'ночью',
+      anytime: 'в любое время',
+    },
+    categoryLabels: {
+      health: 'Здоровье',
+      productivity: 'Продуктивность',
+      learning: 'Обучение',
+      mindfulness: 'Осознанность',
+      fitness: 'Фитнес',
+    },
+    texts: {
+      optimizeTime: (name) => `Оптимизируйте время для "${name}"`,
+      successRate: (rate, time) => `Привычка выполняется на ${rate}% успешнее ${time}`,
+      addTimeSlot: (time) => `Добавьте ${time} привычку`,
+      noHabitsAtTime: (time) => `У вас нет привычек ${time}. Это отличное время для новых привычек!`,
+      addCategory: (category) => `Добавьте привычку из категории "${category}"`,
+      diversityHelps: 'Разнообразие привычек помогает развиваться разносторонне',
+      simplify: (name) => `Упростите "${name}"`,
+      lowCompletion: (rate) => `Привычка выполняется только в ${rate}% случаев. Попробуйте уменьшить сложность`,
+      startSmaller: 'Начните с меньшей продолжительности или частоты',
+      combineHabits: 'Объедините привычки в группу',
+      workTogether: (name1, name2, score) => `"${name1}" и "${name2}" отлично работают вместе (${score}% синергия)`,
+      addHabitAtTime: (time) => `Добавьте привычку ${time}`,
+      doingGreat: (name, time) => `Вы отлично справляетесь с "${name}" ${time} - это ваше лучшее время!`,
+    },
+  };
 }
 
 /**
@@ -72,7 +131,8 @@ export function generateHabitRecommendations(
  */
 function suggestOptimalHabitTimes(
   habits: Habit[],
-  completions: HabitCompletion[]
+  completions: HabitCompletion[],
+  texts: RecommendationTextOptions
 ): HabitRecommendation[] {
   const recommendations: HabitRecommendation[] = [];
 
@@ -83,11 +143,12 @@ function suggestOptimalHabitTimes(
       const currentTime = habit.preferred_time || 'anytime';
       
       if (currentTime !== optimalTime.time) {
+        const timeLabel = texts.timeLabels[optimalTime.time] || optimalTime.time;
         recommendations.push({
           type: 'optimize_time',
           priority: Math.round(optimalTime.confidence),
-          title: `Оптимизируйте время для "${getHabitName(habit)}"`,
-          description: `Привычка выполняется на ${Math.round(optimalTime.successRate)}% успешнее ${getTimeLabel(optimalTime.time)}`,
+          title: texts.texts.optimizeTime(getHabitName(habit, texts.defaultName)),
+          description: texts.texts.successRate(Math.round(optimalTime.successRate), timeLabel),
           actionable: true,
           data: {
             habitId: habit.id,
@@ -108,7 +169,8 @@ function suggestOptimalHabitTimes(
  */
 function suggestGapFillers(
   habits: Habit[],
-  completions: HabitCompletion[]
+  completions: HabitCompletion[],
+  texts: RecommendationTextOptions
 ): HabitRecommendation[] {
   const recommendations: HabitRecommendation[] = [];
   
@@ -120,11 +182,12 @@ function suggestGapFillers(
   
   missingSlots.forEach(slot => {
     if (slot === 'evening' || slot === 'morning') {
+      const timeLabel = texts.timeLabels[slot] || slot;
       recommendations.push({
         type: 'fill_gap',
         priority: 70,
-        title: `Добавьте ${getTimeLabel(slot)} привычку`,
-        description: `У вас нет привычек ${getTimeLabel(slot)}. Это отличное время для новых привычек!`,
+        title: texts.texts.addTimeSlot(timeLabel),
+        description: texts.texts.noHabitsAtTime(timeLabel),
         actionable: true,
         data: { suggestedTime: slot },
       });
@@ -138,11 +201,12 @@ function suggestGapFillers(
 
   if (missingCategories.length > 0 && habits.length < 10) {
     const suggestedCategory = missingCategories[0];
+    const categoryLabel = texts.categoryLabels[suggestedCategory] || suggestedCategory;
     recommendations.push({
       type: 'fill_gap',
       priority: 60,
-      title: `Добавьте привычку из категории "${getCategoryLabel(suggestedCategory)}"`,
-      description: 'Разнообразие привычек помогает развиваться разносторонне',
+      title: texts.texts.addCategory(categoryLabel),
+      description: texts.texts.diversityHelps,
       actionable: true,
       data: { suggestedCategory },
     });
@@ -156,7 +220,8 @@ function suggestGapFillers(
  */
 function suggestDifficultyAdjustments(
   habits: Habit[],
-  qualityScores: HabitQualityScore[]
+  qualityScores: HabitQualityScore[],
+  texts: RecommendationTextOptions
 ): HabitRecommendation[] {
   const recommendations: HabitRecommendation[] = [];
   const strugglingHabits = getHabitsNeedingAttention(qualityScores);
@@ -169,13 +234,13 @@ function suggestDifficultyAdjustments(
       recommendations.push({
         type: 'difficulty_adjust',
         priority: 80,
-        title: `Упростите "${getHabitName(habit)}"`,
-        description: `Привычка выполняется только в ${score.factors.completionRate}% случаев. Попробуйте уменьшить сложность`,
+        title: texts.texts.simplify(getHabitName(habit, texts.defaultName)),
+        description: texts.texts.lowCompletion(score.factors.completionRate),
         actionable: true,
         data: {
           habitId: habit.id,
           currentDifficulty: habit.difficulty,
-          suggestion: 'Начните с меньшей продолжительности или частоты',
+          suggestion: texts.texts.startSmaller,
         },
       });
     }
@@ -189,7 +254,8 @@ function suggestDifficultyAdjustments(
  */
 function suggestSynergies(
   habits: Habit[],
-  completions: HabitCompletion[]
+  completions: HabitCompletion[],
+  texts: RecommendationTextOptions
 ): HabitRecommendation[] {
   const recommendations: HabitRecommendation[] = [];
   const synergies = findHabitSynergies(habits, completions);
@@ -202,8 +268,12 @@ function suggestSynergies(
       recommendations.push({
         type: 'synergy',
         priority: synergy.synergyScore,
-        title: 'Объедините привычки в группу',
-        description: `"${getHabitName(habit1)}" и "${getHabitName(habit2)}" отлично работают вместе (${synergy.synergyScore}% синергия)`,
+        title: texts.texts.combineHabits,
+        description: texts.texts.workTogether(
+          getHabitName(habit1, texts.defaultName),
+          getHabitName(habit2, texts.defaultName),
+          synergy.synergyScore
+        ),
         actionable: true,
         data: {
           habit1Id: habit1.id,
@@ -222,7 +292,8 @@ function suggestSynergies(
  */
 function suggestBasedOnSuccess(
   habits: Habit[],
-  qualityScores: HabitQualityScore[]
+  qualityScores: HabitQualityScore[],
+  texts: RecommendationTextOptions
 ): HabitRecommendation[] {
   const recommendations: HabitRecommendation[] = [];
   const topHabits = qualityScores
@@ -237,11 +308,12 @@ function suggestBasedOnSuccess(
       const timeSlot = bestHabit.preferred_time;
       
       if (timeSlot && timeSlot !== 'anytime') {
+        const timeLabel = texts.timeLabels[timeSlot] || timeSlot;
         recommendations.push({
           type: 'new_habit',
           priority: 65,
-          title: `Добавьте привычку ${getTimeLabel(timeSlot)}`,
-          description: `Вы отлично справляетесь с "${getHabitName(bestHabit)}" ${getTimeLabel(timeSlot)} - это ваше лучшее время!`,
+          title: texts.texts.addHabitAtTime(timeLabel),
+          description: texts.texts.doingGreat(getHabitName(bestHabit, texts.defaultName), timeLabel),
           actionable: true,
           data: {
             suggestedTime: timeSlot,
@@ -253,27 +325,4 @@ function suggestBasedOnSuccess(
   }
 
   return recommendations;
-}
-
-// Helper functions
-function getTimeLabel(time: string): string {
-  const labels: Record<string, string> = {
-    morning: 'утром',
-    afternoon: 'днём',
-    evening: 'вечером',
-    night: 'ночью',
-    anytime: 'в любое время',
-  };
-  return labels[time] || time;
-}
-
-function getCategoryLabel(category: string): string {
-  const labels: Record<string, string> = {
-    health: 'Здоровье',
-    productivity: 'Продуктивность',
-    learning: 'Обучение',
-    mindfulness: 'Осознанность',
-    fitness: 'Фитнес',
-  };
-  return labels[category] || category;
 }

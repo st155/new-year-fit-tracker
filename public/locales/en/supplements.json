@@ -16,7 +16,14 @@
     "selectAllPending": "Select all pending",
     "manage": "Manage",
     "scan": "Scan",
-    "aiGenerator": "AI Generator"
+    "aiGenerator": "AI Generator",
+    "takenCount": "✅ Taken: {{count}}",
+    "allAlreadyTaken": "All selected supplements already taken today",
+    "saveError": "Error saving",
+    "cancelled": "↩️ Cancelled: {{name}}",
+    "taken": "✅ Taken: {{name}}",
+    "intakeAdded": "➕ Added intake: {{name}}",
+    "intakeError": "Error adding intake"
   },
   "timeGroups": {
     "morning": "Morning",

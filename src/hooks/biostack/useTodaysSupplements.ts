@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { calculateTimeStatus } from "@/lib/supplement-timing";
+import { useTranslation } from "react-i18next";
 
 export interface UnifiedSupplementItem {
   id: string;
@@ -37,6 +38,7 @@ export interface UnifiedSupplementItem {
 export function useTodaysSupplements() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { t } = useTranslation('supplements');
 
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
@@ -402,14 +404,14 @@ export function useTodaysSupplements() {
     onSuccess: (count) => {
       queryClient.invalidateQueries({ queryKey: ['manual-supplements-today'] });
       queryClient.invalidateQueries({ queryKey: ['protocol-supplements-today'] });
-      toast.success(`✅ Принято: ${count}`);
+      toast.success(t('today.takenCount', { count }));
     },
     onError: (error: any) => {
       console.error('Error logging intake:', error);
       if (error.message === 'All selected items already taken today') {
-        toast.info('Все выбранные добавки уже приняты сегодня');
+        toast.info(t('today.allAlreadyTaken'));
       } else {
-        toast.error('Ошибка при сохранении');
+        toast.error(t('today.saveError'));
       }
     },
   });
@@ -523,14 +525,14 @@ export function useTodaysSupplements() {
       queryClient.invalidateQueries({ queryKey: ['manual-supplements-today'] });
       queryClient.invalidateQueries({ queryKey: ['protocol-supplements-today'] });
       if (result.action === 'cancelled') {
-        toast.info(`↩️ Отменено: ${result.name}`);
+        toast.info(t('today.cancelled', { name: result.name }));
       } else {
-        toast.success(`✅ Принято: ${result.name}`);
+        toast.success(t('today.taken', { name: result.name }));
       }
     },
     onError: (error) => {
       console.error('Error toggling intake:', error);
-      toast.error('Ошибка');
+      toast.error(t('common:errors.generic'));
     },
   });
 
@@ -575,11 +577,11 @@ export function useTodaysSupplements() {
     onSuccess: (item) => {
       queryClient.invalidateQueries({ queryKey: ['manual-supplements-today'] });
       queryClient.invalidateQueries({ queryKey: ['protocol-supplements-today'] });
-      toast.success(`➕ Добавлен приём: ${item.name}`);
+      toast.success(t('today.intakeAdded', { name: item.name }));
     },
     onError: (error) => {
       console.error('Error incrementing intake:', error);
-      toast.error('Ошибка при добавлении приёма');
+      toast.error(t('today.intakeError'));
     },
   });
 
