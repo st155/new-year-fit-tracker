@@ -20,5 +20,22 @@
     "noGoalsDescription": "Join a challenge to automatically create goals and start tracking your progress",
     "joinChallenge": "Join a Challenge",
     "refreshPage": "Refresh Page"
+  },
+  "quickAdd": {
+    "title": "Add Measurement",
+    "targetLabel": "Target",
+    "valueLabel": "Value",
+    "valuePlaceholder": "e.g.: 5.0",
+    "valuePlaceholderTime": "e.g.: 120 (seconds)",
+    "dateLabel": "Measurement Date",
+    "cancel": "Cancel",
+    "submit": "Add",
+    "submitting": "Saving...",
+    "errors": {
+      "authRequired": "Authentication required",
+      "invalidValue": "Enter a valid value",
+      "saveFailed": "Failed to add measurement"
+    },
+    "success": "Measurement added"
   }
 }
