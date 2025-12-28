@@ -257,7 +257,8 @@
     "rejectedDesc": "План был отклонён",
     "rejectError": "Ошибка отклонения",
     "newPlanReady": "Новый план готов",
-    "goToPending": "Перейти к ожидающим"
+    "goToPending": "Перейти к ожидающим",
+    "executedCount": "Выполнено действий: {{success}}{{failText}}"
   },
   "schedule": {
     "loadError": "Ошибка загрузки событий",

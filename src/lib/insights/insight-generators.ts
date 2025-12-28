@@ -1,15 +1,86 @@
 /**
  * Smart Insight Generators
+ * Supports i18n via options parameter
  */
 
 import type { SmartInsight, InsightGeneratorContext } from './types';
 
 /**
+ * Insight text options for localization
+ */
+export interface InsightTextOptions {
+  quality?: {
+    poor: (count: number) => string;
+    fair: (count: number) => string;
+  };
+  trends?: {
+    weeklyChange: (metric: string, change: string, isPositive: boolean) => string;
+  };
+  goals?: {
+    defaultTitle: string;
+    stale: (title: string, days: number) => string;
+    nearCompletion: (title: string, progress: number) => string;
+    completed: (title: string) => string;
+  };
+  habits?: {
+    streak: (days: number, title: string) => string;
+    allComplete: (done: number, total: number) => string;
+    progress: (done: number, total: number) => string;
+  };
+  achievements?: {
+    stepsRecord: (steps: string) => string;
+    highRecovery: (recovery: number) => string;
+  };
+  info?: {
+    syncedToday: (count: number) => string;
+  };
+  recommendations?: {
+    addMetric: (name: string) => string;
+  };
+}
+
+// Default Russian texts for backward compatibility
+const defaultOptions: InsightTextOptions = {
+  quality: {
+    poor: (count) => `${count} ${count === 1 ? 'метрика требует' : 'метрик требуют'} внимания`,
+    fair: (count) => `${count} ${count === 1 ? 'метрика' : 'метрик'} с низким качеством`,
+  },
+  trends: {
+    weeklyChange: (metric, change, isPositive) => `${metric}: ${isPositive ? '+' : ''}${change}% за неделю`,
+  },
+  goals: {
+    defaultTitle: 'Цель',
+    stale: (title, days) => `Цель "${title}" не обновлялась ${days} ${days === 1 ? 'день' : 'дней'}`,
+    nearCompletion: (title, progress) => `Цель "${title}" на ${progress}%!`,
+    completed: (title) => `Цель "${title}" достигнута!`,
+  },
+  habits: {
+    streak: (days, title) => `Стрейк: ${days} ${days === 1 ? 'день' : 'дней'} - ${title}`,
+    allComplete: (done, total) => `Все привычки выполнены (${done}/${total})`,
+    progress: (done, total) => `Привычки: ${done}/${total} выполнено`,
+  },
+  achievements: {
+    stepsRecord: (steps) => `Новый рекорд! ${steps} шагов`,
+    highRecovery: (recovery) => `Отличное восстановление: ${recovery}%`,
+  },
+  info: {
+    syncedToday: (count) => `Сегодня синхронизировано ${count} ${count === 1 ? 'метрика' : 'метрик'}`,
+  },
+  recommendations: {
+    addMetric: (name) => `Добавьте метрику "${name}" для полной картины`,
+  },
+};
+
+/**
  * Generate quality-related insights
  */
-export function generateQualityInsights(context: InsightGeneratorContext): SmartInsight[] {
+export function generateQualityInsights(
+  context: InsightGeneratorContext,
+  options: InsightTextOptions = defaultOptions
+): SmartInsight[] {
   const insights: SmartInsight[] = [];
   const { qualityData } = context;
+  const texts = { ...defaultOptions.quality, ...options.quality };
 
   if (!qualityData) return insights;
 
@@ -20,7 +91,7 @@ export function generateQualityInsights(context: InsightGeneratorContext): Smart
       id: 'quality-poor',
       type: 'critical',
       emoji: '🚨',
-      message: `${poorMetrics.length} ${poorMetrics.length === 1 ? 'метрика требует' : 'метрик требуют'} внимания`,
+      message: texts.poor!(poorMetrics.length),
       priority: 95,
       action: { type: 'navigate', path: '/data-quality' },
       timestamp: new Date(),
@@ -35,7 +106,7 @@ export function generateQualityInsights(context: InsightGeneratorContext): Smart
       id: 'quality-fair',
       type: 'warning',
       emoji: '⚠️',
-      message: `${fairMetrics.length} ${fairMetrics.length === 1 ? 'метрика' : 'метрик'} с низким качеством`,
+      message: texts.fair!(fairMetrics.length),
       priority: 70,
       action: { type: 'navigate', path: '/data-quality' },
       timestamp: new Date(),
@@ -49,9 +120,13 @@ export function generateQualityInsights(context: InsightGeneratorContext): Smart
 /**
  * Generate trend-related insights
  */
-export function generateTrendInsights(context: InsightGeneratorContext): SmartInsight[] {
+export function generateTrendInsights(
+  context: InsightGeneratorContext,
+  options: InsightTextOptions = defaultOptions
+): SmartInsight[] {
   const insights: SmartInsight[] = [];
   const { metricsData } = context;
+  const texts = { ...defaultOptions.trends, ...options.trends };
 
   if (!metricsData?.history) return insights;
 
@@ -73,7 +148,7 @@ export function generateTrendInsights(context: InsightGeneratorContext): SmartIn
         id: `trend-${metricName.toLowerCase().replace(' ', '-')}`,
         type: isPositive ? 'achievement' : 'warning',
         emoji: isPositive ? '📈' : '📉',
-        message: `${metricName}: ${isPositive ? '+' : ''}${change.toFixed(0)}% за неделю`,
+        message: texts.weeklyChange!(metricName, change.toFixed(0), isPositive),
         priority: Math.abs(change) > 25 ? 75 : 55,
         action: { type: 'navigate', path: `/metrics/${metricName.toLowerCase().replace(' ', '-')}` },
         timestamp: new Date(),
@@ -88,9 +163,13 @@ export function generateTrendInsights(context: InsightGeneratorContext): SmartIn
 /**
  * Generate goal-related insights
  */
-export function generateGoalInsights(context: InsightGeneratorContext): SmartInsight[] {
+export function generateGoalInsights(
+  context: InsightGeneratorContext,
+  options: InsightTextOptions = defaultOptions
+): SmartInsight[] {
   const insights: SmartInsight[] = [];
   const { goalsData } = context;
+  const texts = { ...defaultOptions.goals, ...options.goals };
 
   if (!goalsData) return insights;
 
@@ -105,12 +184,12 @@ export function generateGoalInsights(context: InsightGeneratorContext): SmartIns
       );
       
       if (daysSinceCreation > 7) {
-        const goalTitle = goal.title || goal.metric_name || 'Цель';
+        const goalTitle = goal.title || goal.metric_name || texts.defaultTitle!;
         insights.push({
           id: `goal-stale-${goal.id}`,
           type: 'warning',
           emoji: '⚠️',
-          message: `Цель "${goalTitle}" не обновлялась ${daysSinceCreation} ${daysSinceCreation === 1 ? 'день' : 'дней'}`,
+          message: texts.stale!(goalTitle, daysSinceCreation),
           priority: 65,
           action: { type: 'navigate', path: `/goals/${goal.id}` },
           timestamp: new Date(),
@@ -128,12 +207,12 @@ export function generateGoalInsights(context: InsightGeneratorContext): SmartIns
 
     // Near completion (80-99%)
     if (progress >= 80 && progress < 100) {
-      const goalTitle = goal.title || goal.metric_name || 'Цель';
+      const goalTitle = goal.title || goal.metric_name || texts.defaultTitle!;
       insights.push({
         id: `goal-near-${goal.id}`,
         type: 'achievement',
         emoji: '🎯',
-        message: `Цель "${goalTitle}" на ${Math.round(progress)}%!`,
+        message: texts.nearCompletion!(goalTitle, Math.round(progress)),
         priority: 85,
         action: { type: 'navigate', path: `/goals/${goal.id}` },
         timestamp: new Date(),
@@ -145,12 +224,12 @@ export function generateGoalInsights(context: InsightGeneratorContext): SmartIns
     const lastMeasurement = new Date(goal.measurements[0]?.created_at);
     const isToday = lastMeasurement.toDateString() === new Date().toDateString();
     if (progress >= 100 && isToday) {
-      const goalTitle = goal.title || goal.metric_name || 'Цель';
+      const goalTitle = goal.title || goal.metric_name || texts.defaultTitle!;
       insights.push({
         id: `goal-complete-${goal.id}`,
         type: 'achievement',
         emoji: '🎉',
-        message: `Цель "${goalTitle}" достигнута!`,
+        message: texts.completed!(goalTitle),
         priority: 90,
         action: { type: 'navigate', path: `/goals/${goal.id}` },
         timestamp: new Date(),
@@ -165,9 +244,13 @@ export function generateGoalInsights(context: InsightGeneratorContext): SmartIns
 /**
  * Generate habit-related insights
  */
-export function generateHabitInsights(context: InsightGeneratorContext): SmartInsight[] {
+export function generateHabitInsights(
+  context: InsightGeneratorContext,
+  options: InsightTextOptions = defaultOptions
+): SmartInsight[] {
   const insights: SmartInsight[] = [];
   const { habitsData } = context;
+  const texts = { ...defaultOptions.habits, ...options.habits };
 
   if (!habitsData || habitsData.length === 0) return insights;
 
@@ -189,7 +272,7 @@ export function generateHabitInsights(context: InsightGeneratorContext): SmartIn
       id: 'habit-streak',
       type: 'achievement',
       emoji: '🔥',
-      message: `Стрейк: ${maxStreak} ${maxStreak === 1 ? 'день' : 'дней'} - ${streakHabit.title}`,
+      message: texts.streak!(maxStreak, streakHabit.title),
       priority: 80,
       action: { type: 'navigate', path: '/habits' },
       timestamp: new Date(),
@@ -206,7 +289,7 @@ export function generateHabitInsights(context: InsightGeneratorContext): SmartIn
       id: 'habits-all-complete',
       type: 'achievement',
       emoji: '✅',
-      message: `Все привычки выполнены (${totalHabits}/${totalHabits})`,
+      message: texts.allComplete!(completedToday, totalHabits),
       priority: 75,
       action: { type: 'navigate', path: '/habits' },
       timestamp: new Date(),
@@ -217,7 +300,7 @@ export function generateHabitInsights(context: InsightGeneratorContext): SmartIn
       id: 'habits-progress',
       type: 'info',
       emoji: '📝',
-      message: `Привычки: ${completedToday}/${totalHabits} выполнено`,
+      message: texts.progress!(completedToday, totalHabits),
       priority: 40,
       action: { type: 'navigate', path: '/habits' },
       timestamp: new Date(),
@@ -231,9 +314,13 @@ export function generateHabitInsights(context: InsightGeneratorContext): SmartIn
 /**
  * Generate achievement insights
  */
-export function generateAchievementInsights(context: InsightGeneratorContext): SmartInsight[] {
+export function generateAchievementInsights(
+  context: InsightGeneratorContext,
+  options: InsightTextOptions = defaultOptions
+): SmartInsight[] {
   const insights: SmartInsight[] = [];
   const { todayMetrics, metricsData } = context;
+  const texts = { ...defaultOptions.achievements, ...options.achievements };
 
   if (!todayMetrics) return insights;
 
@@ -243,7 +330,7 @@ export function generateAchievementInsights(context: InsightGeneratorContext): S
       id: 'achievement-steps',
       type: 'achievement',
       emoji: '🏆',
-      message: `Новый рекорд! ${todayMetrics.steps.toLocaleString()} шагов`,
+      message: texts.stepsRecord!(todayMetrics.steps.toLocaleString()),
       priority: 88,
       action: { type: 'navigate', path: '/metrics/steps' },
       timestamp: new Date(),
@@ -257,7 +344,7 @@ export function generateAchievementInsights(context: InsightGeneratorContext): S
       id: 'achievement-recovery',
       type: 'achievement',
       emoji: '💪',
-      message: `Отличное восстановление: ${todayMetrics.recovery}%`,
+      message: texts.highRecovery!(todayMetrics.recovery),
       priority: 78,
       action: { type: 'navigate', path: '/metrics/recovery' },
       timestamp: new Date(),
@@ -271,9 +358,13 @@ export function generateAchievementInsights(context: InsightGeneratorContext): S
 /**
  * Generate information insights (sync status, etc.)
  */
-export function generateInfoInsights(context: InsightGeneratorContext): SmartInsight[] {
+export function generateInfoInsights(
+  context: InsightGeneratorContext,
+  options: InsightTextOptions = defaultOptions
+): SmartInsight[] {
   const insights: SmartInsight[] = [];
   const { metricsData } = context;
+  const texts = { ...defaultOptions.info, ...options.info };
 
   if (!metricsData?.latest) return insights;
 
@@ -288,7 +379,7 @@ export function generateInfoInsights(context: InsightGeneratorContext): SmartIns
       id: 'info-sync',
       type: 'info',
       emoji: '📊',
-      message: `Сегодня синхронизировано ${todayMetrics.length} ${todayMetrics.length === 1 ? 'метрика' : 'метрик'}`,
+      message: texts.syncedToday!(todayMetrics.length),
       priority: 35,
       action: { type: 'navigate', path: '/integrations' },
       timestamp: new Date(),
@@ -302,9 +393,13 @@ export function generateInfoInsights(context: InsightGeneratorContext): SmartIns
 /**
  * Generate recommendation insights
  */
-export function generateRecommendationInsights(context: InsightGeneratorContext): SmartInsight[] {
+export function generateRecommendationInsights(
+  context: InsightGeneratorContext,
+  options: InsightTextOptions = defaultOptions
+): SmartInsight[] {
   const insights: SmartInsight[] = [];
   const { metricsData } = context;
+  const texts = { ...defaultOptions.recommendations, ...options.recommendations };
 
   if (!metricsData?.latest) return insights;
 
@@ -318,7 +413,7 @@ export function generateRecommendationInsights(context: InsightGeneratorContext)
         id: `recommendation-add-${metricName.toLowerCase().replace(' ', '-')}`,
         type: 'recommendation',
         emoji: '💡',
-        message: `Добавьте метрику "${metricName}" для полной картины`,
+        message: texts.addMetric!(metricName),
         priority: 45,
         action: { type: 'navigate', path: '/add-metric' },
         timestamp: new Date(),

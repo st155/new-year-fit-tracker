@@ -257,7 +257,8 @@
     "rejectedDesc": "Plan was rejected",
     "rejectError": "Rejection error",
     "newPlanReady": "New plan ready",
-    "goToPending": "Go to pending"
+    "goToPending": "Go to pending",
+    "executedCount": "Actions executed: {{success}}{{failText}}"
   },
   "schedule": {
     "loadError": "Error loading events",

@@ -1,0 +1,49 @@
+{
+  "network": {
+    "failedToFetch": "Internet connection problem",
+    "networkError": "Check your network connection",
+    "noConnection": "No internet connection",
+    "detailed": "Internet connection problem. Check your connection and try again."
+  },
+  "auth": {
+    "unauthorized": "Please sign in again",
+    "invalidCredentials": "Invalid email or password",
+    "tokenExpired": "Session expired, please sign in again",
+    "sessionMissing": "Sign in required",
+    "detailed": "Re-authentication required. Please sign in again."
+  },
+  "http": {
+    "400": "Bad request",
+    "401": "Authorization required",
+    "403": "Access denied",
+    "404": "Data not found",
+    "429": "Too many requests, please wait",
+    "500": "Server error, please try later",
+    "502": "Server temporarily unavailable",
+    "503": "Service temporarily unavailable"
+  },
+  "database": {
+    "duplicateKey": "This record already exists",
+    "foreignKey": "Cannot delete, has related data",
+    "uniqueConstraint": "Value must be unique"
+  },
+  "validation": {
+    "required": "This field is required",
+    "invalidEmail": "Invalid email format",
+    "passwordTooShort": "Password is too short",
+    "invalidFormat": "Invalid data format",
+    "checkField": "Please check the \"{{field}}\" field",
+    "checkForm": "Please check the form"
+  },
+  "supabase": {
+    "invalidApiKey": "Configuration error, contact administrator",
+    "rowLevelSecurity": "Insufficient permissions"
+  },
+  "generic": {
+    "unknown": "An unknown error occurred",
+    "somethingWrong": "Something went wrong. Please try again."
+  },
+  "server": {
+    "detailed": "Server error. We're already working on it. Please try later."
+  }
+}

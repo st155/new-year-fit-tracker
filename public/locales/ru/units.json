@@ -1,0 +1,45 @@
+{
+  "display": {
+    "reps": "раз",
+    "kg": "кг",
+    "min": "мин",
+    "sec": "сек",
+    "km": "км",
+    "m": "м",
+    "percent": "%",
+    "mlKgMin": "мл/кг/мин",
+    "kgReps": "кг ({{reps}} повторений)"
+  },
+  "format": {
+    "strengthGoal1RM": "{{value}} кг (1RM)",
+    "strengthGoalReps": "{{value}} кг × {{reps}}"
+  },
+  "categories": {
+    "strength": "Сила",
+    "cardio": "Кардио",
+    "time": "Время",
+    "weight": "Вес",
+    "distance": "Дистанция",
+    "percentage": "Проценты"
+  },
+  "suggestions": {
+    "strength": {
+      "pullups": "Подтягивания",
+      "pushups": "Отжимания",
+      "benchPress": "Жим лёжа",
+      "squats": "Приседания"
+    },
+    "cardio": {
+      "run5k": "Бег 5 км",
+      "vo2max": "VO₂max"
+    },
+    "bodyComposition": {
+      "bodyFat": "Процент жира",
+      "weight": "Вес"
+    },
+    "endurance": {
+      "run10k": "Бег 10 км",
+      "plank": "Планка"
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "display": {
+    "reps": "reps",
+    "kg": "kg",
+    "min": "min",
+    "sec": "sec",
+    "km": "km",
+    "m": "m",
+    "percent": "%",
+    "mlKgMin": "ml/kg/min",
+    "kgReps": "kg ({{reps}} reps)"
+  },
+  "format": {
+    "strengthGoal1RM": "{{value}} kg (1RM)",
+    "strengthGoalReps": "{{value}} kg × {{reps}}"
+  },
+  "categories": {
+    "strength": "Strength",
+    "cardio": "Cardio",
+    "time": "Time",
+    "weight": "Weight",
+    "distance": "Distance",
+    "percentage": "Percentage"
+  },
+  "suggestions": {
+    "strength": {
+      "pullups": "Pull-ups",
+      "pushups": "Push-ups",
+      "benchPress": "Bench Press",
+      "squats": "Squats"
+    },
+    "cardio": {
+      "run5k": "5K Run",
+      "vo2max": "VO₂max"
+    },
+    "bodyComposition": {
+      "bodyFat": "Body Fat %",
+      "weight": "Weight"
+    },
+    "endurance": {
+      "run10k": "10K Run",
+      "plank": "Plank"
+    }
+  }
+}
