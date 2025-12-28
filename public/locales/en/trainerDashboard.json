@@ -190,6 +190,17 @@
     "hrZonesHigh": "HR Zones 4-5"
   },
   "units": {
-    "min": "min"
+    "min": "min",
+    "hours": "h",
+    "breathsPerMin": "breaths/min"
+  },
+  "sleepMetrics": {
+    "duration": "Sleep Duration",
+    "efficiency": "Sleep Efficiency",
+    "quality": "Sleep Quality",
+    "deepSleep": "Deep Sleep",
+    "lightSleep": "Light Sleep",
+    "remSleep": "REM Sleep",
+    "respiratoryRate": "Respiratory Rate"
   }
 }

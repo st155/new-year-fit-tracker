@@ -44,5 +44,17 @@
     "email": "Email",
     "progressSharing": "Public Progress",
     "trainer": "Trainer"
+  },
+  "editor": {
+    "title": "Edit Profile",
+    "edit": "Edit",
+    "username": "Username",
+    "usernamePlaceholder": "username",
+    "fullName": "Full Name",
+    "fullNamePlaceholder": "Full Name",
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "uploadAvatar": "Upload Avatar"
   }
 }

@@ -1,11 +1,13 @@
 import { HealthData } from "./types";
 import { HealthMetricCard } from "./HealthMetricCard";
+import { useTranslation } from 'react-i18next';
 
 interface SleepMetricsProps {
   healthData: HealthData[];
 }
 
 export function SleepMetrics({ healthData }: SleepMetricsProps) {
+  const { t } = useTranslation('trainerDashboard');
   const getLatestValue = (key: keyof HealthData) => {
     const latestData = healthData.find(d => d[key] !== undefined && d[key] !== null);
     return latestData?.[key] as number | undefined;
@@ -45,17 +47,17 @@ export function SleepMetrics({ healthData }: SleepMetricsProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <HealthMetricCard
-        title="Длительность сна"
+        title={t('sleepMetrics.duration')}
         icon="💤"
         value={getLatestValue('sleep_hours') || 0}
-        unit="ч"
+        unit={t('units.hours')}
         source={getLatestSource('sleep_hours_source')}
         data={getChartData('sleep_hours')}
         trend={getTrend('sleep_hours')}
       />
       
       <HealthMetricCard
-        title="Эффективность сна"
+        title={t('sleepMetrics.efficiency')}
         icon="✨"
         value={getLatestValue('sleep_efficiency') || 0}
         unit="%"
@@ -65,7 +67,7 @@ export function SleepMetrics({ healthData }: SleepMetricsProps) {
       />
       
       <HealthMetricCard
-        title="Качество сна"
+        title={t('sleepMetrics.quality')}
         icon="⭐"
         value={getLatestValue('sleep_performance') || 0}
         unit="%"
@@ -75,40 +77,40 @@ export function SleepMetrics({ healthData }: SleepMetricsProps) {
       />
       
       <HealthMetricCard
-        title="Глубокий сон"
+        title={t('sleepMetrics.deepSleep')}
         icon="🌙"
         value={getLatestValue('deep_sleep_duration') || 0}
-        unit="ч"
+        unit={t('units.hours')}
         source={getLatestSource('deep_sleep_duration_source')}
         data={getChartData('deep_sleep_duration')}
         trend={getTrend('deep_sleep_duration')}
       />
       
       <HealthMetricCard
-        title="Легкий сон"
+        title={t('sleepMetrics.lightSleep')}
         icon="☁️"
         value={getLatestValue('light_sleep_duration') || 0}
-        unit="ч"
+        unit={t('units.hours')}
         source={getLatestSource('light_sleep_duration_source')}
         data={getChartData('light_sleep_duration')}
         trend={getTrend('light_sleep_duration')}
       />
       
       <HealthMetricCard
-        title="REM сон"
+        title={t('sleepMetrics.remSleep')}
         icon="🌟"
         value={getLatestValue('rem_sleep_duration') || 0}
-        unit="ч"
+        unit={t('units.hours')}
         source={getLatestSource('rem_sleep_duration_source')}
         data={getChartData('rem_sleep_duration')}
         trend={getTrend('rem_sleep_duration')}
       />
       
       <HealthMetricCard
-        title="Частота дыхания"
+        title={t('sleepMetrics.respiratoryRate')}
         icon="🫁"
         value={getLatestValue('respiratory_rate') || 0}
-        unit="вдохов/мин"
+        unit={t('units.breathsPerMin')}
         source={getLatestSource('respiratory_rate_source')}
         data={getChartData('respiratory_rate')}
         trend={getTrend('respiratory_rate')}

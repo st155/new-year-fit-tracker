@@ -6,9 +6,10 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { format, subDays, addDays, isToday, isSameDay } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import { QuickMeasurementDialog } from '@/features/goals/components';
 import { formatForDB } from '@/lib/datetime-utils';
+import { useTranslation } from 'react-i18next';
 interface BodyFatData {
   date: string;
   bodyFat: number;
@@ -20,6 +21,8 @@ interface BodyFatProgressDetailProps {
 }
 
 export function BodyFatProgressDetail({ onBack }: BodyFatProgressDetailProps) {
+  const { t, i18n } = useTranslation('progress');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
   const { user } = useAuth();
   const [bodyFatData, setBodyFatData] = useState<BodyFatData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,9 +50,9 @@ export function BodyFatProgressDetail({ onBack }: BodyFatProgressDetailProps) {
 
   const getDateLabel = () => {
     if (isToday(selectedDate)) {
-      return "Сегодня";
+      return t('bodyFat.today');
     }
-    return format(selectedDate, 'd MMMM yyyy', { locale: ru });
+    return format(selectedDate, 'd MMMM yyyy', { locale: dateLocale });
   };
 
   useEffect(() => {
@@ -201,7 +204,7 @@ export function BodyFatProgressDetail({ onBack }: BodyFatProgressDetailProps) {
   };
 
   const formatTooltipDate = (dateStr: string) => {
-    return format(new Date(dateStr), 'd MMM', { locale: ru });
+    return format(new Date(dateStr), 'd MMM', { locale: dateLocale });
   };
 
   const getProgressColor = (current: number, target: number) => {
@@ -218,7 +221,7 @@ export function BodyFatProgressDetail({ onBack }: BodyFatProgressDetailProps) {
         <CardHeader>
           <Button variant="ghost" onClick={onBack} className="w-fit">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Назад
+            {t('bodyFat.back')}
           </Button>
         </CardHeader>
         <CardContent>
@@ -244,7 +247,7 @@ export function BodyFatProgressDetail({ onBack }: BodyFatProgressDetailProps) {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Процент жировой массы тела</h1>
+            <h1 className="text-2xl font-bold text-foreground">{t('bodyFat.pageTitle')}</h1>
           </div>
         </div>
         {bodyFatGoal && (
@@ -302,7 +305,7 @@ export function BodyFatProgressDetail({ onBack }: BodyFatProgressDetailProps) {
             boxShadow: "0 0 20px rgba(255, 107, 44, 0.3)",
           }}
         >
-          <div className="text-sm text-muted-foreground mb-1">Текущий %</div>
+          <div className="text-sm text-muted-foreground mb-1">{t('bodyFat.currentPercent')}</div>
           <div className={`text-4xl font-bold ${currentBodyFat ? getProgressColor(currentBodyFat, targetBodyFat) : 'text-[#FF6B2C]'}`}>
             {currentBodyFat ? `${currentBodyFat.toFixed(1)}` : '—'}
           </div>
@@ -316,7 +319,7 @@ export function BodyFatProgressDetail({ onBack }: BodyFatProgressDetailProps) {
             borderColor: "rgba(255, 255, 255, 0.1)",
           }}
         >
-          <div className="text-sm text-muted-foreground mb-1">За неделю</div>
+          <div className="text-sm text-muted-foreground mb-1">{t('bodyFat.weeklyChange')}</div>
           <div className="flex items-center gap-2 text-2xl font-bold">
             {weeklyChange !== null ? (
               <>
@@ -337,7 +340,7 @@ export function BodyFatProgressDetail({ onBack }: BodyFatProgressDetailProps) {
             boxShadow: "0 0 20px rgba(34, 197, 94, 0.3)",
           }}
         >
-          <div className="text-sm text-muted-foreground mb-1">Целевой %</div>
+          <div className="text-sm text-muted-foreground mb-1">{t('bodyFat.targetPercent')}</div>
           <div className="text-3xl font-bold text-[#22C55E]">{targetBodyFat}%</div>
         </div>
       </div>
@@ -389,7 +392,7 @@ export function BodyFatProgressDetail({ onBack }: BodyFatProgressDetailProps) {
                   labelStyle={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 12 }}
                   itemStyle={{ color: '#FF6B2C', fontSize: 14, fontWeight: 'bold' }}
                   labelFormatter={(value) => formatTooltipDate(value as string)}
-                  formatter={(value: number) => [`${value.toFixed(1)}%`, 'Процент жира']}
+                  formatter={(value: number) => [`${value.toFixed(1)}%`, t('bodyFat.bodyFatLabel')]}
                 />
                 <Line 
                   type="monotone" 
@@ -421,14 +424,14 @@ export function BodyFatProgressDetail({ onBack }: BodyFatProgressDetailProps) {
           }}
         >
           <Target className="w-12 h-12 mx-auto mb-4 opacity-30" />
-          <p className="text-muted-foreground">Нет данных о проценте жира</p>
-          <p className="text-sm text-muted-foreground">Добавьте измерения для отслеживания прогресса</p>
+          <p className="text-muted-foreground">{t('bodyFat.noData')}</p>
+          <p className="text-sm text-muted-foreground">{t('bodyFat.addMeasurements')}</p>
         </div>
       )}
 
       {/* History */}
       <div>
-        <h3 className="text-lg font-semibold mb-3 text-foreground">История изменений</h3>
+        <h3 className="text-lg font-semibold mb-3 text-foreground">{t('bodyFat.historyTitle')}</h3>
         <div className="space-y-2">
           {bodyFatData.slice(-10).reverse().map((item) => (
             <div 
@@ -444,7 +447,7 @@ export function BodyFatProgressDetail({ onBack }: BodyFatProgressDetailProps) {
                   {item.bodyFat.toFixed(1)}%
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  {format(new Date(item.date), 'd MMMM yyyy', { locale: ru })}
+                  {format(new Date(item.date), 'd MMMM yyyy', { locale: dateLocale })}
                 </div>
               </div>
               {item.change !== 0 && (

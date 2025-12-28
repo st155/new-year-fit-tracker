@@ -190,6 +190,17 @@
     "hrZonesHigh": "HR зоны 4-5"
   },
   "units": {
-    "min": "мин"
+    "min": "мин",
+    "hours": "ч",
+    "breathsPerMin": "вдохов/мин"
+  },
+  "sleepMetrics": {
+    "duration": "Длительность сна",
+    "efficiency": "Эффективность сна",
+    "quality": "Качество сна",
+    "deepSleep": "Глубокий сон",
+    "lightSleep": "Легкий сон",
+    "remSleep": "REM сон",
+    "respiratoryRate": "Частота дыхания"
   }
 }

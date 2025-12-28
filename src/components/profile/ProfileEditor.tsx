@@ -7,6 +7,7 @@ import { Pencil, Save, X, Camera } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useTranslation } from 'react-i18next';
 
 interface ProfileEditorProps {
   username: string;
@@ -27,6 +28,7 @@ export function ProfileEditor({
   isLoading,
   isSaving
 }: ProfileEditorProps) {
+  const { t } = useTranslation('profile');
   const [isEditing, setIsEditing] = useState(false);
   const [showAvatarUpload, setShowAvatarUpload] = useState(false);
   const [editData, setEditData] = useState({
@@ -76,12 +78,12 @@ export function ProfileEditor({
       <Card className="border-2 border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-cyan-500/5">
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
-            ✏️ Редактирование профиля
+            ✏️ {t('editor.title')}
           </CardTitle>
           {!isEditing && (
             <Button variant="ghost" size="sm" onClick={handleStartEdit} className="gap-1.5">
               <Pencil className="h-4 w-4" />
-              Изменить
+              {t('editor.edit')}
             </Button>
           )}
         </CardHeader>
@@ -120,20 +122,20 @@ export function ProfileEditor({
                   >
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="text-xs text-muted-foreground mb-1 block">Username</label>
+                        <label className="text-xs text-muted-foreground mb-1 block">{t('editor.username')}</label>
                         <Input
                           value={editData.username}
                           onChange={(e) => setEditData(prev => ({ ...prev, username: e.target.value }))}
-                          placeholder="username"
+                          placeholder={t('editor.usernamePlaceholder')}
                           className="h-9"
                         />
                       </div>
                       <div>
-                        <label className="text-xs text-muted-foreground mb-1 block">Полное имя</label>
+                        <label className="text-xs text-muted-foreground mb-1 block">{t('editor.fullName')}</label>
                         <Input
                           value={editData.full_name}
                           onChange={(e) => setEditData(prev => ({ ...prev, full_name: e.target.value }))}
-                          placeholder="Полное имя"
+                          placeholder={t('editor.fullNamePlaceholder')}
                           className="h-9"
                         />
                       </div>
@@ -146,7 +148,7 @@ export function ProfileEditor({
                         className="bg-gradient-primary gap-1.5"
                       >
                         <Save className="h-3.5 w-3.5" />
-                        {isSaving ? 'Сохранение...' : 'Сохранить'}
+                        {isSaving ? t('editor.saving') : t('editor.save')}
                       </Button>
                       <Button
                         size="sm"
@@ -155,7 +157,7 @@ export function ProfileEditor({
                         disabled={isSaving}
                       >
                         <X className="h-3.5 w-3.5 mr-1" />
-                        Отмена
+                        {t('editor.cancel')}
                       </Button>
                     </div>
                   </motion.div>
@@ -184,7 +186,7 @@ export function ProfileEditor({
             animate={{ opacity: 1, scale: 1 }}
             className="bg-background border rounded-lg shadow-xl max-w-md w-full p-6"
           >
-            <h3 className="font-semibold mb-4">Загрузить аватар</h3>
+            <h3 className="font-semibold mb-4">{t('editor.uploadAvatar')}</h3>
             <AvatarUpload
               currentAvatarUrl={editData.avatar_url}
               onAvatarUpdate={handleAvatarChange}
@@ -195,7 +197,7 @@ export function ProfileEditor({
               className="w-full mt-4"
               onClick={() => setShowAvatarUpload(false)}
             >
-              Отмена
+              {t('editor.cancel')}
             </Button>
           </motion.div>
         </div>

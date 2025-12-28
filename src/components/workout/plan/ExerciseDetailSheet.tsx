@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import ProgressChart from "@/components/workout/plan/ProgressChart";
 import { Skeleton } from "@/components/ui/skeleton";
-
+import { useTranslation } from 'react-i18next';
 interface ExerciseDetailSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -27,6 +27,7 @@ export function ExerciseDetailSheet({
   onOpenChange,
   exercise,
 }: ExerciseDetailSheetProps) {
+  const { t } = useTranslation('workouts');
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -50,7 +51,7 @@ export function ExerciseDetailSheet({
     <ResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Детали упражнения"
+      title={t('exercise.title')}
     >
       <ScrollArea className="h-[70vh] pr-4">
         <div className="space-y-6">
@@ -61,10 +62,10 @@ export function ExerciseDetailSheet({
               <h3 className="text-xl font-bold mb-2">{exercise.exercise_name}</h3>
               <div className="flex gap-2 flex-wrap">
                 <Badge variant="secondary">
-                  {exercise.sets} подходов
+                  {t('exercise.sets', { count: exercise.sets })}
                 </Badge>
                 <Badge variant="secondary">
-                  {exercise.reps} повторений
+                  {t('exercise.reps', { reps: exercise.reps })}
                 </Badge>
                 {exercise.rpe && (
                   <Badge variant="outline">
@@ -80,7 +81,7 @@ export function ExerciseDetailSheet({
             <div className="glass-card p-4 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
                 <Clock className="w-4 h-4 text-primary" />
-                <h4 className="font-semibold">Отдых между подходами</h4>
+                <h4 className="font-semibold">{t('exercise.restBetweenSets')}</h4>
               </div>
               <p className="text-2xl font-bold">
                 {Math.floor(exercise.rest_seconds / 60)}:{(exercise.rest_seconds % 60).toString().padStart(2, '0')}
@@ -93,7 +94,7 @@ export function ExerciseDetailSheet({
             <div className="glass-card p-4 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
                 <Info className="w-4 h-4 text-primary" />
-                <h4 className="font-semibold">Заметки</h4>
+                <h4 className="font-semibold">{t('exercise.notes')}</h4>
               </div>
               <p className="text-sm text-muted-foreground">{exercise.notes}</p>
             </div>
@@ -103,10 +104,10 @@ export function ExerciseDetailSheet({
           <div className="glass-card p-4 rounded-lg">
             <div className="flex items-center gap-2 mb-3">
               <Target className="w-4 h-4 text-primary" />
-              <h4 className="font-semibold">Целевые мышцы</h4>
+              <h4 className="font-semibold">{t('exercise.targetMuscles')}</h4>
             </div>
             <p className="text-sm text-muted-foreground">
-              Информация о целевых мышцах будет доступна в следующей версии
+              {t('exercise.targetMusclesComingSoon')}
             </p>
           </div>
 
@@ -114,13 +115,13 @@ export function ExerciseDetailSheet({
           <div className="glass-card p-4 rounded-lg">
             <div className="flex items-center gap-2 mb-3">
               <Info className="w-4 h-4 text-primary" />
-              <h4 className="font-semibold">Техника выполнения</h4>
+              <h4 className="font-semibold">{t('exercise.technique')}</h4>
             </div>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>• Сохраняйте правильную форму на протяжении всего упражнения</li>
-              <li>• Контролируйте дыхание: выдох на усилии</li>
-              <li>• Используйте полную амплитуду движения</li>
-              <li>• При необходимости уменьшайте вес для сохранения техники</li>
+              <li>• {t('exercise.techniqueTips.form')}</li>
+              <li>• {t('exercise.techniqueTips.breathing')}</li>
+              <li>• {t('exercise.techniqueTips.rom')}</li>
+              <li>• {t('exercise.techniqueTips.weight')}</li>
             </ul>
           </div>
 
@@ -128,7 +129,7 @@ export function ExerciseDetailSheet({
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-primary" />
-              <h4 className="font-semibold">История прогресса</h4>
+              <h4 className="font-semibold">{t('exercise.progressHistory')}</h4>
             </div>
             {isLoading ? (
               <div className="space-y-3">
@@ -140,10 +141,10 @@ export function ExerciseDetailSheet({
             ) : (
               <div className="glass-card p-6 rounded-lg text-center">
                 <p className="text-sm text-muted-foreground">
-                  Недостаточно данных для отображения прогресса
+                  {t('exercise.notEnoughData')}
                 </p>
                 <p className="text-xs text-muted-foreground mt-2">
-                  Выполните упражнение несколько раз, чтобы увидеть график
+                  {t('exercise.performMoreToSeeChart')}
                 </p>
               </div>
             )}
