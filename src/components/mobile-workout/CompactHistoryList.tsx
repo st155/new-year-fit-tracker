@@ -5,10 +5,12 @@
 
 import { motion } from "framer-motion";
 import { format } from "date-fns";
-import { ru } from "date-fns/locale";
+import { ru, enUS } from "date-fns/locale";
 import { Dumbbell, Footprints, Timer, Trophy, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from 'react-i18next';
+import i18n from '@/i18n';
 
 interface WorkoutItem {
   id: string;
@@ -50,6 +52,8 @@ export function CompactHistoryList({
   onWorkoutClick,
   onViewAll
 }: CompactHistoryListProps) {
+  const { t } = useTranslation('workouts');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
   const displayedWorkouts = workouts.slice(0, maxItems);
 
   if (displayedWorkouts.length === 0) {
@@ -60,14 +64,14 @@ export function CompactHistoryList({
     <div className="mx-4 mt-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-semibold text-foreground">История</h3>
+        <h3 className="text-lg font-semibold text-foreground">{t('history.title')}</h3>
         <Button
           variant="ghost"
           size="sm"
           onClick={onViewAll}
           className="text-muted-foreground hover:text-foreground"
         >
-          Все {workouts.length}
+          {t('history.viewAll', { count: workouts.length })}
           <ChevronRight className="w-4 h-4 ml-1" />
         </Button>
       </div>
@@ -103,10 +107,10 @@ export function CompactHistoryList({
               {/* Info */}
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-foreground truncate">
-                  {workout.name || "Тренировка"}
+                  {workout.name || t('lastWorkout.workout')}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {format(workout.date, "d MMM, HH:mm", { locale: ru })}
+                  {format(workout.date, "d MMM, HH:mm", { locale: dateLocale })}
                 </p>
               </div>
 

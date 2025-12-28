@@ -37,6 +37,29 @@
   },
   "units": {
     "mlKgMin": "мл/кг/мин",
-    "mmHg": "мм рт.ст."
+    "mmHg": "мм рт.ст.",
+    "steps": "шагов",
+    "kcal": "ккал",
+    "km": "км",
+    "kmh": "км/ч",
+    "m": "м",
+    "min": "мин"
+  },
+  "overview": {
+    "title": "Ключевые показатели (последние 7 дней)",
+    "avgSteps": "Средние шаги",
+    "avgSleep": "Среднее время сна",
+    "restingHr": "Пульс в покое",
+    "recoveryScore": "Recovery Score",
+    "activeCalories": "Активные калории"
+  },
+  "activity": {
+    "steps": "Шаги",
+    "activeCalories": "Активные калории",
+    "distance": "Дистанция",
+    "avgSpeed": "Средняя скорость",
+    "maxSpeed": "Макс скорость",
+    "elevation": "Подъем",
+    "workoutTime": "Время тренировки"
   }
 }

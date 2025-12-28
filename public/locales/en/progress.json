@@ -49,5 +49,10 @@
     "noData": "No body fat data",
     "addMeasurements": "Add measurements to track progress",
     "historyTitle": "Change History"
+  },
+  "trends": {
+    "unknown": "Unknown",
+    "empty": "No trend data",
+    "emptyDescription": "Metrics will appear here as you track your progress"
   }
 }

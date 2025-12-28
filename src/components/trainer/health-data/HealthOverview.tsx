@@ -1,11 +1,13 @@
 import { HealthData } from "./types";
 import { HealthMetricCard } from "./HealthMetricCard";
+import { useTranslation } from 'react-i18next';
 
 interface HealthOverviewProps {
   healthData: HealthData[];
 }
 
 export function HealthOverview({ healthData }: HealthOverviewProps) {
+  const { t } = useTranslation('health');
   const last7Days = healthData.slice(0, 7);
   
   const calculateAvg = (key: keyof HealthData) => {
@@ -51,40 +53,40 @@ export function HealthOverview({ healthData }: HealthOverviewProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold mb-4">Ключевые показатели (последние 7 дней)</h3>
+        <h3 className="text-lg font-semibold mb-4">{t('overview.title')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <HealthMetricCard
-            title="Средние шаги"
+            title={t('overview.avgSteps')}
             icon="🏃"
             value={calculateAvg('steps') || 0}
-            unit="шагов"
+            unit={t('units.steps')}
             source={getLatestSource('steps_source')}
             data={getChartData('steps')}
             trend={getTrend('steps')}
           />
           
           <HealthMetricCard
-            title="Среднее время сна"
+            title={t('overview.avgSleep')}
             icon="💤"
             value={calculateAvg('sleep_hours') || 0}
-            unit="ч"
+            unit={t('summary.hours')}
             source={getLatestSource('sleep_hours_source')}
             data={getChartData('sleep_hours')}
             trend={getTrend('sleep_hours')}
           />
           
           <HealthMetricCard
-            title="Пульс в покое"
+            title={t('overview.restingHr')}
             icon="❤️"
             value={calculateAvg('resting_heart_rate') || 0}
-            unit="bpm"
+            unit={t('summary.bpm')}
             source={getLatestSource('resting_heart_rate_source')}
             data={getChartData('resting_heart_rate')}
             trend={getTrend('resting_heart_rate')}
           />
           
           <HealthMetricCard
-            title="Recovery Score"
+            title={t('overview.recoveryScore')}
             icon="⚡"
             value={calculateAvg('recovery_score') || 0}
             unit="%"
@@ -94,20 +96,20 @@ export function HealthOverview({ healthData }: HealthOverviewProps) {
           />
           
           <HealthMetricCard
-            title="Активные калории"
+            title={t('overview.activeCalories')}
             icon="🔥"
             value={calculateAvg('active_calories') || 0}
-            unit="ккал"
+            unit={t('units.kcal')}
             source={getLatestSource('active_calories_source')}
             data={getChartData('active_calories')}
             trend={getTrend('active_calories')}
           />
           
           <HealthMetricCard
-            title="HRV"
+            title={t('summary.hrv')}
             icon="💗"
             value={calculateAvg('hrv') || 0}
-            unit="ms"
+            unit={t('summary.ms')}
             source={getLatestSource('hrv_source')}
             data={getChartData('hrv')}
             trend={getTrend('hrv')}

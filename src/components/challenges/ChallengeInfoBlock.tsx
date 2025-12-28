@@ -5,9 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, Trophy, Target, UserPlus, Info, TrendingUp } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { enUS } from "date-fns/locale";
+import { ru, enUS } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from 'react-i18next';
+import i18n from '@/i18n';
 
 interface ChallengeInfoBlockProps {
   challengeId: string;
@@ -15,15 +17,17 @@ interface ChallengeInfoBlockProps {
   isJoining: boolean;
 }
 
-const difficultyLevels = [
-  { level: 0, label: "Бенчмарк", multiplier: "100%", description: "Базовый уровень - достигните установленных бенчмарков", color: "bg-blue-500/20 text-blue-700 dark:text-blue-300" },
-  { level: 1, label: "Продвинутый", multiplier: "130%", description: "Увеличенные цели на 30%", color: "bg-green-500/20 text-green-700 dark:text-green-300" },
-  { level: 2, label: "Эксперт", multiplier: "160%", description: "Увеличенные цели на 60%", color: "bg-orange-500/20 text-orange-700 dark:text-orange-300" },
-  { level: 3, label: "Мастер", multiplier: "190%", description: "Увеличенные цели на 90%", color: "bg-red-500/20 text-red-700 dark:text-red-300" },
-];
-
 export function ChallengeInfoBlock({ challengeId, onJoinClick, isJoining }: ChallengeInfoBlockProps) {
+  const { t } = useTranslation('challenges');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
   const { challenge, isLoading: challengeLoading } = useChallengeDetailQuery(challengeId);
+
+  const difficultyLevels = [
+    { level: 0, label: t('info.difficultyBenchmark'), multiplier: "100%", description: t('info.difficultyBenchmarkDesc'), color: "bg-blue-500/20 text-blue-700 dark:text-blue-300" },
+    { level: 1, label: t('info.difficultyAdvanced'), multiplier: "130%", description: t('info.difficultyAdvancedDesc'), color: "bg-green-500/20 text-green-700 dark:text-green-300" },
+    { level: 2, label: t('info.difficultyExpert'), multiplier: "160%", description: t('info.difficultyExpertDesc'), color: "bg-orange-500/20 text-orange-700 dark:text-orange-300" },
+    { level: 3, label: t('info.difficultyMaster'), multiplier: "190%", description: t('info.difficultyMasterDesc'), color: "bg-red-500/20 text-red-700 dark:text-red-300" },
+  ];
 
   const { data: disciplines = [], isLoading: disciplinesLoading } = useQuery({
     queryKey: ["challenge-disciplines", challengeId],
@@ -52,7 +56,7 @@ export function ChallengeInfoBlock({ challengeId, onJoinClick, isJoining }: Chal
     return (
       <Card>
         <CardContent className="py-12 text-center">
-          <p className="text-muted-foreground">Информация о челлендже не найдена</p>
+          <p className="text-muted-foreground">{t('info.notFound')}</p>
         </CardContent>
       </Card>
     );
@@ -67,7 +71,7 @@ export function ChallengeInfoBlock({ challengeId, onJoinClick, isJoining }: Chal
         <CardHeader>
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-2 flex-1">
-              <CardTitle className="text-2xl">О челлендже</CardTitle>
+              <CardTitle className="text-2xl">{t('info.about')}</CardTitle>
               <CardDescription className="text-base">
                 {challenge.description}
               </CardDescription>
@@ -82,9 +86,9 @@ export function ChallengeInfoBlock({ challengeId, onJoinClick, isJoining }: Chal
                 <Calendar className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Начало</p>
+                <p className="text-sm text-muted-foreground">{t('info.start')}</p>
                 <p className="font-semibold">
-                  {formatDistanceToNow(new Date(challenge.start_date), { addSuffix: true, locale: enUS })}
+                  {formatDistanceToNow(new Date(challenge.start_date), { addSuffix: true, locale: dateLocale })}
                 </p>
               </div>
             </div>
@@ -93,9 +97,9 @@ export function ChallengeInfoBlock({ challengeId, onJoinClick, isJoining }: Chal
                 <Trophy className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Осталось</p>
+                <p className="text-sm text-muted-foreground">{t('info.remaining')}</p>
                 <p className="font-semibold">
-                  {daysLeft > 0 ? `${daysLeft} дней` : "Завершен"}
+                  {daysLeft > 0 ? t('info.daysLeft', { count: daysLeft }) : t('info.completed')}
                 </p>
               </div>
             </div>
@@ -104,7 +108,7 @@ export function ChallengeInfoBlock({ challengeId, onJoinClick, isJoining }: Chal
                 <Target className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Дисциплин</p>
+                <p className="text-sm text-muted-foreground">{t('info.disciplines')}</p>
                 <p className="font-semibold">{disciplines.length}</p>
               </div>
             </div>
@@ -118,10 +122,10 @@ export function ChallengeInfoBlock({ challengeId, onJoinClick, isJoining }: Chal
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5 text-primary" />
-              Дисциплины
+              {t('info.disciplinesTitle')}
             </CardTitle>
             <CardDescription>
-              Направления развития в этом челлендже
+              {t('info.disciplinesDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -144,7 +148,7 @@ export function ChallengeInfoBlock({ challengeId, onJoinClick, isJoining }: Chal
                       </div>
                     </div>
                     <Badge variant="outline" className="shrink-0">
-                      Бенчмарк
+                      {t('info.benchmark')}
                     </Badge>
                   </div>
                 </div>
@@ -159,10 +163,10 @@ export function ChallengeInfoBlock({ challengeId, onJoinClick, isJoining }: Chal
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-primary" />
-            Уровни сложности
+            {t('info.difficultyLevels')}
           </CardTitle>
           <CardDescription>
-            Выберите уровень сложности при присоединении
+            {t('info.difficultyLevelsDesc')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -194,9 +198,9 @@ export function ChallengeInfoBlock({ challengeId, onJoinClick, isJoining }: Chal
         <CardContent className="py-8">
           <div className="text-center space-y-4">
             <div>
-              <h3 className="text-2xl font-bold mb-2">Готовы принять вызов?</h3>
+              <h3 className="text-2xl font-bold mb-2">{t('info.ctaTitle')}</h3>
               <p className="text-muted-foreground">
-                Присоединяйтесь к челленджу и начните отслеживать свой прогресс
+                {t('info.ctaDescription')}
               </p>
             </div>
             <Button
@@ -206,7 +210,7 @@ export function ChallengeInfoBlock({ challengeId, onJoinClick, isJoining }: Chal
               className="bg-gradient-primary text-white hover:opacity-90 shadow-glow-primary"
             >
               <UserPlus className="h-4 w-4 mr-2" />
-              {isJoining ? "Присоединение..." : "Участвовать в челлендже"}
+              {isJoining ? t('info.joining') : t('info.joinChallenge')}
             </Button>
           </div>
         </CardContent>

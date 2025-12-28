@@ -163,5 +163,9 @@
     "noGps": "GPS data unavailable",
     "deviceRequired": "Detailed route track requires loading data from the device",
     "inDevelopment": "Feature in development"
+  },
+  "history": {
+    "title": "History",
+    "viewAll": "All {{count}}"
   }
 }

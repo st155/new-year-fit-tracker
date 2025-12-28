@@ -83,5 +83,31 @@
     "previewAlert": "Это предварительный отчёт. Челлендж ещё продолжается, финальные результаты будут доступны после завершения.",
     "thankYou": "Спасибо за участие в челлендже!",
     "findNewChallenge": "Найти новый челлендж"
+  },
+  "info": {
+    "notFound": "Информация о челлендже не найдена",
+    "about": "О челлендже",
+    "start": "Начало",
+    "remaining": "Осталось",
+    "daysLeft": "{{count}} дней",
+    "completed": "Завершен",
+    "disciplines": "Дисциплин",
+    "disciplinesTitle": "Дисциплины",
+    "disciplinesDesc": "Направления развития в этом челлендже",
+    "benchmark": "Бенчмарк",
+    "difficultyLevels": "Уровни сложности",
+    "difficultyLevelsDesc": "Выберите уровень сложности при присоединении",
+    "difficultyBenchmark": "Бенчмарк",
+    "difficultyBenchmarkDesc": "Базовый уровень - достигните установленных бенчмарков",
+    "difficultyAdvanced": "Продвинутый",
+    "difficultyAdvancedDesc": "Увеличенные цели на 30%",
+    "difficultyExpert": "Эксперт",
+    "difficultyExpertDesc": "Увеличенные цели на 60%",
+    "difficultyMaster": "Мастер",
+    "difficultyMasterDesc": "Увеличенные цели на 90%",
+    "ctaTitle": "Готовы принять вызов?",
+    "ctaDescription": "Присоединяйтесь к челленджу и начните отслеживать свой прогресс",
+    "joining": "Присоединение...",
+    "joinChallenge": "Участвовать в челлендже"
   }
 }
