@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -19,43 +20,12 @@ import confetti from "canvas-confetti";
 
 type Step = 'input' | 'preview';
 
-const INTAKE_TIME_LABELS: Record<string, string> = {
-  morning: '🌅 Утро',
-  afternoon: '☀️ Обед',
-  evening: '🌆 Ужин',
-  before_sleep: '🌙 Перед сном'
-};
-
 interface ProtocolMessageParserProps {
   onProtocolCreated?: () => void;
 }
 
-const EXAMPLE_PROTOCOLS = [
-  {
-    title: "От врача (формальный)",
-    text: `Витамин D3 5000 МЕ - утром натощак
-Магний цитрат 200 мг - 3 раза в день после еды
-Омега-3 1000 мг - утром и вечером
-Мелатонин 3 мг - за 30 минут до сна`
-  },
-  {
-    title: "От члена семьи (неформальный)",
-    text: `Купи:
-Вит Д - 5000 единиц утром
-Магний - 200мг 3 раза
-Омега3 - 1000 мг 2 раза в день
-Мелатонин 3мг на ночь`
-  },
-  {
-    title: "Список из магазина",
-    text: `Vitamin D3 (NOW Foods) - 5000 IU morning
-Magnesium Citrate (Solgar) - 200mg x3 after meals
-Omega-3 Fish Oil - 1000mg twice daily
-Melatonin 3mg before bed`
-  }
-];
-
 export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessageParserProps) {
+  const { t } = useTranslation('supplements');
   const [step, setStep] = useState<Step>('input');
   const [messageText, setMessageText] = useState('');
   const [parsedSupplements, setParsedSupplements] = useState<ParsedSupplement[]>([]);
@@ -71,6 +41,38 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
   });
   const [examplesOpen, setExamplesOpen] = useState(false);
   const [recentParsings, setRecentParsings] = useState<any[]>([]);
+
+  const INTAKE_TIME_LABELS: Record<string, string> = {
+    morning: `🌅 ${t('timeGroups.morning')}`,
+    afternoon: `☀️ ${t('timeGroups.afternoon')}`,
+    evening: `🌆 ${t('timeGroups.evening')}`,
+    before_sleep: `🌙 ${t('timeGroups.before_sleep')}`
+  };
+
+  const EXAMPLE_PROTOCOLS = [
+    {
+      title: t('parser.examples.doctor'),
+      text: `Витамин D3 5000 МЕ - утром натощак
+Магний цитрат 200 мг - 3 раза в день после еды
+Омега-3 1000 мг - утром и вечером
+Мелатонин 3 мг - за 30 минут до сна`
+    },
+    {
+      title: t('parser.examples.family'),
+      text: `Купи:
+Вит Д - 5000 единиц утром
+Магний - 200мг 3 раза
+Омега3 - 1000 мг 2 раза в день
+Мелатонин 3мг на ночь`
+    },
+    {
+      title: t('parser.examples.store'),
+      text: `Vitamin D3 (NOW Foods) - 5000 IU morning
+Magnesium Citrate (Solgar) - 200mg x3 after meals
+Omega-3 Fish Oil - 1000mg twice daily
+Melatonin 3mg before bed`
+    }
+  ];
 
   const { user } = useAuth();
   const { toast } = useToast();
@@ -102,12 +104,12 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
   const loadParsingHistory = (parsing: any) => {
     setMessageText(parsing.original_text);
     setParsedSupplements(parsing.parsed_supplements);
-    setProtocolName(`Протокол от ${new Date(parsing.created_at).toLocaleDateString('ru-RU')}`);
+    setProtocolName(t('parser.protocolFromDate', { date: new Date(parsing.created_at).toLocaleDateString() }));
     setStep('preview');
     
     toast({
-      title: "История загружена",
-      description: `${parsing.parsed_supplements.length} добавок из истории`
+      title: t('parser.historyLoaded'),
+      description: t('parser.fromHistory', { count: parsing.parsed_supplements.length })
     });
   };
 
@@ -155,7 +157,7 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
   const handleParse = async () => {
     if (!messageText.trim()) {
       toast({
-        title: "Введите текст протокола",
+        title: t('parser.enterText'),
         variant: "destructive"
       });
       return;
@@ -173,8 +175,8 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
             .join(', ');
             
           toast({
-            title: `⚠️ ${supp.supplement_name}: время приема скорректировано`,
-            description: `${validation.warning}\n\nНовое время: ${correctedTimesText}`,
+            title: `⚠️ ${supp.supplement_name}: ${t('parser.intakeTimeCorrected')}`,
+            description: `${validation.warning}\n\n${t('parser.newTime')} ${correctedTimesText}`,
             duration: 6000,
           });
           return { ...supp, intake_times: validation.suggested };
@@ -183,7 +185,7 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
       });
 
       setParsedSupplements(validated);
-      setProtocolName(`Протокол от ${new Date().toLocaleDateString('ru-RU')}`);
+      setProtocolName(t('parser.protocolFromDate', { date: new Date().toLocaleDateString() }));
       setStep('preview');
 
       // Save to history
@@ -198,13 +200,13 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
       }
 
       toast({
-        title: `✅ Найдено добавок: ${supplements.length}`,
-        description: "Проверьте данные и добавьте фотографии баночек"
+        title: `✅ ${t('parser.foundSupplements', { count: supplements.length })}`,
+        description: t('parser.checkDataAndPhotos')
       });
     } catch (error) {
       toast({
-        title: "Ошибка парсинга",
-        description: error instanceof Error ? error.message : "Попробуйте еще раз",
+        title: t('parser.parseError'),
+        description: error instanceof Error ? error.message : t('parser.tryAgain'),
         variant: "destructive"
       });
     }
@@ -234,50 +236,50 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
   const validateProtocolData = (): { valid: boolean; error: string } => {
     // 1. Название протокола
     if (!protocolName.trim()) {
-      return { valid: false, error: "Введите название протокола" };
+      return { valid: false, error: t('parser.enterProtocolName') };
     }
     
     if (protocolName.length < 3) {
-      return { valid: false, error: "Название протокола слишком короткое (минимум 3 символа)" };
+      return { valid: false, error: t('parser.nameTooShort') };
     }
     
     // 2. Длительность
     if (duration < 1 || duration > 365) {
-      return { valid: false, error: "Длительность должна быть от 1 до 365 дней" };
+      return { valid: false, error: t('parser.durationRange') };
     }
     
     // 3. Количество добавок
     if (parsedSupplements.length === 0) {
-      return { valid: false, error: "Добавьте хотя бы одну добавку" };
+      return { valid: false, error: t('parser.addAtLeastOne') };
     }
     
     // 4. Валидация каждой добавки
     for (let i = 0; i < parsedSupplements.length; i++) {
       const supp = parsedSupplements[i];
-      const suppName = supp.supplement_name || `Добавка #${i + 1}`;
+      const suppName = supp.supplement_name || `#${i + 1}`;
       
       // Название
       if (!supp.supplement_name?.trim()) {
-        return { valid: false, error: `${suppName}: укажите название` };
+        return { valid: false, error: `${suppName}: ${t('parser.specifyName')}` };
       }
       
       // Дозировка
       if (!supp.dosage_amount || supp.dosage_amount <= 0) {
-        return { valid: false, error: `${suppName}: укажите корректную дозировку (больше 0)` };
+        return { valid: false, error: `${suppName}: ${t('parser.specifyDosage')}` };
       }
       
       if (supp.dosage_amount > 100000) {
-        return { valid: false, error: `${suppName}: дозировка слишком большая (максимум 100,000)` };
+        return { valid: false, error: `${suppName}: ${t('parser.dosageTooLarge')}` };
       }
       
       // Единица измерения
       if (!supp.dosage_unit?.trim()) {
-        return { valid: false, error: `${suppName}: укажите единицу измерения (мг, мкг, МЕ...)` };
+        return { valid: false, error: `${suppName}: ${t('parser.specifyUnit')}` };
       }
       
       // Время приема
       if (!supp.intake_times || supp.intake_times.length === 0) {
-        return { valid: false, error: `${suppName}: укажите хотя бы одно время приема` };
+        return { valid: false, error: `${suppName}: ${t('parser.specifyIntakeTime')}` };
       }
     }
     
@@ -290,7 +292,7 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
     
     if (!validation.valid) {
       toast({
-        title: "❌ Ошибка валидации",
+        title: `❌ ${t('parser.validationError')}`,
         description: validation.error,
         variant: "destructive",
         duration: 5000
@@ -300,7 +302,7 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
 
     try {
       setCreationProgress({
-        step: 'Создание протокола...',
+        step: t('parser.creatingProtocol'),
         current: 0,
         total: parsedSupplements.length
       });
@@ -351,8 +353,8 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
       }
 
       toast({
-        title: "✅ Протокол создан и активирован!",
-        description: `${parsedSupplements.length} добавок добавлено. Протокол активен.`
+        title: `✅ ${t('parser.protocolCreated')}`,
+        description: t('parser.supplementsAdded', { count: parsedSupplements.length })
       });
 
       // Confetti effect
@@ -376,10 +378,10 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
       console.error('❌ [Protocol UI] Creation failed:', error);
       
       toast({
-        title: "Ошибка создания протокола",
+        title: t('parser.createError'),
         description: error instanceof Error 
-          ? `${error.message}\n\n💡 Проверьте консоль браузера (F12) для деталей`
-          : "Попробуйте еще раз. Откройте консоль браузера (F12) для деталей.",
+          ? `${error.message}\n\n💡 ${t('parser.checkConsole')}`
+          : `${t('parser.tryAgain')}. ${t('parser.checkConsole')}`,
         variant: "destructive",
         duration: 10000
       });
@@ -393,9 +395,9 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
       {step === 'input' && (
         <Card className="p-6 space-y-4">
           <div>
-            <h3 className="text-lg font-semibold mb-2">📋 Вставьте протокол от доктора/жены</h3>
+            <h3 className="text-lg font-semibold mb-2">📋 {t('parser.title')}</h3>
             <p className="text-sm text-muted-foreground">
-              Скопируйте текст сообщения с протоколом добавок. AI автоматически распознает все добавки, дозировки и время приема.
+              {t('parser.description')}
             </p>
           </div>
 
@@ -403,7 +405,7 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
           <Collapsible open={examplesOpen} onOpenChange={setExamplesOpen}>
             <CollapsibleTrigger className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground w-full">
               <ChevronDown className={`h-4 w-4 transition-transform ${examplesOpen ? 'rotate-180' : ''}`} />
-              📝 Примеры форматов протоколов
+              📝 {t('parser.examplesTitle')}
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-3 mt-3">
               {EXAMPLE_PROTOCOLS.map((example, i) => (
@@ -416,7 +418,7 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
                       className="h-6 text-xs"
                       onClick={() => setMessageText(example.text)}
                     >
-                      Использовать
+                      {t('parser.useExample')}
                     </Button>
                   </div>
                   <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono">
@@ -432,7 +434,7 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
             <div className="space-y-2">
               <Label className="flex items-center gap-2 text-sm">
                 <History className="h-4 w-4" />
-                🕐 Недавние парсинги
+                🕐 {t('parser.recentParsings')}
               </Label>
               <div className="space-y-2">
                 {recentParsings.map((parsing) => (
@@ -444,10 +446,10 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <p className="text-sm font-medium">
-                          {parsing.parsed_supplements.length} добавок
+                          {t('parser.supplementsCount', { count: parsing.parsed_supplements.length })}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {new Date(parsing.created_at).toLocaleDateString('ru-RU', {
+                          {new Date(parsing.created_at).toLocaleDateString(undefined, {
                             day: 'numeric',
                             month: 'short',
                             hour: '2-digit',
@@ -456,7 +458,7 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
                         </p>
                       </div>
                       <Badge variant="outline" className="text-xs">
-                        Загрузить
+                        {t('parser.load')}
                       </Badge>
                     </div>
                   </Card>
@@ -466,7 +468,7 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
           )}
 
           <div className="space-y-2">
-            <Label>Текст протокола</Label>
+            <Label>{t('parser.protocolText')}</Label>
             <Textarea
               value={messageText}
               onChange={(e) => setMessageText(e.target.value)}
@@ -492,12 +494,12 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
             {parseMutation.isPending ? (
               <>
                 <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                Анализирую с помощью AI...
+                {t('parser.analyzing')}
               </>
             ) : (
               <>
                 <Sparkles className="h-5 w-5 mr-2" />
-                Распознать протокол
+                {t('parser.recognize')}
               </>
             )}
           </Button>
@@ -510,13 +512,13 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
             <Package className="h-8 w-8 text-muted-foreground" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold">Нет добавок</h3>
+            <h3 className="text-lg font-semibold">{t('parser.noSupplements')}</h3>
             <p className="text-sm text-muted-foreground max-w-md mx-auto">
-              Все добавки были удалены. Вернитесь назад и повторите парсинг протокола.
+              {t('parser.allRemoved')}
             </p>
           </div>
           <Button onClick={() => setStep('input')} variant="outline" size="lg">
-            Назад к вводу
+            {t('parser.backToInput')}
           </Button>
         </Card>
       )}
@@ -525,27 +527,27 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
         <div className="space-y-6">
           <Card className="p-6 space-y-4">
             <div>
-              <h3 className="text-lg font-semibold mb-2">Настройки протокола</h3>
+            <h3 className="text-lg font-semibold mb-2">{t('parser.protocolSettings')}</h3>
               <div className="grid gap-4">
                 <div>
-                  <Label>Название протокола</Label>
+                  <Label>{t('parser.protocolName')}</Label>
                   <Input
                     value={protocolName}
                     onChange={(e) => setProtocolName(e.target.value)}
-                    placeholder="Протокол от доктора Иванова"
+                    placeholder={t('parser.namePlaceholder')}
                   />
                 </div>
                 <div>
-                  <Label>Описание (опционально)</Label>
+                  <Label>{t('parser.descriptionOptional')}</Label>
                   <Textarea
                     value={protocolDescription}
                     onChange={(e) => setProtocolDescription(e.target.value)}
-                    placeholder="Для повышения энергии и улучшения сна"
+                    placeholder={t('parser.descriptionPlaceholder')}
                     rows={2}
                   />
                 </div>
                 <div>
-                  <Label>Длительность (дней)</Label>
+                  <Label>{t('parser.durationLabel')}</Label>
                   <Input
                     type="number"
                     value={duration}
@@ -559,7 +561,7 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
           </Card>
 
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Добавки ({parsedSupplements.length})</h3>
+            <h3 className="text-lg font-semibold">{t('parser.supplementsTitle', { count: parsedSupplements.length })}</h3>
             
             {parsedSupplements.map((supp, index) => (
               <Card key={index} className="p-4 space-y-3">
@@ -567,7 +569,7 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
                   <div className="flex-1 grid gap-3">
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <Label className="text-xs">Название</Label>
+                        <Label className="text-xs">{t('parser.nameLabel')}</Label>
                         <Input
                           value={supp.supplement_name}
                           onChange={(e) => handleUpdateSupplement(index, { supplement_name: e.target.value })}
@@ -575,11 +577,11 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
                         />
                       </div>
                       <div>
-                        <Label className="text-xs">Бренд</Label>
+                        <Label className="text-xs">{t('parser.brandLabel')}</Label>
                         <Input
                           value={supp.brand || ''}
                           onChange={(e) => handleUpdateSupplement(index, { brand: e.target.value })}
-                          placeholder="NOW Foods, Solgar..."
+                          placeholder={t('parser.brandPlaceholder')}
                           className="mt-1"
                         />
                       </div>
@@ -587,7 +589,7 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
 
                     <div className="grid grid-cols-3 gap-3">
                       <div>
-                        <Label className="text-xs">Дозировка</Label>
+                        <Label className="text-xs">{t('parser.dosageLabel')}</Label>
                         <Input
                           type="number"
                           value={supp.dosage_amount}
@@ -596,7 +598,7 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
                         />
                       </div>
                       <div>
-                        <Label className="text-xs">Единица</Label>
+                        <Label className="text-xs">{t('parser.unitLabel')}</Label>
                         <Input
                           value={supp.dosage_unit}
                           onChange={(e) => handleUpdateSupplement(index, { dosage_unit: e.target.value })}
@@ -604,18 +606,18 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
                         />
                       </div>
                       <div>
-                        <Label className="text-xs">Форма</Label>
+                        <Label className="text-xs">{t('parser.formLabel')}</Label>
                         <Input
                           value={supp.form || ''}
                           onChange={(e) => handleUpdateSupplement(index, { form: e.target.value })}
-                          placeholder="капсула"
+                          placeholder={t('parser.formPlaceholder')}
                           className="mt-1"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <Label className="text-xs mb-2 block">Время приема</Label>
+                      <Label className="text-xs mb-2 block">{t('parser.intakeTimeLabel')}</Label>
                       <div className="flex flex-wrap gap-2">
                         {Object.entries(INTAKE_TIME_LABELS).map(([key, label]) => (
                           <label key={key} className="flex items-center gap-2 cursor-pointer">
@@ -654,14 +656,14 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
                             <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-500 mt-0.5 flex-shrink-0" />
                             <div className="flex-1 space-y-1">
                               <p className="text-xs font-medium text-amber-900 dark:text-amber-100">
-                                AI Коррекция применена
+                                {t('parser.aiCorrectionApplied')}
                               </p>
                               <p className="text-xs text-amber-700 dark:text-amber-300">
                                 {validation.warning}
                               </p>
                               <div className="flex gap-1 flex-wrap mt-2">
                                 <span className="text-xs text-amber-600 dark:text-amber-400">
-                                  Исходное время:
+                                  {t('parser.originalTime')}
                                 </span>
                                 {supp.intake_times.map(time => (
                                   <Badge 
@@ -687,13 +689,13 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
                         onClick={() => handleOpenScanner(index)}
                       >
                         <Camera className="h-4 w-4 mr-2" />
-                        Сканировать баночку
+                        {t('parser.scanBottle')}
                       </Button>
                       <label className="cursor-pointer">
                         <Button size="sm" variant="outline" asChild>
                           <span>
                             <Upload className="h-4 w-4 mr-2" />
-                            Загрузить фото
+                            {t('parser.uploadPhoto')}
                           </span>
                         </Button>
                         <input
@@ -734,7 +736,7 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
               variant="outline"
               className="flex-1"
             >
-              Назад
+              {t('common:buttons.back')}
             </Button>
             <Button
               onClick={handleCreateProtocol}
@@ -745,12 +747,12 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
               {createProtocolFromParsed.isPending ? (
                 <>
                   <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                  Создаю протокол...
+                  {t('parser.creatingProtocol')}
                 </>
               ) : (
                 <>
                   <Check className="h-5 w-5 mr-2" />
-                  Создать протокол
+                  {t('parser.createProtocol')}
                 </>
               )}
             </Button>
@@ -795,10 +797,10 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
             handleUpdateSupplement(selectedSupplementIndex, updatedSupplement);
             
             toast({
-              title: "✅ Баночка отсканирована!",
+              title: `✅ ${t('parser.bottleScanned')}`,
               description: scannedData.name 
                 ? `${scannedData.name}${scannedData.brand ? ` - ${scannedData.brand}` : ''}`
-                : "Данные добавлены к добавке"
+                : t('parser.dataAddedToSupplement')
             });
             
             setScannerOpen(false);
@@ -821,7 +823,7 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
                 className="h-2"
               />
               <p className="text-xs text-muted-foreground text-center">
-                {creationProgress.current} из {creationProgress.total} добавок обработано
+                {t('parser.progressText', { current: creationProgress.current, total: creationProgress.total })}
               </p>
             </div>
           </Card>
