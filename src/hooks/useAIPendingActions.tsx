@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { aiApi } from '@/lib/api/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 
 export interface AIPendingAction {
   id: string;
@@ -17,6 +18,7 @@ export interface AIPendingAction {
 }
 
 export const useAIPendingActions = (userId: string | undefined) => {
+  const { t } = useTranslation('trainerDashboard');
   const [pendingActions, setPendingActions] = useState<AIPendingAction[]>([]);
   const [loading, setLoading] = useState(true);
   const [executing, setExecuting] = useState(false);
@@ -39,8 +41,8 @@ export const useAIPendingActions = (userId: string | undefined) => {
     } catch (error) {
       console.error('Error loading pending actions:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось загрузить действия',
+        title: t('pendingActions.error'),
+        description: t('pendingActions.loadError'),
         variant: 'destructive'
       });
     } finally {
@@ -75,16 +77,16 @@ export const useAIPendingActions = (userId: string | undefined) => {
       await loadPendingActions();
       
       toast({
-        title: '📋 План создан',
-        description: 'Проверьте вкладку "Ожидают" для подтверждения'
+        title: t('pendingActions.planCreated'),
+        description: t('pendingActions.checkPending')
       });
       
       return data;
     } catch (error) {
       console.error('Error creating pending action:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось создать действие',
+        title: t('pendingActions.error'),
+        description: t('pendingActions.createError'),
         variant: 'destructive'
       });
       return null;
@@ -141,7 +143,7 @@ export const useAIPendingActions = (userId: string | undefined) => {
       }
 
       toast({
-        title: 'Готово',
+        title: t('pendingActions.done'),
         description: description
       });
 
@@ -151,8 +153,8 @@ export const useAIPendingActions = (userId: string | undefined) => {
       // On error, reload to restore correct state
       await loadPendingActions();
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось выполнить действия',
+        title: t('pendingActions.error'),
+        description: t('pendingActions.executeError'),
         variant: 'destructive'
       });
       return null;
@@ -173,14 +175,14 @@ export const useAIPendingActions = (userId: string | undefined) => {
       await loadPendingActions();
       
       toast({
-        title: 'Отклонено',
-        description: 'Действие отклонено'
+        title: t('pendingActions.rejected'),
+        description: t('pendingActions.rejectedDesc')
       });
     } catch (error) {
       console.error('Error rejecting action:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось отклонить действие',
+        title: t('pendingActions.error'),
+        description: t('pendingActions.rejectError'),
         variant: 'destructive'
       });
     }
@@ -211,8 +213,8 @@ export const useAIPendingActions = (userId: string | undefined) => {
           await loadPendingActions();
           
           toast({
-            title: '✨ Новый план готов',
-            description: 'Перейдите на вкладку "Ожидают"',
+            title: t('pendingActions.newPlanReady'),
+            description: t('pendingActions.goToPending'),
             duration: 5000
           });
         }

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 export type ActionType = 'supplement' | 'exercise' | 'lifestyle' | 'test' | 'medication' | 'consultation';
 
@@ -104,6 +105,7 @@ export function useGroupedActionItems() {
 }
 
 export function useProtocolGroups() {
+  const { t } = useTranslation('medicalDocs');
   const { data: items, ...rest } = useDoctorActionItems();
 
   const protocols: ProtocolGroup[] = [];
@@ -112,7 +114,7 @@ export function useProtocolGroups() {
     const protocolMap = new Map<string, ProtocolGroup>();
     
     items.forEach(item => {
-      const key = item.protocol_tag || `Документ ${item.document_id.substring(0, 8)}`;
+      const key = item.protocol_tag || t('protocol.document', { id: item.document_id.substring(0, 8) });
       
       if (!protocolMap.has(key)) {
         protocolMap.set(key, {
@@ -175,6 +177,7 @@ export function useUpdateActionItemStatus() {
 }
 
 export function useDismissActionItem() {
+  const { t } = useTranslation('medicalDocs');
   const updateStatus = useUpdateActionItemStatus();
 
   return useMutation({
@@ -182,7 +185,7 @@ export function useDismissActionItem() {
       await updateStatus.mutateAsync({ itemId, status: 'dismissed' });
     },
     onSuccess: () => {
-      toast.success('Рекомендация отклонена');
+      toast.success(t('protocol.dismissed'));
     },
   });
 }
@@ -233,17 +236,30 @@ export function parseScheduleFormat(schedule: string): {
   return result;
 }
 
+export interface ScheduleFormatOptions {
+  morning?: string;
+  afternoon?: string;
+  evening?: string;
+}
+
 // Format schedule for display
-export function formatScheduleDisplay(schedule: string | null): string {
+export function formatScheduleDisplay(
+  schedule: string | null, 
+  options?: ScheduleFormatOptions
+): string {
   if (!schedule) return '';
+  
+  const morning = options?.morning || 'morning';
+  const afternoon = options?.afternoon || 'afternoon';
+  const evening = options?.evening || 'evening';
   
   // Check if it's "1-0-1" format
   const parts = schedule.split('-');
   if (parts.length === 3 && parts.every(p => /^\d+$/.test(p))) {
     const times: string[] = [];
-    if (parseInt(parts[0]) > 0) times.push(`${parts[0]} утром`);
-    if (parseInt(parts[1]) > 0) times.push(`${parts[1]} днём`);
-    if (parseInt(parts[2]) > 0) times.push(`${parts[2]} вечером`);
+    if (parseInt(parts[0]) > 0) times.push(`${parts[0]} ${morning}`);
+    if (parseInt(parts[1]) > 0) times.push(`${parts[1]} ${afternoon}`);
+    if (parseInt(parts[2]) > 0) times.push(`${parts[2]} ${evening}`);
     return times.join(', ');
   }
   

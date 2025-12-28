@@ -6,7 +6,8 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { format, subDays } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 import { QuickMeasurementDialog } from '@/features/goals/components';
 
 interface VO2MaxData {
@@ -20,6 +21,7 @@ interface VO2MaxProgressDetailProps {
 }
 
 export function VO2MaxProgressDetail({ onBack }: VO2MaxProgressDetailProps) {
+  const { t, i18n } = useTranslation('health');
   const { user } = useAuth();
   const [vo2maxData, setVO2MaxData] = useState<VO2MaxData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,6 +29,8 @@ export function VO2MaxProgressDetail({ onBack }: VO2MaxProgressDetailProps) {
   const [weeklyChange, setWeeklyChange] = useState<number | null>(null);
   const [vo2maxGoal, setVO2maxGoal] = useState<any>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
 
   useEffect(() => {
     if (user) {
@@ -115,16 +119,16 @@ export function VO2MaxProgressDetail({ onBack }: VO2MaxProgressDetailProps) {
   };
 
   const formatTooltipDate = (dateStr: string) => {
-    return format(new Date(dateStr), 'd MMM', { locale: ru });
+    return format(new Date(dateStr), 'd MMM', { locale: dateLocale });
   };
 
   const getVO2MaxCategory = (value: number) => {
     // Примерная классификация VO2Max для взрослых
-    if (value >= 60) return { label: 'Превосходный', color: 'text-green-600' };
-    if (value >= 50) return { label: 'Отличный', color: 'text-green-500' };
-    if (value >= 40) return { label: 'Хороший', color: 'text-blue-500' };
-    if (value >= 30) return { label: 'Удовлетворительный', color: 'text-yellow-500' };
-    return { label: 'Требует улучшения', color: 'text-red-500' };
+    if (value >= 60) return { label: t('vo2maxDetail.category.excellent'), color: 'text-green-600' };
+    if (value >= 50) return { label: t('vo2maxDetail.category.veryGood'), color: 'text-green-500' };
+    if (value >= 40) return { label: t('vo2maxDetail.category.good'), color: 'text-blue-500' };
+    if (value >= 30) return { label: t('vo2maxDetail.category.fair'), color: 'text-yellow-500' };
+    return { label: t('vo2maxDetail.category.needsImprovement'), color: 'text-red-500' };
   };
 
   if (loading) {
@@ -133,7 +137,7 @@ export function VO2MaxProgressDetail({ onBack }: VO2MaxProgressDetailProps) {
         <CardHeader>
           <Button variant="ghost" onClick={onBack} className="w-fit">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Назад
+            {t('vo2maxDetail.back')}
           </Button>
         </CardHeader>
         <CardContent>
@@ -159,7 +163,7 @@ export function VO2MaxProgressDetail({ onBack }: VO2MaxProgressDetailProps) {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Прогресс VO2Max</h1>
+            <h1 className="text-2xl font-bold text-foreground">{t('vo2maxDetail.title')}</h1>
           </div>
         </div>
         {vo2maxGoal && (
@@ -183,13 +187,13 @@ export function VO2MaxProgressDetail({ onBack }: VO2MaxProgressDetailProps) {
             boxShadow: "0 0 20px rgba(239, 68, 68, 0.3)",
           }}
         >
-          <div className="text-sm text-muted-foreground mb-1">Текущий VO2Max</div>
+          <div className="text-sm text-muted-foreground mb-1">{t('vo2maxDetail.current')}</div>
           <div className="text-4xl font-bold text-[#EF4444]">
             {currentVO2Max ? `${currentVO2Max.toFixed(1)}` : '—'}
           </div>
           {currentVO2Max && (
             <>
-              <div className="text-sm text-muted-foreground">мл/кг/мин</div>
+              <div className="text-sm text-muted-foreground">{t('vo2maxDetail.unit')}</div>
               <div className={`text-xs mt-1 font-semibold ${getVO2MaxCategory(currentVO2Max).color}`}>
                 {getVO2MaxCategory(currentVO2Max).label}
               </div>
@@ -204,7 +208,7 @@ export function VO2MaxProgressDetail({ onBack }: VO2MaxProgressDetailProps) {
             borderColor: "rgba(255, 255, 255, 0.1)",
           }}
         >
-          <div className="text-sm text-muted-foreground mb-1">За неделю</div>
+          <div className="text-sm text-muted-foreground mb-1">{t('vo2maxDetail.weekly')}</div>
           <div className="flex items-center gap-2 text-2xl font-bold">
             {weeklyChange !== null ? (
               <>
@@ -225,7 +229,7 @@ export function VO2MaxProgressDetail({ onBack }: VO2MaxProgressDetailProps) {
             boxShadow: "0 0 20px rgba(59, 130, 246, 0.3)",
           }}
         >
-          <div className="text-sm text-muted-foreground mb-1">Измерений</div>
+          <div className="text-sm text-muted-foreground mb-1">{t('vo2maxDetail.measurements')}</div>
           <div className="text-3xl font-bold text-[#3B82F6]">
             {vo2maxData.length}
           </div>
@@ -277,9 +281,9 @@ export function VO2MaxProgressDetail({ onBack }: VO2MaxProgressDetailProps) {
                   }}
                   labelStyle={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 12 }}
                   itemStyle={{ color: '#EF4444', fontSize: 14, fontWeight: 'bold' }}
-                  labelFormatter={(value) => formatTooltipDate(value as string)}
-                  formatter={(value: number) => [`${value.toFixed(1)} мл/кг/мин`, 'VO2Max']}
-                />
+                labelFormatter={(value) => formatTooltipDate(value as string)}
+                formatter={(value: number) => [t('vo2maxDetail.valueUnit', { value: value.toFixed(1) }), 'VO2Max']}
+              />
                 <Line 
                   type="monotone" 
                   dataKey="vo2max" 
@@ -302,14 +306,14 @@ export function VO2MaxProgressDetail({ onBack }: VO2MaxProgressDetailProps) {
           }}
         >
           <Heart className="w-12 h-12 mx-auto mb-4 opacity-30" />
-          <p className="text-muted-foreground">Нет данных VO2Max</p>
-          <p className="text-sm text-muted-foreground">Загрузите скриншоты из Whoop для отслеживания прогресса</p>
+          <p className="text-muted-foreground">{t('vo2maxDetail.noData')}</p>
+          <p className="text-sm text-muted-foreground">{t('vo2maxDetail.noDataHint')}</p>
         </div>
       )}
 
       {/* History */}
       <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-3 text-foreground">История измерений</h3>
+        <h3 className="text-lg font-semibold mb-3 text-foreground">{t('vo2maxDetail.history')}</h3>
         <div className="space-y-2">
           {vo2maxData.slice(-10).reverse().map((item) => (
             <div 
@@ -322,10 +326,10 @@ export function VO2MaxProgressDetail({ onBack }: VO2MaxProgressDetailProps) {
             >
               <div>
                 <div className="font-semibold text-foreground text-lg">
-                  {item.vo2max.toFixed(1)} мл/кг/мин
+                  {t('vo2maxDetail.valueUnit', { value: item.vo2max.toFixed(1) })}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  {format(new Date(item.date), 'd MMMM yyyy', { locale: ru })}
+                  {format(new Date(item.date), 'd MMMM yyyy', { locale: dateLocale })}
                 </div>
                 <div className={`text-xs font-semibold ${getVO2MaxCategory(item.vo2max).color}`}>
                   {getVO2MaxCategory(item.vo2max).label}
@@ -359,24 +363,24 @@ export function VO2MaxProgressDetail({ onBack }: VO2MaxProgressDetailProps) {
         }}
       >
         <h4 className="font-semibold text-foreground mb-2 flex items-center gap-2">
-          📊 Что такое VO2Max?
+          📊 {t('vo2maxDetail.info.title')}
         </h4>
         <div className="text-sm text-muted-foreground space-y-2">
           <p>
-            VO2Max — максимальное потребление кислорода, ключевой показатель сердечно-сосудистой выносливости.
+            {t('vo2maxDetail.info.description')}
           </p>
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div>
-              <strong className="text-foreground">Превосходный:</strong> 60+ мл/кг/мин
+              <strong className="text-foreground">{t('vo2maxDetail.category.excellent')}:</strong> 60+ {t('vo2maxDetail.unit')}
             </div>
             <div>
-              <strong className="text-foreground">Отличный:</strong> 50-59 мл/кг/мин
+              <strong className="text-foreground">{t('vo2maxDetail.category.veryGood')}:</strong> 50-59 {t('vo2maxDetail.unit')}
             </div>
             <div>
-              <strong className="text-foreground">Хороший:</strong> 40-49 мл/кг/мин
+              <strong className="text-foreground">{t('vo2maxDetail.category.good')}:</strong> 40-49 {t('vo2maxDetail.unit')}
             </div>
             <div>
-              <strong className="text-foreground">Удовлетв.:</strong> 30-39 мл/кг/мин
+              <strong className="text-foreground">{t('vo2maxDetail.category.fairShort')}:</strong> 30-39 {t('vo2maxDetail.unit')}
             </div>
           </div>
         </div>

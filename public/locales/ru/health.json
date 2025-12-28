@@ -70,5 +70,29 @@
     "maxSpeed": "Макс скорость",
     "elevation": "Подъем",
     "workoutTime": "Время тренировки"
+  },
+  "vo2maxDetail": {
+    "title": "Прогресс VO2Max",
+    "back": "Назад",
+    "current": "Текущий VO2Max",
+    "unit": "мл/кг/мин",
+    "weekly": "За неделю",
+    "measurements": "Измерений",
+    "valueUnit": "{{value}} мл/кг/мин",
+    "noData": "Нет данных VO2Max",
+    "noDataHint": "Загрузите скриншоты из Whoop для отслеживания прогресса",
+    "history": "История измерений",
+    "category": {
+      "excellent": "Превосходный",
+      "veryGood": "Отличный",
+      "good": "Хороший",
+      "fair": "Удовлетворительный",
+      "fairShort": "Удовлетв.",
+      "needsImprovement": "Требует улучшения"
+    },
+    "info": {
+      "title": "Что такое VO2Max?",
+      "description": "VO2Max — максимальное потребление кислорода, ключевой показатель сердечно-сосудистой выносливости."
+    }
   }
 }

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import type { LucideIcon } from 'lucide-react';
 import { Trophy, Target, Users, Bell, AlertCircle, MessageCircle } from 'lucide-react';
 
@@ -32,6 +33,7 @@ const getIconForType = (type: NotificationType): LucideIcon => {
 };
 
 export function useNotifications() {
+  const { t } = useTranslation('common');
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -165,10 +167,10 @@ export function useNotifications() {
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       setUnreadCount(0);
       
-      toast.success('Все уведомления отмечены прочитанными');
+      toast.success(t('notifications.allMarkedRead'));
     } catch (error) {
       console.error('Error marking all as read:', error);
-      toast.error('Ошибка при обновлении уведомлений');
+      toast.error(t('notifications.updateError'));
     }
   };
 

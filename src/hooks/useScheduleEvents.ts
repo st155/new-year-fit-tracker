@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 export interface ScheduleEvent {
   id: string;
@@ -34,6 +35,7 @@ export interface ScheduleEvent {
 }
 
 export function useScheduleEvents(startDate?: Date, endDate?: Date) {
+  const { t } = useTranslation('trainerDashboard');
   const { user } = useAuth();
   const [events, setEvents] = useState<ScheduleEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -87,7 +89,7 @@ export function useScheduleEvents(startDate?: Date, endDate?: Date) {
       setEvents(formattedEvents);
     } catch (error) {
       console.error('Error loading schedule events:', error);
-      toast.error('Ошибка загрузки событий');
+      toast.error(t('schedule.loadError'));
     } finally {
       setLoading(false);
     }
@@ -112,12 +114,12 @@ export function useScheduleEvents(startDate?: Date, endDate?: Date) {
 
       if (error) throw error;
 
-      toast.success('Событие создано');
+      toast.success(t('schedule.eventCreated'));
       await loadEvents();
       return data;
     } catch (error) {
       console.error('Error creating event:', error);
-      toast.error('Ошибка создания события');
+      toast.error(t('schedule.createError'));
       return null;
     }
   };
@@ -131,12 +133,12 @@ export function useScheduleEvents(startDate?: Date, endDate?: Date) {
 
       if (error) throw error;
 
-      toast.success('Событие обновлено');
+      toast.success(t('schedule.eventUpdated'));
       await loadEvents();
       return true;
     } catch (error) {
       console.error('Error updating event:', error);
-      toast.error('Ошибка обновления события');
+      toast.error(t('schedule.updateError'));
       return false;
     }
   };
@@ -150,12 +152,12 @@ export function useScheduleEvents(startDate?: Date, endDate?: Date) {
 
       if (error) throw error;
 
-      toast.success('Событие удалено');
+      toast.success(t('schedule.eventDeleted'));
       await loadEvents();
       return true;
     } catch (error) {
       console.error('Error deleting event:', error);
-      toast.error('Ошибка удаления события');
+      toast.error(t('schedule.deleteError'));
       return false;
     }
   };

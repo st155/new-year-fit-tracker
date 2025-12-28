@@ -224,5 +224,9 @@
     "completed": "Completed",
     "skipped": "Skipped",
     "status": "Status"
+  },
+  "attempts": {
+    "resetSuccess": "Habit reset! Starting fresh 💪",
+    "resetError": "Failed to reset habit"
   }
 }

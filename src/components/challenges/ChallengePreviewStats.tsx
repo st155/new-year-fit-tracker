@@ -1,6 +1,7 @@
 import { Progress } from '@/components/ui/progress';
 import { Trophy, Activity, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 interface DisciplineProgress {
   name: string;
@@ -24,12 +25,13 @@ export function ChallengePreviewStats({
   disciplines = defaultDisciplines,
   className 
 }: ChallengePreviewStatsProps) {
+  const { t } = useTranslation('challenges');
   const topThree = disciplines.slice(0, 3);
 
   return (
     <div className={cn("space-y-2", className)}>
       <div className="text-xs font-medium text-muted-foreground mb-3">
-        Топ дисциплины
+        {t('preview.topDisciplines')}
       </div>
       {topThree.map((discipline, idx) => {
         const Icon = discipline.icon;
