@@ -13,12 +13,17 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { useTranslation } from 'react-i18next';
+import i18n from '@/i18n';
 
 interface MetricsTrendsProps {
   userId?: string;
 }
 
 export function MetricsTrends({ userId }: MetricsTrendsProps) {
+  const { t } = useTranslation('progress');
+  const currentLocale = i18n.language === 'ru' ? 'ru-RU' : 'en-US';
+  
   const { data: metrics, isLoading } = useQuery({
     queryKey: ["metrics-trends", userId],
     queryFn: async () => {
@@ -39,10 +44,10 @@ export function MetricsTrends({ userId }: MetricsTrendsProps) {
 
       // Group by metric name
       const grouped = data.reduce((acc: Record<string, Array<{ date: string; value: number }>>, item) => {
-        const name = item.metric_name || "Неизвестно";
+        const name = item.metric_name || t('trends.unknown');
         if (!acc[name]) acc[name] = [];
         acc[name].push({
-          date: new Date(item.measurement_date).toLocaleDateString("ru-RU", {
+          date: new Date(item.measurement_date).toLocaleDateString(currentLocale, {
             month: "short",
             day: "numeric",
           }),
@@ -73,8 +78,8 @@ export function MetricsTrends({ userId }: MetricsTrendsProps) {
     return (
       <EmptyState
         icon={<TrendingUp className="h-12 w-12" />}
-        title="Нет данных о трендах"
-        description="Метрики появятся здесь по мере отслеживания ваших показателей"
+        title={t('trends.empty')}
+        description={t('trends.emptyDescription')}
       />
     );
   }

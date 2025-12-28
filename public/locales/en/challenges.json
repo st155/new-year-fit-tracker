@@ -83,5 +83,31 @@
     "previewAlert": "This is a preview report. The challenge is still ongoing, final results will be available after completion.",
     "thankYou": "Thank you for participating in the challenge!",
     "findNewChallenge": "Find New Challenge"
+  },
+  "info": {
+    "notFound": "Challenge information not found",
+    "about": "About Challenge",
+    "start": "Start",
+    "remaining": "Remaining",
+    "daysLeft": "{{count}} days",
+    "completed": "Completed",
+    "disciplines": "Disciplines",
+    "disciplinesTitle": "Disciplines",
+    "disciplinesDesc": "Development areas in this challenge",
+    "benchmark": "Benchmark",
+    "difficultyLevels": "Difficulty Levels",
+    "difficultyLevelsDesc": "Choose difficulty level when joining",
+    "difficultyBenchmark": "Benchmark",
+    "difficultyBenchmarkDesc": "Base level - reach established benchmarks",
+    "difficultyAdvanced": "Advanced",
+    "difficultyAdvancedDesc": "+30% to each goal",
+    "difficultyExpert": "Expert",
+    "difficultyExpertDesc": "+60% to each goal",
+    "difficultyMaster": "Master",
+    "difficultyMasterDesc": "+90% to each goal",
+    "ctaTitle": "Ready to take the challenge?",
+    "ctaDescription": "Join the challenge and start tracking your progress",
+    "joining": "Joining...",
+    "joinChallenge": "Join Challenge"
   }
 }

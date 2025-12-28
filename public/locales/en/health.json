@@ -37,6 +37,29 @@
   },
   "units": {
     "mlKgMin": "ml/kg/min",
-    "mmHg": "mmHg"
+    "mmHg": "mmHg",
+    "steps": "steps",
+    "kcal": "kcal",
+    "km": "km",
+    "kmh": "km/h",
+    "m": "m",
+    "min": "min"
+  },
+  "overview": {
+    "title": "Key Metrics (last 7 days)",
+    "avgSteps": "Average Steps",
+    "avgSleep": "Average Sleep",
+    "restingHr": "Resting Heart Rate",
+    "recoveryScore": "Recovery Score",
+    "activeCalories": "Active Calories"
+  },
+  "activity": {
+    "steps": "Steps",
+    "activeCalories": "Active Calories",
+    "distance": "Distance",
+    "avgSpeed": "Average Speed",
+    "maxSpeed": "Max Speed",
+    "elevation": "Elevation",
+    "workoutTime": "Workout Time"
   }
 }

@@ -1,11 +1,14 @@
 import { HealthData } from "./types";
 import { HealthMetricCard } from "./HealthMetricCard";
+import { useTranslation } from 'react-i18next';
 
 interface ActivityMetricsProps {
   healthData: HealthData[];
 }
 
 export function ActivityMetrics({ healthData }: ActivityMetricsProps) {
+  const { t } = useTranslation('health');
+  
   const getLatestValue = (key: keyof HealthData) => {
     const latestData = healthData.find(d => d[key] !== undefined && d[key] !== null);
     return latestData?.[key] as number | undefined;
@@ -45,70 +48,70 @@ export function ActivityMetrics({ healthData }: ActivityMetricsProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <HealthMetricCard
-        title="Шаги"
+        title={t('activity.steps')}
         icon="🏃"
         value={getLatestValue('steps') || 0}
-        unit="шагов"
+        unit={t('units.steps')}
         source={getLatestSource('steps_source')}
         data={getChartData('steps')}
         trend={getTrend('steps')}
       />
       
       <HealthMetricCard
-        title="Активные калории"
+        title={t('activity.activeCalories')}
         icon="🔥"
         value={getLatestValue('active_calories') || 0}
-        unit="ккал"
+        unit={t('units.kcal')}
         source={getLatestSource('active_calories_source')}
         data={getChartData('active_calories')}
         trend={getTrend('active_calories')}
       />
       
       <HealthMetricCard
-        title="Дистанция"
+        title={t('activity.distance')}
         icon="📍"
         value={getLatestValue('distance') || 0}
-        unit="км"
+        unit={t('units.km')}
         source={getLatestSource('distance_source')}
         data={getChartData('distance')}
         trend={getTrend('distance')}
       />
       
       <HealthMetricCard
-        title="Средняя скорость"
+        title={t('activity.avgSpeed')}
         icon="⚡"
         value={getLatestValue('avg_speed') || 0}
-        unit="км/ч"
+        unit={t('units.kmh')}
         source={getLatestSource('avg_speed_source')}
         data={getChartData('avg_speed')}
         trend={getTrend('avg_speed')}
       />
       
       <HealthMetricCard
-        title="Макс скорость"
+        title={t('activity.maxSpeed')}
         icon="🚀"
         value={getLatestValue('max_speed') || 0}
-        unit="км/ч"
+        unit={t('units.kmh')}
         source={getLatestSource('max_speed_source')}
         data={getChartData('max_speed')}
         trend={getTrend('max_speed')}
       />
       
       <HealthMetricCard
-        title="Подъем"
+        title={t('activity.elevation')}
         icon="⛰️"
         value={getLatestValue('elevation_gain') || 0}
-        unit="м"
+        unit={t('units.m')}
         source={getLatestSource('elevation_gain_source')}
         data={getChartData('elevation_gain')}
         trend={getTrend('elevation_gain')}
       />
       
       <HealthMetricCard
-        title="Время тренировки"
+        title={t('activity.workoutTime')}
         icon="⏱️"
         value={getLatestValue('workout_time') || 0}
-        unit="мин"
+        unit={t('units.min')}
         source={getLatestSource('workout_time_source')}
         data={getChartData('workout_time')}
         trend={getTrend('workout_time')}

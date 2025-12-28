@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Check, TrendingUp, TrendingDown } from "lucide-react";
 import { useHabitMeasurements } from "@/hooks/useHabitMeasurements";
 import { Badge } from "@/components/ui/badge";
+import { useTranslation } from 'react-i18next';
 
 interface DailyMeasurementInlineWidgetProps {
   habit: any;
@@ -12,6 +13,7 @@ interface DailyMeasurementInlineWidgetProps {
 }
 
 export function DailyMeasurementInlineWidget({ habit, compact }: DailyMeasurementInlineWidgetProps) {
+  const { t } = useTranslation('habits');
   const [value, setValue] = useState("");
   const { measurements, addMeasurement, isAdding } = useHabitMeasurements(habit.id, habit.user_id);
 
@@ -49,12 +51,12 @@ export function DailyMeasurementInlineWidget({ habit, compact }: DailyMeasuremen
               <div className="space-y-0.5">
                 <Badge variant="secondary" className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-green-500/30">
                   <Check className="h-3 w-3 mr-1" />
-                  Записано
+                  {t('measurement.recorded')}
                 </Badge>
                 {trend !== 0 && (
                   <div className={`text-xs flex items-center gap-1 ${trend > 0 ? 'text-green-500' : 'text-red-500'}`}>
                     {trend > 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                    {trend > 0 ? '+' : ''}{trend.toFixed(1)} от вчера
+                    {trend > 0 ? '+' : ''}{trend.toFixed(1)} {t('measurement.fromYesterday')}
                   </div>
                 )}
               </div>
@@ -66,7 +68,7 @@ export function DailyMeasurementInlineWidget({ habit, compact }: DailyMeasuremen
             <div className="space-y-1">
               <Progress value={progress} className="h-2" />
               <div className="text-xs text-center text-muted-foreground">
-                {progress.toFixed(0)}% от цели ({targetValue} {habit.measurement_unit || ""})
+                {t('measurement.progressOfGoal', { percent: progress.toFixed(0), target: targetValue, unit: habit.measurement_unit || '' })}
               </div>
             </div>
           )}
@@ -77,7 +79,7 @@ export function DailyMeasurementInlineWidget({ habit, compact }: DailyMeasuremen
           <div className="flex gap-2">
             <Input
               type="number"
-              placeholder={`Введите ${habit.measurement_unit || "значение"}`}
+              placeholder={t('measurement.enterValue', { unit: habit.measurement_unit || t('measurement.value') })}
               value={value}
               onChange={(e) => setValue(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
@@ -97,7 +99,7 @@ export function DailyMeasurementInlineWidget({ habit, compact }: DailyMeasuremen
           {/* Target hint */}
           {targetValue > 0 && (
             <div className="text-xs text-center text-muted-foreground">
-              Цель: {targetValue} {habit.measurement_unit || ""}
+              {t('measurement.targetHint', { target: targetValue, unit: habit.measurement_unit || '' })}
             </div>
           )}
         </>
