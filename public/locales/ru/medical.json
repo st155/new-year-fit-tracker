@@ -1,0 +1,40 @@
+{
+  "documents": {
+    "noDocuments": "Нет документов для отображения",
+    "retrySuccess": "Документ отправлен на повторную обработку",
+    "retryError": "Не удалось повторить обработку",
+    "extractedCount": "Извлечено рекомендаций: {{count}}",
+    "goToRecommendations": "Перейдите в раздел Рекомендации",
+    "noRecommendations": "Рекомендации не найдены",
+    "extractError": "Не удалось извлечь рекомендации"
+  },
+  "biomarkerMapping": {
+    "title": "Сопоставление биомаркеров",
+    "description": "Свяжите несопоставленные показатели с канонической базой биомаркеров",
+    "unmatchedZone": "Несопоставленные показатели",
+    "mappingZone": "Сопоставить",
+    "selectLeft": "Выберите показатель слева",
+    "searchPlaceholder": "Поиск по базе биомаркеров...",
+    "noResults": "Биомаркеры не найдены",
+    "matchSuccess": "Биомаркер сопоставлен",
+    "matchSuccessDesc": "Система запомнила это соответствие для будущих документов",
+    "matchError": "Ошибка сопоставления",
+    "close": "Закрыть"
+  },
+  "bloodTests": {
+    "recalculateComplete": "Пересчёт завершён",
+    "recalculateDesc": "Обновлено: {{updated}}, пропущено: {{skipped}} из {{total}}",
+    "recalculateError": "Ошибка пересчёта",
+    "duplicatesCleared": "Дубликаты очищены",
+    "duplicatesDesc": "Удалено: {{deleted}} неправильных записей",
+    "duplicatesError": "Ошибка очистки",
+    "clearDuplicates": "Очистить дубликаты",
+    "recalculateUnits": "Пересчитать единицы измерения",
+    "selectBiomarkers": "Выберите биомаркеры для графика",
+    "maxBiomarkers": "Максимум 5 биомаркеров одновременно",
+    "biomarkerDynamics": "Динамика биомаркеров",
+    "measurementsCount": "{{count}} измерений за период",
+    "insufficientData": "Недостаточно данных для построения графика",
+    "uploadMinimum": "Загрузите минимум 2 анализа крови"
+  }
+}

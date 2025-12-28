@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -42,6 +43,8 @@ export function SupplementEffectivenessInsight({
   startDate,
   weeksOnSupplement = 0,
 }: SupplementEffectivenessInsightProps) {
+  const { t } = useTranslation('supplements');
+  
   const getVerdictConfig = () => {
     switch (verdict) {
       case 'effective':
@@ -50,8 +53,8 @@ export function SupplementEffectivenessInsight({
           color: 'text-green-400',
           bgColor: 'bg-green-500/10',
           borderColor: 'border-green-500/30',
-          title: 'Эффективно',
-          description: 'Добавка работает согласно ожиданиям',
+          title: t('effectiveness.effective'),
+          description: t('effectiveness.effectiveDesc'),
         };
       case 'needs_more_time':
         return {
@@ -59,8 +62,8 @@ export function SupplementEffectivenessInsight({
           color: 'text-amber-400',
           bgColor: 'bg-amber-500/10',
           borderColor: 'border-amber-500/30',
-          title: 'Нужно больше времени',
-          description: 'Эффект может проявиться позже',
+          title: t('effectiveness.needsMoreTime'),
+          description: t('effectiveness.needsMoreTimeDesc'),
         };
       case 'not_working':
         return {
@@ -68,8 +71,8 @@ export function SupplementEffectivenessInsight({
           color: 'text-red-400',
           bgColor: 'bg-red-500/10',
           borderColor: 'border-red-500/30',
-          title: 'Не работает',
-          description: 'Рассмотрите альтернативу',
+          title: t('effectiveness.notWorking'),
+          description: t('effectiveness.notWorkingDesc'),
         };
       default:
         return {
@@ -77,8 +80,8 @@ export function SupplementEffectivenessInsight({
           color: 'text-muted-foreground',
           bgColor: 'bg-muted/10',
           borderColor: 'border-muted/30',
-          title: 'Нет данных',
-          description: 'Недостаточно данных для анализа',
+          title: t('effectiveness.noData'),
+          description: t('effectiveness.noDataDesc'),
         };
     }
   };
@@ -107,7 +110,7 @@ export function SupplementEffectivenessInsight({
                 effectivenessPercent >= 50 ? 'border-amber-500/50 text-amber-400' : 
                 'border-red-500/50 text-red-400'}
             >
-              {effectivenessPercent}% эффективности
+              {t('effectiveness.effectivenessPercent', { percent: effectivenessPercent })}
             </Badge>
           )}
         </div>
@@ -117,7 +120,7 @@ export function SupplementEffectivenessInsight({
           <div className="grid grid-cols-2 gap-4">
             {/* Expected */}
             <div className="p-3 rounded-lg bg-background/50">
-              <p className="text-xs text-muted-foreground mb-1">Ожидалось</p>
+              <p className="text-xs text-muted-foreground mb-1">{t('effectiveness.expected')}</p>
               <div className="flex items-center gap-1">
                 {expectedChange.percent > 0 ? (
                   <TrendingUp className="h-4 w-4 text-green-500" />
@@ -131,14 +134,14 @@ export function SupplementEffectivenessInsight({
               </div>
               {expectedChange.timeframeWeeks && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  за {expectedChange.timeframeWeeks} недель
+                  {t('effectiveness.forWeeks', { weeks: expectedChange.timeframeWeeks })}
                 </p>
               )}
             </div>
 
             {/* Actual */}
             <div className="p-3 rounded-lg bg-background/50">
-              <p className="text-xs text-muted-foreground mb-1">Фактически</p>
+              <p className="text-xs text-muted-foreground mb-1">{t('effectiveness.actual')}</p>
               <div className="flex items-center gap-1">
                 {actualChange.percent > 0 ? (
                   <TrendingUp className="h-4 w-4 text-green-500" />
@@ -167,7 +170,7 @@ export function SupplementEffectivenessInsight({
           <span className="text-muted-foreground">{config.description}</span>
           {weeksOnSupplement > 0 && (
             <span className="text-muted-foreground">
-              {weeksOnSupplement} нед. приёма
+              {t('effectiveness.weeksOnSupplement', { weeks: weeksOnSupplement })}
             </span>
           )}
         </div>
