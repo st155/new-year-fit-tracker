@@ -155,5 +155,45 @@
     "goals": "{{count}} целей",
     "measurements": "{{count}} измерений",
     "generatedAt": "Сгенерировано"
+  },
+  "protocol": {
+    "actionType": {
+      "supplement": "Добавка",
+      "exercise": "Упражнение",
+      "lifestyle": "Образ жизни",
+      "test": "Анализ",
+      "medication": "Медикамент",
+      "consultation": "Консультация"
+    },
+    "status": {
+      "pending": "Ожидает",
+      "active": "Активен",
+      "completed": "Завершён",
+      "dismissed": "Отклонён",
+      "addedToLibrary": "В библиотеке"
+    },
+    "editItem": "Редактировать: {{name}}",
+    "dosage": "Дозировка",
+    "dosagePlaceholder": "Например: 500 мг",
+    "schedule": "Расписание",
+    "schedulePlaceholder": "Например: 1-0-1 или утром",
+    "frequency": "Частота",
+    "frequencyPlaceholder": "Например: ежедневно",
+    "priority": "Приоритет",
+    "priorityHigh": "Высокий",
+    "priorityMedium": "Средний",
+    "priorityLow": "Низкий",
+    "details": "Детали",
+    "detailsPlaceholder": "Дополнительная информация",
+    "save": "Сохранить",
+    "important": "Важно",
+    "back": "Назад",
+    "notFound": "Протокол не найден или пуст",
+    "document": "Документ {{id}}",
+    "doctor": "Врач: {{name}}",
+    "items": "{{count}} элементов",
+    "addAllSupplements": "Добавить все добавки ({{count}})",
+    "deactivate": "Деактивировать",
+    "activate": "Активировать"
   }
 }

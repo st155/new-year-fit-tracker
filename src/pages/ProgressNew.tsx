@@ -1,4 +1,5 @@
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 import { 
   useWidgetsQuery, 
   useAddWidgetMutation, 
@@ -26,6 +27,7 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
 export default function ProgressNew() {
+  const { t } = useTranslation('progress');
   const { user } = useAuth();
   const navigate = useNavigate();
   const { data: widgets = [], isLoading: widgetsLoading } = useWidgetsQuery(user?.id);
@@ -52,9 +54,9 @@ export default function ProgressNew() {
     const timer = setTimeout(() => {
       setShowLoader(false);
       if (loading) {
-        toast.info('Данные загружаются дольше обычного', {
+        toast.info(t('dataLoadingSlow'), {
           action: {
-            label: 'Обновить',
+            label: t('refresh'),
             onClick: () => window.location.reload()
           }
         });
@@ -66,7 +68,7 @@ export default function ProgressNew() {
     }
 
     return () => clearTimeout(timer);
-  }, [loading]);
+  }, [loading, t]);
 
   const addWidget = (metricName: string) => {
     if (!user?.id) return;
@@ -86,11 +88,11 @@ export default function ProgressNew() {
   const refetch = () => {
     queryClient.invalidateQueries({ queryKey: widgetKeys.all });
     queryClient.invalidateQueries({ queryKey: ['metrics'] });
-    toast.success('Данные обновлены');
+    toast.success(t('dataUpdated'));
   };
 
   if (loading && showLoader) {
-    return <PageLoader message="Загрузка виджетов..." />;
+    return <PageLoader message={t('loading.widgets')} />;
   }
 
   // Empty state after loading
@@ -100,19 +102,19 @@ export default function ProgressNew() {
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Прогресс</h1>
+              <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
               <p className="text-muted-foreground mt-1">
-                Настройте виджеты для отслеживания прогресса
+                {t('description')}
               </p>
             </div>
           </div>
           
           <EmptyState
             icon={BarChart3}
-            title="Нет виджетов"
-            description="Добавьте виджеты для отслеживания метрик. Сначала присоединитесь к челленджу, чтобы создать цели и начать собирать данные."
+            title={t('empty.title')}
+            description={t('empty.description')}
             action={{
-              label: "К челленджам",
+              label: t('empty.toChallenges'),
               onClick: () => navigate("/challenges")
             }}
           />
@@ -127,9 +129,9 @@ export default function ProgressNew() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Прогресс</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
             <p className="text-muted-foreground mt-1">
-              Настройте виджеты для отслеживания прогресса
+              {t('description')}
             </p>
           </div>
           
@@ -141,7 +143,7 @@ export default function ProgressNew() {
               className="gap-2"
             >
               <RefreshCw className="h-4 w-4" />
-              Обновить
+              {t('refresh')}
             </Button>
             <WidgetSettings
               widgets={widgets}

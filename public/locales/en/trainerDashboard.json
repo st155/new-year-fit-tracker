@@ -16,6 +16,20 @@
     "settings": "Settings",
     "trainer": "Trainer"
   },
+  "index": {
+    "title": "Trainer Dashboard",
+    "description": "Manage clients and goals with AI",
+    "fullDashboard": "Full Dashboard",
+    "aiDescription": "Use AI assistant to manage clients, goals and training plans",
+    "openAI": "Open AI Dashboard",
+    "quickAccess": "Quick Access",
+    "stats": {
+      "activeClients": "Active Clients",
+      "activeGoals": "Active Goals",
+      "completedToday": "Completed Today",
+      "pendingActions": "Pending Actions"
+    }
+  },
   "clientWorkouts": {
     "title": "Workout History",
     "found": "{{count}} workouts found",

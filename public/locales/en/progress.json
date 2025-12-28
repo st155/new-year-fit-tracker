@@ -1,11 +1,13 @@
 {
   "title": "Progress",
+  "description": "Configure widgets to track your progress",
   "goalsFromChallenges": "{{count}} goals from challenges",
   "goal": "goal",
   "goals": "goals",
   "refresh": "Refresh",
   "loading": "Loading progress...",
   "dataLoadingSlow": "Data is taking longer than usual to load",
+  "dataUpdated": "Data updated",
   "analytics": {
     "title": "Analytics & Statistics",
     "subtitle": "disciplines, points, baseline"
@@ -16,10 +18,16 @@
     "loadErrorDescription": "Failed to load progress. Please try refreshing the page."
   },
   "empty": {
+    "title": "No widgets",
+    "description": "Add widgets to track metrics. First join a challenge to create goals and start collecting data.",
     "noGoals": "No goals to track",
     "noGoalsDescription": "Join a challenge to automatically create goals and start tracking your progress",
     "joinChallenge": "Join a Challenge",
-    "refreshPage": "Refresh Page"
+    "refreshPage": "Refresh Page",
+    "toChallenges": "To Challenges"
+  },
+  "loading": {
+    "widgets": "Loading widgets..."
   },
   "quickAdd": {
     "title": "Add Measurement",
