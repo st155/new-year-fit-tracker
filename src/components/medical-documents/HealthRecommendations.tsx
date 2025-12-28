@@ -6,12 +6,14 @@ import { Badge } from "@/components/ui/badge";
 import { healthApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { Sparkles, Loader2, Lightbulb, Calendar } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export const HealthRecommendations = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [recommendations, setRecommendations] = useState<string | null>(null);
   const [metadata, setMetadata] = useState<any>(null);
   const { toast } = useToast();
+  const { t, i18n } = useTranslation('medicalDocs');
 
   const generateRecommendations = async () => {
     setIsGenerating(true);
@@ -25,13 +27,13 @@ export const HealthRecommendations = () => {
       setMetadata(data?.context);
       
       toast({
-        title: "Рекомендации готовы",
-        description: "AI проанализировал все ваши данные"
+        title: t('recommendations.ready'),
+        description: t('recommendations.readyDesc')
       });
     } catch (error: any) {
       console.error('Recommendations error:', error);
       toast({
-        title: "Ошибка генерации",
+        title: t('recommendations.error'),
         description: error.message,
         variant: "destructive"
       });
@@ -47,10 +49,10 @@ export const HealthRecommendations = () => {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Lightbulb className="h-5 w-5" />
-              AI Рекомендации
+              {t('recommendations.title')}
             </CardTitle>
             <CardDescription>
-              Персональные советы на основе всех ваших данных
+              {t('recommendations.subtitle')}
             </CardDescription>
           </div>
           <Button 
@@ -61,12 +63,12 @@ export const HealthRecommendations = () => {
             {isGenerating ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Анализ...
+                {t('recommendations.analyzing')}
               </>
             ) : (
               <>
                 <Sparkles className="h-4 w-4" />
-                Сгенерировать
+                {t('recommendations.generate')}
               </>
             )}
           </Button>
@@ -77,9 +79,9 @@ export const HealthRecommendations = () => {
         {!recommendations && !isGenerating && (
           <div className="text-center py-12 text-muted-foreground">
             <Lightbulb className="h-16 w-16 mx-auto mb-4 opacity-50" />
-            <p className="mb-2">Получите персональные рекомендации</p>
+            <p className="mb-2">{t('recommendations.emptyTitle')}</p>
             <p className="text-sm">
-              AI проанализирует все ваши документы, цели и измерения
+              {t('recommendations.emptyDesc')}
             </p>
           </div>
         )}
@@ -87,7 +89,7 @@ export const HealthRecommendations = () => {
         {isGenerating && (
           <div className="text-center py-12">
             <Loader2 className="h-12 w-12 mx-auto mb-4 animate-spin text-primary" />
-            <p className="text-muted-foreground">Анализируем ваши данные...</p>
+            <p className="text-muted-foreground">{t('recommendations.loading')}</p>
           </div>
         )}
 
@@ -95,13 +97,13 @@ export const HealthRecommendations = () => {
           <div className="space-y-4">
             <div className="flex flex-wrap gap-2">
               <Badge variant="secondary">
-                {metadata.documentsAnalyzed} документов
+                {t('recommendations.documents', { count: metadata.documentsAnalyzed })}
               </Badge>
               <Badge variant="secondary">
-                {metadata.goalsConsidered} целей
+                {t('recommendations.goals', { count: metadata.goalsConsidered })}
               </Badge>
               <Badge variant="secondary">
-                {metadata.measurementsReviewed} измерений
+                {t('recommendations.measurements', { count: metadata.measurementsReviewed })}
               </Badge>
             </div>
 
@@ -115,7 +117,7 @@ export const HealthRecommendations = () => {
 
             <div className="flex items-center gap-2 text-sm text-muted-foreground pt-4 border-t">
               <Calendar className="h-4 w-4" />
-              <span>Сгенерировано: {new Date().toLocaleString('ru-RU')}</span>
+              <span>{t('recommendations.generatedAt')}: {new Date().toLocaleString(i18n.language === 'ru' ? 'ru-RU' : 'en-US')}</span>
             </div>
           </div>
         )}

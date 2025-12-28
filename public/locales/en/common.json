@@ -340,5 +340,17 @@
     "positiveNumber": "Value must be positive",
     "futureDate": "Date must be in the future",
     "pastDate": "Date must be in the past"
+  },
+  "status": {
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "pending": "Pending",
+    "error": "Error",
+    "unknown": "Unknown",
+    "justNow": "just now",
+    "minAgo": "{{min}} min ago",
+    "hoursAgo": "{{hours}} h ago",
+    "daysAgo": "{{days}} d ago",
+    "syncedAt": "Synced"
   }
 }

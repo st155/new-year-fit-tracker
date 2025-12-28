@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, CheckCircle2, AlertCircle, Database } from "lucide-react";
 import { documentsApi } from "@/lib/api";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useTranslation } from "react-i18next";
 
 interface MigrationResult {
   migrated: number;
@@ -20,6 +21,7 @@ export const MigrationStatus = () => {
     total_migrated?: number;
   } | null>(null);
   const { toast } = useToast();
+  const { t } = useTranslation('medicalDocs');
 
   const handleMigration = async () => {
     setIsMigrating(true);
@@ -33,13 +35,13 @@ export const MigrationStatus = () => {
       setResult(data as any);
       
       toast({
-        title: "Миграция завершена",
-        description: `Успешно перенесено ${data.total_migrated} документов`,
+        title: t('migration.complete'),
+        description: t('migration.successDesc', { count: data.total_migrated }),
       });
     } catch (error) {
       console.error('Migration error:', error);
       toast({
-        title: "Ошибка миграции",
+        title: t('migration.error'),
         description: error.message,
         variant: "destructive",
       });
@@ -53,10 +55,10 @@ export const MigrationStatus = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Database className="h-5 w-5" />
-          Миграция данных в новую систему
+          {t('migration.title')}
         </CardTitle>
         <CardDescription>
-          Перенос InBody анализов и фотографий прогресса в универсальную систему медицинских документов
+          {t('migration.description')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -64,8 +66,7 @@ export const MigrationStatus = () => {
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Эта операция переместит все ваши существующие InBody PDF и фотографии прогресса в новую систему хранения. 
-              Старые данные останутся доступными, но будут помечены как мигрированные.
+              {t('migration.warning')}
             </AlertDescription>
           </Alert>
         )}
@@ -74,18 +75,18 @@ export const MigrationStatus = () => {
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-green-600">
               <CheckCircle2 className="h-5 w-5" />
-              <span className="font-medium">Миграция успешно завершена</span>
+              <span className="font-medium">{t('migration.success')}</span>
             </div>
 
             {result.inbody && (
               <div className="border rounded-lg p-3 space-y-1">
-                <div className="font-medium">InBody документы</div>
+                <div className="font-medium">{t('migration.inbodyDocs')}</div>
                 <div className="text-sm text-muted-foreground">
-                  Перенесено: {result.inbody.migrated} из {result.inbody.total}
+                  {t('migration.transferred', { migrated: result.inbody.migrated, total: result.inbody.total })}
                 </div>
                 {result.inbody.errors && result.inbody.errors.length > 0 && (
                   <div className="text-sm text-destructive">
-                    Ошибок: {result.inbody.errors.length}
+                    {t('migration.errors', { count: result.inbody.errors.length })}
                   </div>
                 )}
               </div>
@@ -93,13 +94,13 @@ export const MigrationStatus = () => {
 
             {result.photos && (
               <div className="border rounded-lg p-3 space-y-1">
-                <div className="font-medium">Фотографии прогресса</div>
+                <div className="font-medium">{t('migration.progressPhotos')}</div>
                 <div className="text-sm text-muted-foreground">
-                  Перенесено: {result.photos.migrated} из {result.photos.total}
+                  {t('migration.transferred', { migrated: result.photos.migrated, total: result.photos.total })}
                 </div>
                 {result.photos.errors && result.photos.errors.length > 0 && (
                   <div className="text-sm text-destructive">
-                    Ошибок: {result.photos.errors.length}
+                    {t('migration.errors', { count: result.photos.errors.length })}
                   </div>
                 )}
               </div>
@@ -107,7 +108,7 @@ export const MigrationStatus = () => {
 
             <div className="pt-2 border-t">
               <div className="text-lg font-semibold">
-                Всего перенесено: {result.total_migrated}
+                {t('migration.totalTransferred', { count: result.total_migrated })}
               </div>
             </div>
           </div>
@@ -119,7 +120,7 @@ export const MigrationStatus = () => {
           className="w-full"
         >
           {isMigrating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {isMigrating ? 'Миграция...' : result ? 'Повторить миграцию' : 'Начать миграцию'}
+          {isMigrating ? t('migration.migrating') : result ? t('migration.retry') : t('migration.start')}
         </Button>
       </CardContent>
     </Card>

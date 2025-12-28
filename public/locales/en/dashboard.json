@@ -197,5 +197,17 @@
     "cancel": "Cancel",
     "ignore": "Ignore conflict",
     "apply": "Apply selection"
+  },
+  "goals": {
+    "teamProgress": "Team Progress",
+    "viewAll": "View All",
+    "goalsCount": "{{count}} goals",
+    "myGoals": "My Goals",
+    "emptyTitle": "You have no goals yet",
+    "emptyDesc": "Add your first goal to start tracking progress",
+    "current": "Current",
+    "target": "Target",
+    "errorTitle": "Error",
+    "errorLoading": "Failed to load goals"
   }
 }

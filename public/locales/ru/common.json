@@ -340,5 +340,17 @@
     "positiveNumber": "Значение должно быть положительным",
     "futureDate": "Дата должна быть в будущем",
     "pastDate": "Дата должна быть в прошлом"
+  },
+  "status": {
+    "connected": "Подключено",
+    "disconnected": "Отключено",
+    "pending": "Ожидание",
+    "error": "Ошибка",
+    "unknown": "Неизвестно",
+    "justNow": "только что",
+    "minAgo": "{{min}} мин назад",
+    "hoursAgo": "{{hours}} ч назад",
+    "daysAgo": "{{days}} дн назад",
+    "syncedAt": "Синхронизация"
   }
 }

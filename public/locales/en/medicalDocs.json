@@ -122,5 +122,38 @@
     "error": "Reprocessing error",
     "unknownError": "Unknown error",
     "close": "Close"
+  },
+  "migration": {
+    "title": "Data Migration to New System",
+    "description": "Transferring InBody analyses and progress photos to universal medical documents system",
+    "warning": "This operation will move all your existing InBody PDFs and progress photos to the new storage system. Old data will remain available but marked as migrated.",
+    "complete": "Migration Complete",
+    "successDesc": "Successfully transferred {{count}} documents",
+    "error": "Migration Error",
+    "success": "Migration completed successfully",
+    "inbodyDocs": "InBody Documents",
+    "transferred": "Transferred: {{migrated}} of {{total}}",
+    "errors": "Errors: {{count}}",
+    "progressPhotos": "Progress Photos",
+    "totalTransferred": "Total transferred: {{count}}",
+    "migrating": "Migrating...",
+    "retry": "Retry Migration",
+    "start": "Start Migration"
+  },
+  "recommendations": {
+    "title": "AI Recommendations",
+    "subtitle": "Personal advice based on all your data",
+    "ready": "Recommendations ready",
+    "readyDesc": "AI analyzed all your data",
+    "error": "Generation error",
+    "analyzing": "Analyzing...",
+    "generate": "Generate",
+    "emptyTitle": "Get personalized recommendations",
+    "emptyDesc": "AI will analyze all your documents, goals and measurements",
+    "loading": "Analyzing your data...",
+    "documents": "{{count}} documents",
+    "goals": "{{count}} goals",
+    "measurements": "{{count}} measurements",
+    "generatedAt": "Generated"
   }
 }
