@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -42,6 +43,7 @@ export function AssignTrainingPlanDialog({
   clientName,
   onSuccess,
 }: AssignTrainingPlanDialogProps) {
+  const { t } = useTranslation('trainer');
   const { user } = useAuth();
   const [plans, setPlans] = useState<TrainingPlan[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,7 +92,7 @@ export function AssignTrainingPlanDialog({
       setPlans(formattedPlans);
     } catch (error) {
       console.error('Error loading plans:', error);
-      toast.error('Не удалось загрузить планы');
+      toast.error(t('assignPlan.loadError'));
     } finally {
       setLoading(false);
     }
@@ -135,13 +137,13 @@ export function AssignTrainingPlanDialog({
 
       if (error) throw error;
 
-      toast.success(`План "${selectedPlan?.name}" назначен клиенту`);
+      toast.success(t('assignPlan.assigned', { name: selectedPlan?.name }));
       onSuccess();
       onOpenChange(false);
       setSelectedPlanId(null);
     } catch (error: any) {
       console.error('Error assigning plan:', error);
-      toast.error(error.message || 'Не удалось назначить план');
+      toast.error(error.message || t('assignPlan.assignError'));
     } finally {
       setAssigning(false);
     }
@@ -151,9 +153,9 @@ export function AssignTrainingPlanDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh]">
         <DialogHeader>
-          <DialogTitle>Назначить тренировочный план</DialogTitle>
+          <DialogTitle>{t('assignPlan.title')}</DialogTitle>
           <DialogDescription>
-            Выберите план для клиента {clientName}
+            {t('assignPlan.selectFor', { name: clientName })}
           </DialogDescription>
         </DialogHeader>
 
@@ -162,7 +164,7 @@ export function AssignTrainingPlanDialog({
           <div className="space-y-2">
             <Label htmlFor="start-date" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
-              Дата начала
+              {t('assignPlan.startDate')}
             </Label>
             <Input
               id="start-date"
@@ -175,7 +177,7 @@ export function AssignTrainingPlanDialog({
 
           {/* Plans List */}
           <div className="space-y-2">
-            <Label>Выберите план</Label>
+            <Label>{t('assignPlan.selectPlan')}</Label>
             <ScrollArea className="h-[350px] rounded-md border p-2">
               {loading ? (
                 <div className="flex items-center justify-center h-32">
@@ -184,8 +186,8 @@ export function AssignTrainingPlanDialog({
               ) : plans.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Dumbbell className="h-10 w-10 mx-auto mb-3 opacity-50" />
-                  <p>У вас пока нет тренировочных планов</p>
-                  <p className="text-sm mt-1">Создайте план на вкладке "Планы"</p>
+                  <p>{t('assignPlan.noPlans')}</p>
+                  <p className="text-sm mt-1">{t('assignPlan.noPlansHint')}</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -213,7 +215,7 @@ export function AssignTrainingPlanDialog({
                                 {isAlreadyAssigned && (
                                   <Badge variant="secondary" className="shrink-0">
                                     <Check className="h-3 w-3 mr-1" />
-                                    Назначен
+                                    {t('assignPlan.alreadyAssigned')}
                                   </Badge>
                                 )}
                               </div>
@@ -225,11 +227,11 @@ export function AssignTrainingPlanDialog({
                               <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground">
                                 <span className="flex items-center gap-1">
                                   <Clock className="h-3.5 w-3.5" />
-                                  {plan.duration_weeks} нед.
+                                  {plan.duration_weeks} {t('assignPlan.weeks')}
                                 </span>
                                 <span className="flex items-center gap-1">
                                   <Dumbbell className="h-3.5 w-3.5" />
-                                  {plan.workouts_count} тренировок
+                                  {plan.workouts_count} {t('assignPlan.workouts')}
                                 </span>
                               </div>
                             </div>
@@ -251,16 +253,16 @@ export function AssignTrainingPlanDialog({
           {/* Actions */}
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Отмена
+              {t('common:actions.cancel')}
             </Button>
             <Button onClick={handleAssign} disabled={!selectedPlanId || assigning}>
               {assigning ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Назначаю...
+                  {t('assignPlan.assigning')}
                 </>
               ) : (
-                'Назначить план'
+                t('assignPlan.assign')
               )}
             </Button>
           </div>

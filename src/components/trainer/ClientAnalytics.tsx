@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -27,6 +28,7 @@ interface ClientAnalyticsProps {
 }
 
 export function ClientAnalytics({ clients, selectedClient, onSelectClient }: ClientAnalyticsProps) {
+  const { t } = useTranslation('trainer');
   const [measurements, setMeasurements] = useState<any[]>([]);
   const [healthData, setHealthData] = useState<any[]>([]);
   const [dailyStats, setDailyStats] = useState<any[]>([]);
@@ -154,14 +156,14 @@ export function ClientAnalytics({ clients, selectedClient, onSelectClient }: Cli
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Аналитика подопечных</h2>
+        <h2 className="text-2xl font-bold">{t('analytics.title')}</h2>
       </div>
 
       {!selectedClient ? (
         <Card>
           <CardHeader>
-            <CardTitle>Выберите подопечного</CardTitle>
-            <CardDescription>Выберите подопечного для просмотра детальной аналитики</CardDescription>
+            <CardTitle>{t('analytics.selectClient')}</CardTitle>
+            <CardDescription>{t('analytics.selectClientDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -183,8 +185,8 @@ export function ClientAnalytics({ clients, selectedClient, onSelectClient }: Cli
                         <p className="font-medium">{client.full_name || client.username}</p>
                         <p className="text-sm text-muted-foreground">
                           {client.last_measurement ? 
-                            `Данные: ${new Date(client.last_measurement).toLocaleDateString()}` :
-                            'Нет данных'
+                            `${t('analytics.data')}: ${new Date(client.last_measurement).toLocaleDateString()}` :
+                            t('analytics.noData')
                           }
                         </p>
                       </div>
@@ -210,11 +212,11 @@ export function ClientAnalytics({ clients, selectedClient, onSelectClient }: Cli
                   </Avatar>
                   <div>
                     <h3 className="text-lg font-medium">{selectedClient.full_name || selectedClient.username}</h3>
-                    <p className="text-muted-foreground">Аналитика и прогресс</p>
+                    <p className="text-muted-foreground">{t('analytics.progress')}</p>
                   </div>
                 </div>
                 <Button variant="outline" onClick={() => onSelectClient(null as any)}>
-                  Выбрать другого
+                  {t('analytics.selectAnother')}
                 </Button>
               </div>
             </CardContent>
@@ -224,7 +226,7 @@ export function ClientAnalytics({ clients, selectedClient, onSelectClient }: Cli
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Шаги (сегодня)</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('analytics.stepsToday')}</CardTitle>
                 <Activity className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -247,36 +249,36 @@ export function ClientAnalytics({ clients, selectedClient, onSelectClient }: Cli
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Пульс (средний)</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('analytics.heartRateAvg')}</CardTitle>
                 <Heart className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{Math.round(getLatestValue('heart_rate_avg'))}</div>
                 <p className="text-xs text-muted-foreground">
-                  {getLatestValue('heart_rate_min')}-{getLatestValue('heart_rate_max')} уд/мин
+                  {getLatestValue('heart_rate_min')}-{getLatestValue('heart_rate_max')} {t('analytics.bpm')}
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Калории</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('analytics.calories')}</CardTitle>
                 <Target className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{getLatestValue('active_calories')}</div>
-                <p className="text-xs text-muted-foreground">активных калорий</p>
+                <p className="text-xs text-muted-foreground">{t('analytics.activeCalories')}</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Вес</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('analytics.weight')}</CardTitle>
                 <Calendar className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {weightData.length > 0 ? `${weightData[weightData.length - 1].weight} кг` : 'Н/Д'}
+                  {weightData.length > 0 ? `${weightData[weightData.length - 1].weight} ${t('units.kg')}` : t('analytics.na')}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {weightData.length > 1 && (
@@ -285,7 +287,7 @@ export function ClientAnalytics({ clients, selectedClient, onSelectClient }: Cli
                         ? "text-red-600" : "text-green-600"
                     }>
                       {Number(weightData[weightData.length - 1].weight) > Number(weightData[weightData.length - 2].weight) ? "+" : ""}
-                      {(Number(weightData[weightData.length - 1].weight) - Number(weightData[weightData.length - 2].weight)).toFixed(1)} кг
+                      {(Number(weightData[weightData.length - 1].weight) - Number(weightData[weightData.length - 2].weight)).toFixed(1)} {t('units.kg')}
                     </span>
                   )}
                 </p>
@@ -296,16 +298,16 @@ export function ClientAnalytics({ clients, selectedClient, onSelectClient }: Cli
           {/* Графики */}
           <Tabs defaultValue="activity" className="space-y-4">
             <TabsList>
-              <TabsTrigger value="activity">Активность</TabsTrigger>
-              <TabsTrigger value="health">Здоровье</TabsTrigger>
-              <TabsTrigger value="weight">Вес</TabsTrigger>
+              <TabsTrigger value="activity">{t('analytics.tabs.activity')}</TabsTrigger>
+              <TabsTrigger value="health">{t('analytics.tabs.health')}</TabsTrigger>
+              <TabsTrigger value="weight">{t('analytics.tabs.weight')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="activity">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Шаги за 30 дней</CardTitle>
+                    <CardTitle>{t('analytics.stepsFor30Days')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ResponsiveContainer width="100%" height={300}>
@@ -322,7 +324,7 @@ export function ClientAnalytics({ clients, selectedClient, onSelectClient }: Cli
 
                 <Card>
                   <CardHeader>
-                    <CardTitle>Калории за 30 дней</CardTitle>
+                    <CardTitle>{t('analytics.caloriesFor30Days')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ResponsiveContainer width="100%" height={300}>
@@ -342,7 +344,7 @@ export function ClientAnalytics({ clients, selectedClient, onSelectClient }: Cli
             <TabsContent value="health">
               <Card>
                 <CardHeader>
-                  <CardTitle>Пульс за 30 дней</CardTitle>
+                  <CardTitle>{t('analytics.heartRateFor30Days')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={400}>
@@ -351,9 +353,9 @@ export function ClientAnalytics({ clients, selectedClient, onSelectClient }: Cli
                       <XAxis dataKey="date" />
                       <YAxis />
                       <Tooltip />
-                      <Line type="monotone" dataKey="avg" stroke="hsl(var(--primary))" strokeWidth={2} name="Средний" />
-                      <Line type="monotone" dataKey="min" stroke="hsl(var(--muted-foreground))" strokeWidth={1} name="Минимум" />
-                      <Line type="monotone" dataKey="max" stroke="hsl(var(--destructive))" strokeWidth={1} name="Максимум" />
+                      <Line type="monotone" dataKey="avg" stroke="hsl(var(--primary))" strokeWidth={2} name={t('analytics.avg')} />
+                      <Line type="monotone" dataKey="min" stroke="hsl(var(--muted-foreground))" strokeWidth={1} name={t('analytics.min')} />
+                      <Line type="monotone" dataKey="max" stroke="hsl(var(--destructive))" strokeWidth={1} name={t('analytics.max')} />
                     </LineChart>
                   </ResponsiveContainer>
                 </CardContent>
@@ -363,7 +365,7 @@ export function ClientAnalytics({ clients, selectedClient, onSelectClient }: Cli
             <TabsContent value="weight">
               <Card>
                 <CardHeader>
-                  <CardTitle>Динамика веса</CardTitle>
+                  <CardTitle>{t('analytics.weightDynamics')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={400}>

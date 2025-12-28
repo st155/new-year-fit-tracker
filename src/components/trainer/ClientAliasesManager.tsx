@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,7 @@ interface TrainerClient {
 }
 
 export const ClientAliasesManager = () => {
+  const { t } = useTranslation('trainer');
   const { user } = useAuth();
   const { toast } = useToast();
   const { aliases, loading: aliasesLoading, saveAlias, deleteAlias, reloadAliases } = useClientAliases(user?.id);
@@ -65,8 +67,8 @@ export const ClientAliasesManager = () => {
     } catch (error) {
       console.error('Error loading clients:', error);
       toast({
-        title: "Ошибка загрузки",
-        description: "Не удалось загрузить список клиентов",
+        title: t('aliases.loadErrorTitle'),
+        description: t('aliases.loadError'),
         variant: "destructive"
       });
     } finally {
@@ -82,8 +84,8 @@ export const ClientAliasesManager = () => {
     const aliasName = newAliases[clientId]?.trim();
     if (!aliasName || aliasName.length < 2) {
       toast({
-        title: "Некорректный псевдоним",
-        description: "Псевдоним должен содержать минимум 2 символа",
+        title: t('aliases.invalidAlias'),
+        description: t('aliases.invalidAliasDesc'),
         variant: "destructive"
       });
       return;
@@ -96,8 +98,8 @@ export const ClientAliasesManager = () => {
       setNewAliases(prev => ({ ...prev, [clientId]: '' }));
       const client = clients.find(c => c.user_id === clientId);
       toast({
-        title: "Псевдоним сохранён",
-        description: `"${aliasName}" добавлен для ${client?.full_name || 'клиента'}`,
+        title: t('aliases.saved'),
+        description: t('aliases.savedDesc', { alias: aliasName, name: client?.full_name || t('aliases.client') }),
       });
     }
     
@@ -108,8 +110,8 @@ export const ClientAliasesManager = () => {
     const success = await deleteAlias(aliasId);
     if (success) {
       toast({
-        title: "Псевдоним удалён",
-        description: `"${aliasName}" удалён`,
+        title: t('aliases.deleted'),
+        description: t('aliases.deletedDesc', { alias: aliasName }),
       });
     }
   };
@@ -126,13 +128,13 @@ export const ClientAliasesManager = () => {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Управление псевдонимами</h2>
+          <h2 className="text-2xl font-bold">{t('aliases.title')}</h2>
           <p className="text-sm text-muted-foreground">
-            Добавьте псевдонимы для упрощения упоминаний клиентов в AI чате
+            {t('aliases.description')}
           </p>
         </div>
         <Button variant="outline" onClick={reloadAliases}>
-          Обновить
+          {t('common:refresh')}
         </Button>
       </div>
 
@@ -157,7 +159,7 @@ export const ClientAliasesManager = () => {
                       {hasAliases && (
                         <Badge variant="secondary" className="ml-2">
                           <Check className="h-3 w-3 mr-1" />
-                          {clientAliases.length} {clientAliases.length === 1 ? 'псевдоним' : 'псевдонимов'}
+                          {t('aliases.count', { count: clientAliases.length })}
                         </Badge>
                       )}
                     </CardTitle>
@@ -188,7 +190,7 @@ export const ClientAliasesManager = () => {
                 {/* Add new alias */}
                 <div className="flex gap-2">
                   <Input
-                    placeholder="Например: Саша, Александр, Alex"
+                    placeholder={t('aliases.placeholder')}
                     value={newAliases[client.user_id] || ''}
                     onChange={(e) => setNewAliases(prev => ({ 
                       ...prev, 
@@ -210,7 +212,7 @@ export const ClientAliasesManager = () => {
                     ) : (
                       <>
                         <Plus className="h-4 w-4 mr-1" />
-                        Добавить
+                        {t('common:actions.add')}
                       </>
                     )}
                   </Button>
@@ -225,7 +227,7 @@ export const ClientAliasesManager = () => {
         <Card>
           <CardContent className="p-8 text-center">
             <p className="text-muted-foreground">
-              У вас пока нет клиентов. Добавьте клиентов, чтобы настроить для них псевдонимы.
+              {t('aliases.noClients')}
             </p>
           </CardContent>
         </Card>
