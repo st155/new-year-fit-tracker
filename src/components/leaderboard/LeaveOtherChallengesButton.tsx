@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,6 +14,7 @@ interface LeaveOtherChallengesButtonProps {
 }
 
 export function LeaveOtherChallengesButton({ userId, currentChallengeId, challengeTitle }: LeaveOtherChallengesButtonProps) {
+  const { t } = useTranslation('leaderboard');
   const [showDialog, setShowDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const queryClient = useQueryClient();
@@ -32,11 +34,11 @@ export function LeaveOtherChallengesButton({ userId, currentChallengeId, challen
       await queryClient.invalidateQueries({ queryKey: ['challenges'] });
       await queryClient.invalidateQueries({ queryKey: ['leaderboard'] });
 
-      toast.success(`Вы остались только в "${challengeTitle}"`);
+      toast.success(t('leave.success', { title: challengeTitle }));
       setShowDialog(false);
     } catch (error: any) {
       console.error('[LeaveOtherChallenges] Error:', error);
-      toast.error('Ошибка при выходе из других челленджей: ' + error.message);
+      toast.error(t('leave.error', { message: error.message }));
     } finally {
       setIsLoading(false);
     }
@@ -51,30 +53,30 @@ export function LeaveOtherChallengesButton({ userId, currentChallengeId, challen
         className="gap-2"
       >
         <Trash2 className="h-3.5 w-3.5" />
-        Выйти из других челленджей
+        {t('leave.button')}
       </Button>
 
       <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Выйти из всех других челленджей?</AlertDialogTitle>
+            <AlertDialogTitle>{t('leave.title')}</AlertDialogTitle>
             <AlertDialogDescription className="space-y-2">
               <p>
-                Вы останетесь участником только челленджа <span className="font-semibold">"{challengeTitle}"</span>.
+                {t('leave.description', { title: challengeTitle })}
               </p>
               <p className="text-destructive">
-                Это действие нельзя отменить. Все ваши очки и прогресс в других челленджах будут потеряны.
+                {t('leave.warning')}
               </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isLoading}>Отмена</AlertDialogCancel>
+            <AlertDialogCancel disabled={isLoading}>{t('common:cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleLeaveOthers}
               disabled={isLoading}
               className="bg-destructive hover:bg-destructive/90"
             >
-              {isLoading ? 'Выход...' : 'Да, выйти из других'}
+              {isLoading ? t('leave.leaving') : t('leave.confirm')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

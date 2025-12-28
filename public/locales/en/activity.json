@@ -1,0 +1,37 @@
+{
+  "quick": {
+    "title": "Quick Log",
+    "logged": "{{icon}} {{label}} logged!",
+    "error": "Logging error",
+    "minutesOptional": "Minutes (optional)",
+    "saving": "Saving...",
+    "log": "Log"
+  },
+  "plan": {
+    "title": "Create Wellness Schedule",
+    "stepDescribe": "Describe your training and wellness routine",
+    "stepReview": "Review recognized activities",
+    "stepPeriod": "Choose planning period",
+    "descriptionLabel": "Routine description",
+    "descriptionPlaceholder": "E.g.: 3 strength sessions per week, 2 massages, one run, sauna, stretching and hyperbaric chamber",
+    "descriptionHint": "Describe in free text what activities and how many times per week",
+    "parse": "Recognize",
+    "parseError": "Failed to recognize activities",
+    "parseErrorHint": "Try to be more specific, e.g.: \"3 strength, 2 massages, sauna\"",
+    "addActivity": "Add activity:",
+    "totalWeekly": "Total activities per week",
+    "periodLabel": "Planning period",
+    "weeks_one": "{{count}} week",
+    "weeks_other": "{{count}} weeks",
+    "weeks": "{{count}} wks",
+    "willCreate": "Will be created:",
+    "activitiesCount_one": "{{count}} activity",
+    "activitiesCount_other": "{{count}} activities",
+    "activitiesCount": "{{count}} activities",
+    "startDate": "Start",
+    "creating": "Creating...",
+    "created": "Schedule created!",
+    "createdDesc": "{{count}} activities for {{weeks}} weeks",
+    "createError": "Error creating plan"
+  }
+}

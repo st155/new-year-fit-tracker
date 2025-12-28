@@ -57,5 +57,19 @@
     "recovery": "Recovery",
     "progress": "Progress",
     "balance": "Balance"
+  },
+  "celebration": {
+    "completed": "{{icon}} {{title}} completed!",
+    "pointsEarned": "+{{points}} points earned"
+  },
+  "leave": {
+    "button": "Leave other challenges",
+    "title": "Leave all other challenges?",
+    "description": "You will remain a participant only in \"{{title}}\".",
+    "warning": "This action cannot be undone. All your points and progress in other challenges will be lost.",
+    "leaving": "Leaving...",
+    "confirm": "Yes, leave others",
+    "success": "You stayed only in \"{{title}}\"",
+    "error": "Error leaving other challenges: {{message}}"
   }
 }

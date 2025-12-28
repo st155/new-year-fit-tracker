@@ -1,0 +1,39 @@
+{
+  "quick": {
+    "title": "Быстрая запись",
+    "logged": "{{icon}} {{label}} записано!",
+    "error": "Ошибка записи",
+    "minutesOptional": "Минут (опционально)",
+    "saving": "Сохранение...",
+    "log": "Записать"
+  },
+  "plan": {
+    "title": "Создать Wellness-расписание",
+    "stepDescribe": "Опишите свой режим тренировок и процедур",
+    "stepReview": "Проверьте распознанные активности",
+    "stepPeriod": "Выберите период планирования",
+    "descriptionLabel": "Описание режима",
+    "descriptionPlaceholder": "Например: 3 раза в неделю силовые, 2 массажа, одна пробежка, хожу в сауну, на растяжку и в барокамеру",
+    "descriptionHint": "Напишите свободным текстом, какие активности и сколько раз в неделю",
+    "parse": "Распознать",
+    "parseError": "Не удалось распознать активности",
+    "parseErrorHint": "Попробуйте описать конкретнее, например: \"3 силовые, 2 массажа, сауна\"",
+    "addActivity": "Добавить активность:",
+    "totalWeekly": "Всего активностей в неделю",
+    "periodLabel": "Период планирования",
+    "weeks_one": "{{count}} неделя",
+    "weeks_few": "{{count}} недели",
+    "weeks_many": "{{count}} недель",
+    "weeks": "{{count}} нед.",
+    "willCreate": "Будет создано:",
+    "activitiesCount_one": "{{count}} активность",
+    "activitiesCount_few": "{{count}} активности",
+    "activitiesCount_many": "{{count}} активностей",
+    "activitiesCount": "{{count}} активностей",
+    "startDate": "Начало",
+    "creating": "Создание...",
+    "created": "Расписание создано!",
+    "createdDesc": "{{count}} активностей на {{weeks}} недель",
+    "createError": "Ошибка создания плана"
+  }
+}
