@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -10,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { ResponsiveDialog } from '@/components/ui/responsive-dialog';
 import { CalendarIcon, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import { cn, formatTimeDisplay, isTimeUnit } from '@/lib/utils';
 import { ChallengeGoal } from '@/features/goals/types';
 
@@ -27,10 +28,13 @@ export function QuickAddMeasurementDialog({
   onOpenChange,
   onSuccess,
 }: QuickAddMeasurementDialogProps) {
+  const { t, i18n } = useTranslation('progress');
   const { user } = useAuth();
   const [value, setValue] = useState('');
   const [date, setDate] = useState<Date>(new Date());
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
 
   const isTimeGoal = isTimeUnit(goal.target_unit) ||
     goal.goal_name.toLowerCase().includes('время') ||
@@ -38,13 +42,13 @@ export function QuickAddMeasurementDialog({
 
   const handleSubmit = async () => {
     if (!user?.id) {
-      toast.error('Необходимо авторизоваться');
+      toast.error(t('quickAdd.errors.authRequired'));
       return;
     }
 
     const numValue = parseFloat(value);
     if (isNaN(numValue) || numValue <= 0) {
-      toast.error('Введите корректное значение');
+      toast.error(t('quickAdd.errors.invalidValue'));
       return;
     }
 
@@ -64,14 +68,14 @@ export function QuickAddMeasurementDialog({
 
       if (error) throw error;
 
-      toast.success('Измерение добавлено');
+      toast.success(t('quickAdd.success'));
       setValue('');
       setDate(new Date());
       onOpenChange(false);
       onSuccess();
     } catch (error) {
       console.error('Error adding measurement:', error);
-      toast.error('Не удалось добавить измерение');
+      toast.error(t('quickAdd.errors.saveFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -94,20 +98,20 @@ export function QuickAddMeasurementDialog({
     <ResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Добавить измерение"
-      description={`${goal.goal_name} • Цель: ${isTimeGoal ? formatTimeDisplay(goal.target_value) : goal.target_value?.toFixed(1)} ${goal.target_unit}`}
+      title={t('quickAdd.title')}
+      description={`${goal.goal_name} • ${t('quickAdd.targetLabel')}: ${isTimeGoal ? formatTimeDisplay(goal.target_value) : goal.target_value?.toFixed(1)} ${goal.target_unit}`}
     >
       <div className="space-y-4 p-4 pt-0">
         {/* Value Input */}
         <div className="space-y-2">
           <Label htmlFor="value">
-            Значение ({goal.target_unit})
+            {t('quickAdd.valueLabel')} ({goal.target_unit})
           </Label>
           <Input
             id="value"
             type="number"
             step="0.1"
-            placeholder={isTimeGoal ? "Например: 120 (секунды)" : "Например: 5.0"}
+            placeholder={isTimeGoal ? t('quickAdd.valuePlaceholderTime') : t('quickAdd.valuePlaceholder')}
             value={value}
             onChange={(e) => setValue(e.target.value)}
             autoFocus
@@ -116,7 +120,7 @@ export function QuickAddMeasurementDialog({
 
         {/* Date Picker */}
         <div className="space-y-2">
-          <Label>Дата измерения</Label>
+          <Label>{t('quickAdd.dateLabel')}</Label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -127,7 +131,7 @@ export function QuickAddMeasurementDialog({
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {format(date, 'd MMMM yyyy', { locale: ru })}
+                {format(date, 'd MMMM yyyy', { locale: dateLocale })}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
@@ -136,7 +140,7 @@ export function QuickAddMeasurementDialog({
                 selected={date}
                 onSelect={(d) => d && setDate(d)}
                 disabled={(date) => date > new Date()}
-                locale={ru}
+                locale={dateLocale}
                 initialFocus
               />
             </PopoverContent>
@@ -183,14 +187,14 @@ export function QuickAddMeasurementDialog({
             className="flex-1"
             onClick={() => onOpenChange(false)}
           >
-            Отмена
+            {t('quickAdd.cancel')}
           </Button>
           <Button
             className="flex-1"
             onClick={handleSubmit}
             disabled={isSubmitting || !hasValidValue}
           >
-            {isSubmitting ? 'Сохранение...' : 'Добавить'}
+            {isSubmitting ? t('quickAdd.submitting') : t('quickAdd.submit')}
           </Button>
         </div>
       </div>
