@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from 'react-i18next';
 import { useAIPendingActions } from '@/hooks/useAIPendingActions';
 import { useAuth } from '@/hooks/useAuth';
 import { Users, Target, CheckCircle, Clock, Activity, LayoutDashboard, Dumbbell, Sparkles } from 'lucide-react';
@@ -8,13 +9,14 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface QuickStat {
-  label: string;
+  labelKey: string;
   value: number;
   icon: React.ReactNode;
   color: string;
 }
 
 export default function TrainerIndexPage() {
+  const { t } = useTranslation('trainerDashboard');
   const { user } = useAuth();
   const navigate = useNavigate();
   const { pendingActions } = useAIPendingActions(user?.id);
@@ -57,25 +59,25 @@ export default function TrainerIndexPage() {
 
       setStats([
         {
-          label: 'Активных клиентов',
+          labelKey: 'index.stats.activeClients',
           value: activeClients || 0,
           icon: <Users className="h-5 w-5" />,
           color: 'text-blue-500'
         },
         {
-          label: 'Активных целей',
+          labelKey: 'index.stats.activeGoals',
           value: activeGoals || 0,
           icon: <Target className="h-5 w-5" />,
           color: 'text-green-500'
         },
         {
-          label: 'Завершено сегодня',
+          labelKey: 'index.stats.completedToday',
           value: completedToday || 0,
           icon: <CheckCircle className="h-5 w-5" />,
           color: 'text-orange-500'
         },
         {
-          label: 'Ожидает действий',
+          labelKey: 'index.stats.pendingActions',
           value: pendingActions.length,
           icon: <Clock className="h-5 w-5" />,
           color: 'text-purple-500'
@@ -94,9 +96,9 @@ export default function TrainerIndexPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Тренерский кабинет</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{t('index.title')}</h1>
             <p className="text-muted-foreground mt-1">
-              Управляйте клиентами и целями с помощью AI
+              {t('index.description')}
             </p>
           </div>
           <Button
@@ -105,7 +107,7 @@ export default function TrainerIndexPage() {
             className="gap-2"
           >
             <LayoutDashboard className="h-4 w-4" />
-            Полный кабинет
+            {t('index.fullDashboard')}
           </Button>
         </div>
 
@@ -119,14 +121,14 @@ export default function TrainerIndexPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-muted-foreground">
-              Используйте AI ассистента для управления клиентами, целями и тренировочными планами
+              {t('index.aiDescription')}
             </p>
             <Button
               onClick={() => navigate('/trainer-dashboard')}
               className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-lg shadow-purple-500/25"
             >
               <Sparkles className="h-4 w-4 mr-2" />
-              Открыть AI кабинет
+              {t('index.openAI')}
             </Button>
           </CardContent>
         </Card>
@@ -136,7 +138,7 @@ export default function TrainerIndexPage() {
           {stats.map((stat, idx) => (
             <Card key={idx} className="relative overflow-hidden">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{stat.label}</CardTitle>
+                <CardTitle className="text-sm font-medium">{t(stat.labelKey)}</CardTitle>
                 <div className={stat.color}>{stat.icon}</div>
               </CardHeader>
               <CardContent>
@@ -149,7 +151,7 @@ export default function TrainerIndexPage() {
         {/* Быстрый доступ к разделам */}
         <Card>
           <CardHeader>
-            <CardTitle>Быстрый доступ</CardTitle>
+            <CardTitle>{t('index.quickAccess')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -159,7 +161,7 @@ export default function TrainerIndexPage() {
                 onClick={() => navigate('/trainer-dashboard?tab=clients')}
               >
                 <Users className="h-5 w-5" />
-                <span className="text-sm">Клиенты</span>
+                <span className="text-sm">{t('tabs.clients')}</span>
               </Button>
               <Button
                 variant="outline"
@@ -167,7 +169,7 @@ export default function TrainerIndexPage() {
                 onClick={() => navigate('/trainer-dashboard?tab=plans')}
               >
                 <Dumbbell className="h-5 w-5" />
-                <span className="text-sm">Планы</span>
+                <span className="text-sm">{t('tabs.plans')}</span>
               </Button>
               <Button
                 variant="outline"
@@ -175,7 +177,7 @@ export default function TrainerIndexPage() {
                 onClick={() => navigate('/trainer-dashboard?tab=challenges')}
               >
                 <Activity className="h-5 w-5" />
-                <span className="text-sm">Челленджи</span>
+                <span className="text-sm">{t('tabs.challenges')}</span>
               </Button>
               <Button
                 variant="outline"
@@ -183,7 +185,7 @@ export default function TrainerIndexPage() {
                 onClick={() => navigate('/trainer-dashboard?tab=analytics')}
               >
                 <Clock className="h-5 w-5" />
-                <span className="text-sm">Аналитика</span>
+                <span className="text-sm">{t('tabs.analytics')}</span>
               </Button>
             </div>
           </CardContent>

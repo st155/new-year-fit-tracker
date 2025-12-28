@@ -155,5 +155,45 @@
     "goals": "{{count}} goals",
     "measurements": "{{count}} measurements",
     "generatedAt": "Generated"
+  },
+  "protocol": {
+    "actionType": {
+      "supplement": "Supplement",
+      "exercise": "Exercise",
+      "lifestyle": "Lifestyle",
+      "test": "Test",
+      "medication": "Medication",
+      "consultation": "Consultation"
+    },
+    "status": {
+      "pending": "Pending",
+      "active": "Active",
+      "completed": "Completed",
+      "dismissed": "Dismissed",
+      "addedToLibrary": "In Library"
+    },
+    "editItem": "Edit: {{name}}",
+    "dosage": "Dosage",
+    "dosagePlaceholder": "E.g.: 500 mg",
+    "schedule": "Schedule",
+    "schedulePlaceholder": "E.g.: 1-0-1 or morning",
+    "frequency": "Frequency",
+    "frequencyPlaceholder": "E.g.: daily",
+    "priority": "Priority",
+    "priorityHigh": "High",
+    "priorityMedium": "Medium",
+    "priorityLow": "Low",
+    "details": "Details",
+    "detailsPlaceholder": "Additional information",
+    "save": "Save",
+    "important": "Important",
+    "back": "Back",
+    "notFound": "Protocol not found or empty",
+    "document": "Document {{id}}",
+    "doctor": "Doctor: {{name}}",
+    "items": "{{count}} items",
+    "addAllSupplements": "Add all supplements ({{count}})",
+    "deactivate": "Deactivate",
+    "activate": "Activate"
   }
 }

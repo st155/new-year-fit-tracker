@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,27 +27,27 @@ import {
   Loader2,
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { DoctorActionItem, formatScheduleDisplay } from '@/hooks/biostack/useDoctorActionItems';
 import { useUpdateActionItem, useDeleteActionItem, useToggleProtocolStatus } from '@/hooks/biostack/useExtractProtocols';
 import { useAddProtocolToLibrary } from '@/hooks/biostack/useDoctorProtocol';
 
 const ACTION_TYPE_CONFIG = {
-  supplement: { icon: Pill, label: 'Добавка', color: 'text-green-500' },
-  exercise: { icon: Dumbbell, label: 'Упражнение', color: 'text-blue-500' },
-  lifestyle: { icon: Heart, label: 'Образ жизни', color: 'text-pink-500' },
-  test: { icon: FlaskConical, label: 'Анализ', color: 'text-purple-500' },
-  medication: { icon: Pill, label: 'Медикамент', color: 'text-orange-500' },
-  consultation: { icon: Stethoscope, label: 'Консультация', color: 'text-cyan-500' },
+  supplement: { icon: Pill, labelKey: 'protocol.actionType.supplement', color: 'text-green-500' },
+  exercise: { icon: Dumbbell, labelKey: 'protocol.actionType.exercise', color: 'text-blue-500' },
+  lifestyle: { icon: Heart, labelKey: 'protocol.actionType.lifestyle', color: 'text-pink-500' },
+  test: { icon: FlaskConical, labelKey: 'protocol.actionType.test', color: 'text-purple-500' },
+  medication: { icon: Pill, labelKey: 'protocol.actionType.medication', color: 'text-orange-500' },
+  consultation: { icon: Stethoscope, labelKey: 'protocol.actionType.consultation', color: 'text-cyan-500' },
 };
 
 const STATUS_CONFIG = {
-  pending: { label: 'Ожидает', icon: Clock, color: 'text-yellow-500' },
-  active: { label: 'Активен', icon: CheckCircle2, color: 'text-green-500' },
-  completed: { label: 'Завершён', icon: CheckCircle2, color: 'text-blue-500' },
-  dismissed: { label: 'Отклонён', icon: XCircle, color: 'text-muted-foreground' },
-  added_to_library: { label: 'В библиотеке', icon: CheckCircle2, color: 'text-primary' },
+  pending: { labelKey: 'protocol.status.pending', icon: Clock, color: 'text-yellow-500' },
+  active: { labelKey: 'protocol.status.active', icon: CheckCircle2, color: 'text-green-500' },
+  completed: { labelKey: 'protocol.status.completed', icon: CheckCircle2, color: 'text-blue-500' },
+  dismissed: { labelKey: 'protocol.status.dismissed', icon: XCircle, color: 'text-muted-foreground' },
+  added_to_library: { labelKey: 'protocol.status.addedToLibrary', icon: CheckCircle2, color: 'text-primary' },
 };
 
 interface EditItemDialogProps {
@@ -56,6 +57,7 @@ interface EditItemDialogProps {
 }
 
 function EditItemDialog({ item, open, onOpenChange }: EditItemDialogProps) {
+  const { t } = useTranslation('medicalDocs');
   const [dosage, setDosage] = useState(item.dosage || '');
   const [schedule, setSchedule] = useState(item.schedule || '');
   const [frequency, setFrequency] = useState(item.frequency || '');
@@ -77,61 +79,61 @@ function EditItemDialog({ item, open, onOpenChange }: EditItemDialogProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Редактировать: {item.name}</DialogTitle>
+          <DialogTitle>{t('protocol.editItem', { name: item.name })}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label>Дозировка</Label>
+            <Label>{t('protocol.dosage')}</Label>
             <Input 
               value={dosage} 
               onChange={(e) => setDosage(e.target.value)} 
-              placeholder="Например: 500 мг"
+              placeholder={t('protocol.dosagePlaceholder')}
             />
           </div>
           <div>
-            <Label>Расписание</Label>
+            <Label>{t('protocol.schedule')}</Label>
             <Input 
               value={schedule} 
               onChange={(e) => setSchedule(e.target.value)} 
-              placeholder="Например: 1-0-1 или утром"
+              placeholder={t('protocol.schedulePlaceholder')}
             />
           </div>
           <div>
-            <Label>Частота</Label>
+            <Label>{t('protocol.frequency')}</Label>
             <Input 
               value={frequency} 
               onChange={(e) => setFrequency(e.target.value)} 
-              placeholder="Например: ежедневно"
+              placeholder={t('protocol.frequencyPlaceholder')}
             />
           </div>
           <div>
-            <Label>Приоритет</Label>
+            <Label>{t('protocol.priority')}</Label>
             <Select value={priority} onValueChange={(v) => setPriority(v as typeof priority)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="high">Высокий</SelectItem>
-                <SelectItem value="medium">Средний</SelectItem>
-                <SelectItem value="low">Низкий</SelectItem>
+                <SelectItem value="high">{t('protocol.priorityHigh')}</SelectItem>
+                <SelectItem value="medium">{t('protocol.priorityMedium')}</SelectItem>
+                <SelectItem value="low">{t('protocol.priorityLow')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div>
-            <Label>Детали</Label>
+            <Label>{t('protocol.details')}</Label>
             <Textarea 
               value={details} 
               onChange={(e) => setDetails(e.target.value)} 
-              placeholder="Дополнительная информация"
+              placeholder={t('protocol.detailsPlaceholder')}
             />
           </div>
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Отмена
+              {t('dialog.cancel')}
             </Button>
             <Button onClick={handleSave} disabled={updateItem.isPending}>
               {updateItem.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              Сохранить
+              {t('protocol.save')}
             </Button>
           </div>
         </div>
@@ -145,6 +147,7 @@ interface ActionItemRowProps {
 }
 
 function ActionItemRow({ item }: ActionItemRowProps) {
+  const { t } = useTranslation('medicalDocs');
   const [editOpen, setEditOpen] = useState(false);
   const deleteItem = useDeleteActionItem();
   const addToLibrary = useAddProtocolToLibrary();
@@ -171,15 +174,15 @@ function ActionItemRow({ item }: ActionItemRowProps) {
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-medium">{item.name}</span>
                   <Badge variant="outline" className="text-xs">
-                    {config?.label}
+                    {config ? t(config.labelKey) : item.action_type}
                   </Badge>
                   {item.priority === 'high' && (
-                    <Badge variant="destructive" className="text-xs">Важно</Badge>
+                    <Badge variant="destructive" className="text-xs">{t('protocol.important')}</Badge>
                   )}
                 </div>
                 <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
                   <StatusIcon className={cn("h-3 w-3", statusConfig?.color)} />
-                  <span>{statusConfig?.label}</span>
+                  <span>{statusConfig ? t(statusConfig.labelKey) : item.status}</span>
                 </div>
                 {(item.dosage || item.schedule) && (
                   <p className="text-sm text-muted-foreground mt-1">
@@ -240,10 +243,13 @@ function ActionItemRow({ item }: ActionItemRowProps) {
 }
 
 export default function ProtocolDetailPage() {
+  const { t, i18n } = useTranslation('medicalDocs');
   const { documentId } = useParams<{ documentId: string }>();
   const navigate = useNavigate();
   const toggleStatus = useToggleProtocolStatus();
   const addToLibrary = useAddProtocolToLibrary();
+
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
 
   const { data: protocol, isLoading } = useQuery({
     queryKey: ['protocol-detail', documentId],
@@ -277,11 +283,11 @@ export default function ProtocolDetailPage() {
       <div className="p-6">
         <Button variant="ghost" onClick={() => navigate(-1)} className="mb-4">
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Назад
+          {t('protocol.back')}
         </Button>
         <Card className="glass-card">
           <CardContent className="p-8 text-center text-muted-foreground">
-            Протокол не найден или пуст
+            {t('protocol.notFound')}
           </CardContent>
         </Card>
       </div>
@@ -289,7 +295,7 @@ export default function ProtocolDetailPage() {
   }
 
   const firstItem = protocol[0];
-  const protocolTag = firstItem.protocol_tag || `Документ ${documentId?.substring(0, 8)}`;
+  const protocolTag = firstItem.protocol_tag || t('protocol.document', { id: documentId?.substring(0, 8) });
   const isActive = protocol.some(item => item.status === 'active' || item.status === 'pending');
   const supplements = protocol.filter(i => i.action_type === 'supplement' || i.action_type === 'medication');
   const pendingSupplements = supplements.filter(s => s.status !== 'added_to_library');
@@ -319,7 +325,7 @@ export default function ProtocolDetailPage() {
       <div className="flex items-center justify-between gap-4">
         <Button variant="ghost" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Назад
+          {t('protocol.back')}
         </Button>
       </div>
 
@@ -329,9 +335,9 @@ export default function ProtocolDetailPage() {
             <div>
               <CardTitle>{protocolTag}</CardTitle>
               <CardDescription>
-                {firstItem.doctor_name && `Врач: ${firstItem.doctor_name} • `}
-                {firstItem.prescription_date && format(new Date(firstItem.prescription_date), 'd MMMM yyyy', { locale: ru })}
-                {' • '}{protocol.length} элементов
+                {firstItem.doctor_name && `${t('protocol.doctor', { name: firstItem.doctor_name })} • `}
+                {firstItem.prescription_date && format(new Date(firstItem.prescription_date), 'd MMMM yyyy', { locale: dateLocale })}
+                {' • '}{t('protocol.items', { count: protocol.length })}
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
@@ -345,7 +351,7 @@ export default function ProtocolDetailPage() {
                   ) : (
                     <Plus className="h-4 w-4 mr-2" />
                   )}
-                  Добавить все добавки ({pendingSupplements.length})
+                  {t('protocol.addAllSupplements', { count: pendingSupplements.length })}
                 </Button>
               )}
               <Button 
@@ -360,7 +366,7 @@ export default function ProtocolDetailPage() {
                 ) : (
                   <CheckCircle2 className="h-4 w-4 mr-2" />
                 )}
-                {isActive ? 'Деактивировать' : 'Активировать'}
+                {isActive ? t('protocol.deactivate') : t('protocol.activate')}
               </Button>
             </div>
           </div>
@@ -373,7 +379,7 @@ export default function ProtocolDetailPage() {
           <div key={type} className="space-y-3">
             <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               {config && <config.icon className={cn("h-4 w-4", config.color)} />}
-              {config?.label || type} ({items.length})
+              {config ? t(config.labelKey) : type} ({items.length})
             </h3>
             <div className="space-y-2">
               {items.map(item => (

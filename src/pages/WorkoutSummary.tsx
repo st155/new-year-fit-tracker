@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -21,6 +22,7 @@ interface WorkoutStats {
 }
 
 export default function WorkoutSummary() {
+  const { t } = useTranslation('workouts');
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
@@ -43,7 +45,7 @@ export default function WorkoutSummary() {
       const startTime = sessionStorage.getItem('workoutStartTime');
 
       if (!summaryData || !startTime) {
-        toast.error('Данные тренировки не найдены');
+        toast.error(t('summary.noData'));
         navigate('/workouts');
         return;
       }
@@ -99,7 +101,7 @@ export default function WorkoutSummary() {
       });
     } catch (error) {
       console.error('Error fetching workout stats:', error);
-      toast.error('Ошибка загрузки статистики');
+      toast.error(t('summary.loadError'));
     } finally {
       setIsLoading(false);
     }
@@ -151,18 +153,18 @@ export default function WorkoutSummary() {
       sessionStorage.removeItem('workoutSummary');
       sessionStorage.removeItem('currentWorkoutData');
 
-      toast.success('Тренировка сохранена!');
+      toast.success(t('summary.saved'));
       navigate('/workouts');
     } catch (error) {
       console.error('Error submitting feedback:', error);
-      toast.error('Ошибка сохранения');
+      toast.error(t('summary.saveError'));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   if (isLoading) {
-    return <PageLoader message="Загрузка статистики..." />;
+    return <PageLoader message={t('summary.loading')} />;
   }
 
   return (

@@ -138,7 +138,53 @@
   "onboarding": {
     "planCreated": "Plan created!",
     "createError": "Error creating plan",
-    "continue": "Continue"
+    "continue": "Continue",
+    "steps": {
+      "welcome": "👋 Hi! I'm your AI trainer. In 5 simple steps, I'll create the perfect training plan for you.",
+      "goal": "🎯 Step 1/5: What's your main goal?",
+      "experience": "💪 Step 2/5: What's your training experience?",
+      "schedule": "📅 Step 3/5: Which days of the week can you train?",
+      "duration": "⏱️ Step 4/5: How much time do you have for one workout?",
+      "focus": "🎯 Step 5/5: Which muscle groups do you want to focus on? (pick 2-3)",
+      "generate": "✨ Great! I've collected all the information. Ready to create your personalized 12-week plan?"
+    },
+    "short": {
+      "goal": "Goal",
+      "experience": "Experience",
+      "schedule": "Schedule",
+      "duration": "Duration",
+      "focus": "Focus",
+      "generate": "Generate"
+    },
+    "goals": {
+      "hypertrophy": "Build Muscle",
+      "fatLoss": "Lose Weight",
+      "strength": "Get Stronger"
+    },
+    "experience": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced"
+    },
+    "experienceDesc": {
+      "beginner": "< 1 year",
+      "intermediate": "1-3 years",
+      "advanced": "3+ years"
+    },
+    "duration": {
+      "short": "30-45 min",
+      "medium": "60-75 min",
+      "long": "90+ min"
+    },
+    "muscles": {
+      "chest": "Chest",
+      "back": "Back",
+      "shoulders": "Shoulders",
+      "arms": "Arms",
+      "legs": "Legs",
+      "core": "Core"
+    },
+    "createPlan": "Create Plan"
   },
   "dayCard": {
     "today": "Today",
@@ -218,52 +264,11 @@
       "saveToJournal": "Save to journal"
     }
   },
-  "onboarding": {
-    "steps": {
-      "welcome": "👋 Hi! I'm your AI trainer. In 5 simple steps, I'll create the perfect training plan for you.",
-      "goal": "🎯 Step 1/5: What's your main goal?",
-      "experience": "💪 Step 2/5: What's your training experience?",
-      "schedule": "📅 Step 3/5: Which days of the week can you train?",
-      "duration": "⏱️ Step 4/5: How much time do you have for one workout?",
-      "focus": "🎯 Step 5/5: Which muscle groups do you want to focus on? (pick 2-3)",
-      "generate": "✨ Great! I've collected all the information. Ready to create your personalized 12-week plan?"
-    },
-    "short": {
-      "goal": "Goal",
-      "experience": "Experience",
-      "schedule": "Schedule",
-      "duration": "Duration",
-      "focus": "Focus",
-      "generate": "Generate"
-    },
-    "goals": {
-      "hypertrophy": "Build Muscle",
-      "fatLoss": "Lose Weight",
-      "strength": "Get Stronger"
-    },
-    "experience": {
-      "beginner": "Beginner",
-      "intermediate": "Intermediate",
-      "advanced": "Advanced"
-    },
-    "experienceDesc": {
-      "beginner": "< 1 year",
-      "intermediate": "1-3 years",
-      "advanced": "3+ years"
-    },
-    "duration": {
-      "short": "30-45 min",
-      "medium": "60-75 min",
-      "long": "90+ min"
-    },
-    "muscles": {
-      "chest": "Chest",
-      "back": "Back",
-      "shoulders": "Shoulders",
-      "arms": "Arms",
-      "legs": "Legs",
-      "core": "Core"
-    },
-    "createPlan": "Create Plan"
+  "summary": {
+    "noData": "Workout data not found",
+    "loadError": "Error loading statistics",
+    "saved": "Workout saved!",
+    "saveError": "Error saving",
+    "loading": "Loading statistics..."
   }
 }
