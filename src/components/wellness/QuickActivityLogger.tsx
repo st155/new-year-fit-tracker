@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,7 @@ import { Plus, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function QuickActivityLogger() {
+  const { t } = useTranslation('activity');
   const { user } = useAuth();
   const [selectedType, setSelectedType] = useState<ActivityType | null>(null);
   const [duration, setDuration] = useState('');
@@ -29,12 +31,12 @@ export function QuickActivityLogger() {
       });
 
       const config = getActivityConfig(type);
-      toast.success(`${config.icon} ${config.label} записано!`);
+      toast.success(t('quick.logged', { icon: config.icon, label: config.label }));
       setSelectedType(null);
       setDuration('');
       setIsOpen(false);
     } catch (error: any) {
-      toast.error('Ошибка записи', { description: error.message });
+      toast.error(t('quick.error'), { description: error.message });
     }
   };
 
@@ -45,7 +47,7 @@ export function QuickActivityLogger() {
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <Plus className="w-4 h-4 text-cyan-400" />
-          Быстрая запись
+          {t('quick.title')}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -86,7 +88,7 @@ export function QuickActivityLogger() {
                       <Clock className="w-4 h-4 text-muted-foreground" />
                       <Input
                         type="number"
-                        placeholder="Минут (опционально)"
+                        placeholder={t('quick.minutesOptional')}
                         value={duration}
                         onChange={(e) => setDuration(e.target.value)}
                         className="h-8 bg-neutral-800 border-neutral-700"
@@ -98,7 +100,7 @@ export function QuickActivityLogger() {
                       onClick={() => handleQuickLog(type)}
                       disabled={quickLog.isPending}
                     >
-                      {quickLog.isPending ? 'Сохранение...' : 'Записать'}
+                      {quickLog.isPending ? t('quick.saving') : t('quick.log')}
                     </Button>
                   </div>
                 </PopoverContent>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/sonner';
 import { useNavigate } from 'react-router-dom';
@@ -15,6 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2, KeyRound, Eye, EyeOff } from 'lucide-react';
 
 export function PasswordResetModal() {
+  const { t } = useTranslation('auth');
   const [isOpen, setIsOpen] = useState(false);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -36,12 +38,12 @@ export function PasswordResetModal() {
     e.preventDefault();
 
     if (password.length < 6) {
-      toast.error('Пароль должен быть минимум 6 символов');
+      toast.error(t('reset.minLength'));
       return;
     }
 
     if (password !== confirmPassword) {
-      toast.error('Пароли не совпадают');
+      toast.error(t('reset.noMatch'));
       return;
     }
 
@@ -52,10 +54,10 @@ export function PasswordResetModal() {
 
       if (error) {
         console.error('❌ [PasswordResetModal] Error updating password:', error);
-        toast.error(`Ошибка обновления пароля: ${error.message}`);
+        toast.error(t('reset.updateError', { message: error.message }));
       } else {
         console.log('✅ [PasswordResetModal] Password updated successfully');
-        toast.success('Пароль успешно изменён!');
+        toast.success(t('reset.success'));
         setIsOpen(false);
         setPassword('');
         setConfirmPassword('');
@@ -63,7 +65,7 @@ export function PasswordResetModal() {
       }
     } catch (err: any) {
       console.error('💥 [PasswordResetModal] Unexpected error:', err);
-      toast.error('Неожиданная ошибка. Попробуйте снова.');
+      toast.error(t('reset.unexpectedError'));
     } finally {
       setIsLoading(false);
     }
@@ -75,23 +77,23 @@ export function PasswordResetModal() {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <KeyRound className="h-5 w-5 text-primary" />
-            Установите новый пароль
+            {t('reset.title')}
           </DialogTitle>
           <DialogDescription>
-            Введите новый пароль для вашей учетной записи. Пароль должен содержать минимум 6 символов.
+            {t('reset.description')}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="new-password">Новый пароль</Label>
+            <Label htmlFor="new-password">{t('reset.newPassword')}</Label>
             <div className="relative">
               <Input
                 id="new-password"
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Минимум 6 символов"
+                placeholder={t('reset.minChars')}
                 required
                 minLength={6}
                 disabled={isLoading}
@@ -109,13 +111,13 @@ export function PasswordResetModal() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirm-password">Подтвердите пароль</Label>
+            <Label htmlFor="confirm-password">{t('reset.confirmPassword')}</Label>
             <Input
               id="confirm-password"
               type={showPassword ? 'text' : 'password'}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Повторите пароль"
+              placeholder={t('reset.repeatPassword')}
               required
               minLength={6}
               disabled={isLoading}
@@ -130,16 +132,16 @@ export function PasswordResetModal() {
               disabled={isLoading}
               className="flex-1"
             >
-              Отмена
+              {t('cancel')}
             </Button>
             <Button type="submit" disabled={isLoading} className="flex-1">
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Сохранение...
+                  {t('reset.saving')}
                 </>
               ) : (
-                'Сохранить пароль'
+                t('reset.save')
               )}
             </Button>
           </div>

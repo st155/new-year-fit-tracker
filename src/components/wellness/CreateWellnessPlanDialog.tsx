@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,7 +12,7 @@ import { parseActivityDescription, getActivityConfig, ACTIVITY_TYPES, ActivityTy
 import { toast } from "sonner";
 import { Sparkles, Calendar, Check, Plus, Minus } from "lucide-react";
 import { format, addDays, startOfWeek } from "date-fns";
-import { ru } from "date-fns/locale";
+import { getDateLocale } from "@/lib/date-locale";
 
 interface CreateWellnessPlanDialogProps {
   open: boolean;
@@ -22,6 +23,7 @@ interface CreateWellnessPlanDialogProps {
 type Step = 'describe' | 'review' | 'period';
 
 export function CreateWellnessPlanDialog({ open, onOpenChange, onSuccess }: CreateWellnessPlanDialogProps) {
+  const { t } = useTranslation('activity');
   const { user } = useAuth();
   const [step, setStep] = useState<Step>('describe');
   const [description, setDescription] = useState('');
@@ -35,8 +37,8 @@ export function CreateWellnessPlanDialog({ open, onOpenChange, onSuccess }: Crea
   const handleParse = () => {
     const parsed = parseActivityDescription(description);
     if (Object.keys(parsed).length === 0) {
-      toast.error('Не удалось распознать активности', {
-        description: 'Попробуйте описать конкретнее, например: "3 силовые, 2 массажа, сауна"'
+      toast.error(t('plan.parseError'), {
+        description: t('plan.parseErrorHint')
       });
       return;
     }
@@ -72,7 +74,7 @@ export function CreateWellnessPlanDialog({ open, onOpenChange, onSuccess }: Crea
       
       const plan = await createPlan.mutateAsync({
         user_id: user.id,
-        name: `Wellness ${format(startDate, 'dd MMM', { locale: ru })}`,
+        name: `Wellness ${format(startDate, 'dd MMM', { locale: getDateLocale() })}`,
         description: description,
         duration_weeks: durationWeeks,
         activities_config: parsedActivities,
@@ -92,15 +94,15 @@ export function CreateWellnessPlanDialog({ open, onOpenChange, onSuccess }: Crea
         await createActivities.mutateAsync(activities);
       }
 
-      toast.success('Расписание создано!', {
-        description: `${activities.length} активностей на ${durationWeeks} недель`
+      toast.success(t('plan.created'), {
+        description: t('plan.createdDesc', { count: activities.length, weeks: durationWeeks })
       });
 
       onSuccess?.();
       onOpenChange(false);
       resetForm();
     } catch (error: any) {
-      toast.error('Ошибка создания плана', { description: error.message });
+      toast.error(t('plan.createError'), { description: error.message });
     } finally {
       setIsCreating(false);
     }
@@ -126,28 +128,28 @@ export function CreateWellnessPlanDialog({ open, onOpenChange, onSuccess }: Crea
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Calendar className="w-5 h-5 text-cyan-400" />
-            Создать Wellness-расписание
+            {t('plan.title')}
           </DialogTitle>
           <DialogDescription>
-            {step === 'describe' && 'Опишите свой режим тренировок и процедур'}
-            {step === 'review' && 'Проверьте распознанные активности'}
-            {step === 'period' && 'Выберите период планирования'}
+            {step === 'describe' && t('plan.stepDescribe')}
+            {step === 'review' && t('plan.stepReview')}
+            {step === 'period' && t('plan.stepPeriod')}
           </DialogDescription>
         </DialogHeader>
 
         {step === 'describe' && (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Описание режима</Label>
+              <Label>{t('plan.descriptionLabel')}</Label>
               <Textarea
-                placeholder="Например: 3 раза в неделю силовые, 2 массажа, одна пробежка, хожу в сауну, на растяжку и в барокамеру"
+                placeholder={t('plan.descriptionPlaceholder')}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={4}
                 className="bg-neutral-800 border-neutral-700"
               />
               <p className="text-xs text-muted-foreground">
-                Напишите свободным текстом, какие активности и сколько раз в неделю
+                {t('plan.descriptionHint')}
               </p>
             </div>
 
@@ -157,7 +159,7 @@ export function CreateWellnessPlanDialog({ open, onOpenChange, onSuccess }: Crea
               disabled={!description.trim()}
             >
               <Sparkles className="w-4 h-4 mr-2" />
-              Распознать
+              {t('plan.parse')}
             </Button>
           </div>
         )}
@@ -202,7 +204,7 @@ export function CreateWellnessPlanDialog({ open, onOpenChange, onSuccess }: Crea
 
             {/* Add more activities */}
             <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Добавить активность:</Label>
+              <Label className="text-xs text-muted-foreground">{t('plan.addActivity')}</Label>
               <div className="flex flex-wrap gap-2">
                 {(Object.keys(ACTIVITY_TYPES) as ActivityType[])
                   .filter(type => !parsedActivities[type] && type !== 'other' && type !== 'rest')
@@ -224,19 +226,19 @@ export function CreateWellnessPlanDialog({ open, onOpenChange, onSuccess }: Crea
             </div>
 
             <div className="text-sm text-muted-foreground">
-              Всего: <span className="text-cyan-400 font-medium">{totalWeeklyActivities}</span> активностей в неделю
+              {t('plan.totalWeekly')}: <span className="text-cyan-400 font-medium">{totalWeeklyActivities}</span>
             </div>
 
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => setStep('describe')} className="flex-1">
-                Назад
+                {t('common:back')}
               </Button>
               <Button 
                 onClick={() => setStep('period')} 
                 className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500"
                 disabled={Object.keys(parsedActivities).length === 0}
               >
-                Далее
+                {t('common:next')}
               </Button>
             </div>
           </div>
@@ -245,43 +247,43 @@ export function CreateWellnessPlanDialog({ open, onOpenChange, onSuccess }: Crea
         {step === 'period' && (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Период планирования</Label>
+              <Label>{t('plan.periodLabel')}</Label>
               <Select value={String(durationWeeks)} onValueChange={(v) => setDurationWeeks(Number(v))}>
                 <SelectTrigger className="bg-neutral-800 border-neutral-700">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">1 неделя</SelectItem>
-                  <SelectItem value="2">2 недели</SelectItem>
-                  <SelectItem value="4">4 недели</SelectItem>
-                  <SelectItem value="8">8 недель</SelectItem>
+                  <SelectItem value="1">{t('plan.weeks', { count: 1 })}</SelectItem>
+                  <SelectItem value="2">{t('plan.weeks', { count: 2 })}</SelectItem>
+                  <SelectItem value="4">{t('plan.weeks', { count: 4 })}</SelectItem>
+                  <SelectItem value="8">{t('plan.weeks', { count: 8 })}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="p-4 bg-neutral-800 rounded-lg space-y-2">
-              <p className="text-sm text-muted-foreground">Будет создано:</p>
+              <p className="text-sm text-muted-foreground">{t('plan.willCreate')}</p>
               <p className="text-lg font-semibold text-cyan-400">
-                {totalWeeklyActivities * durationWeeks} активностей
+                {t('plan.activitiesCount', { count: totalWeeklyActivities * durationWeeks })}
               </p>
               <p className="text-xs text-muted-foreground">
-                Начало: {format(startOfWeek(addDays(new Date(), 7), { weekStartsOn: 1 }), 'dd MMMM yyyy', { locale: ru })}
+                {t('plan.startDate')}: {format(startOfWeek(addDays(new Date(), 7), { weekStartsOn: 1 }), 'dd MMMM yyyy', { locale: getDateLocale() })}
               </p>
             </div>
 
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => setStep('review')} className="flex-1">
-                Назад
+                {t('common:back')}
               </Button>
               <Button 
                 onClick={handleCreate} 
                 className="flex-1 bg-gradient-to-r from-green-500 to-cyan-500"
                 disabled={isCreating}
               >
-                {isCreating ? 'Создание...' : (
+                {isCreating ? t('plan.creating') : (
                   <>
                     <Check className="w-4 h-4 mr-2" />
-                    Создать
+                    {t('common:create')}
                   </>
                 )}
               </Button>

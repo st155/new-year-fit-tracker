@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import confetti from "canvas-confetti";
 import { toast } from "sonner";
 import type { DailyChallenge } from "@/lib/daily-challenges";
@@ -9,6 +10,8 @@ interface ChallengeCelebrationProps {
 }
 
 export function ChallengeCelebration({ challenge, onComplete }: ChallengeCelebrationProps) {
+  const { t } = useTranslation('leaderboard');
+  
   useEffect(() => {
     if (!challenge) return;
 
@@ -34,13 +37,13 @@ export function ChallengeCelebration({ challenge, onComplete }: ChallengeCelebra
     }, 300);
 
     // Toast notification
-    toast.success(`${challenge.icon} ${challenge.title} завершен!`, {
-      description: `+${challenge.pointsReward} очков заработано`,
+    toast.success(t('celebration.completed', { icon: challenge.icon, title: challenge.title }), {
+      description: t('celebration.pointsEarned', { points: challenge.pointsReward }),
       duration: 4000,
     });
 
     onComplete?.();
-  }, [challenge, onComplete]);
+  }, [challenge, onComplete, t]);
 
   return null;
 }
