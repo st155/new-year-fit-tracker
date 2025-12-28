@@ -6,8 +6,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { healthApi } from '@/lib/api';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 
 export function UnitRecalculationWidget() {
+  const { t } = useTranslation('dashboard');
   const [isRecalculating, setIsRecalculating] = useState(false);
   const queryClient = useQueryClient();
 
@@ -42,8 +44,8 @@ export function UnitRecalculationWidget() {
 
       if (error) throw error;
 
-      toast.success('Единицы пересчитаны', {
-        description: `Обновлено ${data?.updated || 0} записей`,
+      toast.success(t('unitRecalculation.success'), {
+        description: t('unitRecalculation.successDesc', { count: data?.updated || 0 }),
       });
 
       // Invalidate queries to refresh data
@@ -51,7 +53,7 @@ export function UnitRecalculationWidget() {
       queryClient.invalidateQueries({ queryKey: ['unit-recalculation-check'] });
     } catch (error: any) {
       console.error('Unit recalculation error:', error);
-      toast.error('Ошибка пересчёта', {
+      toast.error(t('unitRecalculation.error'), {
         description: error.message,
       });
     } finally {
@@ -71,10 +73,10 @@ export function UnitRecalculationWidget() {
           <div className="flex-1 space-y-2">
             <div>
               <h3 className="text-sm font-semibold text-yellow-500">
-                Обнаружены неконвертированные единицы измерения
+                {t('unitRecalculation.title')}
               </h3>
               <p className="text-xs text-muted-foreground mt-1">
-                Некоторые биомаркеры имеют неправильные единицы измерения, которые необходимо пересчитать
+                {t('unitRecalculation.description')}
               </p>
             </div>
             <Button
@@ -86,12 +88,12 @@ export function UnitRecalculationWidget() {
               {isRecalculating ? (
                 <>
                   <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                  Пересчитываю...
+                  {t('unitRecalculation.recalculating')}
                 </>
               ) : (
                 <>
                   <CheckCircle2 className="mr-2 h-4 w-4" />
-                  🔄 Исправить единицы измерения
+                  {t('unitRecalculation.fixButton')}
                 </>
               )}
             </Button>

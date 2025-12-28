@@ -6,8 +6,10 @@ import { useDataQuality } from '@/hooks/useDataQuality';
 import { useConfidenceRecalculation } from '@/hooks/useConfidenceRecalculation';
 import { Sparkles, TrendingUp, TrendingDown, AlertCircle, RefreshCw } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { useTranslation } from 'react-i18next';
 
 export function DataQualitySummary() {
+  const { t } = useTranslation('dashboard');
   const { user } = useAuth();
   const { 
     averageConfidence, 
@@ -36,7 +38,7 @@ export function DataQualitySummary() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
-            <CardTitle className="text-lg">Качество данных</CardTitle>
+            <CardTitle className="text-lg">{t('dataQuality.title')}</CardTitle>
           </div>
           <Button
             variant="outline"
@@ -46,7 +48,7 @@ export function DataQualitySummary() {
             className="gap-2"
           >
             <RefreshCw className={`h-4 w-4 ${isRecalculating ? 'animate-spin' : ''}`} />
-            Пересчитать
+            {t('dataQuality.recalculate')}
           </Button>
         </div>
       </CardHeader>
@@ -55,7 +57,7 @@ export function DataQualitySummary() {
         {/* Overall Quality Score */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-muted-foreground">Общая оценка</span>
+            <span className="text-sm text-muted-foreground">{t('dataQuality.overallScore')}</span>
             <span className="text-lg font-bold text-primary">
               {averageConfidence.toFixed(0)}%
             </span>
@@ -66,28 +68,28 @@ export function DataQualitySummary() {
         {/* Quality Breakdown */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <QualityStatCard
-            label="Отлично"
+            label={t('dataQuality.excellent')}
             count={metricsByQuality.excellent.length}
             total={totalMetrics}
             variant="success"
             icon={<TrendingUp className="h-4 w-4" />}
           />
           <QualityStatCard
-            label="Хорошо"
+            label={t('dataQuality.good')}
             count={metricsByQuality.good.length}
             total={totalMetrics}
             variant="default"
             icon={<TrendingUp className="h-4 w-4" />}
           />
           <QualityStatCard
-            label="Средне"
+            label={t('dataQuality.fair')}
             count={metricsByQuality.fair.length}
             total={totalMetrics}
             variant="outline"
             icon={<TrendingDown className="h-4 w-4" />}
           />
           <QualityStatCard
-            label="Плохо"
+            label={t('dataQuality.poor')}
             count={metricsByQuality.poor.length}
             total={totalMetrics}
             variant="destructive"
@@ -101,7 +103,7 @@ export function DataQualitySummary() {
             <AlertCircle className="h-4 w-4 text-destructive mt-0.5" />
             <div className="flex-1 text-sm">
               <p className="font-medium text-destructive">
-                {metricsByQuality.poor.length} метрик с низким качеством
+                {t('dataQuality.lowQualityCount', { count: metricsByQuality.poor.length })}
               </p>
               <p className="text-muted-foreground text-xs mt-1">
                 {metricsByQuality.poor.slice(0, 3).map(m => m.metricName).join(', ')}

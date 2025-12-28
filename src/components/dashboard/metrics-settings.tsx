@@ -5,6 +5,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Settings } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { useTranslation } from 'react-i18next';
 
 export interface MetricVisibility {
   recovery: boolean;
@@ -33,22 +34,23 @@ const defaultSettings: MetricVisibility = {
   bodyFat: true,
 };
 
-const metricLabels: Record<keyof MetricVisibility, string> = {
-  recovery: 'Recovery Score',
-  sleep: 'Sleep Quality',
-  strain: 'Strain',
-  steps: 'Steps',
-  calories: 'Calories',
-  heartRate: 'Heart Rate',
-  weight: 'Weight',
-  bodyFat: 'Body Fat %',
-};
-
 export function MetricsSettings({ onSettingsChange, initialSettings }: MetricsSettingsProps) {
+  const { t } = useTranslation('dashboard');
   const [settings, setSettings] = useState<MetricVisibility>(
     initialSettings || defaultSettings
   );
   const [open, setOpen] = useState(false);
+
+  const metricLabels: Record<keyof MetricVisibility, string> = {
+    recovery: t('metricsSettings.metrics.recovery'),
+    sleep: t('metricsSettings.metrics.sleep'),
+    strain: t('metricsSettings.metrics.strain'),
+    steps: t('metricsSettings.metrics.steps'),
+    calories: t('metricsSettings.metrics.calories'),
+    heartRate: t('metricsSettings.metrics.heartRate'),
+    weight: t('metricsSettings.metrics.weight'),
+    bodyFat: t('metricsSettings.metrics.bodyFat'),
+  };
 
   useEffect(() => {
     const saved = localStorage.getItem('metricsVisibility');
@@ -77,9 +79,9 @@ export function MetricsSettings({ onSettingsChange, initialSettings }: MetricsSe
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Настройки показателей</DialogTitle>
+          <DialogTitle>{t('metricsSettings.title')}</DialogTitle>
           <DialogDescription>
-            Выберите, какие метрики отображать на главной странице
+            {t('metricsSettings.description')}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -99,7 +101,7 @@ export function MetricsSettings({ onSettingsChange, initialSettings }: MetricsSe
           ))}
         </div>
         <div className="flex justify-end">
-          <Button onClick={() => setOpen(false)}>Готово</Button>
+          <Button onClick={() => setOpen(false)}>{t('metricsSettings.done')}</Button>
         </div>
       </DialogContent>
     </Dialog>

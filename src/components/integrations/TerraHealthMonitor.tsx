@@ -14,7 +14,8 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatDistanceToNow } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 
 interface ConnectionHealth {
   provider: string;
@@ -25,10 +26,13 @@ interface ConnectionHealth {
 }
 
 export function TerraHealthMonitor() {
+  const { t, i18n } = useTranslation('integrations');
   const { user } = useAuth();
   const [connections, setConnections] = useState<ConnectionHealth[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastCheck, setLastCheck] = useState<Date>(new Date());
+
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
 
   const checkConnectionHealth = async () => {
     if (!user) return;
@@ -50,17 +54,17 @@ export function TerraHealthMonitor() {
           : null;
 
         let status: 'healthy' | 'warning' | 'error' = 'healthy';
-        let syncStatus = 'Синхронизировано';
+        let syncStatus = t('healthMonitor.syncStatus.synced');
 
         if (!lastSync) {
           status = 'warning';
-          syncStatus = 'Ожидание первой синхронизации';
+          syncStatus = t('healthMonitor.syncStatus.waitingFirst');
         } else if (hoursSinceSync !== null && hoursSinceSync > 48) {
           status = 'error';
-          syncStatus = 'Синхронизация давно не выполнялась';
+          syncStatus = t('healthMonitor.syncStatus.longAgo');
         } else if (hoursSinceSync !== null && hoursSinceSync > 24) {
           status = 'warning';
-          syncStatus = 'Синхронизация устарела';
+          syncStatus = t('healthMonitor.syncStatus.outdated');
         }
 
         return {
@@ -120,13 +124,13 @@ export function TerraHealthMonitor() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'healthy':
-        return <Badge variant="default" className="bg-green-500">Здоров</Badge>;
+        return <Badge variant="default" className="bg-green-500">{t('healthMonitor.badges.healthy')}</Badge>;
       case 'warning':
-        return <Badge variant="default" className="bg-yellow-500">Предупреждение</Badge>;
+        return <Badge variant="default" className="bg-yellow-500">{t('healthMonitor.badges.warning')}</Badge>;
       case 'error':
-        return <Badge variant="destructive">Ошибка</Badge>;
+        return <Badge variant="destructive">{t('healthMonitor.badges.error')}</Badge>;
       default:
-        return <Badge variant="outline">Неизвестно</Badge>;
+        return <Badge variant="outline">{t('healthMonitor.badges.unknown')}</Badge>;
     }
   };
 
@@ -136,11 +140,11 @@ export function TerraHealthMonitor() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Activity className="h-5 w-5" />
-            Мониторинг подключений
+            {t('healthMonitor.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-sm text-muted-foreground">Загрузка...</div>
+          <div className="text-sm text-muted-foreground">{t('healthMonitor.loading')}</div>
         </CardContent>
       </Card>
     );
@@ -152,10 +156,10 @@ export function TerraHealthMonitor() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Activity className="h-5 w-5" />
-            Мониторинг подключений
+            {t('healthMonitor.title')}
           </CardTitle>
           <CardDescription>
-            Нет активных подключений для мониторинга
+            {t('healthMonitor.noConnections')}
           </CardDescription>
         </CardHeader>
       </Card>
@@ -173,10 +177,10 @@ export function TerraHealthMonitor() {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Activity className="h-5 w-5" />
-              Мониторинг подключений
+              {t('healthMonitor.title')}
             </CardTitle>
             <CardDescription>
-              Последняя проверка: {formatDistanceToNow(lastCheck, { addSuffix: true, locale: ru })}
+              {t('healthMonitor.lastCheck')}: {formatDistanceToNow(lastCheck, { addSuffix: true, locale: dateLocale })}
             </CardDescription>
           </div>
           <Button
@@ -186,7 +190,7 @@ export function TerraHealthMonitor() {
             className="gap-2"
           >
             <RefreshCw className="h-4 w-4" />
-            Обновить
+            {t('healthMonitor.refresh')}
           </Button>
         </div>
       </CardHeader>
@@ -197,21 +201,21 @@ export function TerraHealthMonitor() {
             <CheckCircle2 className="h-4 w-4 text-green-500" />
             <div>
               <div className="text-2xl font-bold text-green-500">{healthyCount}</div>
-              <div className="text-xs text-muted-foreground">Здоровые</div>
+              <div className="text-xs text-muted-foreground">{t('healthMonitor.stats.healthy')}</div>
             </div>
           </div>
           <div className="flex items-center gap-2 p-3 border rounded-lg">
             <AlertCircle className="h-4 w-4 text-yellow-500" />
             <div>
               <div className="text-2xl font-bold text-yellow-500">{warningCount}</div>
-              <div className="text-xs text-muted-foreground">Предупреждения</div>
+              <div className="text-xs text-muted-foreground">{t('healthMonitor.stats.warnings')}</div>
             </div>
           </div>
           <div className="flex items-center gap-2 p-3 border rounded-lg">
             <AlertCircle className="h-4 w-4 text-red-500" />
             <div>
               <div className="text-2xl font-bold text-red-500">{errorCount}</div>
-              <div className="text-xs text-muted-foreground">Ошибки</div>
+              <div className="text-xs text-muted-foreground">{t('healthMonitor.stats.errors')}</div>
             </div>
           </div>
         </div>
@@ -237,7 +241,7 @@ export function TerraHealthMonitor() {
                 {connection.lastSync && (
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Clock className="h-3 w-3" />
-                    {formatDistanceToNow(new Date(connection.lastSync), { addSuffix: true, locale: ru })}
+                    {formatDistanceToNow(new Date(connection.lastSync), { addSuffix: true, locale: dateLocale })}
                   </div>
                 )}
                 
@@ -258,13 +262,13 @@ export function TerraHealthMonitor() {
             <div className="flex items-start gap-2">
               <TrendingUp className="h-4 w-4 text-yellow-500 mt-0.5" />
               <div className="text-sm">
-                <div className="font-medium text-yellow-500 mb-1">Рекомендации</div>
+                <div className="font-medium text-yellow-500 mb-1">{t('healthMonitor.recommendations')}</div>
                 <ul className="space-y-1 text-xs text-muted-foreground">
                   {warningCount > 0 && (
-                    <li>• Синхронизация устарела - нажмите "Синхронизировать" в разделе подключений</li>
+                    <li>• {t('healthMonitor.tips.syncOutdated')}</li>
                   )}
                   {errorCount > 0 && (
-                    <li>• Обнаружены проблемы - проверьте статус устройства и переподключитесь при необходимости</li>
+                    <li>• {t('healthMonitor.tips.issuesFound')}</li>
                   )}
                 </ul>
               </div>

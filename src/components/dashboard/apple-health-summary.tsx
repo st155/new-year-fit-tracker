@@ -7,7 +7,8 @@ import { Activity, Heart, Weight, Footprints, Moon, Flame } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { formatDistanceToNow } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 
 interface DailyHealthSummary {
   id: string;
@@ -37,11 +38,14 @@ interface HealthRecordsSummary {
 }
 
 export function AppleHealthSummary() {
+  const { t, i18n } = useTranslation('dashboard');
   const { user } = useAuth();
   const [dailySummaries, setDailySummaries] = useState<DailyHealthSummary[]>([]);
   const [recordsSummary, setRecordsSummary] = useState<HealthRecordsSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState<'7d' | '30d' | '90d'>('7d');
+
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
 
   useEffect(() => {
     if (user) {
@@ -116,15 +120,15 @@ export function AppleHealthSummary() {
 
   const formatHealthRecordType = (type: string) => {
     const typeMap: { [key: string]: string } = {
-      'HKQuantityTypeIdentifierStepCount': 'Шаги',
-      'HKQuantityTypeIdentifierVO2Max': 'VO2 Max',
-      'HKQuantityTypeIdentifierBodyMass': 'Вес',
-      'HKQuantityTypeIdentifierHeartRate': 'Пульс',
-      'HKQuantityTypeIdentifierActiveEnergyBurned': 'Активные калории',
-      'HKQuantityTypeIdentifierBasalEnergyBurned': 'Базовые калории',
-      'HKQuantityTypeIdentifierAppleExerciseTime': 'Время упражнений',
-      'HKQuantityTypeIdentifierDistanceWalkingRunning': 'Дистанция',
-      'HKCategoryTypeIdentifierSleepAnalysis': 'Анализ сна'
+      'HKQuantityTypeIdentifierStepCount': t('appleHealth.types.steps'),
+      'HKQuantityTypeIdentifierVO2Max': t('appleHealth.types.vo2max'),
+      'HKQuantityTypeIdentifierBodyMass': t('appleHealth.types.weight'),
+      'HKQuantityTypeIdentifierHeartRate': t('appleHealth.types.heartRate'),
+      'HKQuantityTypeIdentifierActiveEnergyBurned': t('appleHealth.types.activeCalories'),
+      'HKQuantityTypeIdentifierBasalEnergyBurned': t('appleHealth.types.basalCalories'),
+      'HKQuantityTypeIdentifierAppleExerciseTime': t('appleHealth.types.exerciseTime'),
+      'HKQuantityTypeIdentifierDistanceWalkingRunning': t('appleHealth.types.distance'),
+      'HKCategoryTypeIdentifierSleepAnalysis': t('appleHealth.types.sleepAnalysis')
     };
     return typeMap[type] || type;
   };
@@ -145,7 +149,7 @@ export function AppleHealthSummary() {
         <CardContent className="p-6">
           <div className="flex items-center justify-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <span className="ml-2">Загружаем данные Apple Health...</span>
+            <span className="ml-2">{t('appleHealth.loading')}</span>
           </div>
         </CardContent>
       </Card>
@@ -160,7 +164,7 @@ export function AppleHealthSummary() {
             🍎 Apple Health
           </CardTitle>
           <CardDescription>
-            Данные из Apple Health пока не загружены
+            {t('appleHealth.noData')}
           </CardDescription>
         </CardHeader>
       </Card>
@@ -172,43 +176,43 @@ export function AppleHealthSummary() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            🍎 Apple Health Dashboard
+            🍎 {t('appleHealth.dashboard')}
           </CardTitle>
           <CardDescription>
-            Сводка ваших данных здоровья из Apple Health
+            {t('appleHealth.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div className="text-center">
               <div className="text-2xl font-bold">{recordsSummary.total_records.toLocaleString()}</div>
-              <div className="text-sm text-muted-foreground">Всего записей</div>
+              <div className="text-sm text-muted-foreground">{t('appleHealth.totalRecords')}</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold">{recordsSummary.record_types.length}</div>
-              <div className="text-sm text-muted-foreground">Типов данных</div>
+              <div className="text-sm text-muted-foreground">{t('appleHealth.dataTypes')}</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold">{dailySummaries.length}</div>
-              <div className="text-sm text-muted-foreground">Дней данных</div>
+              <div className="text-sm text-muted-foreground">{t('appleHealth.daysOfData')}</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold">
                 {recordsSummary.date_range.latest ? 
                   formatDistanceToNow(new Date(recordsSummary.date_range.latest), { 
                     addSuffix: true, 
-                    locale: ru 
+                    locale: dateLocale 
                   }) : 'N/A'}
               </div>
-              <div className="text-sm text-muted-foreground">Последнее обновление</div>
+              <div className="text-sm text-muted-foreground">{t('appleHealth.lastUpdate')}</div>
             </div>
           </div>
 
           <Tabs value={selectedPeriod} onValueChange={(value) => setSelectedPeriod(value as any)} className="w-full">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="7d">7 дней</TabsTrigger>
-              <TabsTrigger value="30d">30 дней</TabsTrigger>
-              <TabsTrigger value="90d">90 дней</TabsTrigger>
+              <TabsTrigger value="7d">{t('appleHealth.days7')}</TabsTrigger>
+              <TabsTrigger value="30d">{t('appleHealth.days30')}</TabsTrigger>
+              <TabsTrigger value="90d">{t('appleHealth.days90')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value={selectedPeriod} className="mt-6">
@@ -218,7 +222,7 @@ export function AppleHealthSummary() {
                   <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-2 text-sm">
                       {getMetricIcon('steps')}
-                      Шаги
+                      {t('appleHealth.metrics.steps')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -226,7 +230,7 @@ export function AppleHealthSummary() {
                       {latestSummary?.steps?.toLocaleString() || '—'}
                     </div>
                     <div className="text-sm text-muted-foreground mb-2">
-                      Среднее: {avgSteps.toLocaleString()} шагов
+                      {t('appleHealth.average')}: {avgSteps.toLocaleString()} {t('appleHealth.stepsUnit')}
                     </div>
                     {latestSummary?.steps && (
                       <Progress value={Math.min((latestSummary.steps / 10000) * 100, 100)} className="h-2" />
@@ -239,20 +243,20 @@ export function AppleHealthSummary() {
                   <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-2 text-sm">
                       {getMetricIcon('heart_rate')}
-                      Пульс
+                      {t('appleHealth.metrics.heartRate')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold mb-1">
                       {latestSummary?.heart_rate_avg?.toFixed(0) || '—'} 
-                      {latestSummary?.heart_rate_avg && <span className="text-sm"> уд/мин</span>}
+                      {latestSummary?.heart_rate_avg && <span className="text-sm"> {t('appleHealth.bpm')}</span>}
                     </div>
                     <div className="text-sm text-muted-foreground mb-2">
-                      Среднее: {avgHeartRate} уд/мин
+                      {t('appleHealth.average')}: {avgHeartRate} {t('appleHealth.bpm')}
                     </div>
                     {latestSummary?.heart_rate_min && latestSummary?.heart_rate_max && (
                       <div className="text-xs text-muted-foreground">
-                        Диапазон: {latestSummary.heart_rate_min}—{latestSummary.heart_rate_max}
+                        {t('appleHealth.range')}: {latestSummary.heart_rate_min}—{latestSummary.heart_rate_max}
                       </div>
                     )}
                   </CardContent>
@@ -263,16 +267,16 @@ export function AppleHealthSummary() {
                   <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-2 text-sm">
                       {getMetricIcon('weight')}
-                      Вес
+                      {t('appleHealth.metrics.weight')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold mb-1">
                       {latestSummary?.weight?.toFixed(1) || '—'}
-                      {latestSummary?.weight && <span className="text-sm"> кг</span>}
+                      {latestSummary?.weight && <span className="text-sm"> {t('appleHealth.kg')}</span>}
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      Среднее: {avgWeight.toFixed(1)} кг
+                      {t('appleHealth.average')}: {avgWeight.toFixed(1)} {t('appleHealth.kg')}
                     </div>
                   </CardContent>
                 </Card>
@@ -288,10 +292,10 @@ export function AppleHealthSummary() {
                   <CardContent>
                     <div className="text-2xl font-bold mb-1">
                       {latestSummary?.vo2_max?.toFixed(1) || '—'}
-                      {latestSummary?.vo2_max && <span className="text-sm"> мл/кг/мин</span>}
+                      {latestSummary?.vo2_max && <span className="text-sm"> {t('appleHealth.vo2unit')}</span>}
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      Кардиофитнес
+                      {t('appleHealth.cardioFitness')}
                     </div>
                   </CardContent>
                 </Card>
@@ -301,16 +305,16 @@ export function AppleHealthSummary() {
                   <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-2 text-sm">
                       {getMetricIcon('sleep')}
-                      Сон
+                      {t('appleHealth.metrics.sleep')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold mb-1">
                       {latestSummary?.sleep_hours?.toFixed(1) || '—'}
-                      {latestSummary?.sleep_hours && <span className="text-sm"> ч</span>}
+                      {latestSummary?.sleep_hours && <span className="text-sm"> {t('appleHealth.hours')}</span>}
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      Время сна
+                      {t('appleHealth.sleepTime')}
                     </div>
                   </CardContent>
                 </Card>
@@ -320,20 +324,20 @@ export function AppleHealthSummary() {
                   <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-2 text-sm">
                       {getMetricIcon('calories')}
-                      Калории
+                      {t('appleHealth.metrics.calories')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold mb-1">
                       {latestSummary?.active_calories || '—'}
-                      {latestSummary?.active_calories && <span className="text-sm"> ккал</span>}
+                      {latestSummary?.active_calories && <span className="text-sm"> {t('appleHealth.kcal')}</span>}
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      Активные калории
+                      {t('appleHealth.activeCalories')}
                     </div>
                     {latestSummary?.resting_calories && (
                       <div className="text-xs text-muted-foreground">
-                        Базовые: {latestSummary.resting_calories} ккал
+                        {t('appleHealth.basalCalories')}: {latestSummary.resting_calories} {t('appleHealth.kcal')}
                       </div>
                     )}
                   </CardContent>
@@ -343,7 +347,7 @@ export function AppleHealthSummary() {
               {/* Список типов данных */}
               <Card className="mt-6">
                 <CardHeader>
-                  <CardTitle className="text-sm">Доступные типы данных</CardTitle>
+                  <CardTitle className="text-sm">{t('appleHealth.availableTypes')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2">

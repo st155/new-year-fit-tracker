@@ -16,40 +16,14 @@ import {
   ChevronLeft
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 interface WhoopSetupWizardProps {
   onComplete?: () => void;
 }
 
-const STEPS = [
-  {
-    id: 1,
-    title: 'Настройка DNS домена',
-    description: 'Создайте CNAME запись для вашего поддомена',
-  },
-  {
-    id: 2,
-    title: 'Регистрация в Whoop Developer Portal',
-    description: 'Создайте приложение в Whoop Developer Portal',
-  },
-  {
-    id: 3,
-    title: 'Запрос SSL сертификата',
-    description: 'Откройте тикет в Terra Support для SSL',
-  },
-  {
-    id: 4,
-    title: 'Конфигурация Terra Dashboard',
-    description: 'Введите Whoop credentials в Terra Dashboard',
-  },
-  {
-    id: 5,
-    title: 'Тестирование',
-    description: 'Протестируйте подключение Whoop',
-  },
-];
-
 export function WhoopSetupWizard({ onComplete }: WhoopSetupWizardProps) {
+  const { t } = useTranslation('integrations');
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
@@ -58,12 +32,40 @@ export function WhoopSetupWizard({ onComplete }: WhoopSetupWizardProps) {
   const [clientSecret, setClientSecret] = useState('');
   const [copied, setCopied] = useState<string | null>(null);
 
+  const STEPS = [
+    {
+      id: 1,
+      title: t('whoopWizard.steps.dns.title'),
+      description: t('whoopWizard.steps.dns.description'),
+    },
+    {
+      id: 2,
+      title: t('whoopWizard.steps.register.title'),
+      description: t('whoopWizard.steps.register.description'),
+    },
+    {
+      id: 3,
+      title: t('whoopWizard.steps.ssl.title'),
+      description: t('whoopWizard.steps.ssl.description'),
+    },
+    {
+      id: 4,
+      title: t('whoopWizard.steps.terra.title'),
+      description: t('whoopWizard.steps.terra.description'),
+    },
+    {
+      id: 5,
+      title: t('whoopWizard.steps.test.title'),
+      description: t('whoopWizard.steps.test.description'),
+    },
+  ];
+
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
     setCopied(label);
     toast({
-      title: 'Скопировано',
-      description: `${label} скопировано в буфер обмена`,
+      title: t('whoopWizard.copied'),
+      description: t('whoopWizard.copiedDesc', { label }),
     });
     setTimeout(() => setCopied(null), 2000);
   };
@@ -94,12 +96,12 @@ export function WhoopSetupWizard({ onComplete }: WhoopSetupWizardProps) {
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Для интеграции Whoop требуется собственный домен с доступом к DNS настройкам
+                {t('whoopWizard.step1.domainRequired')}
               </AlertDescription>
             </Alert>
 
             <div className="space-y-2">
-              <Label htmlFor="subdomain">Ваш поддомен для Whoop</Label>
+              <Label htmlFor="subdomain">{t('whoopWizard.step1.subdomainLabel')}</Label>
               <Input
                 id="subdomain"
                 placeholder="whoop.yourcompany.com"
@@ -109,16 +111,16 @@ export function WhoopSetupWizard({ onComplete }: WhoopSetupWizardProps) {
             </div>
 
             <div className="space-y-3 p-4 glass-card">
-              <h4 className="font-semibold">Инструкция:</h4>
+              <h4 className="font-semibold">{t('whoopWizard.instructions')}:</h4>
               <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
-                <li>Зайдите в DNS панель вашего провайдера (GoDaddy, Cloudflare, etc.)</li>
-                <li>Создайте новую CNAME запись:
+                <li>{t('whoopWizard.step1.instruction1')}</li>
+                <li>{t('whoopWizard.step1.instruction2')}
                   <div className="ml-6 mt-2 space-y-1 font-mono text-xs">
                     <div className="flex items-center justify-between p-2 bg-muted/20 rounded">
                       <span>Type: CNAME</span>
                     </div>
                     <div className="flex items-center justify-between p-2 bg-muted/20 rounded">
-                      <span>Name: whoop (или {subdomain || 'whoop.yourcompany.com'})</span>
+                      <span>Name: whoop ({t('whoopWizard.or')} {subdomain || 'whoop.yourcompany.com'})</span>
                       {subdomain && (
                         <Button
                           size="sm"
@@ -140,18 +142,18 @@ export function WhoopSetupWizard({ onComplete }: WhoopSetupWizardProps) {
                       </Button>
                     </div>
                     <div className="flex items-center justify-between p-2 bg-muted/20 rounded">
-                      <span>TTL: Automatic или 3600</span>
+                      <span>TTL: Automatic {t('whoopWizard.or')} 3600</span>
                     </div>
                   </div>
                 </li>
-                <li>Сохраните запись</li>
-                <li>Дождитесь пропагации DNS (10-30 минут, максимум 48 часов)</li>
+                <li>{t('whoopWizard.step1.instruction3')}</li>
+                <li>{t('whoopWizard.step1.instruction4')}</li>
               </ol>
 
               <Alert className="mt-4">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Проверьте пропагацию DNS командой: <code className="text-xs">nslookup {subdomain || 'whoop.yourcompany.com'}</code>
+                  {t('whoopWizard.step1.checkDns')}: <code className="text-xs">nslookup {subdomain || 'whoop.yourcompany.com'}</code>
                 </AlertDescription>
               </Alert>
             </div>
@@ -160,8 +162,8 @@ export function WhoopSetupWizard({ onComplete }: WhoopSetupWizardProps) {
               onClick={() => {
                 if (!subdomain) {
                   toast({
-                    title: 'Ошибка',
-                    description: 'Введите ваш поддомен',
+                    title: t('whoopWizard.error'),
+                    description: t('whoopWizard.step1.enterSubdomain'),
                     variant: 'destructive',
                   });
                   return;
@@ -171,7 +173,7 @@ export function WhoopSetupWizard({ onComplete }: WhoopSetupWizardProps) {
               }}
               className="w-full"
             >
-              DNS настроен, продолжить
+              {t('whoopWizard.step1.dnsConfigured')}
               <ChevronRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
@@ -181,11 +183,11 @@ export function WhoopSetupWizard({ onComplete }: WhoopSetupWizardProps) {
         return (
           <div className="space-y-4">
             <div className="space-y-3 p-4 glass-card">
-              <h4 className="font-semibold">Инструкция:</h4>
+              <h4 className="font-semibold">{t('whoopWizard.instructions')}:</h4>
               <ol className="space-y-3 text-sm text-muted-foreground list-decimal list-inside">
-                <li>Скачайте приложение Whoop (iOS/Android)</li>
-                <li>Создайте аккаунт с email и паролем</li>
-                <li>Войдите на Developer Portal:
+                <li>{t('whoopWizard.step2.instruction1')}</li>
+                <li>{t('whoopWizard.step2.instruction2')}</li>
+                <li>{t('whoopWizard.step2.instruction3')}:
                   <Button
                     variant="outline"
                     size="sm"
@@ -196,8 +198,8 @@ export function WhoopSetupWizard({ onComplete }: WhoopSetupWizardProps) {
                     external-developer-portal.whoop.com
                   </Button>
                 </li>
-                <li>Создайте Team с вашими данными</li>
-                <li>Создайте App со следующими параметрами:
+                <li>{t('whoopWizard.step2.instruction4')}</li>
+                <li>{t('whoopWizard.step2.instruction5')}:
                   <div className="ml-6 mt-2 space-y-1 font-mono text-xs">
                     <div className="flex items-center justify-between p-2 bg-muted/20 rounded">
                       <span className="break-all">Redirect URL: https://{subdomain || 'whoop.yourcompany.com'}/auth/whoop/oauth2</span>
@@ -226,7 +228,7 @@ export function WhoopSetupWizard({ onComplete }: WhoopSetupWizardProps) {
                   </div>
                 </li>
                 <li>
-                  <strong>Включите ВСЕ Scopes:</strong>
+                  <strong>{t('whoopWizard.step2.enableScopes')}:</strong>
                   <div className="ml-6 mt-2 grid grid-cols-2 gap-1 text-xs">
                     <Badge variant="secondary">read:recovery</Badge>
                     <Badge variant="secondary">read:cycles</Badge>
@@ -236,7 +238,7 @@ export function WhoopSetupWizard({ onComplete }: WhoopSetupWizardProps) {
                     <Badge variant="secondary">read:body_measurement</Badge>
                   </div>
                 </li>
-                <li>Скопируйте Client ID и Client Secret</li>
+                <li>{t('whoopWizard.step2.copyCredentials')}</li>
               </ol>
             </div>
 
@@ -264,14 +266,14 @@ export function WhoopSetupWizard({ onComplete }: WhoopSetupWizardProps) {
             <div className="flex gap-2">
               <Button variant="outline" onClick={prevStep}>
                 <ChevronLeft className="mr-2 h-4 w-4" />
-                Назад
+                {t('whoopWizard.back')}
               </Button>
               <Button 
                 onClick={() => {
                   if (!clientId || !clientSecret) {
                     toast({
-                      title: 'Ошибка',
-                      description: 'Введите Client ID и Client Secret',
+                      title: t('whoopWizard.error'),
+                      description: t('whoopWizard.step2.enterCredentials'),
                       variant: 'destructive',
                     });
                     return;
@@ -281,7 +283,7 @@ export function WhoopSetupWizard({ onComplete }: WhoopSetupWizardProps) {
                 }}
                 className="flex-1"
               >
-                Данные Whoop сохранены
+                {t('whoopWizard.step2.dataSaved')}
                 <ChevronRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
@@ -292,9 +294,9 @@ export function WhoopSetupWizard({ onComplete }: WhoopSetupWizardProps) {
         return (
           <div className="space-y-4">
             <div className="space-y-3 p-4 glass-card">
-              <h4 className="font-semibold">Запрос SSL сертификата в Terra:</h4>
+              <h4 className="font-semibold">{t('whoopWizard.step3.sslRequest')}:</h4>
               <ol className="space-y-3 text-sm text-muted-foreground list-decimal list-inside">
-                <li>Откройте Terra Dashboard Support:
+                <li>{t('whoopWizard.step3.openSupport')}:
                   <Button
                     variant="outline"
                     size="sm"
@@ -305,7 +307,7 @@ export function WhoopSetupWizard({ onComplete }: WhoopSetupWizardProps) {
                     Terra Support
                   </Button>
                 </li>
-                <li>Создайте тикет со следующим текстом:</li>
+                <li>{t('whoopWizard.step3.createTicket')}:</li>
               </ol>
 
               <div className="relative">
@@ -341,7 +343,7 @@ Thank you!`}
               <Alert>
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Terra Support ответит в течение 1-2 рабочих дней и попросит добавить дополнительные CNAME записи для SSL валидации
+                  {t('whoopWizard.step3.supportResponse')}
                 </AlertDescription>
               </Alert>
             </div>
@@ -349,7 +351,7 @@ Thank you!`}
             <div className="flex gap-2">
               <Button variant="outline" onClick={prevStep}>
                 <ChevronLeft className="mr-2 h-4 w-4" />
-                Назад
+                {t('whoopWizard.back')}
               </Button>
               <Button 
                 onClick={() => {
@@ -358,7 +360,7 @@ Thank you!`}
                 }}
                 className="flex-1"
               >
-                Тикет создан, SSL получен
+                {t('whoopWizard.step3.ticketCreated')}
                 <ChevronRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
@@ -369,9 +371,9 @@ Thank you!`}
         return (
           <div className="space-y-4">
             <div className="space-y-3 p-4 glass-card">
-              <h4 className="font-semibold">Настройка Terra Dashboard:</h4>
+              <h4 className="font-semibold">{t('whoopWizard.step4.terraSetup')}:</h4>
               <ol className="space-y-3 text-sm text-muted-foreground list-decimal list-inside">
-                <li>Откройте Terra Dashboard Connections:
+                <li>{t('whoopWizard.step4.openConnections')}:
                   <Button
                     variant="outline"
                     size="sm"
@@ -382,12 +384,12 @@ Thank you!`}
                     Terra Connections
                   </Button>
                 </li>
-                <li>Найдите <strong>WHOOP</strong> в списке провайдеров</li>
-                <li>Нажмите <strong>Configure</strong> или <strong>Settings</strong></li>
-                <li>Введите данные:
+                <li>{t('whoopWizard.step4.findWhoop')}</li>
+                <li>{t('whoopWizard.step4.clickConfigure')}</li>
+                <li>{t('whoopWizard.step4.enterData')}:
                   <div className="ml-6 mt-2 space-y-2">
                     <div className="flex items-center justify-between p-2 bg-muted/20 rounded">
-                      <span className="text-xs">Client ID: {clientId || '(из шага 2)'}</span>
+                      <span className="text-xs">Client ID: {clientId || t('whoopWizard.step4.fromStep2')}</span>
                       {clientId && (
                         <Button
                           size="sm"
@@ -399,7 +401,7 @@ Thank you!`}
                       )}
                     </div>
                     <div className="flex items-center justify-between p-2 bg-muted/20 rounded">
-                      <span className="text-xs">Client Secret: {clientSecret ? '••••••••' : '(из шага 2)'}</span>
+                      <span className="text-xs">Client Secret: {clientSecret ? '••••••••' : t('whoopWizard.step4.fromStep2')}</span>
                       {clientSecret && (
                         <Button
                           size="sm"
@@ -424,15 +426,15 @@ Thank you!`}
                     </div>
                   </div>
                 </li>
-                <li>Сохраните конфигурацию</li>
-                <li>Убедитесь что статус "Configured" или "Active"</li>
+                <li>{t('whoopWizard.step4.saveConfig')}</li>
+                <li>{t('whoopWizard.step4.checkStatus')}</li>
               </ol>
             </div>
 
             <div className="flex gap-2">
               <Button variant="outline" onClick={prevStep}>
                 <ChevronLeft className="mr-2 h-4 w-4" />
-                Назад
+                {t('whoopWizard.back')}
               </Button>
               <Button 
                 onClick={() => {
@@ -441,7 +443,7 @@ Thank you!`}
                 }}
                 className="flex-1"
               >
-                Terra Dashboard настроен
+                {t('whoopWizard.step4.terraConfigured')}
                 <ChevronRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
@@ -454,46 +456,46 @@ Thank you!`}
             <Alert>
               <CheckCircle2 className="h-4 w-4 text-success" />
               <AlertDescription>
-                Настройка завершена! Теперь можно протестировать подключение
+                {t('whoopWizard.step5.setupComplete')}
               </AlertDescription>
             </Alert>
 
             <div className="space-y-3 p-4 glass-card">
-              <h4 className="font-semibold">Тестирование:</h4>
+              <h4 className="font-semibold">{t('whoopWizard.step5.testing')}:</h4>
               <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
-                <li>Вернитесь на страницу Integrations</li>
-                <li>Нажмите "Подключить Whoop"</li>
-                <li>Авторизуйтесь через Whoop OAuth</li>
-                <li>Проверьте что устройство появилось в списке подключенных</li>
-                <li>Запустите синхронизацию данных</li>
+                <li>{t('whoopWizard.step5.test1')}</li>
+                <li>{t('whoopWizard.step5.test2')}</li>
+                <li>{t('whoopWizard.step5.test3')}</li>
+                <li>{t('whoopWizard.step5.test4')}</li>
+                <li>{t('whoopWizard.step5.test5')}</li>
               </ol>
             </div>
 
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                <strong>Важно:</strong> После успешного тестирования вам нужно подать заявку на Production Approval в Whoop Developer Portal. Процесс может занять 1-2 недели.
+                <strong>{t('whoopWizard.important')}:</strong> {t('whoopWizard.step5.productionNote')}
               </AlertDescription>
             </Alert>
 
             <div className="flex gap-2">
               <Button variant="outline" onClick={prevStep}>
                 <ChevronLeft className="mr-2 h-4 w-4" />
-                Назад
+                {t('whoopWizard.back')}
               </Button>
               <Button 
                 onClick={() => {
                   markStepComplete(5);
                   toast({
-                    title: 'Настройка завершена!',
-                    description: 'Whoop интеграция готова к использованию',
+                    title: t('whoopWizard.step5.completeTitle'),
+                    description: t('whoopWizard.step5.completeDesc'),
                   });
                   onComplete?.();
                 }}
                 className="flex-1"
               >
                 <CheckCircle2 className="mr-2 h-4 w-4" />
-                Завершить настройку
+                {t('whoopWizard.step5.finishSetup')}
               </Button>
             </div>
           </div>
@@ -509,8 +511,8 @@ Thank you!`}
       {/* Progress */}
       <div className="space-y-2">
         <div className="flex items-center justify-between text-sm">
-          <span className="font-medium">Шаг {currentStep} из {STEPS.length}</span>
-          <span className="text-muted-foreground">{Math.round((completedSteps.length / STEPS.length) * 100)}% завершено</span>
+          <span className="font-medium">{t('whoopWizard.stepOf', { current: currentStep, total: STEPS.length })}</span>
+          <span className="text-muted-foreground">{Math.round((completedSteps.length / STEPS.length) * 100)}% {t('whoopWizard.completed')}</span>
         </div>
         <div className="progress-bar">
           <div 

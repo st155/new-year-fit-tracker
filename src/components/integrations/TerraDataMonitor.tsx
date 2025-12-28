@@ -8,7 +8,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { terraApi } from '@/lib/api/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 
 interface TerraDataMonitorProps {
   provider: string;
@@ -16,11 +17,14 @@ interface TerraDataMonitorProps {
 }
 
 export function TerraDataMonitor({ provider, terraUserId }: TerraDataMonitorProps) {
+  const { t, i18n } = useTranslation('integrations');
   const [backfillJob, setBackfillJob] = useState<any>(null);
   const [freshness, setFreshness] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const { toast } = useToast();
+
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
 
   const loadData = async () => {
     setLoading(true);
@@ -80,8 +84,8 @@ export function TerraDataMonitor({ provider, terraUserId }: TerraDataMonitorProp
   const startBackfill = async (daysAgo: number) => {
     if (!terraUserId) {
       toast({
-        title: 'Ошибка',
-        description: 'Terra User ID не найден',
+        title: t('dataMonitor.error'),
+        description: t('dataMonitor.terraIdNotFound'),
         variant: 'destructive',
       });
       return;
@@ -102,15 +106,15 @@ export function TerraDataMonitor({ provider, terraUserId }: TerraDataMonitorProp
       if (error) throw error;
 
       toast({
-        title: 'Backfill запущен',
-        description: `Загрузка данных за последние ${daysAgo} дней...`,
+        title: t('dataMonitor.backfillStarted'),
+        description: t('dataMonitor.backfillStartedDesc', { days: daysAgo }),
       });
 
       // Refresh data
       setTimeout(loadData, 2000);
     } catch (error: any) {
       toast({
-        title: 'Ошибка backfill',
+        title: t('dataMonitor.backfillError'),
         description: error.message,
         variant: 'destructive',
       });
@@ -121,10 +125,10 @@ export function TerraDataMonitor({ provider, terraUserId }: TerraDataMonitorProp
 
   const getDataTypeLabel = (type: string) => {
     const labels: { [key: string]: string } = {
-      'daily': '📊 Дневные метрики',
-      'sleep': '😴 Сон',
-      'activity': '🏃 Активность',
-      'body': '⚖️ Тело',
+      'daily': t('dataMonitor.types.daily'),
+      'sleep': t('dataMonitor.types.sleep'),
+      'activity': t('dataMonitor.types.activity'),
+      'body': t('dataMonitor.types.body'),
     };
     return labels[type] || type;
   };
@@ -154,21 +158,21 @@ export function TerraDataMonitor({ provider, terraUserId }: TerraDataMonitorProp
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Download className="h-5 w-5" />
-              Загрузка исторических данных
+              {t('dataMonitor.loadingHistory')}
             </CardTitle>
             <CardDescription>
-              {backfillJob.status === 'processing' ? 'Идет загрузка...' : 'Ожидание'}
+              {backfillJob.status === 'processing' ? t('dataMonitor.processing') : t('dataMonitor.waiting')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between text-sm">
-              <span>Прогресс: {backfillJob.processed_days} / {backfillJob.total_days} дней</span>
+              <span>{t('dataMonitor.progress')}: {backfillJob.processed_days} / {backfillJob.total_days} {t('dataMonitor.days')}</span>
               <span className="font-semibold">{backfillJob.progress_percentage}%</span>
             </div>
             <Progress value={backfillJob.progress_percentage} />
             {backfillJob.date_being_processed && (
               <p className="text-xs text-muted-foreground">
-                Обрабатывается: {backfillJob.date_being_processed}
+                {t('dataMonitor.processingDate')}: {backfillJob.date_being_processed}
               </p>
             )}
           </CardContent>
@@ -182,10 +186,10 @@ export function TerraDataMonitor({ provider, terraUserId }: TerraDataMonitorProp
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="h-5 w-5" />
-                Актуальность данных
+                {t('dataMonitor.freshness')}
               </CardTitle>
               <CardDescription>
-                Последние полученные данные от {provider}
+                {t('dataMonitor.freshnessDesc', { provider })}
               </CardDescription>
             </div>
             <Button
@@ -201,7 +205,7 @@ export function TerraDataMonitor({ provider, terraUserId }: TerraDataMonitorProp
         <CardContent className="space-y-3">
           {freshness.length === 0 ? (
             <div className="text-center py-4 text-muted-foreground">
-              <p>Нет данных о свежести</p>
+              <p>{t('dataMonitor.noFreshnessData')}</p>
               <Button
                 variant="outline"
                 size="sm"
@@ -210,7 +214,7 @@ export function TerraDataMonitor({ provider, terraUserId }: TerraDataMonitorProp
                 disabled={syncing}
               >
                 {syncing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                Загрузить данные за неделю
+                {t('dataMonitor.loadWeek')}
               </Button>
             </div>
           ) : (
@@ -223,7 +227,7 @@ export function TerraDataMonitor({ provider, terraUserId }: TerraDataMonitorProp
                   <div>
                     <p className="font-medium">{getDataTypeLabel(item.data_type)}</p>
                     <p className="text-xs text-muted-foreground">
-                      Последнее обновление: {formatDistanceToNow(new Date(item.last_received_at), { addSuffix: true, locale: ru })}
+                      {t('dataMonitor.lastUpdate')}: {formatDistanceToNow(new Date(item.last_received_at), { addSuffix: true, locale: dateLocale })}
                     </p>
                   </div>
                 </div>
@@ -236,7 +240,7 @@ export function TerraDataMonitor({ provider, terraUserId }: TerraDataMonitorProp
           
           {freshness.length > 0 && (
             <div className="pt-3 border-t space-y-2">
-              <p className="text-sm text-muted-foreground">Загрузить больше исторических данных:</p>
+              <p className="text-sm text-muted-foreground">{t('dataMonitor.loadMoreHistory')}:</p>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
@@ -245,7 +249,7 @@ export function TerraDataMonitor({ provider, terraUserId }: TerraDataMonitorProp
                   disabled={syncing}
                 >
                   {syncing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  14 дней
+                  {t('dataMonitor.days14')}
                 </Button>
                 <Button
                   variant="outline"
@@ -254,7 +258,7 @@ export function TerraDataMonitor({ provider, terraUserId }: TerraDataMonitorProp
                   disabled={syncing}
                 >
                   {syncing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  30 дней
+                  {t('dataMonitor.days30')}
                 </Button>
               </div>
             </div>
@@ -268,15 +272,15 @@ export function TerraDataMonitor({ provider, terraUserId }: TerraDataMonitorProp
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-destructive">
               <AlertCircle className="h-5 w-5" />
-              Данные не обновляются
+              {t('dataMonitor.dataNotUpdating')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-3">
-              Некоторые данные не обновлялись более 2 дней. Проверьте подключение устройства.
+              {t('dataMonitor.dataNotUpdatingDesc')}
             </p>
             <Button variant="destructive" size="sm" onClick={() => startBackfill(7)}>
-              Попробовать синхронизировать
+              {t('dataMonitor.trySync')}
             </Button>
           </CardContent>
         </Card>
