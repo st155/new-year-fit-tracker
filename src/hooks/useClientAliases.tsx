@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -12,6 +13,7 @@ export interface ClientAlias {
 }
 
 export const useClientAliases = (trainerId: string | undefined) => {
+  const { t } = useTranslation('trainerDashboard');
   const [aliases, setAliases] = useState<ClientAlias[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -32,8 +34,8 @@ export const useClientAliases = (trainerId: string | undefined) => {
     } catch (error) {
       console.error('Error loading aliases:', error);
       toast({
-        title: "Ошибка загрузки",
-        description: "Не удалось загрузить псевдонимы",
+        title: t('aliases.loadError'),
+        description: t('aliases.loadErrorDesc'),
         variant: "destructive"
       });
     } finally {
@@ -56,8 +58,8 @@ export const useClientAliases = (trainerId: string | undefined) => {
 
       if (existing) {
         toast({
-          title: "Конфликт псевдонимов",
-          description: `Псевдоним "${aliasName}" уже используется для другого клиента`,
+          title: t('aliases.conflict'),
+          description: t('aliases.conflictDesc', { name: aliasName }),
           variant: "destructive"
         });
         return false;
@@ -78,8 +80,8 @@ export const useClientAliases = (trainerId: string | undefined) => {
     } catch (error) {
       console.error('Error saving alias:', error);
       toast({
-        title: "Ошибка сохранения",
-        description: "Не удалось сохранить псевдоним",
+        title: t('aliases.saveError'),
+        description: t('aliases.saveErrorDesc'),
         variant: "destructive"
       });
       return false;
@@ -100,8 +102,8 @@ export const useClientAliases = (trainerId: string | undefined) => {
     } catch (error) {
       console.error('Error deleting alias:', error);
       toast({
-        title: "Ошибка удаления",
-        description: "Не удалось удалить псевдоним",
+        title: t('aliases.deleteError'),
+        description: t('aliases.deleteErrorDesc'),
         variant: "destructive"
       });
       return false;
@@ -124,8 +126,8 @@ export const useClientAliases = (trainerId: string | undefined) => {
     } catch (error) {
       console.error('Error updating alias:', error);
       toast({
-        title: "Ошибка обновления",
-        description: "Не удалось обновить псевдоним",
+        title: t('aliases.updateError'),
+        description: t('aliases.updateErrorDesc'),
         variant: "destructive"
       });
       return false;

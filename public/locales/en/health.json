@@ -1,4 +1,13 @@
 {
+  "metrics": {
+    "workoutCalories": "Workout Calories",
+    "workoutStrain": "Workout Strain",
+    "workoutTime": "Workout Time"
+  },
+  "units": {
+    "kcal": "kcal",
+    "min": "min"
+  },
   "title": "System Health Check",
   "overallStatus": "Overall Status",
   "rerun": "Re-run",

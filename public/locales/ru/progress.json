@@ -62,5 +62,40 @@
     "unknown": "Неизвестно",
     "empty": "Нет данных о трендах",
     "emptyDescription": "Метрики появятся здесь по мере отслеживания ваших показателей"
+  },
+  "chart": {
+    "progress": "Прогресс",
+    "selectMetric": "Выберите метрику",
+    "connectWellness": "Подключите Whoop/Garmin для данных о сне и восстановлении",
+    "addBodyMeasurements": "Добавьте замеры тела для отслеживания прогресса",
+    "noDataCategory": "Нет данных в этой категории",
+    "noData": "Нет данных по этому показателю",
+    "recordToSee": "Запишите тренировку чтобы увидеть прогресс",
+    "sessions": "Сессий",
+    "total": "Всего",
+    "min": "Мин",
+    "max": "Макс",
+    "start": "Начало",
+    "current": "Текущий",
+    "avg": "Средний",
+    "period": {
+      "7d": "7 дн",
+      "30d": "30 дн",
+      "90d": "90 дн",
+      "all": "Всё"
+    },
+    "category": {
+      "strength": "Сила",
+      "wellness": "Wellness",
+      "body": "Тело"
+    },
+    "units": {
+      "reps": "{{value}} повт",
+      "kg": "{{value}} кг",
+      "percent": "{{value}}%",
+      "kcal": "{{value}} ккал",
+      "min": "{{value}} мин",
+      "hours": "{{value}} ч"
+    }
   }
 }

@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useTranslation } from 'react-i18next';
 import { Slider } from "@/components/ui/slider";
 
 interface FeelingSliderProps {
@@ -6,13 +7,15 @@ interface FeelingSliderProps {
   onChange: (value: number) => void;
 }
 
-const feelings = [
-  { emoji: "😊", label: "Очень легко", range: [1, 2] },
-  { emoji: "😐", label: "Нормально", range: [3] },
-  { emoji: "😫", label: "Очень тяжело", range: [4, 5] },
-];
-
 export function FeelingSlider({ value, onChange }: FeelingSliderProps) {
+  const { t } = useTranslation('workouts');
+  
+  const feelings = [
+    { emoji: "😊", label: t('feeling.veryEasy'), range: [1, 2] },
+    { emoji: "😐", label: t('feeling.normal'), range: [3] },
+    { emoji: "😫", label: t('feeling.veryHard'), range: [4, 5] },
+  ];
+
   const currentFeeling = feelings.find(f => 
     value >= f.range[0] && value <= f.range[f.range.length - 1]
   ) || feelings[1];
@@ -26,9 +29,9 @@ export function FeelingSlider({ value, onChange }: FeelingSliderProps) {
     >
       <div className="text-center space-y-1">
         <h3 className="text-2xl font-semibold text-foreground">
-          Как ты себя чувствуешь?
+          {t('feeling.title')}
         </h3>
-        <p className="text-muted-foreground">после тренировки?</p>
+        <p className="text-muted-foreground">{t('feeling.subtitle')}</p>
       </div>
 
       <div className="flex justify-center">
@@ -54,9 +57,9 @@ export function FeelingSlider({ value, onChange }: FeelingSliderProps) {
         />
         
         <div className="flex justify-between text-sm text-muted-foreground px-1">
-          <span>Легко</span>
+          <span>{t('feeling.easy')}</span>
           <span className="font-semibold text-foreground">{currentFeeling.label}</span>
-          <span>Тяжело</span>
+          <span>{t('feeling.hard')}</span>
         </div>
       </div>
     </motion.div>

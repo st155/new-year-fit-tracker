@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Line, Area, ComposedChart, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 
 interface HabitProgressChartProps {
   habitId: string;
@@ -17,9 +18,12 @@ interface HabitProgressChartProps {
 }
 
 export function HabitProgressChart({ habitName, habitType, data }: HabitProgressChartProps) {
+  const { t, i18n } = useTranslation('habits');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
+  
   // Prepare chart data
   const chartData = data.map(d => ({
-    date: format(new Date(d.date), 'dd MMM', { locale: ru }),
+    date: format(new Date(d.date), 'dd MMM', { locale: dateLocale }),
     fullDate: d.date,
     // Для daily_check: 1 = выполнено, 0 = пропущено
     value: d.completed ? 1 : 0,
@@ -34,7 +38,7 @@ export function HabitProgressChart({ habitName, habitType, data }: HabitProgress
   return (
     <Card className="glass-card border-white/10">
       <CardHeader>
-        <CardTitle className="text-lg">Прогресс: {habitName}</CardTitle>
+        <CardTitle className="text-lg">{t('progress.title')}: {habitName}</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
@@ -76,7 +80,7 @@ export function HabitProgressChart({ habitName, habitType, data }: HabitProgress
                     y={milestone}
                     stroke="hsl(var(--primary))"
                     strokeDasharray="3 3"
-                    label={{ value: `${milestone} дней`, position: "right", fill: "hsl(var(--primary))", fontSize: 11 }}
+                    label={{ value: t('progress.days', { count: milestone }), position: "right", fill: "hsl(var(--primary))", fontSize: 11 }}
                   />
                 );
               })}
@@ -88,7 +92,7 @@ export function HabitProgressChart({ habitName, habitType, data }: HabitProgress
                     x={d.date} 
                     stroke="hsl(var(--habit-negative))" 
                     strokeDasharray="3 3"
-                    label={{ value: "Сброс", position: "top", fill: "hsl(var(--habit-negative))" }}
+                    label={{ value: t('progress.reset'), position: "top", fill: "hsl(var(--habit-negative))" }}
                   />
                 ) : null
               )}
@@ -99,7 +103,7 @@ export function HabitProgressChart({ habitName, habitType, data }: HabitProgress
                 strokeWidth={3}
                 fillOpacity={1} 
                 fill={`url(#streakGradient-${habitName})`}
-                name="Дни стрика"
+                name={t('progress.streakDays')}
                 dot={{ fill: 'hsl(var(--habit-positive))', r: 4, strokeWidth: 2, stroke: 'hsl(var(--background))' }}
                 activeDot={{ r: 6, fill: 'hsl(var(--habit-positive))' }}
                 style={{ filter: 'drop-shadow(0 2px 8px hsla(var(--primary), 0.4))' }}
@@ -134,7 +138,7 @@ export function HabitProgressChart({ habitName, habitType, data }: HabitProgress
                   color: 'hsl(var(--foreground))'
                 }}
                 labelStyle={{ color: 'hsl(var(--foreground))' }}
-                formatter={(value: any) => [value === 1 ? 'Выполнено' : 'Пропущено', 'Статус']}
+                formatter={(value: any) => [value === 1 ? t('progress.completed') : t('progress.skipped'), t('progress.status')]}
               />
               <Area
                 type="stepAfter"

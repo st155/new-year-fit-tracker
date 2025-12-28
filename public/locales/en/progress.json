@@ -62,5 +62,40 @@
     "unknown": "Unknown",
     "empty": "No trend data",
     "emptyDescription": "Metrics will appear here as you track your progress"
+  },
+  "chart": {
+    "progress": "Progress",
+    "selectMetric": "Select metric",
+    "connectWellness": "Connect Whoop/Garmin for sleep and recovery data",
+    "addBodyMeasurements": "Add body measurements to track progress",
+    "noDataCategory": "No data in this category",
+    "noData": "No data for this metric",
+    "recordToSee": "Record a workout to see progress",
+    "sessions": "Sessions",
+    "total": "Total",
+    "min": "Min",
+    "max": "Max",
+    "start": "Start",
+    "current": "Current",
+    "avg": "Average",
+    "period": {
+      "7d": "7 days",
+      "30d": "30 days",
+      "90d": "90 days",
+      "all": "All"
+    },
+    "category": {
+      "strength": "Strength",
+      "wellness": "Wellness",
+      "body": "Body"
+    },
+    "units": {
+      "reps": "{{value}} reps",
+      "kg": "{{value}} kg",
+      "percent": "{{value}}%",
+      "kcal": "{{value}} kcal",
+      "min": "{{value}} min",
+      "hours": "{{value}} h"
+    }
   }
 }

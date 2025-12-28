@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { HealthData } from "./types";
 import { HealthMetricCard } from "./HealthMetricCard";
 
@@ -6,6 +7,8 @@ interface WorkoutMetricsProps {
 }
 
 export function WorkoutMetrics({ healthData }: WorkoutMetricsProps) {
+  const { t } = useTranslation('health');
+  
   const getLatestValue = (key: keyof HealthData) => {
     const latestData = healthData.find(d => d[key] !== undefined && d[key] !== null);
     return latestData?.[key] as number | undefined;
@@ -45,17 +48,17 @@ export function WorkoutMetrics({ healthData }: WorkoutMetricsProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <HealthMetricCard
-        title="Калории за тренировку"
+        title={t('metrics.workoutCalories')}
         icon="🔥"
         value={getLatestValue('workout_calories') || 0}
-        unit="ккал"
+        unit={t('units.kcal')}
         source={getLatestSource('workout_calories_source')}
         data={getChartData('workout_calories')}
         trend={getTrend('workout_calories')}
       />
       
       <HealthMetricCard
-        title="Workout Strain"
+        title={t('metrics.workoutStrain')}
         icon="💪"
         value={getLatestValue('workout_strain') || 0}
         unit=""
@@ -65,10 +68,10 @@ export function WorkoutMetrics({ healthData }: WorkoutMetricsProps) {
       />
       
       <HealthMetricCard
-        title="Время тренировки"
+        title={t('metrics.workoutTime')}
         icon="⏱️"
         value={getLatestValue('workout_time') || 0}
-        unit="мин"
+        unit={t('units.min')}
         source={getLatestSource('workout_time_source')}
         data={getChartData('workout_time')}
         trend={getTrend('workout_time')}

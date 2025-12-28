@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -33,6 +34,7 @@ export default function AddExerciseImageDialog({
   exerciseName,
   onImageSelect,
 }: AddExerciseImageDialogProps) {
+  const { t } = useTranslation('workouts');
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('search');
   const [searchQuery, setSearchQuery] = useState(exerciseName);
@@ -74,8 +76,8 @@ export default function AddExerciseImageDialog({
     } catch (error) {
       console.error('Error searching Wger:', error);
       toast({
-        title: 'Ошибка поиска',
-        description: 'Не удалось найти изображения. Попробуйте ввести URL вручную.',
+        title: t('imageDialog.searchError'),
+        description: t('imageDialog.searchErrorDesc'),
         variant: 'destructive',
       });
     } finally {
@@ -107,8 +109,8 @@ export default function AddExerciseImageDialog({
       setPreviewUrl(urlInput);
     } catch {
       toast({
-        title: 'Неверный URL',
-        description: 'Пожалуйста, введите корректный URL изображения',
+        title: t('imageDialog.invalidUrl'),
+        description: t('imageDialog.invalidUrlDesc'),
         variant: 'destructive',
       });
     }
@@ -144,19 +146,19 @@ export default function AddExerciseImageDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ImageIcon className="w-5 h-5" />
-            Добавить изображение
+            {t('imageDialog.title')}
           </DialogTitle>
         </DialogHeader>
 
         <div className="text-sm text-muted-foreground mb-4">
-          Упражнение: <span className="font-medium text-foreground">{exerciseName}</span>
+          {t('imageDialog.exercise')}: <span className="font-medium text-foreground">{exerciseName}</span>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="search" className="gap-2">
               <Search className="w-4 h-4" />
-              Поиск
+              {t('imageDialog.search')}
             </TabsTrigger>
             <TabsTrigger value="url" className="gap-2">
               <Link2 className="w-4 h-4" />
@@ -167,7 +169,7 @@ export default function AddExerciseImageDialog({
           <TabsContent value="search" className="space-y-4">
             <div className="flex gap-2">
               <Input
-                placeholder="Название упражнения..."
+                placeholder={t('imageDialog.placeholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && searchWger()}
@@ -218,15 +220,15 @@ export default function AddExerciseImageDialog({
             {!isSearching && searchResults.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
                 <ImageIcon className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p>Нажмите "Поиск" для поиска изображений</p>
-                <p className="text-xs mt-1">Или введите URL вручную</p>
+                <p>{t('imageDialog.hint')}</p>
+                <p className="text-xs mt-1">{t('imageDialog.hintAlt')}</p>
               </div>
             )}
           </TabsContent>
 
           <TabsContent value="url" className="space-y-4">
             <div className="space-y-2">
-              <Label>URL изображения</Label>
+              <Label>{t('imageDialog.urlLabel')}</Label>
               <div className="flex gap-2">
                 <Input
                   placeholder="https://example.com/image.jpg"
@@ -235,14 +237,14 @@ export default function AddExerciseImageDialog({
                   onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()}
                 />
                 <Button onClick={handleUrlSubmit} variant="secondary">
-                  Загрузить
+                  {t('imageDialog.load')}
                 </Button>
               </div>
             </div>
 
             {previewUrl && (
               <div className="space-y-2">
-                <Label>Предпросмотр</Label>
+                <Label>{t('imageDialog.preview')}</Label>
                 <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
                   <img
                     src={previewUrl}
@@ -251,8 +253,8 @@ export default function AddExerciseImageDialog({
                     onError={() => {
                       setPreviewUrl(null);
                       toast({
-                        title: 'Ошибка загрузки',
-                        description: 'Не удалось загрузить изображение по этому URL',
+                        title: t('imageDialog.loadError'),
+                        description: t('imageDialog.loadErrorDesc'),
                         variant: 'destructive',
                       });
                     }}
@@ -271,13 +273,13 @@ export default function AddExerciseImageDialog({
 
         <div className="flex justify-end gap-2 pt-4">
           <Button variant="outline" onClick={() => handleClose(false)}>
-            Отмена
+            {t('common:cancel')}
           </Button>
           <Button
             onClick={handleConfirm}
             disabled={!selectedImage && !previewUrl}
           >
-            Сохранить
+            {t('common:save')}
           </Button>
         </div>
       </DialogContent>

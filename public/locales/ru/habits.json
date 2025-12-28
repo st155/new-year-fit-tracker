@@ -216,5 +216,14 @@
     "progressOfGoal": "{{percent}}% от цели ({{target}} {{unit}})",
     "enterValue": "Введите {{unit}}",
     "targetHint": "Цель: {{target}} {{unit}}"
+  },
+  "progress": {
+    "title": "Прогресс",
+    "days": "{{count}} дней",
+    "reset": "Сброс",
+    "streakDays": "Дни стрика",
+    "completed": "Выполнено",
+    "skipped": "Пропущено",
+    "status": "Статус"
   }
 }
