@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { GoalCreateDialog, GoalEditDialog } from "@/features/goals/components";
+import { useTranslation } from "react-i18next";
 
 interface Goal {
   id: string;
@@ -64,6 +65,7 @@ export function GoalsSection({ userRole }: GoalsSectionProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { t } = useTranslation('dashboard');
 
   const fetchGoals = async () => {
     if (!user) return;
@@ -168,8 +170,8 @@ export function GoalsSection({ userRole }: GoalsSectionProps) {
     } catch (error: any) {
       console.error('Error fetching goals:', error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось загрузить цели",
+        title: t('goals.errorTitle'),
+        description: t('goals.errorLoading'),
         variant: "destructive"
       });
     } finally {
@@ -238,10 +240,10 @@ export function GoalsSection({ userRole }: GoalsSectionProps) {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
             <Trophy className="w-5 h-5 text-primary" />
-            <h3 className="text-xl font-bold">Общий прогресс команды</h3>
+            <h3 className="text-xl font-bold">{t('goals.teamProgress')}</h3>
           </div>
           <Button variant="outline" size="sm">
-            Посмотреть всех
+            {t('goals.viewAll')}
           </Button>
         </div>
         
@@ -254,7 +256,7 @@ export function GoalsSection({ userRole }: GoalsSectionProps) {
                 </div>
                 <span className="font-medium">{name}</span>
                 <Badge variant="outline" className="text-xs">
-                  {4 - index} цели
+                  {t('goals.goalsCount', { count: 4 - index })}
                 </Badge>
               </div>
               <div className="flex items-center gap-3">
@@ -273,7 +275,7 @@ export function GoalsSection({ userRole }: GoalsSectionProps) {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <Target className="w-5 h-5 text-primary" />
-          <h3 className="text-xl font-bold">Мои цели</h3>
+          <h3 className="text-xl font-bold">{t('goals.myGoals')}</h3>
         </div>
         <GoalCreateDialog onGoalCreated={fetchGoals} />
       </div>
@@ -285,8 +287,8 @@ export function GoalsSection({ userRole }: GoalsSectionProps) {
       ) : goals.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
           <Target className="w-12 h-12 mx-auto mb-4 opacity-50" />
-          <p>У вас пока нет целей</p>
-          <p className="text-sm">Добавьте первую цель, чтобы начать отслеживать прогресс</p>
+          <p>{t('goals.emptyTitle')}</p>
+          <p className="text-sm">{t('goals.emptyDesc')}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -355,11 +357,11 @@ export function GoalsSection({ userRole }: GoalsSectionProps) {
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-4 text-sm">
                     <div className="flex items-center gap-1">
-                      <span className="text-muted-foreground">Текущий:</span>
+                      <span className="text-muted-foreground">{t('goals.current')}:</span>
                       <span className="font-medium">{goal.displayCurrent || goal.current} {goal.unit}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <span className="text-muted-foreground">Цель:</span>
+                      <span className="text-muted-foreground">{t('goals.target')}:</span>
                       <span className="font-medium text-primary">{goal.displayTarget || goal.target} {goal.unit}</span>
                     </div>
                   </div>
