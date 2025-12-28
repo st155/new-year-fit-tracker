@@ -1,4 +1,31 @@
 {
+  "aiInsight": {
+    "title": "AI Insight",
+    "highVolumeFeelingGood": "Great! You handled a high volume and feel good. I'll increase the load next workout. 💪",
+    "hardWorkoutNormal": "A tough workout is normal! Your body is adapting. The next session will be adjusted for better recovery. 🌟",
+    "impressiveVolume": "Impressive volume! This data will help me create the perfect program for your progress. 🎯",
+    "shortButEffective": "Short but effective workout! Quality over quantity. Keep it up! ⚡",
+    "greatWorkout": "Great workout! Your consistency will help me personalize the next plan. 🚀"
+  },
+  "exercise": {
+    "title": "Exercise Details",
+    "sets": "{{count}} sets",
+    "reps": "{{reps}} reps",
+    "restBetweenSets": "Rest Between Sets",
+    "notes": "Notes",
+    "targetMuscles": "Target Muscles",
+    "targetMusclesComingSoon": "Target muscle information will be available in the next version",
+    "technique": "Technique",
+    "techniqueTips": {
+      "form": "Maintain proper form throughout the exercise",
+      "breathing": "Control your breathing: exhale on effort",
+      "rom": "Use full range of motion",
+      "weight": "Reduce weight if needed to maintain form"
+    },
+    "progressHistory": "Progress History",
+    "notEnoughData": "Not enough data to show progress",
+    "performMoreToSeeChart": "Perform the exercise several times to see the chart"
+  },
   "aiRationale": {
     "description": "Our algorithm creates a personalized program using information about you and your goals."
   },

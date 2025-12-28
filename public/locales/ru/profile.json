@@ -44,5 +44,17 @@
     "email": "Email",
     "progressSharing": "Публичный прогресс",
     "trainer": "Тренер"
+  },
+  "editor": {
+    "title": "Редактирование профиля",
+    "edit": "Изменить",
+    "username": "Username",
+    "usernamePlaceholder": "username",
+    "fullName": "Полное имя",
+    "fullNamePlaceholder": "Полное имя",
+    "save": "Сохранить",
+    "saving": "Сохранение...",
+    "cancel": "Отмена",
+    "uploadAvatar": "Загрузить аватар"
   }
 }

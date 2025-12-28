@@ -37,5 +37,17 @@
       "saveFailed": "Failed to add measurement"
     },
     "success": "Measurement added"
+  },
+  "bodyFat": {
+    "today": "Today",
+    "back": "Back",
+    "pageTitle": "Body Fat Percentage",
+    "currentPercent": "Current %",
+    "weeklyChange": "Weekly Change",
+    "targetPercent": "Target %",
+    "bodyFatLabel": "Body Fat",
+    "noData": "No body fat data",
+    "addMeasurements": "Add measurements to track progress",
+    "historyTitle": "Change History"
   }
 }

@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Bot, Sparkles } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 interface WorkoutStats {
   duration: number;
@@ -15,25 +16,27 @@ interface AIInsightCardProps {
 }
 
 export function AIInsightCard({ stats, feeling }: AIInsightCardProps) {
+  const { t } = useTranslation('workouts');
+
   const generateInsight = () => {
     // Generate contextual AI insight based on stats and feeling
     if (feeling <= 2 && stats.totalVolume > 3000) {
-      return "Отлично! Ты справился с большим объемом и чувствуешь себя хорошо. Я увеличу нагрузку на следующей тренировке. 💪";
+      return t('aiInsight.highVolumeFeelingGood');
     }
     
     if (feeling >= 4) {
-      return "Тяжелая тренировка — это нормально! Твое тело адаптируется. Следующая сессия будет скорректирована для лучшего восстановления. 🌟";
+      return t('aiInsight.hardWorkoutNormal');
     }
     
     if (stats.totalSets >= 20) {
-      return "Внушительный объем работы! Эти данные помогут мне создать идеальную программу для твоего прогресса. 🎯";
+      return t('aiInsight.impressiveVolume');
     }
     
     if (stats.duration < 30) {
-      return "Короткая, но эффективная тренировка! Качество важнее количества. Продолжай в том же духе! ⚡";
+      return t('aiInsight.shortButEffective');
     }
 
-    return "Отличная тренировка! Твоя последовательность поможет мне персонализировать следующий план. 🚀";
+    return t('aiInsight.greatWorkout');
   };
 
   return (
@@ -52,7 +55,7 @@ export function AIInsightCard({ stats, feeling }: AIInsightCardProps) {
             <Bot className="w-6 h-6 text-white" />
           </div>
           <div className="flex items-center gap-2">
-            <h3 className="text-xl font-semibold text-foreground">AI Insight</h3>
+            <h3 className="text-xl font-semibold text-foreground">{t('aiInsight.title')}</h3>
             <Sparkles className="w-5 h-5 text-yellow-400 animate-pulse" />
           </div>
         </div>
