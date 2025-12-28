@@ -33,7 +33,7 @@ const getIconForType = (type: NotificationType): LucideIcon => {
 };
 
 export function useNotifications() {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('trainerDashboard');
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);

@@ -244,5 +244,32 @@
       "heart": "Сердце",
       "body": "Тело"
     }
+  },
+  "pendingActions": {
+    "error": "Ошибка",
+    "loadError": "Не удалось загрузить ожидающие действия",
+    "planCreated": "План создан",
+    "checkPending": "Проверьте ожидающие действия",
+    "createError": "Ошибка создания плана",
+    "done": "Готово",
+    "executeError": "Ошибка выполнения",
+    "rejected": "Отклонено",
+    "rejectedDesc": "План был отклонён",
+    "rejectError": "Ошибка отклонения",
+    "newPlanReady": "Новый план готов",
+    "goToPending": "Перейти к ожидающим"
+  },
+  "schedule": {
+    "loadError": "Ошибка загрузки событий",
+    "eventCreated": "Событие создано",
+    "createError": "Ошибка создания события",
+    "eventUpdated": "Событие обновлено",
+    "updateError": "Ошибка обновления события",
+    "eventDeleted": "Событие удалено",
+    "deleteError": "Ошибка удаления события"
+  },
+  "notifications": {
+    "allMarkedRead": "Все уведомления отмечены как прочитанные",
+    "updateError": "Ошибка обновления уведомлений"
   }
 }
