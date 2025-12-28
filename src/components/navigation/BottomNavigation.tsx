@@ -1,4 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Home, TrendingUp, Sparkles, Dumbbell, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -6,22 +7,23 @@ import { cn } from "@/lib/utils";
 import { memo } from "react";
 
 const mainNavItems = [
-  { path: "/dashboard", icon: Home, label: "Главная" },
-  { path: "/progress", icon: TrendingUp, label: "Прогресс" },
-  { path: "/recommendations", icon: Sparkles, label: "Советы" },
-  { path: "/workouts", icon: Dumbbell, label: "Тренировки" },
+  { path: "/dashboard", icon: Home, labelKey: "navigation.home" },
+  { path: "/progress", icon: TrendingUp, labelKey: "navigation.progress" },
+  { path: "/recommendations", icon: Sparkles, labelKey: "navigation.tips" },
+  { path: "/workouts", icon: Dumbbell, labelKey: "navigation.workouts" },
 ];
 
 const secondaryNavItems = [
-  { path: "/goals", label: "Цели" },
-  { path: "/leaderboard", label: "Рейтинг" },
-  { path: "/body", label: "Тело" },
-  { path: "/challenges", label: "Челленджи" },
-  { path: "/habits", label: "Привычки" },
-  { path: "/fitness-data", label: "Фитнес дата" },
+  { path: "/goals", labelKey: "navigation.goals" },
+  { path: "/leaderboard", labelKey: "navigation.leaderboard" },
+  { path: "/body", labelKey: "navigation.body" },
+  { path: "/challenges", labelKey: "navigation.challenges" },
+  { path: "/habits", labelKey: "navigation.habits" },
+  { path: "/fitness-data", labelKey: "navigation.fitnessData" },
 ];
 
 export const BottomNavigation = memo(function BottomNavigation() {
+  const { t } = useTranslation('common');
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -43,7 +45,7 @@ export const BottomNavigation = memo(function BottomNavigation() {
             )}
           >
             <item.icon className="h-6 w-6" />
-            <span className="text-[10px] font-medium">{item.label}</span>
+            <span className="text-[10px] font-medium">{t(item.labelKey)}</span>
           </Button>
         ))}
         
@@ -56,7 +58,7 @@ export const BottomNavigation = memo(function BottomNavigation() {
               className="flex flex-col items-center gap-1 h-auto py-2 px-3 min-w-[64px]"
             >
               <Menu className="h-6 w-6" />
-              <span className="text-[10px] font-medium">Ещё</span>
+              <span className="text-[10px] font-medium">{t('navigation.more')}</span>
             </Button>
           </SheetTrigger>
           <SheetContent side="bottom" className="h-auto rounded-t-2xl">
@@ -71,7 +73,7 @@ export const BottomNavigation = memo(function BottomNavigation() {
                   )}
                   onClick={() => navigate(item.path)}
                 >
-                  {item.label}
+                  {t(item.labelKey)}
                 </Button>
               ))}
             </div>

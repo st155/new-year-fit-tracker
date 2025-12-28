@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +18,7 @@ interface MetricMapping {
 }
 
 export function SourcePrioritySettings() {
+  const { t } = useTranslation('integrations');
   const [mappings, setMappings] = useState<MetricMapping[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -39,8 +41,8 @@ export function SourcePrioritySettings() {
     } catch (error) {
       console.error('Error loading mappings:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось загрузить настройки',
+        title: t('prioritySettings.error'),
+        description: t('prioritySettings.loadError'),
         variant: 'destructive',
       });
     } finally {
@@ -89,14 +91,14 @@ export function SourcePrioritySettings() {
       await Promise.all(updates);
 
       toast({
-        title: 'Успешно',
-        description: 'Настройки приоритета сохранены',
+        title: t('prioritySettings.success'),
+        description: t('prioritySettings.saved'),
       });
     } catch (error) {
       console.error('Error saving settings:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось сохранить настройки',
+        title: t('prioritySettings.error'),
+        description: t('prioritySettings.saveError'),
         variant: 'destructive',
       });
     } finally {
@@ -119,14 +121,14 @@ export function SourcePrioritySettings() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Настройка приоритета источников</CardTitle>
+              <CardTitle>{t('prioritySettings.title')}</CardTitle>
               <CardDescription>
-                Установите приоритет источников данных для каждой метрики. Источники с более высоким приоритетом будут использоваться в первую очередь при агрегации.
+                {t('prioritySettings.description')}
               </CardDescription>
             </div>
             <Button onClick={saveSettings} disabled={isSaving}>
               <Save className="w-4 h-4 mr-2" />
-              Сохранить
+              {t('prioritySettings.save')}
             </Button>
           </div>
         </CardHeader>
@@ -142,14 +144,14 @@ export function SourcePrioritySettings() {
                     <div>
                       <h4 className="font-semibold">{mapping.unified_metric_name}</h4>
                       <p className="text-sm text-muted-foreground">
-                        Метод агрегации: {mapping.aggregation_method}
+                        {t('prioritySettings.aggregationMethod')} {mapping.aggregation_method}
                       </p>
                     </div>
                     <Badge variant="outline">{mapping.unified_metric_category}</Badge>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Приоритет источников (сверху вниз):</label>
+                    <label className="text-sm font-medium">{t('prioritySettings.priorityOrder')}</label>
                     <div className="space-y-2">
                       {priorityOrder.map((source, index) => (
                         <div

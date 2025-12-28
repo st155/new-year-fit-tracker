@@ -161,10 +161,148 @@
   },
   "dataQuality": {
     "title": "Data Quality",
+    "recalculate": "Recalculate",
+    "overallScore": "Overall Score",
     "excellent": "Excellent",
     "good": "Good",
     "fair": "Fair",
-    "poor": "Poor"
+    "poor": "Poor",
+    "lowQualityMetrics": "{{count}} low quality metrics"
+  },
+  "activity": {
+    "loading": "Loading activity data...",
+    "strain": "Strain",
+    "calories": "Calories",
+    "steps": "Steps",
+    "activeTime": "Active Time",
+    "strainLevels": {
+      "noData": "No data",
+      "high": "High",
+      "moderate": "Moderate",
+      "light": "Light"
+    },
+    "activityLevels": {
+      "noData": "No data",
+      "active": "Active day",
+      "moderate": "Moderate activity",
+      "low": "Low activity"
+    },
+    "history": "Activity History",
+    "historyDescription": "Activity dynamics for the last 7 days",
+    "kcal": "kcal",
+    "min": "min"
+  },
+  "appleHealth": {
+    "loading": "Loading Apple Health data...",
+    "noData": "No Apple Health data loaded yet",
+    "dashboardTitle": "Apple Health Dashboard",
+    "dashboardDescription": "Summary of your health data from Apple Health",
+    "totalRecords": "Total Records",
+    "dataTypes": "Data Types",
+    "daysOfData": "Days of Data",
+    "lastUpdate": "Last Update",
+    "periods": {
+      "7d": "7 days",
+      "30d": "30 days",
+      "90d": "90 days"
+    },
+    "metrics": {
+      "steps": "Steps",
+      "heartRate": "Heart Rate",
+      "weight": "Weight",
+      "vo2max": "VO2 Max",
+      "sleep": "Sleep",
+      "calories": "Calories"
+    },
+    "units": {
+      "bpm": "bpm",
+      "kg": "kg",
+      "mlkgmin": "ml/kg/min",
+      "hours": "h",
+      "kcal": "kcal"
+    },
+    "averageSteps": "Average: {{count}} steps",
+    "averageBpm": "Average: {{value}} bpm",
+    "averageKg": "Average: {{value}} kg",
+    "cardioFitness": "Cardio Fitness",
+    "sleepTime": "Sleep Time",
+    "activeCalories": "Active Calories",
+    "baseCalories": "Base: {{value}} kcal",
+    "availableDataTypes": "Available Data Types",
+    "healthRecordTypes": {
+      "stepCount": "Steps",
+      "vo2max": "VO2 Max",
+      "bodyMass": "Weight",
+      "heartRate": "Heart Rate",
+      "activeEnergy": "Active Calories",
+      "basalEnergy": "Basal Calories",
+      "exerciseTime": "Exercise Time",
+      "distance": "Distance",
+      "sleepAnalysis": "Sleep Analysis"
+    }
+  },
+  "metricsSettings": {
+    "title": "Metrics Settings",
+    "description": "Choose which metrics to display on the main page",
+    "done": "Done"
+  },
+  "insightSettings": {
+    "title": "Smart AI Insights Settings",
+    "description": "Configure which types of insights you want to see",
+    "insightTypes": "Insight Types",
+    "refreshInterval": "Refresh Interval",
+    "refreshIntervalHint": "How often insights will be automatically updated",
+    "intervals": {
+      "30s": "30 seconds",
+      "1m": "1 minute",
+      "2m": "2 minutes",
+      "5m": "5 minutes"
+    },
+    "save": "Save",
+    "reset": "Reset",
+    "types": {
+      "critical": "Critical",
+      "warning": "Warnings",
+      "achievement": "Achievements",
+      "info": "Information",
+      "recommendation": "Recommendations",
+      "correlation": "Correlations",
+      "anomaly": "Anomalies",
+      "prediction": "Predictions",
+      "social": "Social",
+      "trainer": "From Trainer",
+      "temporal": "Temporal Patterns",
+      "habit_pattern": "Habit Patterns",
+      "habit_risk": "Habit Risks",
+      "habit_optimization": "Habit Optimization",
+      "habit_chain": "Habit Chains"
+    },
+    "typeDescriptions": {
+      "critical": "Issues requiring immediate attention",
+      "warning": "Important warnings and reminders",
+      "achievement": "Your successes and records",
+      "info": "General information and statistics",
+      "recommendation": "Personalized recommendations",
+      "correlation": "Relationships between metrics",
+      "anomaly": "Unusual deviations from the norm",
+      "prediction": "Goal achievement forecasts",
+      "social": "Challenges and comparisons",
+      "trainer": "Messages from your trainer",
+      "temporal": "Temporal patterns",
+      "habit_pattern": "Optimal times and patterns",
+      "habit_risk": "Habits at risk",
+      "habit_optimization": "Improvement recommendations",
+      "habit_chain": "Connections between habits"
+    }
+  },
+  "unitRecalculation": {
+    "successTitle": "Units recalculated",
+    "successDescription": "Updated {{count}} records",
+    "errorTitle": "Recalculation error",
+    "alertTitle": "Unconverted units detected",
+    "alertDescription": "Some biomarkers have incorrect units that need to be recalculated",
+    "fixButton": "Fix units",
+    "recalculating": "Recalculating..."
   },
   "aiStrip": {
     "metrics": "metrics",
