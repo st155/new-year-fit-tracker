@@ -5,6 +5,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { habitKeys } from '../keys';
 
 export interface HabitAttempt {
@@ -19,6 +20,7 @@ export interface HabitAttempt {
 }
 
 export function useHabitAttemptsQuery(habitId: string, userId?: string) {
+  const { t } = useTranslation('habits');
   const queryClient = useQueryClient();
 
   const { data: attempts, isLoading } = useQuery({
@@ -116,11 +118,11 @@ export function useHabitAttemptsQuery(habitId: string, userId?: string) {
       queryClient.invalidateQueries({ queryKey: habitKeys.attempts(habitId) });
       queryClient.invalidateQueries({ queryKey: ['habit-stats'] });
       queryClient.invalidateQueries({ queryKey: ['habit-measurements'] });
-      toast.success('Привычка сброшена! Начинаем заново 💪');
+      toast.success(t('attempts.resetSuccess'));
     },
     onError: (error) => {
       console.error('Error resetting habit:', error);
-      toast.error('Failed to reset habit');
+      toast.error(t('attempts.resetError'));
     },
   });
 

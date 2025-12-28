@@ -17,9 +17,8 @@ interface Habit {
   title?: string; // legacy
   category?: string;
 }
-
-function getHabitName(habit: Habit): string {
-  return habit.name || habit.title || 'Привычка';
+function getHabitName(habit: Habit, defaultName = 'Habit'): string {
+  return habit.name || habit.title || defaultName;
 }
 
 export interface HabitDependency {
@@ -123,15 +122,26 @@ export function detectTriggerHabits(
     }));
 }
 
+export interface SynergyOptions {
+  defaultHabitName?: string;
+  synergyReason?: (name1: string, name2: string) => string;
+  categoryReason?: (category: string) => string;
+}
+
 /**
  * Find synergies between habits (habits that work well together)
  */
 export function findHabitSynergies(
   habits: Habit[],
-  completions: HabitCompletion[]
+  completions: HabitCompletion[],
+  options?: SynergyOptions
 ): HabitSynergy[] {
   const synergies: HabitSynergy[] = [];
   const dependencies = findHabitDependencies(completions);
+  
+  const defaultName = options?.defaultHabitName || 'Habit';
+  const getSynergyReason = options?.synergyReason || ((n1, n2) => `${n1} and ${n2} work great together`);
+  const getCategoryReason = options?.categoryReason || ((cat) => `Both habits from category "${cat}"`);
 
   // Bidirectional strong dependencies = synergy
   dependencies.forEach(dep => {
@@ -149,7 +159,7 @@ export function findHabitSynergies(
           habit1: dep.sourceHabit,
           habit2: dep.dependentHabit,
           synergyScore: Math.round(avgStrength),
-          reason: `${getHabitName(habit1)} и ${getHabitName(habit2)} отлично работают вместе`,
+          reason: getSynergyReason(getHabitName(habit1, defaultName), getHabitName(habit2, defaultName)),
         });
       }
     }
@@ -193,7 +203,7 @@ export function findHabitSynergies(
           habit1: habit1Id,
           habit2: habit2Id,
           synergyScore: Math.min(count * 10, 100),
-          reason: `Обе привычки из категории "${habit1.category}"`,
+          reason: getCategoryReason(habit1.category!),
         });
       }
     }

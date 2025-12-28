@@ -70,5 +70,29 @@
     "maxSpeed": "Max Speed",
     "elevation": "Elevation",
     "workoutTime": "Workout Time"
+  },
+  "vo2maxDetail": {
+    "title": "VO2Max Progress",
+    "back": "Back",
+    "current": "Current VO2Max",
+    "unit": "ml/kg/min",
+    "weekly": "Weekly",
+    "measurements": "Measurements",
+    "valueUnit": "{{value}} ml/kg/min",
+    "noData": "No VO2Max data",
+    "noDataHint": "Upload Whoop screenshots to track progress",
+    "history": "Measurement History",
+    "category": {
+      "excellent": "Excellent",
+      "veryGood": "Very Good",
+      "good": "Good",
+      "fair": "Fair",
+      "fairShort": "Fair",
+      "needsImprovement": "Needs Improvement"
+    },
+    "info": {
+      "title": "What is VO2Max?",
+      "description": "VO2Max is the maximum oxygen consumption, a key indicator of cardiovascular endurance."
+    }
   }
 }

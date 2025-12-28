@@ -352,5 +352,9 @@
     "hoursAgo": "{{hours}} ч назад",
     "daysAgo": "{{days}} дн назад",
     "syncedAt": "Синхронизация"
+  },
+  "notifications": {
+    "allMarkedRead": "Все уведомления отмечены прочитанными",
+    "updateError": "Ошибка при обновлении уведомлений"
   }
 }

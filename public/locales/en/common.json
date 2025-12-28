@@ -352,5 +352,9 @@
     "hoursAgo": "{{hours}} h ago",
     "daysAgo": "{{days}} d ago",
     "syncedAt": "Synced"
+  },
+  "notifications": {
+    "allMarkedRead": "All notifications marked as read",
+    "updateError": "Error updating notifications"
   }
 }

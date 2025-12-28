@@ -194,6 +194,7 @@
     "items": "{{count}} элементов",
     "addAllSupplements": "Добавить все добавки ({{count}})",
     "deactivate": "Деактивировать",
-    "activate": "Активировать"
+    "activate": "Активировать",
+    "dismissed": "Рекомендация отклонена"
   }
 }
