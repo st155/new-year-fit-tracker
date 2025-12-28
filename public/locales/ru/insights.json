@@ -1,0 +1,38 @@
+{
+  "quality": {
+    "poor_one": "{{count}} метрика требует внимания",
+    "poor_few": "{{count}} метрики требуют внимания",
+    "poor_many": "{{count}} метрик требуют внимания",
+    "fair_one": "{{count}} метрика с низким качеством",
+    "fair_few": "{{count}} метрики с низким качеством",
+    "fair_many": "{{count}} метрик с низким качеством"
+  },
+  "trends": {
+    "weeklyChange": "{{metric}}: {{change}}% за неделю"
+  },
+  "goals": {
+    "defaultTitle": "Цель",
+    "stale": "Цель \"{{title}}\" не обновлялась {{days}} дней",
+    "stale_one": "Цель \"{{title}}\" не обновлялась {{days}} день",
+    "nearCompletion": "Цель \"{{title}}\" на {{progress}}%!",
+    "completed": "Цель \"{{title}}\" достигнута!"
+  },
+  "habits": {
+    "streak": "Стрейк: {{days}} дней - {{title}}",
+    "streak_one": "Стрейк: {{days}} день - {{title}}",
+    "allComplete": "Все привычки выполнены ({{done}}/{{total}})",
+    "progress": "Привычки: {{done}}/{{total}} выполнено"
+  },
+  "achievements": {
+    "stepsRecord": "Новый рекорд! {{steps}} шагов",
+    "highRecovery": "Отличное восстановление: {{recovery}}%"
+  },
+  "info": {
+    "syncedToday_one": "Сегодня синхронизирована {{count}} метрика",
+    "syncedToday_few": "Сегодня синхронизировано {{count}} метрики",
+    "syncedToday_many": "Сегодня синхронизировано {{count}} метрик"
+  },
+  "recommendations": {
+    "addMetric": "Добавьте метрику \"{{name}}\" для полной картины"
+  }
+}

@@ -228,5 +228,15 @@
   "attempts": {
     "resetSuccess": "Habit reset! Starting fresh 💪",
     "resetError": "Failed to reset habit"
+  },
+  "mutations": {
+    "created": "Habit created",
+    "createdDesc": "\"{{name}}\" added to list",
+    "error": "Error",
+    "createError": "Failed to create habit",
+    "statusError": "Failed to update status",
+    "deleted": "Habit deleted",
+    "deletedDesc": "Habit and all related data deleted",
+    "deleteError": "Failed to delete habit"
   }
 }

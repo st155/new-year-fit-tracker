@@ -4,6 +4,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 import {
   createHabit,
   updateHabitStatus,
@@ -14,6 +15,7 @@ import {
 import { habitKeys } from '../keys';
 
 export function useHabitMutations() {
+  const { t } = useTranslation('habits');
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -27,15 +29,15 @@ export function useHabitMutations() {
     onSuccess: (habit) => {
       invalidateHabits();
       toast({
-        title: 'Привычка создана',
-        description: `"${habit.name}" добавлена в список`,
+        title: t('mutations.created'),
+        description: t('mutations.createdDesc', { name: habit.name }),
       });
     },
     onError: (error) => {
       console.error('[useHabitMutations] Create error:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось создать привычку',
+        title: t('mutations.error'),
+        description: t('mutations.createError'),
         variant: 'destructive',
       });
     },
@@ -54,8 +56,8 @@ export function useHabitMutations() {
     onError: (error) => {
       console.error('[useHabitMutations] Status update error:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось обновить статус',
+        title: t('mutations.error'),
+        description: t('mutations.statusError'),
         variant: 'destructive',
       });
     },
@@ -67,15 +69,15 @@ export function useHabitMutations() {
     onSuccess: () => {
       invalidateHabits();
       toast({
-        title: 'Привычка удалена',
-        description: 'Привычка и все связанные данные удалены',
+        title: t('mutations.deleted'),
+        description: t('mutations.deletedDesc'),
       });
     },
     onError: (error) => {
       console.error('[useHabitMutations] Delete error:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось удалить привычку',
+        title: t('mutations.error'),
+        description: t('mutations.deleteError'),
         variant: 'destructive',
       });
     },

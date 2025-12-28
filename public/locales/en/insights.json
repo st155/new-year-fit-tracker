@@ -1,0 +1,35 @@
+{
+  "quality": {
+    "poor_one": "{{count}} metric needs attention",
+    "poor_other": "{{count}} metrics need attention",
+    "fair_one": "{{count}} metric has low quality",
+    "fair_other": "{{count}} metrics have low quality"
+  },
+  "trends": {
+    "weeklyChange": "{{metric}}: {{change}}% this week"
+  },
+  "goals": {
+    "defaultTitle": "Goal",
+    "stale": "Goal \"{{title}}\" hasn't been updated for {{days}} days",
+    "stale_one": "Goal \"{{title}}\" hasn't been updated for {{days}} day",
+    "nearCompletion": "Goal \"{{title}}\" is at {{progress}}%!",
+    "completed": "Goal \"{{title}}\" achieved!"
+  },
+  "habits": {
+    "streak": "Streak: {{days}} days - {{title}}",
+    "streak_one": "Streak: {{days}} day - {{title}}",
+    "allComplete": "All habits completed ({{done}}/{{total}})",
+    "progress": "Habits: {{done}}/{{total}} completed"
+  },
+  "achievements": {
+    "stepsRecord": "New record! {{steps}} steps",
+    "highRecovery": "Excellent recovery: {{recovery}}%"
+  },
+  "info": {
+    "syncedToday_one": "{{count}} metric synced today",
+    "syncedToday_other": "{{count}} metrics synced today"
+  },
+  "recommendations": {
+    "addMetric": "Add metric \"{{name}}\" for a complete picture"
+  }
+}
