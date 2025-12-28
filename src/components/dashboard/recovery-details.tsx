@@ -6,7 +6,10 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Heart, Battery, Moon, Zap, TrendingUp, TrendingDown } from 'lucide-react';
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
+
+const getDateLocale = (lang: string) => lang === 'ru' ? ru : enUS;
 
 interface RecoveryData {
   recovery_score: number | null;
@@ -22,6 +25,8 @@ interface RecoveryDetailsProps {
 
 export const RecoveryDetails = ({ selectedDate }: RecoveryDetailsProps) => {
   const { user } = useAuth();
+  const { t, i18n } = useTranslation('dashboard');
+  const dateLocale = getDateLocale(i18n.language);
   const [recoveryData, setRecoveryData] = useState<RecoveryData[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -108,10 +113,10 @@ export const RecoveryDetails = ({ selectedDate }: RecoveryDetailsProps) => {
   };
 
   const getRecoveryStatus = (score: number | null) => {
-    if (!score) return { label: 'Нет данных', color: 'secondary' };
-    if (score >= 75) return { label: 'Отличное', color: 'success' };
-    if (score >= 50) return { label: 'Хорошее', color: 'warning' };
-    return { label: 'Требует отдыха', color: 'destructive' };
+    if (!score) return { label: t('recovery.noData'), color: 'secondary' };
+    if (score >= 75) return { label: t('recovery.excellent'), color: 'success' };
+    if (score >= 50) return { label: t('recovery.good'), color: 'warning' };
+    return { label: t('recovery.needsRest'), color: 'destructive' };
   };
 
   const getTrend = (current: number | null, previous: number | null) => {
@@ -122,7 +127,7 @@ export const RecoveryDetails = ({ selectedDate }: RecoveryDetailsProps) => {
   };
 
   if (loading) {
-    return <div className="text-center py-8">Загрузка данных восстановления...</div>;
+    return <div className="text-center py-8">{t('recovery.loading')}</div>;
   }
 
   const todayData = recoveryData[0];
@@ -135,7 +140,7 @@ export const RecoveryDetails = ({ selectedDate }: RecoveryDetailsProps) => {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium">Оценка восстановления</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('recovery.score')}</CardTitle>
               <Heart className="h-4 w-4 text-red-500" />
             </div>
           </CardHeader>
@@ -162,7 +167,7 @@ export const RecoveryDetails = ({ selectedDate }: RecoveryDetailsProps) => {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium">HRV</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('recovery.hrv')}</CardTitle>
               <Battery className="h-4 w-4 text-blue-500" />
             </div>
           </CardHeader>
@@ -178,7 +183,7 @@ export const RecoveryDetails = ({ selectedDate }: RecoveryDetailsProps) => {
                     <TrendingDown className="h-4 w-4 text-red-500" />
                 )}
               </div>
-              <p className="text-xs text-muted-foreground">мс</p>
+              <p className="text-xs text-muted-foreground">{t('units.ms')}</p>
             </div>
           </CardContent>
         </Card>
@@ -186,7 +191,7 @@ export const RecoveryDetails = ({ selectedDate }: RecoveryDetailsProps) => {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium">ЧСС покоя</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('recovery.restingHr')}</CardTitle>
               <Heart className="h-4 w-4 text-red-500" />
             </div>
           </CardHeader>
@@ -202,7 +207,7 @@ export const RecoveryDetails = ({ selectedDate }: RecoveryDetailsProps) => {
                     <TrendingDown className="h-4 w-4 text-red-500" />
                 )}
               </div>
-              <p className="text-xs text-muted-foreground">bpm</p>
+              <p className="text-xs text-muted-foreground">{t('units.bpm')}</p>
             </div>
           </CardContent>
         </Card>
@@ -210,7 +215,7 @@ export const RecoveryDetails = ({ selectedDate }: RecoveryDetailsProps) => {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium">Качество сна</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('recovery.sleepQuality')}</CardTitle>
               <Moon className="h-4 w-4 text-purple-500" />
             </div>
           </CardHeader>
@@ -236,9 +241,9 @@ export const RecoveryDetails = ({ selectedDate }: RecoveryDetailsProps) => {
       {/* История восстановления */}
       <Card>
         <CardHeader>
-          <CardTitle>История восстановления</CardTitle>
+          <CardTitle>{t('recovery.history')}</CardTitle>
           <CardDescription>
-            Динамика показателей за последние 7 дней
+            {t('recovery.historyDesc')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -247,7 +252,7 @@ export const RecoveryDetails = ({ selectedDate }: RecoveryDetailsProps) => {
               <div key={data.date} className="flex items-center justify-between py-3 border-b last:border-b-0">
                 <div className="flex items-center gap-3">
                   <div className="text-sm font-medium min-w-[100px]">
-                    {format(new Date(data.date), 'd MMM', { locale: ru })}
+                    {format(new Date(data.date), 'd MMM', { locale: dateLocale })}
                   </div>
                   <div className="flex items-center gap-4">
                     {data.recovery_score && (
@@ -259,7 +264,7 @@ export const RecoveryDetails = ({ selectedDate }: RecoveryDetailsProps) => {
                     {data.hrv && (
                       <div className="flex items-center gap-2">
                         <Battery className="h-3 w-3 text-blue-500" />
-                        <span className="text-sm">{Math.round(data.hrv)} мс</span>
+                        <span className="text-sm">{Math.round(data.hrv)} {t('units.ms')}</span>
                       </div>
                     )}
                     {data.resting_hr && (
