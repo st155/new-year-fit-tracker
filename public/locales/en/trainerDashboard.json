@@ -216,5 +216,33 @@
     "lightSleep": "Light Sleep",
     "remSleep": "REM Sleep",
     "respiratoryRate": "Respiratory Rate"
+  },
+  "aliases": {
+    "loadError": "Load Error",
+    "loadErrorDesc": "Failed to load aliases",
+    "conflict": "Alias Conflict",
+    "conflictDesc": "Alias \"{{name}}\" is already used for another client",
+    "saveError": "Save Error",
+    "saveErrorDesc": "Failed to save alias",
+    "deleteError": "Delete Error",
+    "deleteErrorDesc": "Failed to delete alias",
+    "updateError": "Update Error",
+    "updateErrorDesc": "Failed to update alias"
+  },
+  "metrics": {
+    "title": "Select Metrics",
+    "selected": "{{count}} selected",
+    "search": "Search metrics...",
+    "all": "All",
+    "cardio": "Cardio",
+    "clear": "Clear",
+    "notFound": "No metrics found",
+    "category": {
+      "activity": "Activity",
+      "sleep": "Sleep",
+      "recovery": "Recovery",
+      "heart": "Heart",
+      "body": "Body"
+    }
   }
 }

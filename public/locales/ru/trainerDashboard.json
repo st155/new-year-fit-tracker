@@ -213,8 +213,36 @@
     "efficiency": "Эффективность сна",
     "quality": "Качество сна",
     "deepSleep": "Глубокий сон",
-    "lightSleep": "Легкий сон",
+    "lightSleep": "Лёгкий сон",
     "remSleep": "REM сон",
     "respiratoryRate": "Частота дыхания"
+  },
+  "aliases": {
+    "loadError": "Ошибка загрузки",
+    "loadErrorDesc": "Не удалось загрузить псевдонимы",
+    "conflict": "Конфликт псевдонимов",
+    "conflictDesc": "Псевдоним \"{{name}}\" уже используется для другого клиента",
+    "saveError": "Ошибка сохранения",
+    "saveErrorDesc": "Не удалось сохранить псевдоним",
+    "deleteError": "Ошибка удаления",
+    "deleteErrorDesc": "Не удалось удалить псевдоним",
+    "updateError": "Ошибка обновления",
+    "updateErrorDesc": "Не удалось обновить псевдоним"
+  },
+  "metrics": {
+    "title": "Выбор метрик",
+    "selected": "{{count}} выбрано",
+    "search": "Поиск метрик...",
+    "all": "Все",
+    "cardio": "Кардио",
+    "clear": "Очистить",
+    "notFound": "Метрики не найдены",
+    "category": {
+      "activity": "Активность",
+      "sleep": "Сон",
+      "recovery": "Восстановление",
+      "heart": "Сердце",
+      "body": "Тело"
+    }
   }
 }
