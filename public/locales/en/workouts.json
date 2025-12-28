@@ -1,4 +1,43 @@
 {
+  "imageDialog": {
+    "title": "Add Image",
+    "exercise": "Exercise",
+    "search": "Search",
+    "placeholder": "Exercise name...",
+    "hint": "Click 'Search' to find images",
+    "hintAlt": "Or enter URL manually",
+    "urlLabel": "Image URL",
+    "load": "Load",
+    "preview": "Preview",
+    "searchError": "Search Error",
+    "searchErrorDesc": "Could not find images. Try entering URL manually.",
+    "invalidUrl": "Invalid URL",
+    "invalidUrlDesc": "Please enter a valid image URL",
+    "loadError": "Load Error",
+    "loadErrorDesc": "Could not load image from this URL"
+  },
+  "stats": {
+    "duration": "Duration",
+    "minutes": "{{value}} min",
+    "totalVolume": "Total Volume",
+    "kg": "{{value}} kg",
+    "calories": "Calories",
+    "kcal": "~{{value}} kcal",
+    "exercises": "Exercises",
+    "sets": "Sets",
+    "intensity": "Intensity",
+    "kgPerMin": "{{value}} kg/min",
+    "summaryTitle": "Summary"
+  },
+  "feeling": {
+    "title": "How do you feel?",
+    "subtitle": "after workout?",
+    "veryEasy": "Very Easy",
+    "normal": "Normal",
+    "veryHard": "Very Hard",
+    "easy": "Easy",
+    "hard": "Hard"
+  },
   "aiInsight": {
     "title": "AI Insight",
     "highVolumeFeelingGood": "Great! You handled a high volume and feel good. I'll increase the load next workout. 💪",

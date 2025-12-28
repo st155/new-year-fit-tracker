@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useTranslation } from 'react-i18next';
 import { Clock, Dumbbell, Activity, Flame, Hash, Layers } from "lucide-react";
 
 interface WorkoutStats {
@@ -14,41 +15,43 @@ interface WorkoutStatsCardProps {
 }
 
 export function WorkoutStatsCard({ stats }: WorkoutStatsCardProps) {
+  const { t } = useTranslation('workouts');
+  
   const statsData = [
     {
       icon: Clock,
-      label: "Длительность",
-      value: `${stats.duration} мин`,
+      label: t('stats.duration'),
+      value: t('stats.minutes', { value: stats.duration }),
       color: "text-cyan-400",
     },
     {
       icon: Dumbbell,
-      label: "Общий объем",
-      value: `${stats.totalVolume.toLocaleString()} кг`,
+      label: t('stats.totalVolume'),
+      value: t('stats.kg', { value: stats.totalVolume.toLocaleString() }),
       color: "text-purple-400",
     },
     {
       icon: Flame,
-      label: "Калории",
-      value: `~${stats.estimatedCalories} ккал`,
+      label: t('stats.calories'),
+      value: t('stats.kcal', { value: stats.estimatedCalories }),
       color: "text-pink-400",
     },
     {
       icon: Layers,
-      label: "Упражнений",
+      label: t('stats.exercises'),
       value: stats.totalExercises.toString(),
       color: "text-cyan-400",
     },
     {
       icon: Hash,
-      label: "Подходов",
+      label: t('stats.sets'),
       value: stats.totalSets.toString(),
       color: "text-purple-400",
     },
     {
       icon: Activity,
-      label: "Интенсивность",
-      value: stats.duration > 0 ? `${Math.round(stats.totalVolume / stats.duration)} кг/мин` : '0 кг/мин',
+      label: t('stats.intensity'),
+      value: stats.duration > 0 ? t('stats.kgPerMin', { value: Math.round(stats.totalVolume / stats.duration) }) : t('stats.kgPerMin', { value: 0 }),
       color: "text-pink-400",
     },
   ];
@@ -60,7 +63,7 @@ export function WorkoutStatsCard({ stats }: WorkoutStatsCardProps) {
       transition={{ duration: 0.5, delay: 0.2 }}
       className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 space-y-4"
     >
-      <h2 className="text-2xl font-semibold text-foreground">Краткая сводка</h2>
+      <h2 className="text-2xl font-semibold text-foreground">{t('stats.summaryTitle')}</h2>
       
       <div className="grid grid-cols-2 gap-4">
         {statsData.map((stat, index) => (

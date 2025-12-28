@@ -1,4 +1,13 @@
 {
+  "metrics": {
+    "workoutCalories": "Калории за тренировку",
+    "workoutStrain": "Нагрузка тренировки",
+    "workoutTime": "Время тренировки"
+  },
+  "units": {
+    "kcal": "ккал",
+    "min": "мин"
+  },
   "title": "Проверка здоровья системы",
   "overallStatus": "Общий статус",
   "rerun": "Перезапустить",

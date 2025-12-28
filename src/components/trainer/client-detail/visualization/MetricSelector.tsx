@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -16,38 +17,38 @@ interface MetricCategory {
   metrics: string[];
 }
 
-const METRIC_CATEGORIES: MetricCategory[] = [
+const getMetricCategories = (t: (key: string) => string): MetricCategory[] => [
   {
     id: 'activity',
-    name: 'Активность',
+    name: t('metrics.category.activity'),
     icon: Activity,
     color: 'blue',
     metrics: ['Steps', 'Active Calories', 'Distance', 'Workout Time', 'Active Energy'],
   },
   {
     id: 'sleep',
-    name: 'Сон',
+    name: t('metrics.category.sleep'),
     icon: Moon,
     color: 'indigo',
     metrics: ['Sleep Duration', 'Sleep Efficiency', 'Sleep Performance', 'Deep Sleep Duration', 'REM Sleep Duration', 'Light Sleep Duration'],
   },
   {
     id: 'recovery',
-    name: 'Восстановление',
+    name: t('metrics.category.recovery'),
     icon: Zap,
     color: 'green',
     metrics: ['Recovery Score', 'HRV RMSSD', 'Body Battery', 'Stress Level', 'Readiness Score'],
   },
   {
     id: 'heart',
-    name: 'Сердце',
+    name: t('metrics.category.heart'),
     icon: Heart,
     color: 'red',
     metrics: ['Average Heart Rate', 'Resting Heart Rate', 'Max Heart Rate', 'Heart Rate Variability'],
   },
   {
     id: 'body',
-    name: 'Тело',
+    name: t('metrics.category.body'),
     icon: Weight,
     color: 'amber',
     metrics: ['Weight', 'Body Fat Percentage', 'Muscle Mass', 'BMI', 'BMR'],
@@ -61,7 +62,9 @@ interface MetricSelectorProps {
 }
 
 export function MetricSelector({ selectedMetrics, onMetricsChange, availableMetrics }: MetricSelectorProps) {
+  const { t } = useTranslation('trainerDashboard');
   const [searchQuery, setSearchQuery] = useState('');
+  const METRIC_CATEGORIES = getMetricCategories(t);
 
   const handleMetricToggle = (metric: string) => {
     if (selectedMetrics.includes(metric)) {
@@ -116,15 +119,15 @@ export function MetricSelector({ selectedMetrics, onMetricsChange, availableMetr
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">Выбор метрик</CardTitle>
-          <Badge variant="secondary">{selectedMetrics.length} выбрано</Badge>
+          <CardTitle className="text-lg">{t('metrics.title')}</CardTitle>
+          <Badge variant="secondary">{t('metrics.selected', { count: selectedMetrics.length })}</Badge>
         </div>
         
         {/* Search */}
         <div className="relative mt-4">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Поиск метрик..."
+            placeholder={t('metrics.search')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
@@ -144,16 +147,16 @@ export function MetricSelector({ selectedMetrics, onMetricsChange, availableMetr
         {/* Presets */}
         <div className="flex gap-2 mt-3">
           <Button variant="outline" size="sm" onClick={() => handlePreset('all')}>
-            Все
+            {t('metrics.all')}
           </Button>
           <Button variant="outline" size="sm" onClick={() => handlePreset('cardio')}>
-            Кардио
+            {t('metrics.cardio')}
           </Button>
           <Button variant="outline" size="sm" onClick={() => handlePreset('wellness')}>
             Wellness
           </Button>
           <Button variant="outline" size="sm" onClick={() => handlePreset('clear')}>
-            Очистить
+            {t('metrics.clear')}
           </Button>
         </div>
       </CardHeader>
@@ -212,7 +215,7 @@ export function MetricSelector({ selectedMetrics, onMetricsChange, availableMetr
         
         {filteredCategories.length === 0 && (
           <div className="text-center py-8 text-muted-foreground">
-            <p>Метрики не найдены</p>
+            <p>{t('metrics.notFound')}</p>
           </div>
         )}
       </CardContent>

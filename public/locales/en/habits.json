@@ -215,5 +215,14 @@
     "progressOfGoal": "{{percent}}% of goal ({{target}} {{unit}})",
     "enterValue": "Enter {{unit}}",
     "targetHint": "Target: {{target}} {{unit}}"
+  },
+  "progress": {
+    "title": "Progress",
+    "days": "{{count}} days",
+    "reset": "Reset",
+    "streakDays": "Streak Days",
+    "completed": "Completed",
+    "skipped": "Skipped",
+    "status": "Status"
   }
 }
