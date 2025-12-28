@@ -244,5 +244,32 @@
       "heart": "Heart",
       "body": "Body"
     }
+  },
+  "pendingActions": {
+    "error": "Error",
+    "loadError": "Failed to load pending actions",
+    "planCreated": "Plan created",
+    "checkPending": "Check pending actions",
+    "createError": "Error creating plan",
+    "done": "Done",
+    "executeError": "Execution error",
+    "rejected": "Rejected",
+    "rejectedDesc": "Plan was rejected",
+    "rejectError": "Rejection error",
+    "newPlanReady": "New plan ready",
+    "goToPending": "Go to pending"
+  },
+  "schedule": {
+    "loadError": "Error loading events",
+    "eventCreated": "Event created",
+    "createError": "Error creating event",
+    "eventUpdated": "Event updated",
+    "updateError": "Error updating event",
+    "eventDeleted": "Event deleted",
+    "deleteError": "Error deleting event"
+  },
+  "notifications": {
+    "allMarkedRead": "All notifications marked as read",
+    "updateError": "Error updating notifications"
   }
 }
