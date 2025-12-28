@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { supplementsApi } from '@/lib/api';
+import { useTranslation } from 'react-i18next';
 
 interface Deficiency {
   biomarker_id: string;
@@ -47,6 +48,7 @@ interface AnalysisResponse {
 
 export function useGenerateRecommendations() {
   const { toast } = useToast();
+  const { t } = useTranslation('supplements');
 
   return useMutation({
     mutationFn: async (): Promise<AnalysisResponse> => {
@@ -64,7 +66,7 @@ export function useGenerateRecommendations() {
     },
     onError: (error: any) => {
       toast({
-        title: 'Ошибка анализа',
+        title: t('aiGenerator.analysisError'),
         description: error.message,
         variant: 'destructive',
       });
@@ -74,6 +76,7 @@ export function useGenerateRecommendations() {
 
 export function useAddRecommendationsToStack() {
   const { toast } = useToast();
+  const { t } = useTranslation('supplements');
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -135,7 +138,7 @@ export function useAddRecommendationsToStack() {
           if (corrected.warning) {
             console.log('[AI-Validation]', corrected.warning);
             toast({
-              title: 'Время приема скорректировано',
+              title: t('aiGenerator.intakeTimeCorrected'),
               description: corrected.warning,
             });
           }
@@ -179,22 +182,24 @@ export function useAddRecommendationsToStack() {
 
       if (successCount > 0) {
         toast({
-          title: 'Добавки добавлены в стек',
-          description: `${successCount} добавок успешно добавлено${failedCount > 0 ? `, ${failedCount} ошибок` : ''}`,
+          title: t('aiGenerator.addedToStack'),
+          description: failedCount > 0 
+            ? t('aiGenerator.addedWithErrors', { success: successCount, failed: failedCount })
+            : t('aiGenerator.addedCount', { success: successCount }),
         });
       }
 
       if (failedCount > 0 && successCount === 0) {
         toast({
-          title: 'Ошибка добавления',
-          description: `Не удалось добавить ${failedCount} добавок`,
+          title: t('aiGenerator.addError'),
+          description: t('aiGenerator.failedToAdd', { count: failedCount }),
           variant: 'destructive',
         });
       }
     },
     onError: (error: any) => {
       toast({
-        title: 'Ошибка добавления',
+        title: t('aiGenerator.addError'),
         description: error.message,
         variant: 'destructive',
       });

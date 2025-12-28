@@ -7,6 +7,7 @@ import { Sunrise, Sun, Sunset, Moon, ChevronDown, CheckCircle2 } from 'lucide-re
 import { Button } from '@/components/ui/button';
 import { TimelineSupplementCard } from './TimelineSupplementCard';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 import type { UnifiedSupplementItem } from '@/hooks/biostack/useTodaysSupplements';
 
 interface TimelineSectionProps {
@@ -22,22 +23,22 @@ interface TimelineSectionProps {
 
 const timeSlotConfig = {
   morning: { 
-    label: 'Утро', 
+    labelKey: 'timeline.morning', 
     icon: Sunrise,
     gradient: 'from-amber-500/20 to-orange-500/20'
   },
   noon: { 
-    label: 'День', 
+    labelKey: 'timeline.noon', 
     icon: Sun,
     gradient: 'from-yellow-500/20 to-amber-500/20'
   },
   evening: { 
-    label: 'Вечер', 
+    labelKey: 'timeline.evening', 
     icon: Sunset,
     gradient: 'from-purple-500/20 to-pink-500/20'
   },
   bedtime: { 
-    label: 'Перед сном', 
+    labelKey: 'timeline.bedtime', 
     icon: Moon,
     gradient: 'from-indigo-500/20 to-purple-500/20'
   },
@@ -53,6 +54,7 @@ export function TimelineSection({
   onToggle,
   togglingItemId,
 }: TimelineSectionProps) {
+  const { t } = useTranslation('supplements');
   const config = timeSlotConfig[timeSlot];
   const Icon = config.icon;
   
@@ -98,10 +100,10 @@ export function TimelineSection({
             "font-semibold",
             allTaken && "text-green-500"
           )}>
-            {config.label}
+            {t(config.labelKey)}
           </p>
           <p className="text-sm text-muted-foreground">
-            {takenCount} / {totalCount} принято
+            {t('timeline.takenCount', { taken: takenCount, total: totalCount })}
           </p>
         </div>
 
@@ -138,7 +140,7 @@ export function TimelineSection({
                   }}
                   className="w-full mb-2 border-dashed"
                 >
-                  Принять всё ({totalCount - takenCount})
+                  {t('timeline.takeAll', { count: totalCount - takenCount })}
                 </Button>
               )}
 

@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, Package, Unlink, Pill } from "lucide-react";
 import { cn } from "@/lib/utils";
-
+import { useTranslation } from "react-i18next";
 interface LinkProductDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -31,6 +31,7 @@ export function LinkProductDialog({
   currentLinkedId,
   itemName 
 }: LinkProductDialogProps) {
+  const { t } = useTranslation('supplements');
   const [search, setSearch] = useState("");
 
   const { data: libraryProducts = [], isLoading } = useQuery({
@@ -73,21 +74,21 @@ export function LinkProductDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-lg">Связать с продуктом</DialogTitle>
+          <DialogTitle className="text-lg">{t('linkProduct.title')}</DialogTitle>
           <p className="text-sm text-muted-foreground mt-1">
-            Выберите продукт для: <span className="font-medium text-foreground">{itemName}</span>
+            {t('linkProduct.selectFor')} <span className="font-medium text-foreground">{itemName}</span>
           </p>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Поиск..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+            <Input placeholder={t('linkProduct.search')} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
           </div>
 
           {currentLinkedId && (
             <Button variant="outline" className="w-full justify-start gap-2 text-destructive" onClick={() => { onSelect(null); onOpenChange(false); }}>
-              <Unlink className="h-4 w-4" /> Убрать связь
+              <Unlink className="h-4 w-4" /> {t('linkProduct.removeLink')}
             </Button>
           )}
 
@@ -95,14 +96,14 @@ export function LinkProductDialog({
             {isLoading ? (
               <div className="flex items-center justify-center py-8"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" /></div>
             ) : filteredProducts.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground"><Package className="h-8 w-8 mx-auto mb-2 opacity-50" /><p className="text-sm">{search ? 'Не найдено' : 'Библиотека пуста'}</p></div>
+              <div className="text-center py-8 text-muted-foreground"><Package className="h-8 w-8 mx-auto mb-2 opacity-50" /><p className="text-sm">{search ? t('linkProduct.notFound') : t('linkProduct.libraryEmpty')}</p></div>
             ) : (
               <div className="space-y-2">
                 {filteredProducts.map((p) => (
                   <button key={p.id} onClick={() => { onSelect(p.id); onOpenChange(false); }} className={cn("w-full flex items-center gap-3 p-3 rounded-lg border transition-all text-left", p.id === currentLinkedId ? "bg-green-500/10 border-green-500/50" : "bg-card hover:bg-accent border-border")}>
                     {p.image_url ? <img src={p.image_url} alt={p.name} className="w-10 h-10 rounded-lg object-cover" /> : <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center"><Pill className="h-5 w-5 text-muted-foreground" /></div>}
                     <div className="flex-1 min-w-0"><p className="font-medium text-sm truncate">{p.name}</p>{p.brand && <p className="text-xs text-muted-foreground truncate">{p.brand}</p>}</div>
-                    {p.id === currentLinkedId && <span className="text-xs font-medium text-green-500">Связан</span>}
+                    {p.id === currentLinkedId && <span className="text-xs font-medium text-green-500">{t('linkProduct.linked')}</span>}
                   </button>
                 ))}
               </div>
