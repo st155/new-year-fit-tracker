@@ -209,5 +209,23 @@
     "target": "Target",
     "errorTitle": "Error",
     "errorLoading": "Failed to load goals"
+  },
+  "recovery": {
+    "noData": "No data",
+    "excellent": "Excellent",
+    "good": "Good",
+    "needsRest": "Needs rest",
+    "loading": "Loading recovery data...",
+    "score": "Recovery Score",
+    "hrv": "HRV",
+    "restingHr": "Resting HR",
+    "sleepQuality": "Sleep Quality",
+    "history": "Recovery History",
+    "historyDesc": "Metrics over the last 7 days"
+  },
+  "units": {
+    "min": "min",
+    "ms": "ms",
+    "bpm": "bpm"
   }
 }

@@ -11,6 +11,7 @@ import { useMedicalDocuments, DocumentType } from '@/hooks/useMedicalDocuments';
 import { supabase } from '@/integrations/supabase/client';
 import { documentsApi } from '@/lib/api/client';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 interface FileUploadState {
   file: File;
@@ -33,6 +34,7 @@ interface FileUploadState {
 }
 
 export function BulkDocumentUpload() {
+  const { t, i18n } = useTranslation('medicalDocs');
   const [files, setFiles] = useState<FileUploadState[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const { uploadDocument } = useMedicalDocuments();
@@ -73,8 +75,8 @@ export function BulkDocumentUpload() {
       
       if (!isValidType) {
         toast({
-          title: 'Неподдерживаемый формат',
-          description: `Файл ${file.name} имеет неподдерживаемый формат`,
+          title: t('bulkUpload.unsupportedFormat'),
+          description: t('bulkUpload.unsupportedFormatDesc', { name: file.name }),
           variant: 'destructive',
         });
         return false;
@@ -82,8 +84,8 @@ export function BulkDocumentUpload() {
       
       if (!isValidSize) {
         toast({
-          title: 'Файл слишком большой',
-          description: `Файл ${file.name} превышает 150 МБ`,
+          title: t('bulkUpload.fileTooLarge'),
+          description: t('bulkUpload.fileTooLargeDesc', { name: file.name }),
           variant: 'destructive',
         });
         return false;
@@ -287,21 +289,21 @@ export function BulkDocumentUpload() {
     } catch (error) {
       console.error('[BulkUpload] Upload error:', error);
       
-      let errorMessage = 'Ошибка загрузки';
+      let errorMessage = t('bulkUpload.uploadError');
       
       if (error && typeof error === 'object' && 'message' in error) {
         const errMsg = (error as any).message;
         
         if (errMsg.includes('check constraint') || errMsg.includes('violates check')) {
-          errorMessage = 'Неподдерживаемый тип документа';
+          errorMessage = t('bulkUpload.unsupportedDocType');
         } else if (errMsg.includes('invalid input syntax for type date')) {
-          errorMessage = 'Неверный формат даты';
+          errorMessage = t('bulkUpload.invalidDateFormat');
         } else if (errMsg.includes('violates')) {
-          errorMessage = 'Ошибка валидации данных';
+          errorMessage = t('bulkUpload.validationError');
         } else if (errMsg.includes('storage')) {
-          errorMessage = 'Ошибка загрузки файла';
+          errorMessage = t('bulkUpload.storageError');
         } else {
-          errorMessage = errMsg.substring(0, 80); // Первые 80 символов
+          errorMessage = errMsg.substring(0, 80);
         }
       }
       
@@ -333,17 +335,17 @@ export function BulkDocumentUpload() {
 
   const getDocumentTypeLabel = (type: DocumentType): string => {
     const labels: Record<DocumentType, string> = {
-      inbody: '📊 InBody',
-      blood_test: '🩸 Анализ крови',
-      fitness_report: '📋 Мед. заключение',
-      progress_photo: '📸 Фото прогресса',
-      vo2max: '🫁 VO2max',
-      caliper: '📏 Калипер',
-      prescription: '💊 Рецепт',
-      training_program: '🏋️ Программа',
-      other: '📄 Документ',
+      inbody: `📊 ${t('documentTypes.inbody')}`,
+      blood_test: `🩸 ${t('documentTypes.blood_test')}`,
+      fitness_report: `📋 ${t('documentTypes.fitness_report')}`,
+      progress_photo: `📸 ${t('documentTypes.progress_photo')}`,
+      vo2max: `🫁 ${t('documentTypes.vo2max')}`,
+      caliper: `📏 ${t('documentTypes.caliper')}`,
+      prescription: `💊 ${t('documentTypes.prescription')}`,
+      training_program: `🏋️ ${t('documentTypes.training_program')}`,
+      other: `📄 ${t('documentTypes.other')}`,
     };
-    return labels[type] || '📄 Документ';
+    return labels[type] || `📄 ${t('documentTypes.other')}`;
   };
 
   const activeUploads = files.filter(f => f.status !== 'complete').length;
@@ -372,16 +374,16 @@ export function BulkDocumentUpload() {
             
             <div>
               <h3 className="text-lg font-semibold mb-1">
-                Загрузите ваши медицинские документы
+                {t('bulkUpload.dropTitle')}
               </h3>
               <p className="text-sm text-muted-foreground">
-                Перетащите файлы сюда или нажмите для выбора
+                {t('bulkUpload.dropDesc')}
               </p>
             </div>
 
             <div className="flex flex-col items-center gap-2 text-xs text-muted-foreground">
-              <p>Поддержка: PDF, JPG, PNG, HEIC, WEBP</p>
-              <p>До 150 МБ на файл, до 20 файлов одновременно</p>
+              <p>{t('bulkUpload.supportedFormats')}</p>
+              <p>{t('bulkUpload.sizeLimit')}</p>
             </div>
 
             <div>
@@ -401,7 +403,7 @@ export function BulkDocumentUpload() {
                 }}
                 disabled={activeUploads > 0}
               >
-                Выбрать файлы
+                {t('bulkUpload.selectFiles')}
               </Button>
             </div>
           </div>
@@ -413,7 +415,7 @@ export function BulkDocumentUpload() {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium">
-              Загружаемые файлы ({files.filter(f => f.status === 'complete').length}/{files.length})
+              {t('bulkUpload.uploading')} ({files.filter(f => f.status === 'complete').length}/{files.length})
             </h3>
             {files.every(f => f.status === 'complete' || f.status === 'error') && (
               <Button
@@ -421,7 +423,7 @@ export function BulkDocumentUpload() {
                 size="sm"
                 onClick={() => setFiles([])}
               >
-                Очистить
+                {t('bulkUpload.clear')}
               </Button>
             )}
           </div>
@@ -435,7 +437,7 @@ export function BulkDocumentUpload() {
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{fileState.file.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {(fileState.file.size / 1024 / 1024).toFixed(2)} МБ
+                        {(fileState.file.size / 1024 / 1024).toFixed(2)} {t('bulkUpload.sizeMB')}
                       </p>
                     </div>
 
@@ -470,43 +472,43 @@ export function BulkDocumentUpload() {
                     {fileState.status === 'queue' && (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">В очереди...</span>
+                        <span className="text-sm text-muted-foreground">{t('bulkUpload.statusQueue')}</span>
                       </>
                     )}
                     {fileState.status === 'hashing' && (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                        <span className="text-sm text-muted-foreground">Проверка дубликатов...</span>
+                        <span className="text-sm text-muted-foreground">{t('bulkUpload.statusHashing')}</span>
                       </>
                     )}
                     {fileState.status === 'classifying' && (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-                        <span className="text-sm text-blue-600">AI классифицирует...</span>
+                        <span className="text-sm text-blue-600">{t('bulkUpload.statusClassifying')}</span>
                       </>
                     )}
                     {fileState.status === 'renaming' && (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin text-purple-600" />
-                        <span className="text-sm text-purple-600">Умное переименование...</span>
+                        <span className="text-sm text-purple-600">{t('bulkUpload.statusRenaming')}</span>
                       </>
                     )}
                     {fileState.status === 'uploading' && (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                        <span className="text-sm text-primary">Загрузка...</span>
+                        <span className="text-sm text-primary">{t('bulkUpload.statusUploading')}</span>
                       </>
                     )}
                     {fileState.status === 'parsing' && (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin text-orange-600" />
-                        <span className="text-sm text-orange-600">Извлечение рекомендаций...</span>
+                        <span className="text-sm text-orange-600">{t('bulkUpload.statusParsing')}</span>
                       </>
                     )}
                     {fileState.status === 'complete' && (
                       <>
                         <Check className="h-4 w-4 text-green-600" />
-                        <span className="text-sm text-green-600">Загружено успешно</span>
+                        <span className="text-sm text-green-600">{t('bulkUpload.statusComplete')}</span>
                       </>
                     )}
                     {fileState.status === 'duplicate' && (
@@ -514,13 +516,13 @@ export function BulkDocumentUpload() {
                         <AlertCircle className="h-4 w-4 text-amber-600" />
                         <div className="flex-1">
                           <span className="text-sm text-amber-600 font-medium">
-                            Дубликат
+                            {t('bulkUpload.statusDuplicate')}
                           </span>
                           {fileState.duplicateInfo && (
                             <p className="text-xs text-muted-foreground">
-                              Оригинал: {fileState.duplicateInfo.originalFileName}
+                              {t('bulkUpload.duplicateOriginal')}: {fileState.duplicateInfo.originalFileName}
                               <br />
-                              Загружен: {new Date(fileState.duplicateInfo.uploadedAt).toLocaleDateString('ru-RU', {
+                              {t('bulkUpload.duplicateUploaded')}: {new Date(fileState.duplicateInfo.uploadedAt).toLocaleDateString(i18n.language === 'ru' ? 'ru-RU' : 'en-US', {
                                 day: 'numeric',
                                 month: 'long',
                                 year: 'numeric'
@@ -535,7 +537,7 @@ export function BulkDocumentUpload() {
                           className="gap-1"
                         >
                           <ExternalLink className="h-3 w-3" />
-                          Открыть
+                          {t('bulkUpload.open')}
                         </Button>
                       </>
                     )}
@@ -549,7 +551,7 @@ export function BulkDocumentUpload() {
                           onClick={() => retryFile(fileState.id)}
                           className="ml-auto"
                         >
-                          Повторить
+                          {t('bulkUpload.retry')}
                         </Button>
                       </>
                     )}

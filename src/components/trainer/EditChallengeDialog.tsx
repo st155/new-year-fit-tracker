@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus, X } from "lucide-react";
 import { ChallengeDisciplineSelector } from "./ChallengeDisciplineSelector";
+import { useTranslation } from 'react-i18next';
 
 interface Discipline {
   id?: string;
@@ -35,6 +36,7 @@ interface EditChallengeDialogProps {
 
 export function EditChallengeDialog({ open, onOpenChange, challenge, onSuccess }: EditChallengeDialogProps) {
   const { toast } = useToast();
+  const { t } = useTranslation('trainerDashboard');
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -87,8 +89,8 @@ export function EditChallengeDialog({ open, onOpenChange, challenge, onSuccess }
 
       if (error) {
         toast({
-          title: "Ошибка",
-          description: "Не удалось удалить дисциплину",
+          title: t('common:errors.generic'),
+          description: t('editChallenge.deleteDisciplineError'),
           variant: "destructive",
         });
         return;
@@ -109,8 +111,8 @@ export function EditChallengeDialog({ open, onOpenChange, challenge, onSuccess }
     
     if (!challenge || !title.trim() || !startDate || !endDate) {
       toast({
-        title: "Ошибка",
-        description: "Заполните все обязательные поля",
+        title: t('common:errors.generic'),
+        description: t('editChallenge.fillRequired'),
         variant: "destructive",
       });
       return;
@@ -163,8 +165,8 @@ export function EditChallengeDialog({ open, onOpenChange, challenge, onSuccess }
       }
 
       toast({
-        title: "Успех",
-        description: "Челлендж успешно обновлен",
+        title: t('common:success'),
+        description: t('editChallenge.success'),
       });
 
       onSuccess();
@@ -172,8 +174,8 @@ export function EditChallengeDialog({ open, onOpenChange, challenge, onSuccess }
     } catch (error: any) {
       console.error("Error updating challenge:", error);
       toast({
-        title: "Ошибка",
-        description: error.message || "Не удалось обновить челлендж",
+        title: t('common:errors.generic'),
+        description: error.message || t('editChallenge.updateError'),
         variant: "destructive",
       });
     } finally {
@@ -185,12 +187,12 @@ export function EditChallengeDialog({ open, onOpenChange, challenge, onSuccess }
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Редактировать челлендж</DialogTitle>
+          <DialogTitle>{t('editChallenge.title')}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="title">Название челленджа *</Label>
+            <Label htmlFor="title">{t('editChallenge.nameLabel')}</Label>
             <Input
               id="title"
               value={title}
@@ -200,7 +202,7 @@ export function EditChallengeDialog({ open, onOpenChange, challenge, onSuccess }
           </div>
 
           <div>
-            <Label htmlFor="description">Описание</Label>
+            <Label htmlFor="description">{t('editChallenge.description')}</Label>
             <Textarea
               id="description"
               value={description}
@@ -211,7 +213,7 @@ export function EditChallengeDialog({ open, onOpenChange, challenge, onSuccess }
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="startDate">Дата начала *</Label>
+              <Label htmlFor="startDate">{t('editChallenge.startDate')}</Label>
               <Input
                 id="startDate"
                 type="date"
@@ -222,7 +224,7 @@ export function EditChallengeDialog({ open, onOpenChange, challenge, onSuccess }
             </div>
 
             <div>
-              <Label htmlFor="endDate">Дата окончания *</Label>
+              <Label htmlFor="endDate">{t('editChallenge.endDate')}</Label>
               <Input
                 id="endDate"
                 type="date"
@@ -235,7 +237,7 @@ export function EditChallengeDialog({ open, onOpenChange, challenge, onSuccess }
 
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label>Дисциплины</Label>
+              <Label>{t('editChallenge.disciplines')}</Label>
               <Button
                 type="button"
                 variant="outline"
@@ -243,14 +245,14 @@ export function EditChallengeDialog({ open, onOpenChange, challenge, onSuccess }
                 onClick={handleAddDiscipline}
               >
                 <Plus className="h-4 w-4 mr-1" />
-                Добавить дисциплину
+                {t('editChallenge.addDiscipline')}
               </Button>
             </div>
 
             {disciplines.map((discipline, index) => (
               <div key={discipline.id || index} className="border rounded-lg p-3 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Дисциплина {index + 1}</span>
+                  <span className="text-sm font-medium">{t('editChallenge.disciplineN', { n: index + 1 })}</span>
                   <Button
                     type="button"
                     variant="ghost"
@@ -276,11 +278,11 @@ export function EditChallengeDialog({ open, onOpenChange, challenge, onSuccess }
               onClick={() => onOpenChange(false)}
               disabled={loading}
             >
-              Отмена
+              {t('common:cancel')}
             </Button>
             <Button type="submit" disabled={loading}>
               {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Сохранить изменения
+              {t('editChallenge.saveChanges')}
             </Button>
           </div>
         </form>
