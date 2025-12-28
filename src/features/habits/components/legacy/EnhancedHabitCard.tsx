@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +9,7 @@ import { Check, Flame } from "lucide-react";
 import { toast } from "sonner";
 import { LineChart, Line, ResponsiveContainer, Tooltip, YAxis, CartesianGrid, XAxis } from "recharts";
 import { format, subDays, startOfWeek } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import { useHabitProgress } from "@/hooks/useHabitProgress";
 import { useDeleteHabit } from "@/hooks/useDeleteHabit";
 import { HabitEditDialog } from "./HabitEditDialog";
@@ -59,6 +60,8 @@ const habitThemes = {
 };
 
 export function EnhancedHabitCard({ habit, onCompleted }: EnhancedHabitCardProps) {
+  const { t, i18n } = useTranslation('habits');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
   const navigate = useNavigate();
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showArchiveDialog, setShowArchiveDialog] = useState(false);
@@ -99,9 +102,9 @@ export function EnhancedHabitCard({ habit, onCompleted }: EnhancedHabitCardProps
     return Object.entries(weeklyData).map(([date, data]) => ({
       date,
       completionRate: (data.completed / data.total) * 100,
-      formattedDate: format(new Date(date), 'dd MMM', { locale: ru })
+      formattedDate: format(new Date(date), 'dd MMM', { locale: dateLocale })
     }));
-  }, [progressData]);
+  }, [progressData, dateLocale]);
 
   // Calculate statistics
   const stats = useMemo(() => {
@@ -140,30 +143,23 @@ export function EnhancedHabitCard({ habit, onCompleted }: EnhancedHabitCardProps
         setCelebrate(true);
         setTimeout(() => setCelebrate(false), 100);
 
-        const messages = {
-          7: "Отличное начало! 7 дней подряд! 🎉",
-          30: "Целый месяц! Вы молодец! 🎊",
-          100: "Невероятно! 100 дней подряд! 🏆",
-          365: "ГОД БЕЗ ПРОПУСКОВ! ЛЕГЕНДА! 🌟"
-        };
-
-        toast.success(messages[achievedMilestone as keyof typeof messages]);
+        toast.success(t(`milestones.${achievedMilestone}`));
       } else if (newStreak > 1 && newStreak % 5 === 0) {
         setMilestoneType('streak');
         setCelebrate(true);
         setTimeout(() => setCelebrate(false), 100);
-        toast.success(`${newStreak} дней подряд! 🔥`);
+        toast.success(t('completion.streak', { count: newStreak }));
       } else {
         setMilestoneType('completion');
         setCelebrate(true);
         setTimeout(() => setCelebrate(false), 100);
-        toast.success("Привычка выполнена! 🎉");
+        toast.success(t('completion.success'));
       }
 
       onCompleted();
     } catch (error) {
       console.error("Error completing habit:", error);
-      toast.error("Ошибка при отметке привычки");
+      toast.error(t('errors.completionError'));
     } finally {
       setIsCompleting(false);
     }
@@ -219,10 +215,7 @@ export function EnhancedHabitCard({ habit, onCompleted }: EnhancedHabitCardProps
         {/* Category Badge */}
         <div className="flex gap-2">
           <Badge variant="outline" className="text-xs capitalize">
-            {habit.category === 'health' ? 'Здоровье' :
-             habit.category === 'fitness' ? 'Фитнес' :
-             habit.category === 'nutrition' ? 'Питание' :
-             'Прочее'}
+            {t(`categories.${habit.category}`)}
           </Badge>
         </div>
 
@@ -233,7 +226,7 @@ export function EnhancedHabitCard({ habit, onCompleted }: EnhancedHabitCardProps
               {Math.round(habit.stats.completion_rate)}%
             </div>
             <div className="text-sm text-muted-foreground">
-              {habit.stats.total_completions} выполнений
+              {habit.stats.total_completions} {t('stats.completions')}
             </div>
           </div>
         )}
@@ -247,7 +240,7 @@ export function EnhancedHabitCard({ habit, onCompleted }: EnhancedHabitCardProps
               className="h-2"
             />
             <div className="text-xs text-muted-foreground mt-1">
-              {habit.stats.completion_rate.toFixed(0)}% выполнено
+              {habit.stats.completion_rate.toFixed(0)}% {t('stats.completed')}
             </div>
           </div>
         )}
@@ -268,7 +261,7 @@ export function EnhancedHabitCard({ habit, onCompleted }: EnhancedHabitCardProps
                         <div className="bg-background border rounded px-2 py-1 text-xs shadow-lg">
                           <div className="font-medium">{data.formattedDate}</div>
                           <div className="text-muted-foreground">
-                            {Math.round(payload[0].value as number)}% выполнено
+                            {Math.round(payload[0].value as number)}% {t('stats.completed')}
                           </div>
                         </div>
                       );
@@ -293,19 +286,19 @@ export function EnhancedHabitCard({ habit, onCompleted }: EnhancedHabitCardProps
         {chartData.length > 0 && (
           <div className="grid grid-cols-4 gap-2 text-xs pt-3 border-t border-border/50">
             <div>
-              <div className="text-muted-foreground mb-0.5">Мин</div>
+              <div className="text-muted-foreground mb-0.5">{t('stats.min')}</div>
               <div className="font-semibold">{stats.min}%</div>
             </div>
             <div>
-              <div className="text-muted-foreground mb-0.5">Средн</div>
+              <div className="text-muted-foreground mb-0.5">{t('stats.avg')}</div>
               <div className="font-semibold">{stats.avg}%</div>
             </div>
             <div>
-              <div className="text-muted-foreground mb-0.5">Макс</div>
+              <div className="text-muted-foreground mb-0.5">{t('stats.max')}</div>
               <div className="font-semibold">{stats.max}%</div>
             </div>
             <div>
-              <div className="text-muted-foreground mb-0.5">Streak</div>
+              <div className="text-muted-foreground mb-0.5">{t('stats.streak')}</div>
               <div className="font-semibold flex items-center gap-1">
                 <Flame className="h-3 w-3 text-habit-negative" />
                 {habit.stats?.current_streak || 0}
@@ -329,10 +322,10 @@ export function EnhancedHabitCard({ habit, onCompleted }: EnhancedHabitCardProps
           {habit.completed_today ? (
             <>
               <Check className="mr-2 h-4 w-4" />
-              Готово
+              {t('actions.done')}
             </>
           ) : (
-            "Отметить выполненной"
+            t('actions.markComplete')
           )}
         </Button>
       </div>
@@ -347,18 +340,17 @@ export function EnhancedHabitCard({ habit, onCompleted }: EnhancedHabitCardProps
       <AlertDialog open={showArchiveDialog} onOpenChange={setShowArchiveDialog}>
         <AlertDialogContent className="glass-strong border-white/20">
           <AlertDialogHeader>
-            <AlertDialogTitle>Архивировать привычку?</AlertDialogTitle>
+            <AlertDialogTitle>{t('archive.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Привычка будет скрыта из списка активных, но все данные сохранятся.
-              Вы сможете восстановить её позже.
+              {t('archive.description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="glass-card border-white/20">
-              Отмена
+              {t('delete.cancel')}
             </AlertDialogCancel>
             <AlertDialogAction onClick={handleArchiveConfirm}>
-              Архивировать
+              {t('archive.confirm')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -367,30 +359,20 @@ export function EnhancedHabitCard({ habit, onCompleted }: EnhancedHabitCardProps
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent className="glass-strong border-white/20">
           <AlertDialogHeader>
-            <AlertDialogTitle>Удалить привычку навсегда?</AlertDialogTitle>
+            <AlertDialogTitle>{t('delete.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Это действие нельзя отменить. Будут удалены:
-              <ul className="mt-2 list-disc list-inside text-sm">
-                <li>Все логи выполнения</li>
-                <li>Вся статистика и история</li>
-                <li>Все измерения и попытки</li>
-              </ul>
-              <div className="mt-3 p-3 bg-destructive/10 rounded-md border border-destructive/30">
-                <p className="text-sm font-semibold text-destructive">
-                  ⚠️ Если вы хотите временно скрыть привычку, используйте "Архивировать"
-                </p>
-              </div>
+              {t('delete.description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="glass-card border-white/20">
-              Отмена
+              {t('delete.cancel')}
             </AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleDeleteConfirm}
               className="bg-destructive hover:bg-destructive/90"
             >
-              Удалить навсегда
+              {t('delete.confirm')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

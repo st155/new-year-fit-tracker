@@ -662,18 +662,18 @@ export function TerraTokenAdmin() {
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Создать новый токен</DialogTitle>
+            <DialogTitle>{t('terra.create.title')}</DialogTitle>
             <DialogDescription>
-              Свяжите пользователя с его Terra User ID из Terra Dashboard
+              {t('terra.create.description')}
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Пользователь</Label>
+              <Label>{t('terra.create.userLabel')}</Label>
               <Select value={newUserId} onValueChange={setNewUserId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Выберите пользователя" />
+                  <SelectValue placeholder={t('terra.create.selectUser')} />
                 </SelectTrigger>
                 <SelectContent>
                   {users?.map((user) => (
@@ -694,19 +694,19 @@ export function TerraTokenAdmin() {
             </div>
 
             <div className="space-y-2">
-              <Label>Terra User ID</Label>
+              <Label>{t('terra.create.terraIdLabel')}</Label>
               <Input
-                placeholder="Вставьте из Terra Dashboard"
+                placeholder={t('terra.create.terraIdPlaceholder')}
                 value={newTerraUserId}
                 onChange={(e) => setNewTerraUserId(e.target.value)}
               />
               <p className="text-xs text-muted-foreground">
-                Найдите в Terra Dashboard → Users → нужный пользователь → User ID
+                {t('terra.create.terraIdHint')}
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label>Провайдер</Label>
+              <Label>{t('terra.create.providerLabel')}</Label>
               <Select value={newProvider} onValueChange={setNewProvider}>
                 <SelectTrigger>
                   <SelectValue />
@@ -724,7 +724,7 @@ export function TerraTokenAdmin() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
-              Отмена
+              {t('common.cancel')}
             </Button>
             <Button 
               onClick={handleCreate}
@@ -735,7 +735,7 @@ export function TerraTokenAdmin() {
               ) : (
                 <Plus className="h-4 w-4 mr-2" />
               )}
-              Создать
+              {t('terra.create.submit')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -745,9 +745,9 @@ export function TerraTokenAdmin() {
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Редактировать токен</DialogTitle>
+            <DialogTitle>{t('terra.edit.title')}</DialogTitle>
             <DialogDescription>
-              Обновите Terra User ID или статус токена
+              {t('terra.edit.description')}
             </DialogDescription>
           </DialogHeader>
           
@@ -761,7 +761,7 @@ export function TerraTokenAdmin() {
               </Avatar>
               <div>
                 <p className="font-medium">
-                  {selectedToken?.profile?.full_name || 'Без имени'}
+                  {selectedToken?.profile?.full_name || t('terra.table.noName')}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {selectedToken?.user_id}
@@ -770,7 +770,7 @@ export function TerraTokenAdmin() {
             </div>
 
             <div className="space-y-2">
-              <Label>Terra User ID</Label>
+              <Label>{t('terra.edit.terraIdLabel')}</Label>
               <Input
                 value={editTerraUserId}
                 onChange={(e) => setEditTerraUserId(e.target.value)}
@@ -778,7 +778,7 @@ export function TerraTokenAdmin() {
             </div>
 
             <div className="space-y-2">
-              <Label>Провайдер</Label>
+              <Label>{t('terra.edit.providerLabel')}</Label>
               <Select value={editProvider} onValueChange={setEditProvider}>
                 <SelectTrigger>
                   <SelectValue />
@@ -794,7 +794,7 @@ export function TerraTokenAdmin() {
             </div>
 
             <div className="space-y-2">
-              <Label>Статус</Label>
+              <Label>{t('terra.edit.statusLabel')}</Label>
               <Select 
                 value={editIsActive ? 'active' : 'inactive'} 
                 onValueChange={(v) => setEditIsActive(v === 'active')}
@@ -803,8 +803,8 @@ export function TerraTokenAdmin() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="active">Активен</SelectItem>
-                  <SelectItem value="inactive">Неактивен</SelectItem>
+                  <SelectItem value="active">{t('terra.table.active')}</SelectItem>
+                  <SelectItem value="inactive">{t('terra.table.inactive')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -812,14 +812,14 @@ export function TerraTokenAdmin() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowEditDialog(false)}>
-              Отмена
+              {t('common.cancel')}
             </Button>
             <Button 
               onClick={handleEdit}
               disabled={updateToken.isPending}
             >
               {updateToken.isPending && <RefreshCw className="h-4 w-4 mr-2 animate-spin" />}
-              Сохранить
+              {t('common.save')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -829,14 +829,16 @@ export function TerraTokenAdmin() {
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Удалить токен?</AlertDialogTitle>
+            <AlertDialogTitle>{t('terra.delete.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Токен для {selectedToken?.profile?.full_name || 'пользователя'} ({selectedToken?.provider}) будет удалён. 
-              Пользователю придётся переподключить интеграцию.
+              {t('terra.delete.description', { 
+                name: selectedToken?.profile?.full_name || t('terra.table.noName'), 
+                provider: selectedToken?.provider 
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Отмена</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -846,7 +848,7 @@ export function TerraTokenAdmin() {
               ) : (
                 <Trash2 className="h-4 w-4 mr-2" />
               )}
-              Удалить
+              {t('common.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -858,10 +860,10 @@ export function TerraTokenAdmin() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Eye className="h-5 w-5" />
-              Terra API подключения: {inspectingUserName}
+              {t('terra.apiUsers.title', { name: inspectingUserName })}
             </DialogTitle>
             <DialogDescription>
-              Подключения в Terra API для reference_id: <code className="bg-muted px-1 py-0.5 rounded text-xs">{inspectingUserId}</code>
+              {t('terra.apiUsers.description', { refId: inspectingUserId })}
             </DialogDescription>
           </DialogHeader>
           
@@ -869,19 +871,19 @@ export function TerraTokenAdmin() {
             {getTerraUsers.isPending ? (
               <div className="flex items-center justify-center py-8">
                 <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
-                <span className="ml-2 text-muted-foreground">Загрузка из Terra API...</span>
+                <span className="ml-2 text-muted-foreground">{t('terra.apiUsers.loading')}</span>
               </div>
             ) : terraApiUsers.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <CheckCircle2 className="h-12 w-12 mx-auto mb-2 text-success" />
-                <p className="font-medium">Подключений не найдено</p>
-                <p className="text-sm">В Terra API нет подключений для этого пользователя</p>
+                <p className="font-medium">{t('terra.apiUsers.noConnections')}</p>
+                <p className="text-sm">{t('terra.apiUsers.noConnectionsDesc')}</p>
               </div>
             ) : (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-muted-foreground">
-                    Найдено {terraApiUsers.length} подключений
+                    {t('terra.apiUsers.foundConnections', { count: terraApiUsers.length })}
                   </p>
                   <Button
                     variant="destructive"
@@ -894,17 +896,17 @@ export function TerraTokenAdmin() {
                     ) : (
                       <Unplug className="h-4 w-4 mr-2" />
                     )}
-                    Сбросить все
+                    {t('terra.orphanCleanup.resetAll')}
                   </Button>
                 </div>
                 
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Провайдер</TableHead>
-                      <TableHead>Terra User ID</TableHead>
-                      <TableHead>Последний вебхук</TableHead>
-                      <TableHead className="text-right">Действия</TableHead>
+                      <TableHead>{t('terra.apiUsers.table.provider')}</TableHead>
+                      <TableHead>{t('terra.apiUsers.table.terraId')}</TableHead>
+                      <TableHead>{t('terra.apiUsers.table.lastWebhook')}</TableHead>
+                      <TableHead className="text-right">{t('terra.apiUsers.table.actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -923,7 +925,7 @@ export function TerraTokenAdmin() {
                             <span className="text-sm text-muted-foreground">
                               {formatDistanceToNow(new Date(terraUser.last_webhook_update), { 
                                 addSuffix: true, 
-                                locale: ru 
+                                locale: dateLocale 
                               })}
                             </span>
                           ) : (
@@ -954,7 +956,7 @@ export function TerraTokenAdmin() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowTerraUsersDialog(false)}>
-              Закрыть
+              {t('common.close')}
             </Button>
           </DialogFooter>
         </DialogContent>

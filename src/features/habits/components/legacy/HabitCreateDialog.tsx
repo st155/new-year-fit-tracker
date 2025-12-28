@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -66,6 +67,7 @@ const habitTypes = [
 ];
 
 export function HabitCreateDialog({ open, onOpenChange, linkedGoalId, prefilledName, onHabitCreated }: HabitCreateDialogProps) {
+  const { t } = useTranslation('habits');
   const { user } = useAuth();
   const { personalGoals } = useGoalsQuery(user?.id);
   const isMobile = useIsMobile();
@@ -115,7 +117,7 @@ export function HabitCreateDialog({ open, onOpenChange, linkedGoalId, prefilledN
 
   const handleCreate = async () => {
     if (!user || !name.trim()) {
-      toast.error("Введите название привычки");
+      toast.error(t('create.enterName'));
       return;
     }
 
@@ -179,13 +181,13 @@ export function HabitCreateDialog({ open, onOpenChange, linkedGoalId, prefilledN
         if (attemptError) console.error("Error creating initial attempt:", attemptError);
       }
 
-      toast.success("Привычка создана! 🎉");
+      toast.success(t('create.success'));
       resetForm();
       onOpenChange(false);
       onHabitCreated?.();
     } catch (error) {
       console.error("Error creating habit:", error);
-      toast.error("Ошибка при создании привычки");
+      toast.error(t('create.error'));
     } finally {
       setIsCreating(false);
     }
@@ -196,7 +198,7 @@ export function HabitCreateDialog({ open, onOpenChange, linkedGoalId, prefilledN
     <div className="space-y-4">
       {/* Template Quick Select */}
       <div className="space-y-2">
-        <Label>Популярные шаблоны</Label>
+        <Label>{t('create.templates')}</Label>
         <div className={cn(
           "gap-2",
           isMobile 
@@ -223,7 +225,7 @@ export function HabitCreateDialog({ open, onOpenChange, linkedGoalId, prefilledN
 
       {/* Habit Type Selection */}
       <div className="space-y-2">
-        <Label>Тип привычки</Label>
+        <Label>{t('create.habitType')}</Label>
         <RadioGroup value={habitType} onValueChange={setHabitType} className="space-y-2">
           {habitTypes.map((type) => (
             <div 
@@ -247,20 +249,20 @@ export function HabitCreateDialog({ open, onOpenChange, linkedGoalId, prefilledN
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="name">Название*</Label>
+        <Label htmlFor="name">{t('create.nameLabel')}</Label>
         <Input
           id="name"
-          placeholder="Например: Утренняя зарядка"
+          placeholder={t('create.namePlaceholder')}
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description">Описание</Label>
+        <Label htmlFor="description">{t('create.descriptionLabel')}</Label>
         <Textarea
           id="description"
-          placeholder="Опишите вашу привычку..."
+          placeholder={t('create.descriptionPlaceholder')}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={2}
@@ -269,7 +271,7 @@ export function HabitCreateDialog({ open, onOpenChange, linkedGoalId, prefilledN
 
       <div className={cn("gap-4", isMobile ? "space-y-4" : "grid grid-cols-2")}>
         <div className="space-y-2">
-          <Label htmlFor="category">Категория</Label>
+          <Label htmlFor="category">{t('create.categoryLabel')}</Label>
           <Select value={category} onValueChange={setCategory}>
             <SelectTrigger>
               <SelectValue />
@@ -277,7 +279,7 @@ export function HabitCreateDialog({ open, onOpenChange, linkedGoalId, prefilledN
             <SelectContent>
               {categories.map((cat) => (
                 <SelectItem key={cat.value} value={cat.value}>
-                  {cat.label}
+                  {t(`categories.${cat.value}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -286,7 +288,7 @@ export function HabitCreateDialog({ open, onOpenChange, linkedGoalId, prefilledN
 
         {habitType === "daily_check" && (
           <div className="space-y-2">
-            <Label htmlFor="frequency">Частота</Label>
+            <Label htmlFor="frequency">{t('create.frequencyLabel')}</Label>
             <Select value={frequency} onValueChange={setFrequency}>
               <SelectTrigger>
                 <SelectValue />
@@ -294,7 +296,7 @@ export function HabitCreateDialog({ open, onOpenChange, linkedGoalId, prefilledN
               <SelectContent>
                 {frequencies.map((freq) => (
                   <SelectItem key={freq.value} value={freq.value}>
-                    {freq.label}
+                    {t(`frequencies.${freq.value}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -306,7 +308,7 @@ export function HabitCreateDialog({ open, onOpenChange, linkedGoalId, prefilledN
       {/* Type-specific fields */}
       {habitType === "duration_counter" && (
         <div className="space-y-2">
-          <Label htmlFor="costPerDay">Стоимость в день (₽) - опционально</Label>
+          <Label htmlFor="costPerDay">{t('create.costPerDay')}</Label>
           <Input
             id="costPerDay"
             type="number"
@@ -315,7 +317,7 @@ export function HabitCreateDialog({ open, onOpenChange, linkedGoalId, prefilledN
             onChange={(e) => setCostPerDay(e.target.value)}
           />
           <p className="text-xs text-muted-foreground">
-            Для подсчета сэкономленных денег (например, цена пачки сигарет)
+            {t('create.costPerDayHint')}
           </p>
         </div>
       )}
@@ -323,7 +325,7 @@ export function HabitCreateDialog({ open, onOpenChange, linkedGoalId, prefilledN
       {(habitType === "numeric_counter" || habitType === "daily_measurement") && (
         <div className={cn("gap-4", isMobile ? "space-y-4" : "grid grid-cols-2")}>
           <div className="space-y-2">
-            <Label htmlFor="targetValue">Целевое значение</Label>
+            <Label htmlFor="targetValue">{t('create.targetValue')}</Label>
             <Input
               id="targetValue"
               type="number"
@@ -333,10 +335,10 @@ export function HabitCreateDialog({ open, onOpenChange, linkedGoalId, prefilledN
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="measurementUnit">Единица измерения</Label>
+            <Label htmlFor="measurementUnit">{t('create.measurementUnit')}</Label>
             <Input
               id="measurementUnit"
-              placeholder="книг / страниц / км"
+              placeholder={t('create.measurementUnitPlaceholder')}
               value={measurementUnit}
               onChange={(e) => setMeasurementUnit(e.target.value)}
             />
@@ -346,13 +348,13 @@ export function HabitCreateDialog({ open, onOpenChange, linkedGoalId, prefilledN
 
       {/* Goal Linking */}
       <div className="space-y-2">
-        <Label htmlFor="linkedGoal">Связать с целью (опционально)</Label>
+        <Label htmlFor="linkedGoal">{t('create.linkGoal')}</Label>
         <Select value={selectedGoalId || "none"} onValueChange={(val) => setSelectedGoalId(val === "none" ? undefined : val)}>
           <SelectTrigger>
-            <SelectValue placeholder="Выберите цель" />
+            <SelectValue placeholder={t('create.selectGoal')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="none">Без цели</SelectItem>
+            <SelectItem value="none">{t('create.noGoal')}</SelectItem>
             {personalGoals?.map((goal) => (
               <SelectItem key={goal.id} value={goal.id}>
                 {goal.goal_name} ({goal.target_value} {goal.target_unit})
@@ -361,13 +363,13 @@ export function HabitCreateDialog({ open, onOpenChange, linkedGoalId, prefilledN
           </SelectContent>
         </Select>
         <p className="text-xs text-muted-foreground">
-          При выполнении привычки автоматически будет записан прогресс в цель
+          {t('create.linkGoalHint')}
         </p>
       </div>
 
       {frequency === "weekly" && habitType === "daily_check" && (
         <div className="space-y-2">
-          <Label htmlFor="target">Цель (раз в неделю)</Label>
+          <Label htmlFor="target">{t('create.weeklyTarget')}</Label>
           <Input
             id="target"
             type="number"
@@ -387,9 +389,9 @@ export function HabitCreateDialog({ open, onOpenChange, linkedGoalId, prefilledN
       <Drawer open={open} onOpenChange={onOpenChange}>
         <DrawerContent className="max-h-[90vh]">
           <DrawerHeader className="text-left">
-            <DrawerTitle>Новая привычка</DrawerTitle>
+            <DrawerTitle>{t('create.title')}</DrawerTitle>
             <DrawerDescription>
-              Создайте привычку, которую хотите отслеживать
+              {t('create.description')}
             </DrawerDescription>
           </DrawerHeader>
           
@@ -403,14 +405,14 @@ export function HabitCreateDialog({ open, onOpenChange, linkedGoalId, prefilledN
               disabled={isCreating || !name.trim()}
               className="w-full"
             >
-              {isCreating ? "Создание..." : "Создать"}
+              {isCreating ? t('create.creating') : t('create.submit')}
             </Button>
             <Button 
               variant="outline" 
               onClick={() => onOpenChange(false)}
               className="w-full"
             >
-              Отмена
+              {t('create.cancel')}
             </Button>
           </DrawerFooter>
         </DrawerContent>
@@ -423,9 +425,9 @@ export function HabitCreateDialog({ open, onOpenChange, linkedGoalId, prefilledN
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Новая привычка</DialogTitle>
+          <DialogTitle>{t('create.title')}</DialogTitle>
           <DialogDescription>
-            Создайте привычку, которую хотите отслеживать
+            {t('create.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -435,10 +437,10 @@ export function HabitCreateDialog({ open, onOpenChange, linkedGoalId, prefilledN
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Отмена
+            {t('create.cancel')}
           </Button>
           <Button onClick={handleCreate} disabled={isCreating || !name.trim()}>
-            {isCreating ? "Создание..." : "Создать"}
+            {isCreating ? t('create.creating') : t('create.submit')}
           </Button>
         </DialogFooter>
       </DialogContent>

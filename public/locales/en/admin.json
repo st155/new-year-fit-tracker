@@ -36,6 +36,24 @@
       "resetSuccess": "✅ {{name}}: reset {{deauthenticated}}/{{total}} connections",
       "errorFor": "❌ Error for {{name}}: {{message}}"
     },
+    "delete": {
+      "title": "Delete token?",
+      "description": "Token for {{name}} ({{provider}}) will be deleted. User will need to reconnect the integration."
+    },
+    "apiUsers": {
+      "title": "Terra API connections: {{name}}",
+      "description": "Connections in Terra API for reference_id: {{refId}}",
+      "loading": "Loading from Terra API...",
+      "noConnections": "No connections found",
+      "noConnectionsDesc": "No connections found in Terra API for this user",
+      "foundConnections": "Found {{count}} connections",
+      "table": {
+        "provider": "Provider",
+        "terraId": "Terra User ID",
+        "lastWebhook": "Last webhook",
+        "actions": "Actions"
+      }
+    },
     "table": {
       "searchPlaceholder": "Search by name, Terra ID or provider...",
       "title": "Active tokens ({{count}})",
@@ -55,6 +73,24 @@
       "request30Days": "Request 30 days data",
       "noDeadTokens": "No dead tokens found",
       "noTokens": "No tokens found"
+    },
+    "create": {
+      "title": "Create new token",
+      "description": "Link user with their Terra User ID from Terra Dashboard",
+      "userLabel": "User",
+      "selectUser": "Select user",
+      "terraIdLabel": "Terra User ID",
+      "terraIdPlaceholder": "Paste from Terra Dashboard",
+      "terraIdHint": "Find in Terra Dashboard → Users → select user → User ID",
+      "providerLabel": "Provider",
+      "submit": "Create"
+    },
+    "edit": {
+      "title": "Edit token",
+      "description": "Update Terra User ID or token status",
+      "terraIdLabel": "Terra User ID",
+      "providerLabel": "Provider",
+      "statusLabel": "Status"
     }
   },
   "errorLogs": {
