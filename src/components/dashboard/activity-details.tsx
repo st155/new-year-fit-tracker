@@ -7,7 +7,8 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Activity, Zap, Target, Clock, TrendingUp, TrendingDown } from 'lucide-react';
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 
 interface ActivityData {
   strain: number | null;
@@ -22,10 +23,13 @@ interface ActivityDetailsProps {
 }
 
 export const ActivityDetails = ({ selectedDate }: ActivityDetailsProps) => {
+  const { t, i18n } = useTranslation('dashboard');
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activityData, setActivityData] = useState<ActivityData[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
 
   useEffect(() => {
     if (user) {
@@ -97,17 +101,17 @@ export const ActivityDetails = ({ selectedDate }: ActivityDetailsProps) => {
   };
 
   const getStrainLevel = (strain: number | null) => {
-    if (!strain) return { label: 'Нет данных', color: 'secondary' };
-    if (strain >= 15) return { label: 'Высокая', color: 'destructive' };
-    if (strain >= 10) return { label: 'Умеренная', color: 'warning' };
-    return { label: 'Легкая', color: 'success' };
+    if (!strain) return { label: t('activity.noData'), color: 'secondary' };
+    if (strain >= 15) return { label: t('activity.strainHigh'), color: 'destructive' };
+    if (strain >= 10) return { label: t('activity.strainModerate'), color: 'warning' };
+    return { label: t('activity.strainLight'), color: 'success' };
   };
 
   const getActivityLevel = (steps: number | null) => {
-    if (!steps) return { label: 'Нет данных', color: 'secondary' };
-    if (steps >= 10000) return { label: 'Активный день', color: 'success' };
-    if (steps >= 5000) return { label: 'Умеренная активность', color: 'warning' };
-    return { label: 'Низкая активность', color: 'destructive' };
+    if (!steps) return { label: t('activity.noData'), color: 'secondary' };
+    if (steps >= 10000) return { label: t('activity.activeDay'), color: 'success' };
+    if (steps >= 5000) return { label: t('activity.moderateActivity'), color: 'warning' };
+    return { label: t('activity.lowActivity'), color: 'destructive' };
   };
 
   const getTrend = (current: number | null, previous: number | null) => {
@@ -119,7 +123,7 @@ export const ActivityDetails = ({ selectedDate }: ActivityDetailsProps) => {
   };
 
   if (loading) {
-    return <div className="text-center py-8">Загрузка данных активности...</div>;
+    return <div className="text-center py-8">{t('activity.loading')}</div>;
   }
 
   const todayData = activityData[0];
@@ -132,7 +136,7 @@ export const ActivityDetails = ({ selectedDate }: ActivityDetailsProps) => {
         <Card className="cursor-pointer hover:shadow-lg transition-all duration-300" onClick={() => navigate('/metric/recovery')}>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium">Нагрузка</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('activity.strain')}</CardTitle>
               <Zap className="h-4 w-4 text-yellow-500" />
             </div>
           </CardHeader>
@@ -163,7 +167,7 @@ export const ActivityDetails = ({ selectedDate }: ActivityDetailsProps) => {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium">Калории</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('activity.calories')}</CardTitle>
               <Target className="h-4 w-4 text-orange-500" />
             </div>
           </CardHeader>
@@ -184,7 +188,7 @@ export const ActivityDetails = ({ selectedDate }: ActivityDetailsProps) => {
                 autoColor 
                 className="h-2" 
               />
-              <p className="text-xs text-muted-foreground">ккал</p>
+              <p className="text-xs text-muted-foreground">{t('activity.kcal')}</p>
             </div>
           </CardContent>
         </Card>
@@ -192,7 +196,7 @@ export const ActivityDetails = ({ selectedDate }: ActivityDetailsProps) => {
         <Card className="cursor-pointer hover:shadow-lg transition-all duration-300" onClick={() => navigate('/metric/steps')}>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium">Шаги</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('activity.steps')}</CardTitle>
               <Activity className="h-4 w-4 text-blue-500" />
             </div>
           </CardHeader>
@@ -223,7 +227,7 @@ export const ActivityDetails = ({ selectedDate }: ActivityDetailsProps) => {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium">Активное время</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('activity.activeTime')}</CardTitle>
               <Clock className="h-4 w-4 text-green-500" />
             </div>
           </CardHeader>
@@ -244,7 +248,7 @@ export const ActivityDetails = ({ selectedDate }: ActivityDetailsProps) => {
                 autoColor 
                 className="h-2" 
               />
-              <p className="text-xs text-muted-foreground">мин</p>
+              <p className="text-xs text-muted-foreground">{t('activity.min')}</p>
             </div>
           </CardContent>
         </Card>
@@ -253,9 +257,9 @@ export const ActivityDetails = ({ selectedDate }: ActivityDetailsProps) => {
       {/* История активности */}
       <Card>
         <CardHeader>
-          <CardTitle>История активности</CardTitle>
+          <CardTitle>{t('activity.history')}</CardTitle>
           <CardDescription>
-            Динамика активности за последние 7 дней
+            {t('activity.historyDesc')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -264,7 +268,7 @@ export const ActivityDetails = ({ selectedDate }: ActivityDetailsProps) => {
               <div key={data.date} className="flex items-center justify-between py-3 border-b last:border-b-0">
                 <div className="flex items-center gap-3">
                   <div className="text-sm font-medium min-w-[100px]">
-                    {format(new Date(data.date), 'd MMM', { locale: ru })}
+                    {format(new Date(data.date), 'd MMM', { locale: dateLocale })}
                   </div>
                   <div className="flex items-center gap-4">
                     {data.strain && (
@@ -276,7 +280,7 @@ export const ActivityDetails = ({ selectedDate }: ActivityDetailsProps) => {
                     {data.calories && (
                       <div className="flex items-center gap-2">
                         <Target className="h-3 w-3 text-orange-500" />
-                        <span className="text-sm">{Math.round(data.calories)} ккал</span>
+                        <span className="text-sm">{Math.round(data.calories)} {t('activity.kcal')}</span>
                       </div>
                     )}
                     {data.steps && (

@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ExternalLink, User as UserIcon, AtSign, CheckCircle, FileText, Search, MapPin } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface RecognizedClientBadgeProps {
   recognizedClient: {
@@ -27,20 +28,21 @@ export function RecognizedClientBadge({
   clients,
   onNavigateToClient
 }: RecognizedClientBadgeProps) {
+  const { t } = useTranslation('trainer');
   const client = clients.find(c => c.user_id === recognizedClient.client_id);
   if (!client) return null;
 
   const methodLabels: Record<string, { label: string; icon: any }> = {
-    alias: { label: 'Псевдоним', icon: UserIcon },
-    full_name_exact: { label: 'Полное имя', icon: CheckCircle },
-    username: { label: 'Username', icon: AtSign },
-    name_part: { label: 'Часть имени', icon: FileText },
-    name_stem: { label: 'Склонение', icon: Search },
-    context: { label: 'Из контекста', icon: MapPin }
+    alias: { label: t('recognizedClient.alias'), icon: UserIcon },
+    full_name_exact: { label: t('recognizedClient.fullName'), icon: CheckCircle },
+    username: { label: t('recognizedClient.username'), icon: AtSign },
+    name_part: { label: t('recognizedClient.namePart'), icon: FileText },
+    name_stem: { label: t('recognizedClient.nameStem'), icon: Search },
+    context: { label: t('recognizedClient.context'), icon: MapPin }
   };
 
   const method = methodLabels[recognizedClient.recognition_method] || { 
-    label: 'Распознан', 
+    label: t('recognizedClient.recognized'), 
     icon: UserIcon 
   };
   const Icon = method.icon;

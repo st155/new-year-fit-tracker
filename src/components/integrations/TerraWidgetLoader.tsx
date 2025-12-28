@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle, RefreshCw, ArrowLeft, Clock, CheckCircle2 } from 'lucide-react';
 import { terraApi } from '@/lib/api';
+import { useTranslation } from 'react-i18next';
 
 const SESSION_TIMEOUT_MS = 5 * 60 * 1000; // 5 минут — реальный лимит Terra Widget
 
@@ -12,6 +13,7 @@ const SESSION_TIMEOUT_MS = 5 * 60 * 1000; // 5 минут — реальный �
 const SLOW_OAUTH_PROVIDERS = ['WHOOP', 'OURA', 'GARMIN', 'WITHINGS', 'POLAR'];
 
 export function TerraWidgetLoader() {
+  const { t } = useTranslation('integrations');
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
@@ -75,14 +77,14 @@ export function TerraWidgetLoader() {
           errorMessage.toLowerCase().includes('expired') ||
           errorMessage.toLowerCase().includes('timeout')) {
         setIsSessionExpiredError(true);
-        setError('Сессия авторизации истекла. Это может произойти, если авторизация заняла больше 5 минут.');
+        setError(t('widgetLoader.sessionExpiredError'));
       } else {
         setError(errorMessage);
       }
     } finally {
       setRetrying(false);
     }
-  }, [provider]);
+  }, [provider, t]);
 
   const handleStartConnection = () => {
     loadWidget();
@@ -109,7 +111,7 @@ export function TerraWidgetLoader() {
         <div className="max-w-md w-full space-y-6 text-center">
           <div className="text-6xl mb-4">⏱️</div>
           <h1 className="text-2xl font-bold">
-            Подготовка к подключению {provider || 'устройства'}
+            {t('widgetLoader.preparingConnection', { provider: provider || t('widgetLoader.device') })}
           </h1>
           
           <div className="space-y-4 text-left">
@@ -117,28 +119,27 @@ export function TerraWidgetLoader() {
             <Alert className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800">
               <Clock className="h-5 w-5 text-amber-600" />
               <AlertDescription className="text-amber-800 dark:text-amber-200">
-                <strong className="block mb-1">Важно: у вас 5 минут!</strong>
-                После нажатия кнопки "Начать" у вас будет ровно 5 минут на завершение авторизации 
-                в приложении {provider || 'провайдера'}.
+                <strong className="block mb-1">{t('widgetLoader.importantTimeLimit')}</strong>
+                {t('widgetLoader.timeLimitDesc', { provider: provider || t('widgetLoader.provider') })}
               </AlertDescription>
             </Alert>
 
             {/* Preparation checklist */}
             <div className="bg-muted/50 rounded-lg p-4 space-y-3">
-              <p className="font-medium">Перед началом убедитесь:</p>
+              <p className="font-medium">{t('widgetLoader.beforeStarting')}:</p>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="h-4 w-4 mt-0.5 text-green-500 flex-shrink-0" />
-                  <span>Вы знаете логин и пароль от {provider || 'приложения'}</span>
+                  <span>{t('widgetLoader.knowCredentials', { provider: provider || t('widgetLoader.app') })}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="h-4 w-4 mt-0.5 text-green-500 flex-shrink-0" />
-                  <span>У вас стабильное интернет-соединение</span>
+                  <span>{t('widgetLoader.stableConnection')}</span>
                 </li>
                 {isSlowProvider && (
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="h-4 w-4 mt-0.5 text-green-500 flex-shrink-0" />
-                    <span>Если нужно — сначала войдите в приложение {provider} в браузере</span>
+                    <span>{t('widgetLoader.loginFirst', { provider })}</span>
                   </li>
                 )}
               </ul>
@@ -148,8 +149,7 @@ export function TerraWidgetLoader() {
             <Alert>
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription className="text-sm">
-                <strong>Совет:</strong> Если увидите ошибку "Session Expired" — сначала выйдите 
-                и войдите заново в приложение {provider || 'провайдера'}, затем повторите подключение.
+                <strong>{t('widgetLoader.tip')}:</strong> {t('widgetLoader.sessionExpiredTip', { provider: provider || t('widgetLoader.provider') })}
               </AlertDescription>
             </Alert>
           </div>
@@ -161,11 +161,11 @@ export function TerraWidgetLoader() {
               className="w-full h-14 text-lg"
             >
               <Clock className="h-5 w-5 mr-2" />
-              Я готов — начать подключение
+              {t('widgetLoader.readyToStart')}
             </Button>
             <Button variant="ghost" onClick={handleGoBack} className="w-full">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Вернуться к интеграциям
+              {t('widgetLoader.backToIntegrations')}
             </Button>
           </div>
         </div>
@@ -179,7 +179,7 @@ export function TerraWidgetLoader() {
         <div className="text-center p-6 max-w-md space-y-4">
           <div className="text-6xl mb-4">{isSessionExpiredError ? '⏱️' : '❌'}</div>
           <h2 className="text-xl font-semibold mb-2">
-            {isSessionExpiredError ? 'Сессия истекла' : 'Ошибка загрузки'}
+            {isSessionExpiredError ? t('widgetLoader.sessionExpired') : t('widgetLoader.loadError')}
           </h2>
           <p className="text-muted-foreground mb-4">{error}</p>
           
@@ -187,8 +187,7 @@ export function TerraWidgetLoader() {
             <Alert className="text-left">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                <strong>Совет:</strong> Попробуйте сначала войти в {provider || 'приложение'} в браузере,
-                а затем повторите подключение. Убедитесь, что завершите процесс за 5 минут.
+                <strong>{t('widgetLoader.tip')}:</strong> {t('widgetLoader.sessionExpiredAdvice', { provider: provider || t('widgetLoader.app') })}
               </AlertDescription>
             </Alert>
           )}
@@ -196,11 +195,11 @@ export function TerraWidgetLoader() {
           <div className="flex flex-col gap-2">
             <Button onClick={handleRetry} className="w-full">
               <RefreshCw className="h-4 w-4 mr-2" />
-              Попробовать снова
+              {t('widgetLoader.tryAgain')}
             </Button>
             <Button variant="outline" onClick={handleGoBack} className="w-full">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Вернуться к интеграциям
+              {t('widgetLoader.backToIntegrations')}
             </Button>
           </div>
         </div>
@@ -212,27 +211,26 @@ export function TerraWidgetLoader() {
     <div className="flex flex-col items-center justify-center min-h-screen bg-background p-6">
       <PageLoader 
         size="lg" 
-        message={redirecting ? `Перенаправляем на ${provider || 'Terra'}...` : 'Загружаем виджет авторизации...'}
+        message={redirecting ? t('widgetLoader.redirecting', { provider: provider || 'Terra' }) : t('widgetLoader.loadingWidget')}
       />
       
       {/* Countdown timer */}
       {redirecting && timeRemaining !== null && timeRemaining > 0 && (
         <div className="mt-8 max-w-md space-y-3">
           <div className="text-center p-4 bg-primary/10 rounded-lg border border-primary/20">
-            <p className="text-sm text-muted-foreground mb-1">Осталось времени:</p>
+            <p className="text-sm text-muted-foreground mb-1">{t('widgetLoader.timeRemaining')}:</p>
             <p className={`text-3xl font-mono font-bold ${timeRemaining < 60000 ? 'text-red-500' : 'text-primary'}`}>
               {formatTimeRemaining(timeRemaining)}
             </p>
             {timeRemaining < 60000 && (
-              <p className="text-xs text-red-500 mt-1">Поторопитесь! Меньше минуты!</p>
+              <p className="text-xs text-red-500 mt-1">{t('widgetLoader.hurryUp')}</p>
             )}
           </div>
           
           <Alert className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800">
             <AlertTriangle className="h-4 w-4 text-amber-600" />
             <AlertDescription className="text-sm text-amber-800 dark:text-amber-200">
-              Завершите авторизацию в открывшемся окне. Если окно не открылось — 
-              проверьте блокировщик всплывающих окон.
+              {t('widgetLoader.completeInWindow')}
             </AlertDescription>
           </Alert>
         </div>

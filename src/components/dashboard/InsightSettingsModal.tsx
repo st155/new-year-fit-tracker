@@ -22,51 +22,53 @@ import {
 } from '@/components/ui/select';
 import { useInsightPersonalization } from '@/hooks/useInsightPersonalization';
 import type { InsightType } from '@/lib/insights/types';
+import { useTranslation } from 'react-i18next';
 
 interface InsightSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const INSIGHT_TYPE_LABELS: Record<InsightType, string> = {
-  critical: 'Критические',
-  warning: 'Предупреждения',
-  achievement: 'Достижения',
-  info: 'Информация',
-  recommendation: 'Рекомендации',
-  correlation: 'Корреляции',
-  anomaly: 'Аномалии',
-  prediction: 'Предсказания',
-  social: 'Социальные',
-  trainer: 'От тренера',
-  temporal: 'Временные паттерны',
-  habit_pattern: 'Паттерны привычек',
-  habit_risk: 'Риски привычек',
-  habit_optimization: 'Оптимизация привычек',
-  habit_chain: 'Связи привычек',
-};
-
-const INSIGHT_TYPE_DESCRIPTIONS: Record<InsightType, string> = {
-  critical: 'Проблемы, требующие немедленного внимания',
-  warning: 'Важные предупреждения и напоминания',
-  achievement: 'Ваши успехи и рекорды',
-  info: 'Общая информация и статистика',
-  recommendation: 'Персональные рекомендации',
-  correlation: 'Взаимосвязи между метриками',
-  anomaly: 'Необычные отклонения от нормы',
-  prediction: 'Прогнозы достижения целей',
-  social: 'Челленджи и сравнения',
-  trainer: 'Сообщения от вашего тренера',
-  temporal: 'Временные закономерности',
-  habit_pattern: 'Оптимальные времена и паттерны',
-  habit_risk: 'Привычки под угрозой',
-  habit_optimization: 'Рекомендации по улучшению',
-  habit_chain: 'Связи между привычками',
-};
-
 export function InsightSettingsModal({ isOpen, onClose }: InsightSettingsModalProps) {
+  const { t } = useTranslation('dashboard');
   const { preferences, toggleType, updateRefreshInterval, resetPreferences } =
     useInsightPersonalization();
+
+  const INSIGHT_TYPE_LABELS: Record<InsightType, string> = {
+    critical: t('insightSettings.types.critical'),
+    warning: t('insightSettings.types.warning'),
+    achievement: t('insightSettings.types.achievement'),
+    info: t('insightSettings.types.info'),
+    recommendation: t('insightSettings.types.recommendation'),
+    correlation: t('insightSettings.types.correlation'),
+    anomaly: t('insightSettings.types.anomaly'),
+    prediction: t('insightSettings.types.prediction'),
+    social: t('insightSettings.types.social'),
+    trainer: t('insightSettings.types.trainer'),
+    temporal: t('insightSettings.types.temporal'),
+    habit_pattern: t('insightSettings.types.habitPattern'),
+    habit_risk: t('insightSettings.types.habitRisk'),
+    habit_optimization: t('insightSettings.types.habitOptimization'),
+    habit_chain: t('insightSettings.types.habitChain'),
+  };
+
+  const INSIGHT_TYPE_DESCRIPTIONS: Record<InsightType, string> = {
+    critical: t('insightSettings.descriptions.critical'),
+    warning: t('insightSettings.descriptions.warning'),
+    achievement: t('insightSettings.descriptions.achievement'),
+    info: t('insightSettings.descriptions.info'),
+    recommendation: t('insightSettings.descriptions.recommendation'),
+    correlation: t('insightSettings.descriptions.correlation'),
+    anomaly: t('insightSettings.descriptions.anomaly'),
+    prediction: t('insightSettings.descriptions.prediction'),
+    social: t('insightSettings.descriptions.social'),
+    trainer: t('insightSettings.descriptions.trainer'),
+    temporal: t('insightSettings.descriptions.temporal'),
+    habit_pattern: t('insightSettings.descriptions.habitPattern'),
+    habit_risk: t('insightSettings.descriptions.habitRisk'),
+    habit_optimization: t('insightSettings.descriptions.habitOptimization'),
+    habit_chain: t('insightSettings.descriptions.habitChain'),
+  };
 
   const insightTypes: InsightType[] = [
     'critical',
@@ -86,16 +88,16 @@ export function InsightSettingsModal({ isOpen, onClose }: InsightSettingsModalPr
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Настройки Smart AI Insights</DialogTitle>
+          <DialogTitle>{t('insightSettings.title')}</DialogTitle>
           <DialogDescription>
-            Настройте, какие типы инсайтов вы хотите видеть
+            {t('insightSettings.description')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
           {/* Insight Types */}
           <div>
-            <h4 className="font-medium mb-3">Типы инсайтов</h4>
+            <h4 className="font-medium mb-3">{t('insightSettings.insightTypes')}</h4>
             <div className="space-y-3">
               {insightTypes.map((type) => (
                 <div key={type} className="flex items-start gap-3">
@@ -122,7 +124,7 @@ export function InsightSettingsModal({ isOpen, onClose }: InsightSettingsModalPr
 
           {/* Refresh Interval */}
           <div>
-            <h4 className="font-medium mb-3">Частота обновления</h4>
+            <h4 className="font-medium mb-3">{t('insightSettings.refreshFrequency')}</h4>
             <Select
               value={preferences.refreshInterval.toString()}
               onValueChange={(val) => updateRefreshInterval(parseInt(val))}
@@ -131,24 +133,24 @@ export function InsightSettingsModal({ isOpen, onClose }: InsightSettingsModalPr
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="30">30 секунд</SelectItem>
-                <SelectItem value="60">1 минута</SelectItem>
-                <SelectItem value="120">2 минуты</SelectItem>
-                <SelectItem value="300">5 минут</SelectItem>
+                <SelectItem value="30">{t('insightSettings.intervals.30sec')}</SelectItem>
+                <SelectItem value="60">{t('insightSettings.intervals.1min')}</SelectItem>
+                <SelectItem value="120">{t('insightSettings.intervals.2min')}</SelectItem>
+                <SelectItem value="300">{t('insightSettings.intervals.5min')}</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground mt-2">
-              Как часто инсайты будут автоматически обновляться
+              {t('insightSettings.refreshHint')}
             </p>
           </div>
 
           {/* Actions */}
           <div className="flex gap-2 pt-4 border-t">
             <Button onClick={onClose} className="flex-1">
-              Сохранить
+              {t('insightSettings.save')}
             </Button>
             <Button variant="outline" onClick={resetPreferences}>
-              Сбросить
+              {t('insightSettings.reset')}
             </Button>
           </div>
         </div>
