@@ -14,6 +14,7 @@ import { SupplementResearchCard } from './SupplementResearchCard';
 import { SupplementEffectivenessInsight, EffectivenessVerdict } from './SupplementEffectivenessInsight';
 import { SupplementTimeline } from './SupplementTimeline';
 import { AIEffectivenessAnalyzer } from './AIEffectivenessAnalyzer';
+import { useTranslation } from 'react-i18next';
 
 interface StackItem {
   id: string;
@@ -30,6 +31,7 @@ interface StackItemWithCorrelations extends StackItem {
 }
 
 export function CorrelationEngine() {
+  const { t } = useTranslation('supplements');
   const [selectedStackItemId, setSelectedStackItemId] = useState<string>();
   const [timeframe, setTimeframe] = useState<number>(6);
   const [stackItemsWithData, setStackItemsWithData] = useState<StackItemWithCorrelations[]>([]);
@@ -173,9 +175,9 @@ export function CorrelationEngine() {
         <div className="text-center space-y-4">
           <Activity className="h-12 w-12 mx-auto text-muted-foreground" />
           <div>
-            <h3 className="text-lg font-semibold mb-2">Нет активных добавок</h3>
+            <h3 className="text-lg font-semibold mb-2">{t('correlation.noActiveSupplements')}</h3>
             <p className="text-muted-foreground">
-              Добавьте добавки в ваш стек, чтобы увидеть научные корреляции с биомаркерами
+              {t('correlation.addToSeeCorrelations')}
             </p>
           </div>
         </div>
@@ -193,10 +195,10 @@ export function CorrelationEngine() {
         <div>
           <h2 className="text-xl font-bold flex items-center gap-2">
             <Beaker className="h-5 w-5 text-purple-400" />
-            Научные корреляции
+            {t('correlation.scientificCorrelations')}
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            {itemsWithCorrelations.length} из {stackItems.length} добавок с научными данными
+            {t('correlation.withScientificData', { count: itemsWithCorrelations.length, total: stackItems.length })}
           </p>
         </div>
         
@@ -211,7 +213,7 @@ export function CorrelationEngine() {
             ) : (
               <Sparkles className="h-4 w-4 mr-2" />
             )}
-            Привязать все ({itemsWithoutCorrelations.length})
+            {t('correlation.linkAll', { count: itemsWithoutCorrelations.length })}
           </Button>
         )}
       </div>
@@ -240,14 +242,14 @@ export function CorrelationEngine() {
         <div className="border-t border-neutral-800 pt-6">
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Brain className="h-5 w-5 text-purple-400" />
-            AI-анализ эффективности
+            {t('correlation.aiEffectivenessAnalysis')}
           </h3>
           
           {/* Selector for AI analysis */}
           <div className="mb-4">
             <Select value={selectedForAI || ''} onValueChange={setSelectedForAI}>
               <SelectTrigger className="bg-neutral-950 border-neutral-700 max-w-md">
-                <SelectValue placeholder="Выберите добавку для AI-анализа" />
+                <SelectValue placeholder={t('correlation.selectForAIAnalysis')} />
               </SelectTrigger>
               <SelectContent>
                 {stackItemsWithData.map((item) => (
@@ -274,7 +276,7 @@ export function CorrelationEngine() {
         <div className="border-t border-neutral-800 pt-6">
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Clock className="h-5 w-5 text-blue-400" />
-            Таймлайн эффекта
+            {t('correlation.effectTimeline')}
           </h3>
           <div className="grid gap-4 md:grid-cols-2">
             {stackItemsWithData
@@ -296,14 +298,14 @@ export function CorrelationEngine() {
       {itemsWithCorrelations.length > 0 && (
         <>
           <div className="border-t border-neutral-800 pt-6">
-            <h3 className="text-lg font-semibold mb-4">Детальный анализ</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('correlation.detailedAnalysis')}</h3>
             
             {/* Controls */}
             <div className="flex flex-col sm:flex-row gap-4 mb-6">
               <div className="flex-1">
                 <Select value={selectedStackItemId} onValueChange={setSelectedStackItemId}>
                   <SelectTrigger className="bg-neutral-950 border-neutral-700 hover:border-purple-500 transition-colors">
-                    <SelectValue placeholder="Выберите добавку для анализа" />
+                    <SelectValue placeholder={t('correlation.selectForAnalysis')} />
                   </SelectTrigger>
                   <SelectContent>
                     {itemsWithCorrelations.map((item) => (
@@ -312,7 +314,7 @@ export function CorrelationEngine() {
                           <Link2 className="h-3 w-3 text-green-500" />
                           {item.stack_name}
                           <span className="text-xs text-muted-foreground">
-                            ({item.correlations?.length || 0} корреляций)
+                            ({t('correlation.correlations', { count: item.correlations?.length || 0 })})
                           </span>
                         </div>
                       </SelectItem>
@@ -326,9 +328,9 @@ export function CorrelationEngine() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="3">3 месяца</SelectItem>
-                    <SelectItem value="6">6 месяцев</SelectItem>
-                    <SelectItem value="12">12 месяцев</SelectItem>
+                    <SelectItem value="3">{t('correlation.months3')}</SelectItem>
+                    <SelectItem value="6">{t('correlation.months6')}</SelectItem>
+                    <SelectItem value="12">{t('correlation.months12')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -340,7 +342,7 @@ export function CorrelationEngine() {
             <Card className="p-12 bg-neutral-950 border-neutral-800">
               <div className="flex flex-col items-center space-y-4">
                 <Loader2 className="h-12 w-12 animate-spin text-purple-500" />
-                <p className="text-muted-foreground">🤖 Анализ корреляции...</p>
+                <p className="text-muted-foreground">🤖 {t('correlation.analyzingCorrelation')}</p>
               </div>
             </Card>
           )}
@@ -349,10 +351,10 @@ export function CorrelationEngine() {
           {correlation && !correlation.success && (
             <Card className="p-8 bg-neutral-950 border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
               <div className="text-center space-y-2">
-                <h3 className="text-lg font-semibold text-amber-400">Недостаточно данных</h3>
+                <h3 className="text-lg font-semibold text-amber-400">{t('correlation.insufficientData')}</h3>
                 <p className="text-muted-foreground">{correlation.error}</p>
                 <p className="text-sm text-muted-foreground">
-                  Для анализа нужны данные о приёме добавок и результаты анализов крови
+                  {t('correlation.needIntakeAndBloodTests')}
                 </p>
               </div>
             </Card>
@@ -401,7 +403,7 @@ export function CorrelationEngine() {
                 <Card className="p-4 bg-neutral-950 border-blue-500/30 shadow-[0_0_10px_rgba(59,130,246,0.2)]">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Корреляция</span>
+                      <span className="text-sm text-muted-foreground">{t('correlation.correlation')}</span>
                       <Badge variant={
                         correlation.correlation && correlation.correlation.score > 0.7 ? 'default' :
                         correlation.correlation && correlation.correlation.score > 0.5 ? 'secondary' : 'outline'
