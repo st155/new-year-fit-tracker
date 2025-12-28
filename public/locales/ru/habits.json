@@ -209,5 +209,12 @@
     "trackProgress": "Отслеживайте прогресс в режиме реального времени",
     "level": "Lvl {{level}}",
     "xpProgress": "{{current}} / {{max}} XP"
+  },
+  "measurement": {
+    "recorded": "Записано",
+    "fromYesterday": "от вчера",
+    "progressOfGoal": "{{percent}}% от цели ({{target}} {{unit}})",
+    "enterValue": "Введите {{unit}}",
+    "targetHint": "Цель: {{target}} {{unit}}"
   }
 }

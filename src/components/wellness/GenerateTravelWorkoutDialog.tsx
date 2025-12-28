@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -39,33 +40,33 @@ interface GenerateTravelWorkoutDialogProps {
 }
 
 const EQUIPMENT_OPTIONS = [
-  { value: 'bodyweight', label: 'Только тело', emoji: '🤸' },
-  { value: 'dumbbells', label: 'Гантели', emoji: '🏋️' },
-  { value: 'resistance_bands', label: 'Резинки', emoji: '🔗' },
-  { value: 'hotel_gym', label: 'Зал в отеле', emoji: '🏨' },
-  { value: 'full_gym', label: 'Полный зал', emoji: '💪' },
+  { value: 'bodyweight', labelKey: 'travelWorkout.equipment.bodyweight', emoji: '🤸' },
+  { value: 'dumbbells', labelKey: 'travelWorkout.equipment.dumbbells', emoji: '🏋️' },
+  { value: 'resistance_bands', labelKey: 'travelWorkout.equipment.resistanceBands', emoji: '🔗' },
+  { value: 'hotel_gym', labelKey: 'travelWorkout.equipment.hotelGym', emoji: '🏨' },
+  { value: 'full_gym', labelKey: 'travelWorkout.equipment.fullGym', emoji: '💪' },
 ];
 
 const WORKOUT_TYPES = [
-  { value: 'full_body', label: 'Всё тело', emoji: '🏋️', muscles: ['chest', 'back', 'legs', 'shoulders', 'arms', 'core'] },
-  { value: 'upper', label: 'Верх', emoji: '💪', muscles: ['chest', 'back', 'shoulders', 'arms'] },
-  { value: 'lower', label: 'Низ', emoji: '🦵', muscles: ['legs', 'core'] },
-  { value: 'push', label: 'Жим', emoji: '🔥', muscles: ['chest', 'shoulders', 'arms'] },
-  { value: 'pull', label: 'Тяга', emoji: '🎯', muscles: ['back', 'arms'] },
-  { value: 'cardio', label: 'Кардио', emoji: '❤️', muscles: [] },
-  { value: 'custom', label: 'Своё', emoji: '⚙️', muscles: [] },
+  { value: 'full_body', labelKey: 'travelWorkout.types.fullBody', emoji: '🏋️', muscles: ['chest', 'back', 'legs', 'shoulders', 'arms', 'core'] },
+  { value: 'upper', labelKey: 'travelWorkout.types.upper', emoji: '💪', muscles: ['chest', 'back', 'shoulders', 'arms'] },
+  { value: 'lower', labelKey: 'travelWorkout.types.lower', emoji: '🦵', muscles: ['legs', 'core'] },
+  { value: 'push', labelKey: 'travelWorkout.types.push', emoji: '🔥', muscles: ['chest', 'shoulders', 'arms'] },
+  { value: 'pull', labelKey: 'travelWorkout.types.pull', emoji: '🎯', muscles: ['back', 'arms'] },
+  { value: 'cardio', labelKey: 'travelWorkout.types.cardio', emoji: '❤️', muscles: [] },
+  { value: 'custom', labelKey: 'travelWorkout.types.custom', emoji: '⚙️', muscles: [] },
 ];
 
 const MUSCLE_GROUPS = [
-  { key: 'chest', label: 'Грудь', icon: '💪' },
-  { key: 'back', label: 'Спина', icon: '🔙' },
-  { key: 'legs', label: 'Ноги', icon: '🦵' },
-  { key: 'shoulders', label: 'Плечи', icon: '🎯' },
-  { key: 'arms', label: 'Руки', icon: '💪' },
-  { key: 'core', label: 'Кор', icon: '🔥' },
+  { key: 'chest', labelKey: 'travelWorkout.muscles.chest', icon: '💪' },
+  { key: 'back', labelKey: 'travelWorkout.muscles.back', icon: '🔙' },
+  { key: 'legs', labelKey: 'travelWorkout.muscles.legs', icon: '🦵' },
+  { key: 'shoulders', labelKey: 'travelWorkout.muscles.shoulders', icon: '🎯' },
+  { key: 'arms', labelKey: 'travelWorkout.muscles.arms', icon: '💪' },
+  { key: 'core', labelKey: 'travelWorkout.muscles.core', icon: '🔥' },
 ];
 
-function GapsSummary({ gapAnalysis }: { gapAnalysis: GapAnalysisResult | undefined }) {
+function GapsSummary({ gapAnalysis, t }: { gapAnalysis: GapAnalysisResult | undefined; t: (key: string, options?: any) => string }) {
   if (!gapAnalysis) return null;
 
   const neglected = Object.entries(gapAnalysis.muscleAnalysis)
@@ -76,7 +77,7 @@ function GapsSummary({ gapAnalysis }: { gapAnalysis: GapAnalysisResult | undefin
     return (
       <div className="flex items-center gap-2 text-green-400 text-sm">
         <CheckCircle2 className="h-4 w-4" />
-        Все группы мышц в балансе
+        {t('travelWorkout.gaps.allBalanced')}
       </div>
     );
   }
@@ -85,7 +86,7 @@ function GapsSummary({ gapAnalysis }: { gapAnalysis: GapAnalysisResult | undefin
     <div className="space-y-2">
       <div className="flex items-center gap-2 text-yellow-400 text-sm">
         <AlertTriangle className="h-4 w-4" />
-        Давно не тренировались:
+        {t('travelWorkout.gaps.neglected')}
       </div>
       <div className="flex flex-wrap gap-1.5">
         {neglected.map(({ group, icon, name, daysSince }) => (
@@ -94,7 +95,7 @@ function GapsSummary({ gapAnalysis }: { gapAnalysis: GapAnalysisResult | undefin
             variant="outline" 
             className="bg-yellow-500/10 text-yellow-400 border-yellow-500/30"
           >
-            {icon} {name} ({daysSince}д)
+            {icon} {name} ({t('travelWorkout.gaps.daysAgo', { days: daysSince })})
           </Badge>
         ))}
       </div>
@@ -105,11 +106,13 @@ function GapsSummary({ gapAnalysis }: { gapAnalysis: GapAnalysisResult | undefin
 function WorkoutPreview({ 
   workout, 
   onSave, 
-  isSaving 
+  isSaving,
+  t
 }: { 
   workout: GeneratedWorkout; 
   onSave: () => void;
   isSaving: boolean;
+  t: (key: string, options?: any) => string;
 }) {
   return (
     <motion.div
@@ -122,7 +125,7 @@ function WorkoutPreview({
         <div className="flex items-center justify-center gap-3 mt-1 text-sm text-muted-foreground">
           <span className="flex items-center gap-1">
             <Clock className="h-3.5 w-3.5" />
-            {workout.duration_minutes} мин
+            {t('travelWorkout.preview.minutes', { min: workout.duration_minutes })}
           </span>
           <span className="flex items-center gap-1">
             <Target className="h-3.5 w-3.5" />
@@ -137,7 +140,7 @@ function WorkoutPreview({
           {workout.warmup && workout.warmup.length > 0 && (
             <div>
               <h4 className="text-xs font-medium text-muted-foreground uppercase mb-2">
-                Разминка
+                {t('travelWorkout.preview.warmup')}
               </h4>
               <div className="space-y-1">
                 {workout.warmup.map((ex, idx) => (
@@ -153,7 +156,7 @@ function WorkoutPreview({
           {/* Упражнения */}
           <div>
             <h4 className="text-xs font-medium text-muted-foreground uppercase mb-2">
-              Упражнения
+              {t('travelWorkout.preview.exercises')}
             </h4>
             <div className="space-y-2">
               {workout.exercises?.map((ex, idx) => (
@@ -164,7 +167,7 @@ function WorkoutPreview({
                       <div className="text-xs text-muted-foreground">
                         {ex.sets} × {ex.reps}
                         {ex.weight && ` • ${ex.weight}`}
-                        {ex.rest && ` • отдых ${ex.rest}`}
+                        {ex.rest && ` • ${t('travelWorkout.preview.rest', { rest: ex.rest })}`}
                       </div>
                       {ex.notes && (
                         <div className="text-xs text-primary/80 mt-1">{ex.notes}</div>
@@ -183,7 +186,7 @@ function WorkoutPreview({
           {workout.cooldown && workout.cooldown.length > 0 && (
             <div>
               <h4 className="text-xs font-medium text-muted-foreground uppercase mb-2">
-                Заминка
+                {t('travelWorkout.preview.cooldown')}
               </h4>
               <div className="space-y-1">
                 {workout.cooldown.map((ex, idx) => (
@@ -217,7 +220,7 @@ function WorkoutPreview({
         ) : (
           <Save className="h-4 w-4 mr-2" />
         )}
-        Сохранить в журнал
+        {t('travelWorkout.preview.saveToJournal')}
       </Button>
     </motion.div>
   );
@@ -227,6 +230,7 @@ export function GenerateTravelWorkoutDialog({
   open, 
   onOpenChange 
 }: GenerateTravelWorkoutDialogProps) {
+  const { t } = useTranslation('workouts');
   const [step, setStep] = useState<'config' | 'generating' | 'preview'>('config');
   const [duration, setDuration] = useState(45);
   const [equipment, setEquipment] = useState('bodyweight');
@@ -299,10 +303,10 @@ export function GenerateTravelWorkoutDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Plane className="h-5 w-5 text-primary" />
-            Тренировка в поездке
+            {t('travelWorkout.title')}
           </DialogTitle>
           <DialogDescription>
-            AI создаст тренировку на основе твоей истории с тренером
+            {t('travelWorkout.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -320,10 +324,10 @@ export function GenerateTravelWorkoutDialog({
                 {isLoadingGaps ? (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Анализируем историю...
+                    {t('travelWorkout.analyzing')}
                   </div>
                 ) : (
-                  <GapsSummary gapAnalysis={gapAnalysis} />
+                  <GapsSummary gapAnalysis={gapAnalysis} t={t} />
                 )}
               </div>
 
@@ -332,9 +336,9 @@ export function GenerateTravelWorkoutDialog({
                 <Label className="flex items-center justify-between">
                   <span className="flex items-center gap-2">
                     <Clock className="h-4 w-4" />
-                    Длительность
+                    {t('travelWorkout.duration')}
                   </span>
-                  <span className="text-primary font-medium">{duration} мин</span>
+                  <span className="text-primary font-medium">{t('travelWorkout.minutes', { min: duration })}</span>
                 </Label>
                 <Slider
                   value={[duration]}
@@ -350,7 +354,7 @@ export function GenerateTravelWorkoutDialog({
               <div className="space-y-3">
                 <Label className="flex items-center gap-2">
                   <Dumbbell className="h-4 w-4" />
-                  Оборудование
+                  {t('travelWorkout.equipmentLabel')}
                 </Label>
                 <div className="grid grid-cols-3 gap-2">
                   {EQUIPMENT_OPTIONS.map(opt => (
@@ -363,7 +367,7 @@ export function GenerateTravelWorkoutDialog({
                       )}
                     >
                       <span className="text-xl">{opt.emoji}</span>
-                      <span className="text-xs font-medium mt-1 text-center">{opt.label}</span>
+                      <span className="text-xs font-medium mt-1 text-center">{t(opt.labelKey)}</span>
                     </Card>
                   ))}
                 </div>
@@ -373,7 +377,7 @@ export function GenerateTravelWorkoutDialog({
               <div className="space-y-3">
                 <Label className="flex items-center gap-2">
                   <Target className="h-4 w-4" />
-                  Тип тренировки
+                  {t('travelWorkout.type')}
                 </Label>
                 <div className="grid grid-cols-4 gap-2">
                   {WORKOUT_TYPES.map(type => (
@@ -386,7 +390,7 @@ export function GenerateTravelWorkoutDialog({
                       )}
                     >
                       <span className="text-lg">{type.emoji}</span>
-                      <span className="text-xs font-medium mt-0.5 text-center">{type.label}</span>
+                      <span className="text-xs font-medium mt-0.5 text-center">{t(type.labelKey)}</span>
                     </Card>
                   ))}
                 </div>
@@ -397,7 +401,7 @@ export function GenerateTravelWorkoutDialog({
                 <div className="space-y-3">
                   <Label className="flex items-center gap-2">
                     <Target className="h-4 w-4" />
-                    Выберите мышцы
+                    {t('travelWorkout.selectMuscles')}
                   </Label>
                   <div className="flex flex-wrap gap-1.5">
                     {MUSCLE_GROUPS.map(group => (
@@ -407,7 +411,7 @@ export function GenerateTravelWorkoutDialog({
                         className="cursor-pointer transition-all"
                         onClick={() => toggleMuscle(group.key)}
                       >
-                        {group.icon} {group.label}
+                        {group.icon} {t(group.labelKey)}
                       </Badge>
                     ))}
                   </div>
@@ -420,7 +424,7 @@ export function GenerateTravelWorkoutDialog({
                 disabled={generateMutation.isPending}
               >
                 <Sparkles className="h-4 w-4 mr-2" />
-                Сгенерировать
+                {t('travelWorkout.generate')}
               </Button>
             </motion.div>
           )}
@@ -435,10 +439,10 @@ export function GenerateTravelWorkoutDialog({
             >
               <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
               <p className="mt-4 text-sm text-muted-foreground">
-                AI анализирует твои тренировки с тренером...
+                {t('travelWorkout.generating')}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                Это может занять 10-20 секунд
+                {t('travelWorkout.generatingHint')}
               </p>
             </motion.div>
           )}
@@ -448,6 +452,7 @@ export function GenerateTravelWorkoutDialog({
               workout={generatedWorkout} 
               onSave={handleSave}
               isSaving={saveMutation.isPending}
+              t={t}
             />
           )}
         </AnimatePresence>

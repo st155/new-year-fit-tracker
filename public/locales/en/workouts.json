@@ -167,5 +167,103 @@
   "history": {
     "title": "History",
     "viewAll": "All {{count}}"
+  },
+  "travelWorkout": {
+    "title": "Travel Workout",
+    "description": "AI will create a workout based on your training history",
+    "analyzing": "Analyzing history...",
+    "duration": "Duration",
+    "minutes": "{{min}} min",
+    "equipmentLabel": "Equipment",
+    "type": "Workout Type",
+    "selectMuscles": "Select muscles",
+    "generate": "Generate",
+    "generating": "AI is analyzing your training history...",
+    "generatingHint": "This may take 10-20 seconds",
+    "gaps": {
+      "allBalanced": "All muscle groups are balanced",
+      "neglected": "Haven't trained recently:",
+      "daysAgo": "{{days}}d"
+    },
+    "equipment": {
+      "bodyweight": "Bodyweight only",
+      "dumbbells": "Dumbbells",
+      "resistanceBands": "Resistance bands",
+      "hotelGym": "Hotel gym",
+      "fullGym": "Full gym"
+    },
+    "types": {
+      "fullBody": "Full body",
+      "upper": "Upper",
+      "lower": "Lower",
+      "push": "Push",
+      "pull": "Pull",
+      "cardio": "Cardio",
+      "custom": "Custom"
+    },
+    "muscles": {
+      "chest": "Chest",
+      "back": "Back",
+      "legs": "Legs",
+      "shoulders": "Shoulders",
+      "arms": "Arms",
+      "core": "Core"
+    },
+    "preview": {
+      "minutes": "{{min}} min",
+      "warmup": "Warmup",
+      "exercises": "Exercises",
+      "rest": "rest {{rest}}",
+      "cooldown": "Cooldown",
+      "saveToJournal": "Save to journal"
+    }
+  },
+  "onboarding": {
+    "steps": {
+      "welcome": "👋 Hi! I'm your AI trainer. In 5 simple steps, I'll create the perfect training plan for you.",
+      "goal": "🎯 Step 1/5: What's your main goal?",
+      "experience": "💪 Step 2/5: What's your training experience?",
+      "schedule": "📅 Step 3/5: Which days of the week can you train?",
+      "duration": "⏱️ Step 4/5: How much time do you have for one workout?",
+      "focus": "🎯 Step 5/5: Which muscle groups do you want to focus on? (pick 2-3)",
+      "generate": "✨ Great! I've collected all the information. Ready to create your personalized 12-week plan?"
+    },
+    "short": {
+      "goal": "Goal",
+      "experience": "Experience",
+      "schedule": "Schedule",
+      "duration": "Duration",
+      "focus": "Focus",
+      "generate": "Generate"
+    },
+    "goals": {
+      "hypertrophy": "Build Muscle",
+      "fatLoss": "Lose Weight",
+      "strength": "Get Stronger"
+    },
+    "experience": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced"
+    },
+    "experienceDesc": {
+      "beginner": "< 1 year",
+      "intermediate": "1-3 years",
+      "advanced": "3+ years"
+    },
+    "duration": {
+      "short": "30-45 min",
+      "medium": "60-75 min",
+      "long": "90+ min"
+    },
+    "muscles": {
+      "chest": "Chest",
+      "back": "Back",
+      "shoulders": "Shoulders",
+      "arms": "Arms",
+      "legs": "Legs",
+      "core": "Core"
+    },
+    "createPlan": "Create Plan"
   }
 }

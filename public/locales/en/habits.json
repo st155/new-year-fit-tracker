@@ -208,5 +208,12 @@
     "trackProgress": "Track progress in real time",
     "level": "Lvl {{level}}",
     "xpProgress": "{{current}} / {{max}} XP"
+  },
+  "measurement": {
+    "recorded": "Recorded",
+    "fromYesterday": "from yesterday",
+    "progressOfGoal": "{{percent}}% of goal ({{target}} {{unit}})",
+    "enterValue": "Enter {{unit}}",
+    "targetHint": "Target: {{target}} {{unit}}"
   }
 }
