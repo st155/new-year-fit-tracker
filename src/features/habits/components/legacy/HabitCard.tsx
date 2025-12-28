@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -59,6 +60,7 @@ interface HabitCardProps {
 }
 
 export function HabitCard({ habit, onCompleted }: HabitCardProps) {
+  const { t } = useTranslation('habits');
   const navigate = useNavigate();
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showArchiveDialog, setShowArchiveDialog] = useState(false);
@@ -110,31 +112,24 @@ export function HabitCard({ habit, onCompleted }: HabitCardProps) {
         setCelebrate(true);
         setTimeout(() => setCelebrate(false), 100);
 
-        const messages = {
-          7: "Отличное начало! 7 дней подряд! 🎉",
-          30: "Целый месяц! Вы молодец! 🎊",
-          100: "Невероятно! 100 дней подряд! 🏆",
-          365: "ГОД БЕЗ ПРОПУСКОВ! ЛЕГЕНДА! 🌟"
-        };
-        
-        toast.success(messages[achievedMilestone as keyof typeof messages]);
+        toast.success(t(`milestones.${achievedMilestone}`));
       } else if (newStreak > 1 && newStreak % 5 === 0) {
         // Mini celebration every 5 days
         setMilestoneType('streak');
         setCelebrate(true);
         setTimeout(() => setCelebrate(false), 100);
-        toast.success(`${newStreak} дней подряд! 🔥`);
+        toast.success(t('completion.streak', { count: newStreak }));
       } else {
         setMilestoneType('completion');
         setCelebrate(true);
         setTimeout(() => setCelebrate(false), 100);
-        toast.success("Привычка выполнена! 🎉");
+        toast.success(t('completion.success'));
       }
 
       onCompleted();
     } catch (error) {
       console.error("Error completing habit:", error);
-      toast.error("Ошибка при отметке привычки");
+      toast.error(t('errors.completionError'));
     } finally {
       setIsCompleting(false);
     }
@@ -232,7 +227,7 @@ export function HabitCard({ habit, onCompleted }: HabitCardProps) {
               >
                 <Flame className="h-3 w-3 text-habit-negative" />
                 <span className="font-semibold">{habit.stats.current_streak}</span>
-                <span className="text-xs">дней</span>
+                <span className="text-xs">{t('stats.days')}</span>
               </Badge>
             )}
             <Badge 
@@ -247,7 +242,7 @@ export function HabitCard({ habit, onCompleted }: HabitCardProps) {
           {/* Completion Rate Progress */}
           <div className="space-y-2">
             <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Процент выполнения</span>
+              <span className="text-muted-foreground">{t('stats.completionRate')}</span>
               <span className="font-semibold text-foreground">{Math.round(habit.stats.completion_rate)}%</span>
             </div>
             <div className="relative h-2 rounded-full bg-white/10 overflow-hidden">
@@ -300,10 +295,10 @@ export function HabitCard({ habit, onCompleted }: HabitCardProps) {
         {habit.completed_today ? (
           <>
             <Check className="mr-2 h-4 w-4 relative z-10" />
-            <span className="relative z-10">Готово</span>
+            <span className="relative z-10">{t('actions.done')}</span>
           </>
         ) : (
-          <span className="relative z-10 font-semibold">Отметить</span>
+          <span className="relative z-10 font-semibold">{t('actions.mark')}</span>
         )}
       </Button>
     </div>
@@ -318,18 +313,17 @@ export function HabitCard({ habit, onCompleted }: HabitCardProps) {
     <AlertDialog open={showArchiveDialog} onOpenChange={setShowArchiveDialog}>
       <AlertDialogContent className="glass-strong border-white/20">
         <AlertDialogHeader>
-          <AlertDialogTitle>Архивировать привычку?</AlertDialogTitle>
+          <AlertDialogTitle>{t('archive.title')}</AlertDialogTitle>
           <AlertDialogDescription>
-            Привычка будет скрыта из списка активных, но все данные сохранятся.
-            Вы сможете восстановить её позже.
+            {t('archive.description')}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel className="glass-card border-white/20">
-            Отмена
+            {t('delete.cancel')}
           </AlertDialogCancel>
           <AlertDialogAction onClick={handleArchiveConfirm}>
-            Архивировать
+            {t('archive.confirm')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -338,30 +332,20 @@ export function HabitCard({ habit, onCompleted }: HabitCardProps) {
     <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
       <AlertDialogContent className="glass-strong border-white/20">
         <AlertDialogHeader>
-          <AlertDialogTitle>Удалить привычку навсегда?</AlertDialogTitle>
+          <AlertDialogTitle>{t('delete.title')}</AlertDialogTitle>
           <AlertDialogDescription>
-            Это действие нельзя отменить. Будут удалены:
-            <ul className="mt-2 list-disc list-inside text-sm">
-              <li>Все логи выполнения</li>
-              <li>Вся статистика и история</li>
-              <li>Все измерения и попытки</li>
-            </ul>
-            <div className="mt-3 p-3 bg-destructive/10 rounded-md border border-destructive/30">
-              <p className="text-sm font-semibold text-destructive">
-                ⚠️ Если вы хотите временно скрыть привычку, используйте "Архивировать"
-              </p>
-            </div>
+            {t('delete.description')}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel className="glass-card border-white/20">
-            Отмена
+            {t('delete.cancel')}
           </AlertDialogCancel>
           <AlertDialogAction 
             onClick={handleDeleteConfirm}
             className="bg-destructive hover:bg-destructive/90"
           >
-            Удалить навсегда
+            {t('delete.confirm')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

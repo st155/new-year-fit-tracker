@@ -4,6 +4,95 @@
     "dataQuality": "Качество данных",
     "terraTokens": "Terra Tokens"
   },
+  "common": {
+    "refresh": "Обновить",
+    "search": "Поиск...",
+    "cancel": "Отмена",
+    "save": "Сохранить",
+    "delete": "Удалить",
+    "close": "Закрыть"
+  },
+  "terra": {
+    "title": "Управление Terra токенами",
+    "subtitle": "Управление токенами интеграций (Whoop, Garmin и др.)",
+    "createToken": "Создать токен",
+    "checkTerraApi": "Проверить Terra API",
+    "deadTokensFound": "Обнаружено {{count}} мёртвых подключений",
+    "deadTokensDesc": "Токены активны, но данные не получены более 7 дней",
+    "showAll": "Показать все",
+    "showDead": "Показать мёртвые",
+    "create": {
+      "title": "Создать новый токен",
+      "description": "Свяжите пользователя с его Terra User ID из Terra Dashboard",
+      "userLabel": "Пользователь",
+      "selectUser": "Выберите пользователя",
+      "terraIdLabel": "Terra User ID",
+      "terraIdPlaceholder": "Вставьте из Terra Dashboard",
+      "terraIdHint": "Найдите в Terra Dashboard → Users → нужный пользователь → User ID",
+      "providerLabel": "Провайдер",
+      "submit": "Создать"
+    },
+    "edit": {
+      "title": "Редактировать токен",
+      "description": "Обновите Terra User ID или статус токена",
+      "terraIdLabel": "Terra User ID",
+      "providerLabel": "Провайдер",
+      "statusLabel": "Статус"
+    },
+    "delete": {
+      "title": "Удалить токен?",
+      "description": "Токен для {{name}} ({{provider}}) будет удалён. Пользователю придётся переподключить интеграцию."
+    },
+    "orphanCleanup": {
+      "title": "Очистка застрявших подключений",
+      "description": "Для пользователей с ошибкой \"сессия истекла\" — проверка и сброс подключений в Terra API",
+      "selectUser": "Выберите пользователя",
+      "searchUser": "Поиск пользователя...",
+      "noConnections": "У {{name}} нет подключений в Terra API",
+      "canReconnect": "Пользователь может переподключить интеграцию",
+      "reset": "Сброшено {{deauthenticated}}/{{total}} подключений для {{name}}",
+      "canReconnectAfter": "Пользователь может переподключить интеграцию",
+      "error": "Ошибка сброса: {{message}}",
+      "resetAll": "Сбросить все",
+      "quickReset": "Быстрый сброс для известных проблемных пользователей:",
+      "resetSuccess": "✅ {{name}}: сброшено {{deauthenticated}}/{{total}} подключений",
+      "errorFor": "❌ Ошибка для {{name}}: {{message}}"
+    },
+    "table": {
+      "searchPlaceholder": "Поиск по имени, Terra ID или провайдеру...",
+      "title": "Активные токены ({{count}})",
+      "description": "Связи между пользователями и их Terra User ID",
+      "user": "Пользователь",
+      "terraId": "Terra User ID",
+      "provider": "Провайдер",
+      "status": "Статус",
+      "lastSync": "Последняя синхр.",
+      "lastData": "Последние данные",
+      "actions": "Действия",
+      "noName": "Без имени",
+      "missing": "Отсутствует",
+      "active": "Активен",
+      "inactive": "Неактивен",
+      "noDataDays": "Нет данных {{days}} дней",
+      "request30Days": "Запросить данные за 30 дней",
+      "noDeadTokens": "Мёртвые токены не найдены",
+      "noTokens": "Токены не найдены"
+    },
+    "apiUsers": {
+      "title": "Terra API подключения: {{name}}",
+      "description": "Подключения в Terra API для reference_id: {{refId}}",
+      "loading": "Загрузка из Terra API...",
+      "noConnections": "Подключений не найдено",
+      "noConnectionsDesc": "В Terra API нет подключений для этого пользователя",
+      "foundConnections": "Найдено {{count}} подключений",
+      "table": {
+        "provider": "Провайдер",
+        "terraId": "Terra User ID",
+        "lastWebhook": "Последний вебхук",
+        "actions": "Действия"
+      }
+    }
+  },
   "errorLogs": {
     "title": "Логи ошибок",
     "description": "История ошибок и проблем с интеграциями",

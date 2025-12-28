@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
-import { ru } from "date-fns/locale";
+import { ru, enUS } from "date-fns/locale";
 import {
   Dialog,
   DialogContent,
@@ -62,10 +63,12 @@ export function ManualWorkoutDialog({
   onOpenChange,
   onSuccess 
 }: ManualWorkoutDialogProps) {
+  const { t, i18n } = useTranslation('workouts');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [workoutText, setWorkoutText] = useState("");
-  const [workoutName, setWorkoutName] = useState("Тренировка с тренером");
+  const [workoutName, setWorkoutName] = useState(t('manual.defaultName'));
   const [workoutDate, setWorkoutDate] = useState<Date>(new Date());
   const [duration, setDuration] = useState("60");
   const [trainerName, setTrainerName] = useState("");
@@ -75,14 +78,14 @@ export function ManualWorkoutDialog({
 
   const handleParse = () => {
     if (!workoutText.trim()) {
-      toast.error("Введите текст тренировки");
+      toast.error(t('manual.enterText'));
       return;
     }
     
     const parsed = parseWorkoutText(workoutText);
     if (parsed.exercises.length === 0) {
-      toast.error("Не удалось распознать упражнения", {
-        description: "Проверьте формат ввода"
+      toast.error(t('manual.parseError'), {
+        description: t('manual.checkFormat')
       });
       return;
     }
@@ -166,8 +169,12 @@ export function ManualWorkoutDialog({
           .eq("id", whoopWorkout.id);
       }
 
-      toast.success("Тренировка сохранена!", {
-        description: `${parsedWorkout.exercises.length} упражнений, ${parsedWorkout.totalSets} сетов${whoopWorkout ? ' • Связано с WHOOP' : ''}`
+      toast.success(t('manual.saveSuccess'), {
+        description: t('manual.saveSuccessDesc', { 
+          exercises: parsedWorkout.exercises.length, 
+          sets: parsedWorkout.totalSets,
+          whoop: whoopWorkout ? ` • ${t('manual.linkedWithWhoop')}` : ''
+        })
       });
 
       // Invalidate workout-related queries for smooth UI update
@@ -183,8 +190,8 @@ export function ManualWorkoutDialog({
 
     } catch (error) {
       console.error("Error saving workout:", error);
-      toast.error("Ошибка сохранения", {
-        description: "Попробуйте ещё раз"
+      toast.error(t('manual.saveError'), {
+        description: t('manual.tryAgain')
       });
     } finally {
       setIsSaving(false);
@@ -203,10 +210,10 @@ export function ManualWorkoutDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <FileText className="w-5 h-5 text-cyan-400" />
-            Записать тренировку
+            {t('manual.title')}
           </DialogTitle>
           <DialogDescription>
-            Вставьте текст тренировки из блокнота — система автоматически распознает упражнения и сеты
+            {t('manual.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -217,26 +224,26 @@ export function ManualWorkoutDialog({
               <div className="space-y-2">
                 <Label htmlFor="workout-name" className="flex items-center gap-1.5">
                   <FileText className="w-3.5 h-3.5" />
-                  Название
+                  {t('manual.nameLabel')}
                 </Label>
                 <Input
                   id="workout-name"
                   value={workoutName}
                   onChange={(e) => setWorkoutName(e.target.value)}
-                  placeholder="Тренировка с тренером"
+                  placeholder={t('manual.defaultName')}
                   className="bg-neutral-800 border-neutral-700"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="trainer-name" className="flex items-center gap-1.5">
                   <User className="w-3.5 h-3.5" />
-                  Тренер
+                  {t('manual.trainerLabel')}
                 </Label>
                 <Input
                   id="trainer-name"
                   value={trainerName}
                   onChange={(e) => setTrainerName(e.target.value)}
-                  placeholder="Антон"
+                  placeholder={t('manual.trainerPlaceholder')}
                   className="bg-neutral-800 border-neutral-700"
                 />
               </div>
@@ -246,7 +253,7 @@ export function ManualWorkoutDialog({
               <div className="space-y-2">
                 <Label className="flex items-center gap-1.5">
                   <CalendarIcon className="w-3.5 h-3.5" />
-                  Дата
+                  {t('manual.dateLabel')}
                 </Label>
                 <Popover>
                   <PopoverTrigger asChild>
@@ -258,7 +265,7 @@ export function ManualWorkoutDialog({
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {workoutDate ? format(workoutDate, "d MMMM yyyy", { locale: ru }) : "Выберите дату"}
+                      {workoutDate ? format(workoutDate, "d MMMM yyyy", { locale: dateLocale }) : t('manual.selectDate')}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -276,7 +283,7 @@ export function ManualWorkoutDialog({
               <div className="space-y-2">
                 <Label htmlFor="duration" className="flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5" />
-                  Длительность (мин)
+                  {t('manual.durationLabel')}
                 </Label>
                 <Input
                   id="duration"
@@ -291,7 +298,7 @@ export function ManualWorkoutDialog({
 
             {/* Workout text input */}
             <div className="space-y-2">
-              <Label htmlFor="workout-text">Текст тренировки</Label>
+              <Label htmlFor="workout-text">{t('manual.textLabel')}</Label>
               <Textarea
                 id="workout-text"
                 value={workoutText}
@@ -303,13 +310,13 @@ export function ManualWorkoutDialog({
 
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={handleClose}>
-                Отмена
+                {t('manual.cancel')}
               </Button>
               <Button 
                 onClick={handleParse}
                 className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
               >
-                Распознать
+                {t('manual.parse')}
               </Button>
             </div>
           </div>
@@ -330,7 +337,7 @@ export function ManualWorkoutDialog({
                 variant="outline" 
                 onClick={() => setStep('input')}
               >
-                ← Редактировать
+                ← {t('manual.edit')}
               </Button>
               <Button 
                 onClick={handleSave}
@@ -340,10 +347,10 @@ export function ManualWorkoutDialog({
                 {isSaving ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Сохранение...
+                    {t('manual.saving')}
                   </>
                 ) : (
-                  "Сохранить тренировку"
+                  t('manual.save')
                 )}
               </Button>
             </div>

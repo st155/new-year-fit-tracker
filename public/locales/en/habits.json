@@ -26,13 +26,81 @@
     "confirm": "Delete"
   },
   "completion": {
-    "success": "Habit completed",
-    "streak": "{{count}} days in a row!"
+    "success": "Habit completed! 🎉",
+    "streak": "{{count}} days in a row! 🔥"
+  },
+  "milestones": {
+    "7": "Great start! 7 days in a row! 🎉",
+    "30": "A whole month! You're amazing! 🎊",
+    "100": "Incredible! 100 days in a row! 🏆",
+    "365": "A YEAR WITHOUT MISSING! LEGEND! 🌟"
+  },
+  "errors": {
+    "completionError": "Error marking habit complete"
+  },
+  "categories": {
+    "health": "Health",
+    "fitness": "Fitness",
+    "nutrition": "Nutrition",
+    "sleep": "Sleep",
+    "mindfulness": "Mindfulness",
+    "custom": "Other"
+  },
+  "frequencies": {
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "custom": "Custom"
+  },
+  "stats": {
+    "completions": "completions",
+    "completed": "completed",
+    "min": "Min",
+    "avg": "Avg",
+    "max": "Max",
+    "streak": "Streak",
+    "days": "days",
+    "completionRate": "Completion rate"
+  },
+  "archive": {
+    "title": "Archive habit?",
+    "description": "The habit will be hidden from active list, but all data will be preserved. You can restore it later.",
+    "confirm": "Archive"
   },
   "actions": {
     "newHabit": "New Habit",
     "quickComplete": "Quick Complete",
-    "statistics": "Statistics"
+    "statistics": "Statistics",
+    "done": "Done",
+    "markComplete": "Mark as complete",
+    "mark": "Mark"
+  },
+  "create": {
+    "title": "New Habit",
+    "description": "Create a habit you want to track",
+    "templates": "Popular templates",
+    "habitType": "Habit type",
+    "nameLabel": "Name*",
+    "namePlaceholder": "e.g.: Morning exercise",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Describe your habit...",
+    "categoryLabel": "Category",
+    "frequencyLabel": "Frequency",
+    "costPerDay": "Cost per day ($) - optional",
+    "costPerDayHint": "To calculate saved money (e.g., price of a pack of cigarettes)",
+    "targetValue": "Target value",
+    "measurementUnit": "Measurement unit",
+    "measurementUnitPlaceholder": "books / pages / km",
+    "linkGoal": "Link to goal (optional)",
+    "selectGoal": "Select goal",
+    "noGoal": "No goal",
+    "linkGoalHint": "Completing habit will automatically record progress to the goal",
+    "weeklyTarget": "Target (times per week)",
+    "enterName": "Enter habit name",
+    "success": "Habit created! 🎉",
+    "error": "Error creating habit",
+    "creating": "Creating...",
+    "submit": "Create",
+    "cancel": "Cancel"
   },
   "devTools": {
     "title": "Dev Tools",
