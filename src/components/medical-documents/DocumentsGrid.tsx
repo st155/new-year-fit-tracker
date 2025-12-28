@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { DocumentCard } from './DocumentCard';
 import { useMedicalDocuments } from '@/hooks/useMedicalDocuments';
 import { FileText } from 'lucide-react';
@@ -14,6 +15,7 @@ interface DocumentsGridProps {
 }
 
 export const DocumentsGrid = ({ filterType = "all", filterCategory = null }: DocumentsGridProps) => {
+  const { t } = useTranslation('medical');
   const queryClient = useQueryClient();
   const { documents, isLoading, deleteDocument, getDocumentUrl } = useMedicalDocuments(
     filterType && filterType !== 'all' ? { documentType: filterType as any } : undefined
@@ -57,11 +59,11 @@ export const DocumentsGrid = ({ filterType = "all", filterCategory = null }: Doc
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['medical-documents'] });
-      toast.success('Документ отправлен на повторную обработку');
+      toast.success(t('documents.retrySuccess'));
     },
     onError: (error: any) => {
       console.error('Retry failed:', error);
-      toast.error('Не удалось повторить обработку', { description: error.message });
+      toast.error(t('documents.retryError'), { description: error.message });
     }
   });
 
@@ -78,13 +80,13 @@ export const DocumentsGrid = ({ filterType = "all", filterCategory = null }: Doc
       queryClient.invalidateQueries({ queryKey: ['recommendations-counts'] });
       queryClient.invalidateQueries({ queryKey: ['doctor-action-items'] });
       const count = data?.recommendations?.length || 0;
-      toast.success(`Извлечено рекомендаций: ${count}`, {
-        description: count > 0 ? 'Перейдите в раздел Рекомендации' : 'Рекомендации не найдены'
+      toast.success(t('documents.extractedCount', { count }), {
+        description: count > 0 ? t('documents.goToRecommendations') : t('documents.noRecommendations')
       });
     },
     onError: (error: any) => {
       console.error('Parse recommendations failed:', error);
-      toast.error('Не удалось извлечь рекомендации', { description: error.message });
+      toast.error(t('documents.extractError'), { description: error.message });
     },
     onSettled: () => {
       setParsingDocId(null);
@@ -132,7 +134,7 @@ export const DocumentsGrid = ({ filterType = "all", filterCategory = null }: Doc
     return (
       <div className="text-center py-12">
         <FileText className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-20" />
-        <p className="text-muted-foreground">Нет документов для отображения</p>
+        <p className="text-muted-foreground">{t('documents.noDocuments')}</p>
       </div>
     );
   }

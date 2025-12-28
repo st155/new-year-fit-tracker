@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -52,6 +53,7 @@ const CHART_COLORS = [
 ];
 
 export const BloodTestTrendsChart = () => {
+  const { t } = useTranslation('medical');
   const [selectedBiomarkers, setSelectedBiomarkers] = useState<string[]>(['Glucose', 'Total Cholesterol']);
   const { toast } = useToast();
   // Convert display names to canonical names for the query
@@ -66,15 +68,15 @@ export const BloodTestTrendsChart = () => {
     },
     onSuccess: (data: any) => {
       toast({
-        title: "✅ Пересчёт завершён",
-        description: `Обновлено: ${data.updated}, пропущено: ${data.skipped} из ${data.total}`,
+        title: `✅ ${t('bloodTests.recalculateComplete')}`,
+        description: t('bloodTests.recalculateDesc', { updated: data.updated, skipped: data.skipped, total: data.total }),
       });
       refetch();
     },
     onError: (error: Error) => {
       toast({
         variant: "destructive",
-        title: "Ошибка пересчёта",
+        title: t('bloodTests.recalculateError'),
         description: error.message,
       });
     },
@@ -88,15 +90,15 @@ export const BloodTestTrendsChart = () => {
     },
     onSuccess: (data: any) => {
       toast({
-        title: "✅ Дубликаты очищены",
-        description: `Удалено: ${data.deleted} неправильных записей`,
+        title: `✅ ${t('bloodTests.duplicatesCleared')}`,
+        description: t('bloodTests.duplicatesDesc', { deleted: data.deleted }),
       });
       refetch();
     },
     onError: (error: Error) => {
       toast({
         variant: "destructive",
-        title: "Ошибка очистки",
+        title: t('bloodTests.duplicatesError'),
         description: error.message,
       });
     },
@@ -154,7 +156,7 @@ export const BloodTestTrendsChart = () => {
           disabled={fixDuplicatesMutation.isPending}
         >
           <RefreshCw className={`h-4 w-4 mr-2 ${fixDuplicatesMutation.isPending ? 'animate-spin' : ''}`} />
-          Очистить дубликаты
+          {t('bloodTests.clearDuplicates')}
         </Button>
         <Button 
           variant="outline" 
@@ -163,15 +165,15 @@ export const BloodTestTrendsChart = () => {
           disabled={recalculateUnitsMutation.isPending}
         >
           <RefreshCw className={`h-4 w-4 mr-2 ${recalculateUnitsMutation.isPending ? 'animate-spin' : ''}`} />
-          Пересчитать единицы измерения
+          {t('bloodTests.recalculateUnits')}
         </Button>
       </div>
 
       {/* Biomarker Selector */}
       <Card className="border-primary/20">
         <CardHeader>
-          <CardTitle className="text-lg">Выберите биомаркеры для графика</CardTitle>
-          <CardDescription>Максимум 5 биомаркеров одновременно</CardDescription>
+          <CardTitle className="text-lg">{t('bloodTests.selectBiomarkers')}</CardTitle>
+          <CardDescription>{t('bloodTests.maxBiomarkers')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
@@ -222,10 +224,10 @@ export const BloodTestTrendsChart = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-primary" />
-            Динамика биомаркеров
+            {t('bloodTests.biomarkerDynamics')}
           </CardTitle>
           <CardDescription>
-            {data?.chartData?.length || 0} измерений за период
+            {t('bloodTests.measurementsCount', { count: data?.chartData?.length || 0 })}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -278,8 +280,8 @@ export const BloodTestTrendsChart = () => {
           ) : (
             <div className="text-center py-16 text-muted-foreground">
               <TrendingUp className="h-16 w-16 mx-auto mb-4 opacity-30" />
-              <p>Недостаточно данных для построения графика</p>
-              <p className="text-sm">Загрузите минимум 2 анализа крови</p>
+              <p>{t('bloodTests.insufficientData')}</p>
+              <p className="text-sm">{t('bloodTests.uploadMinimum')}</p>
             </div>
           )}
         </CardContent>

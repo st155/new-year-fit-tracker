@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,7 @@ function detectLanguage(text: string): string {
 }
 
 export function BiomarkerMappingDialog({ open, onOpenChange, unmatchedResults }: BiomarkerMappingDialogProps) {
+  const { t } = useTranslation('medical');
   const { biomarkers } = useBiomarkers();
   const queryClient = useQueryClient();
   const [selectedResult, setSelectedResult] = useState<LabTestResult | null>(null);
@@ -72,7 +74,7 @@ export function BiomarkerMappingDialog({ open, onOpenChange, unmatchedResults }:
       queryClient.invalidateQueries({ queryKey: ['biomarker-history', biomarkerId] });
       queryClient.invalidateQueries({ queryKey: ['biomarker-trends', biomarkerId] });
 
-      showSuccessToast('Биомаркер сопоставлен', 'Система запомнила это соответствие для будущих документов');
+      showSuccessToast(t('biomarkerMapping.matchSuccess'), t('biomarkerMapping.matchSuccessDesc'));
       
       setSelectedResult(null);
       setSearchQuery('');
@@ -83,7 +85,7 @@ export function BiomarkerMappingDialog({ open, onOpenChange, unmatchedResults }:
       }
     } catch (error: any) {
       console.error('Error matching biomarker:', error);
-      showErrorToast('Ошибка сопоставления', error.message);
+      showErrorToast(t('biomarkerMapping.matchError'), error.message);
     } finally {
       setIsSaving(false);
     }
@@ -93,9 +95,9 @@ export function BiomarkerMappingDialog({ open, onOpenChange, unmatchedResults }:
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col bg-neutral-950 border-purple-500/50 shadow-[0_0_20px_rgba(168,85,247,0.3)]">
         <DialogHeader>
-          <DialogTitle className="text-purple-400">🔗 Сопоставление биомаркеров</DialogTitle>
+          <DialogTitle className="text-purple-400">🔗 {t('biomarkerMapping.title')}</DialogTitle>
           <DialogDescription className="text-foreground/60">
-            Свяжите несопоставленные показатели с канонической базой биомаркеров
+            {t('biomarkerMapping.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -103,7 +105,7 @@ export function BiomarkerMappingDialog({ open, onOpenChange, unmatchedResults }:
           {/* Left: Unmatched Zone (Red) */}
           <div className="border border-red-500/50 rounded-lg p-4 space-y-2 overflow-y-auto bg-red-500/5">
             <h3 className="font-semibold text-sm text-red-400 mb-3">
-              🔴 Несопоставленные показатели ({unmatchedResults.length})
+              🔴 {t('biomarkerMapping.unmatchedZone')} ({unmatchedResults.length})
             </h3>
             {unmatchedResults.map(result => (
               <button
@@ -135,18 +137,18 @@ export function BiomarkerMappingDialog({ open, onOpenChange, unmatchedResults }:
           {/* Right: Mapping Zone (Purple) */}
           <div className="border border-purple-500/50 rounded-lg p-4 flex flex-col overflow-hidden bg-purple-500/5">
             <h3 className="font-semibold text-sm text-purple-400 mb-3">
-              {selectedResult ? `🔗 Сопоставить: ${selectedResult.raw_test_name}` : '👈 Выберите показатель слева'}
+              {selectedResult ? `🔗 ${t('biomarkerMapping.mappingZone')}: ${selectedResult.raw_test_name}` : `👈 ${t('biomarkerMapping.selectLeft')}`}
             </h3>
             
             {selectedResult && (
               <Command className="flex-1 overflow-hidden bg-neutral-900/50 border border-purple-500/30 rounded-lg">
                 <CommandInput
-                  placeholder="Поиск по базе биомаркеров..."
+                  placeholder={t('biomarkerMapping.searchPlaceholder')}
                   value={searchQuery}
                   onValueChange={setSearchQuery}
                   className="border-b border-purple-500/30"
                 />
-                <CommandEmpty className="text-muted-foreground py-6">Биомаркеры не найдены</CommandEmpty>
+                <CommandEmpty className="text-muted-foreground py-6">{t('biomarkerMapping.noResults')}</CommandEmpty>
                 <CommandGroup className="overflow-y-auto max-h-[400px]">
                   {biomarkers
                     ?.filter(b => 
@@ -188,7 +190,7 @@ export function BiomarkerMappingDialog({ open, onOpenChange, unmatchedResults }:
             onClick={() => onOpenChange(false)}
             className="border-purple-500/30 text-purple-400 hover:bg-purple-500/10"
           >
-            Закрыть
+            {t('biomarkerMapping.close')}
           </Button>
         </div>
       </DialogContent>

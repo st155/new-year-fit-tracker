@@ -1,0 +1,40 @@
+{
+  "documents": {
+    "noDocuments": "No documents to display",
+    "retrySuccess": "Document sent for reprocessing",
+    "retryError": "Failed to retry processing",
+    "extractedCount": "Extracted recommendations: {{count}}",
+    "goToRecommendations": "Go to Recommendations section",
+    "noRecommendations": "No recommendations found",
+    "extractError": "Failed to extract recommendations"
+  },
+  "biomarkerMapping": {
+    "title": "Biomarker Mapping",
+    "description": "Link unmatched results to the canonical biomarker database",
+    "unmatchedZone": "Unmatched results",
+    "mappingZone": "Map to",
+    "selectLeft": "Select a result on the left",
+    "searchPlaceholder": "Search biomarker database...",
+    "noResults": "No biomarkers found",
+    "matchSuccess": "Biomarker matched",
+    "matchSuccessDesc": "System will remember this mapping for future documents",
+    "matchError": "Mapping error",
+    "close": "Close"
+  },
+  "bloodTests": {
+    "recalculateComplete": "Recalculation complete",
+    "recalculateDesc": "Updated: {{updated}}, skipped: {{skipped}} of {{total}}",
+    "recalculateError": "Recalculation error",
+    "duplicatesCleared": "Duplicates cleared",
+    "duplicatesDesc": "Deleted: {{deleted}} incorrect records",
+    "duplicatesError": "Cleanup error",
+    "clearDuplicates": "Clear duplicates",
+    "recalculateUnits": "Recalculate units",
+    "selectBiomarkers": "Select biomarkers for chart",
+    "maxBiomarkers": "Maximum 5 biomarkers at once",
+    "biomarkerDynamics": "Biomarker Dynamics",
+    "measurementsCount": "{{count}} measurements for period",
+    "insufficientData": "Insufficient data to build chart",
+    "uploadMinimum": "Upload at least 2 blood tests"
+  }
+}
