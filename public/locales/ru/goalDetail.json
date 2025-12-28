@@ -1,8 +1,25 @@
 {
-  "loading": "Загрузка цели...",
+  "loading": "Загружаем данные прогресса...",
   "notFound": "Цель не найдена",
   "accessDenied": "У вас нет доступа к этой цели",
   "loadError": "Ошибка при загрузке цели",
   "deletedOrNoAccess": "Возможно, цель была удалена или у вас нет прав для её просмотра",
-  "back": "Назад"
+  "back": "Назад",
+  "noData": "Нет данных",
+  "currentResult": "Текущий результат",
+  "periodChange": "Изменение за период",
+  "targetValue": "Целевое значение",
+  "progressToGoal": "Прогресс к цели",
+  "progressChart": "График прогресса",
+  "noChartData": "Нет данных для отображения",
+  "addMeasurementsHint": "Добавьте измерения, чтобы увидеть график прогресса",
+  "measurementHistory": "История измерений",
+  "value": "Значение",
+  "goal": "Цель",
+  "types": {
+    "strength": "Сила",
+    "cardio": "Кардио",
+    "endurance": "Выносливость",
+    "bodyComposition": "Состав тела"
+  }
 }

@@ -14,6 +14,7 @@ import {
   Cell
 } from 'recharts';
 import { TrendingUp, Activity, Award, Target } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface WorkoutExercise {
   exercise_id: string;
@@ -57,9 +58,21 @@ export const TrainingPlanAnalytics = ({
   assignedClients,
   durationWeeks 
 }: TrainingPlanAnalyticsProps) => {
+  const { t } = useTranslation('trainingPlan');
+
+  const DAY_NAMES_SHORT = [
+    t('days.shortMon'),
+    t('days.shortTue'),
+    t('days.shortWed'),
+    t('days.shortThu'),
+    t('days.shortFri'),
+    t('days.shortSat'),
+    t('days.shortSun')
+  ];
+
   // Generate mock completion rate data over weeks
   const completionData = Array.from({ length: Math.min(durationWeeks, 12) }, (_, i) => ({
-    week: `Неделя ${i + 1}`,
+    week: `${t('analytics.week')} ${i + 1}`,
     completion: Math.round(65 + Math.random() * 25 + i * 1.5),
     target: 85
   }));
@@ -79,10 +92,9 @@ export const TrainingPlanAnalytics = ({
     .slice(0, 8);
 
   // Generate client performance heatmap data
-  const dayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
   const clientPerformance = assignedClients.slice(0, 5).map(client => {
     const data: any = { name: client.profiles.full_name.split(' ')[0] };
-    dayNames.forEach((day, index) => {
+    DAY_NAMES_SHORT.forEach((day, index) => {
       const hasWorkout = workouts.some(w => w.day_of_week === index);
       data[day] = hasWorkout ? Math.round(60 + Math.random() * 35) : 0;
     });
@@ -115,9 +127,9 @@ export const TrainingPlanAnalytics = ({
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Выполнение</p>
+                <p className="text-sm text-muted-foreground">{t('analytics.completion')}</p>
                 <p className="text-3xl font-bold text-trainer-green">{avgCompletion}%</p>
-                <p className="text-xs text-muted-foreground mt-1">Средний показатель</p>
+                <p className="text-xs text-muted-foreground mt-1">{t('analytics.averageRate')}</p>
               </div>
               <div className="h-12 w-12 rounded-full bg-trainer-green/20 flex items-center justify-center">
                 <Target className="h-6 w-6 text-trainer-green" />
@@ -130,9 +142,9 @@ export const TrainingPlanAnalytics = ({
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Активные клиенты</p>
+                <p className="text-sm text-muted-foreground">{t('analytics.activeClients')}</p>
                 <p className="text-3xl font-bold text-trainer-blue">{activeClients}</p>
-                <p className="text-xs text-muted-foreground mt-1">Используют план</p>
+                <p className="text-xs text-muted-foreground mt-1">{t('analytics.usingPlan')}</p>
               </div>
               <div className="h-12 w-12 rounded-full bg-trainer-blue/20 flex items-center justify-center">
                 <Activity className="h-6 w-6 text-trainer-blue" />
@@ -145,9 +157,9 @@ export const TrainingPlanAnalytics = ({
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Упражнений</p>
+                <p className="text-sm text-muted-foreground">{t('analytics.exercises')}</p>
                 <p className="text-3xl font-bold text-trainer-orange">{totalExercises}</p>
-                <p className="text-xs text-muted-foreground mt-1">Всего в плане</p>
+                <p className="text-xs text-muted-foreground mt-1">{t('analytics.totalInPlan')}</p>
               </div>
               <div className="h-12 w-12 rounded-full bg-trainer-orange/20 flex items-center justify-center">
                 <Award className="h-6 w-6 text-trainer-orange" />
@@ -160,9 +172,9 @@ export const TrainingPlanAnalytics = ({
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">В среднем</p>
+                <p className="text-sm text-muted-foreground">{t('analytics.average')}</p>
                 <p className="text-3xl font-bold text-trainer-purple">{avgExercisesPerWorkout}</p>
-                <p className="text-xs text-muted-foreground mt-1">Упражнений/тренировка</p>
+                <p className="text-xs text-muted-foreground mt-1">{t('analytics.exercisesPerWorkout')}</p>
               </div>
               <div className="h-12 w-12 rounded-full bg-trainer-purple/20 flex items-center justify-center">
                 <TrendingUp className="h-6 w-6 text-trainer-purple" />
@@ -177,7 +189,7 @@ export const TrainingPlanAnalytics = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-trainer-green" />
-            Динамика выполнения плана
+            {t('analytics.completionTrend')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -207,7 +219,7 @@ export const TrainingPlanAnalytics = ({
                 dataKey="completion" 
                 stroke="hsl(var(--chart-green))" 
                 strokeWidth={3}
-                name="Выполнение (%)"
+                name={t('analytics.completionPercent')}
                 dot={{ fill: 'hsl(var(--chart-green))' }}
               />
               <Line 
@@ -216,7 +228,7 @@ export const TrainingPlanAnalytics = ({
                 stroke="hsl(var(--muted-foreground))" 
                 strokeWidth={2}
                 strokeDasharray="5 5"
-                name="Цель (%)"
+                name={t('analytics.targetPercent')}
                 dot={false}
               />
             </LineChart>
@@ -230,7 +242,7 @@ export const TrainingPlanAnalytics = ({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Award className="h-5 w-5 text-trainer-orange" />
-              Популярные упражнения
+              {t('analytics.popularExercises')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -253,7 +265,7 @@ export const TrainingPlanAnalytics = ({
                       borderRadius: '8px'
                     }}
                   />
-                  <Bar dataKey="count" name="Использований" radius={[0, 8, 8, 0]}>
+                  <Bar dataKey="count" name={t('analytics.usageCount')} radius={[0, 8, 8, 0]}>
                     {exerciseData.map((entry, index) => (
                       <Cell 
                         key={`cell-${index}`} 
@@ -265,7 +277,7 @@ export const TrainingPlanAnalytics = ({
               </ResponsiveContainer>
             ) : (
               <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                Нет данных об упражнениях
+                {t('analytics.noExerciseData')}
               </div>
             )}
           </CardContent>
@@ -276,7 +288,7 @@ export const TrainingPlanAnalytics = ({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Activity className="h-5 w-5 text-trainer-blue" />
-              Производительность клиентов
+              {t('analytics.clientPerformance')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -302,7 +314,7 @@ export const TrainingPlanAnalytics = ({
                     }}
                   />
                   <Legend />
-                  {dayNames.map((day, index) => (
+                  {DAY_NAMES_SHORT.map((day, index) => (
                     <Bar 
                       key={day}
                       dataKey={day} 
@@ -316,8 +328,8 @@ export const TrainingPlanAnalytics = ({
               <div className="h-[300px] flex items-center justify-center text-center text-muted-foreground">
                 <div>
                   <Activity className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>Нет назначенных клиентов</p>
-                  <p className="text-sm mt-1">Назначьте план клиентам для отслеживания прогресса</p>
+                  <p>{t('analytics.noClients')}</p>
+                  <p className="text-sm mt-1">{t('analytics.assignHint')}</p>
                 </div>
               </div>
             )}
@@ -330,12 +342,12 @@ export const TrainingPlanAnalytics = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Target className="h-5 w-5 text-trainer-purple" />
-            Распределение по дням недели
+            {t('analytics.weeklyDistribution')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-7 gap-2">
-            {dayNames.map((day, index) => {
+            {DAY_NAMES_SHORT.map((day, index) => {
               const workout = workouts.find(w => w.day_of_week === index);
               const exerciseCount = workout?.exercises?.length || 0;
               
@@ -352,14 +364,14 @@ export const TrainingPlanAnalytics = ({
                   {workout ? (
                     <>
                       <Badge variant="secondary" className="text-xs mb-2">
-                        {exerciseCount} упр.
+                        {exerciseCount} {t('analytics.exShort')}
                       </Badge>
                       <p className="text-xs font-medium line-clamp-2">
                         {workout.workout_name}
                       </p>
                     </>
                   ) : (
-                    <p className="text-xs text-muted-foreground">Отдых</p>
+                    <p className="text-xs text-muted-foreground">{t('analytics.rest')}</p>
                   )}
                 </div>
               );

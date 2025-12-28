@@ -6,6 +6,7 @@ import { Dumbbell } from 'lucide-react';
 import ExerciseImage from '@/components/workout/ExerciseImage';
 import AddExerciseImageDialog from '@/components/workout/AddExerciseImageDialog';
 import { useExerciseImages } from '@/hooks/useExerciseImages';
+import { useTranslation } from 'react-i18next';
 
 interface WorkoutExercise {
   name?: string;
@@ -40,12 +41,21 @@ interface TrainingPlanWorkoutsTabProps {
   workouts: TrainingPlanWorkout[];
 }
 
-const DAY_NAMES = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
-
 export function TrainingPlanWorkoutsTab({ workouts }: TrainingPlanWorkoutsTabProps) {
+  const { t } = useTranslation('trainingPlan');
   const { getImageUrl, setImageUrl } = useExerciseImages();
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState<string>('');
+
+  const DAY_NAMES = [
+    t('days.monday'),
+    t('days.tuesday'),
+    t('days.wednesday'),
+    t('days.thursday'),
+    t('days.friday'),
+    t('days.saturday'),
+    t('days.sunday')
+  ];
 
   const handleAddImage = (exerciseName: string) => {
     setSelectedExercise(exerciseName);
@@ -61,9 +71,9 @@ export function TrainingPlanWorkoutsTab({ workouts }: TrainingPlanWorkoutsTabPro
       <Card>
         <CardContent className="py-12 text-center">
           <Dumbbell className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-          <h3 className="text-lg font-medium mb-2">Нет тренировок</h3>
+          <h3 className="text-lg font-medium mb-2">{t('workouts.noWorkouts')}</h3>
           <p className="text-muted-foreground">
-            В этом плане пока нет добавленных тренировок
+            {t('workouts.noWorkoutsDesc')}
           </p>
         </CardContent>
       </Card>
@@ -93,7 +103,7 @@ export function TrainingPlanWorkoutsTab({ workouts }: TrainingPlanWorkoutsTabPro
                     )}
                   </div>
                   <Badge variant="outline">
-                    {workout.exercises?.length || 0} упражнений
+                    {workout.exercises?.length || 0} {t('workouts.exercisesCount')}
                   </Badge>
                 </div>
               </CardHeader>
@@ -126,60 +136,60 @@ export function TrainingPlanWorkoutsTab({ workouts }: TrainingPlanWorkoutsTabPro
                           {exercise.sets > 0 && (
                             <div className="text-center min-w-[50px]">
                               <div className="font-semibold">{exercise.sets}</div>
-                              <div className="text-xs text-muted-foreground">подходов</div>
+                              <div className="text-xs text-muted-foreground">{t('workouts.sets')}</div>
                             </div>
                           )}
                           {exercise.reps && (
                             <div className="text-center min-w-[50px]">
                               <div className="font-semibold">{exercise.reps}</div>
-                              <div className="text-xs text-muted-foreground">повторов</div>
+                              <div className="text-xs text-muted-foreground">{t('workouts.reps')}</div>
                             </div>
                           )}
                           {exercise.weight && (
                             <div className="text-center min-w-[50px]">
-                              <div className="font-semibold">{exercise.weight} кг</div>
-                              <div className="text-xs text-muted-foreground">вес</div>
+                              <div className="font-semibold">{exercise.weight} {t('common:units.kg')}</div>
+                              <div className="text-xs text-muted-foreground">{t('workouts.weight')}</div>
                             </div>
                           )}
                           {exercise.distance && (
                             <div className="text-center min-w-[50px]">
-                              <div className="font-semibold">{exercise.distance} км</div>
-                              <div className="text-xs text-muted-foreground">дистанция</div>
+                              <div className="font-semibold">{exercise.distance} {t('common:units.km')}</div>
+                              <div className="text-xs text-muted-foreground">{t('workouts.distance')}</div>
                             </div>
                           )}
                           {exercise.duration && (
                             <div className="text-center min-w-[50px]">
-                              <div className="font-semibold">{exercise.duration} мин</div>
-                              <div className="text-xs text-muted-foreground">время</div>
+                              <div className="font-semibold">{exercise.duration} {t('common:units.min')}</div>
+                              <div className="text-xs text-muted-foreground">{t('workouts.duration')}</div>
                             </div>
                           )}
                           {exercise.pace && (
                             <div className="text-center min-w-[50px]">
                               <div className="font-semibold">{exercise.pace}</div>
-                              <div className="text-xs text-muted-foreground">темп</div>
+                              <div className="text-xs text-muted-foreground">{t('workouts.pace')}</div>
                             </div>
                           )}
                           {exercise.intensity && (
                             <div className="text-center min-w-[50px]">
                               <div className="font-semibold capitalize">{exercise.intensity}</div>
-                              <div className="text-xs text-muted-foreground">интенсивность</div>
+                              <div className="text-xs text-muted-foreground">{t('workouts.intensity')}</div>
                             </div>
                           )}
                           {exercise.tempo && (
                             <div className="text-center min-w-[50px]">
                               <div className="font-semibold">{exercise.tempo}</div>
-                              <div className="text-xs text-muted-foreground">темп</div>
+                              <div className="text-xs text-muted-foreground">{t('workouts.tempo')}</div>
                             </div>
                           )}
                           {exercise.target_metric && (
                             <div className="text-center min-w-[50px]">
                               <div className="font-semibold">{exercise.target_metric}</div>
-                              <div className="text-xs text-muted-foreground">цель</div>
+                              <div className="text-xs text-muted-foreground">{t('workouts.target')}</div>
                             </div>
                           )}
                           <div className="text-center min-w-[50px]">
-                            <div className="font-semibold">{exercise.rest_seconds}с</div>
-                            <div className="text-xs text-muted-foreground">отдых</div>
+                            <div className="font-semibold">{exercise.rest_seconds}{t('common:units.s')}</div>
+                            <div className="text-xs text-muted-foreground">{t('workouts.rest')}</div>
                           </div>
                           </div>
                         </div>

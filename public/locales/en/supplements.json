@@ -69,5 +69,10 @@
     "deleteDesc": "This action cannot be undone. The protocol and all its data will be permanently deleted.",
     "cancel": "Cancel",
     "delete": "Delete"
+  },
+  "protocol": {
+    "productLinked": "Product linked to protocol",
+    "linkRemoved": "Link removed",
+    "linkError": "Failed to link product"
   }
 }

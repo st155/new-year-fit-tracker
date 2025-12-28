@@ -7,10 +7,11 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
-import { ru } from "date-fns/locale";
+import { ru, enUS } from "date-fns/locale";
 import { QuickMeasurementDialog } from "@/features/goals/components";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatTimeDisplay } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 interface GoalData {
   date: string;
@@ -33,12 +34,15 @@ interface GoalProgressDetailProps {
 
 const GoalProgressDetail = ({ goal, onBack }: GoalProgressDetailProps) => {
   const { user } = useAuth();
+  const { t, i18n } = useTranslation('goalDetail');
   const queryClient = useQueryClient();
   const [goalData, setGoalData] = useState<GoalData[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentValue, setCurrentValue] = useState<number | null>(null);
   const [weeklyChange, setWeeklyChange] = useState<number | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
 
   useEffect(() => {
     if (user && goal) {
@@ -96,7 +100,7 @@ const GoalProgressDetail = ({ goal, onBack }: GoalProgressDetailProps) => {
   };
 
   const formatTooltipDate = (dateStr: string) => {
-    return format(new Date(dateStr), 'd MMM yyyy', { locale: ru });
+    return format(new Date(dateStr), 'd MMM yyyy', { locale: dateLocale });
   };
 
   const getGoalTypeColor = (goalType: string) => {
@@ -109,6 +113,16 @@ const GoalProgressDetail = ({ goal, onBack }: GoalProgressDetailProps) => {
     return colors[goalType as keyof typeof colors] || 'bg-muted text-muted-foreground';
   };
 
+  const getGoalTypeLabel = (goalType: string) => {
+    const labels: Record<string, string> = {
+      strength: t('types.strength'),
+      cardio: t('types.cardio'),
+      endurance: t('types.endurance'),
+      body_composition: t('types.bodyComposition')
+    };
+    return labels[goalType] || goalType;
+  };
+
   const getProgressPercentage = () => {
     if (!currentValue || !goal.target_value) return 0;
     return Math.min(100, Math.max(0, (currentValue / goal.target_value) * 100));
@@ -119,7 +133,7 @@ const GoalProgressDetail = ({ goal, onBack }: GoalProgressDetailProps) => {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Загружаем данные прогресса...</p>
+          <p className="text-muted-foreground">{t('loading')}</p>
         </div>
       </div>
     );
@@ -132,15 +146,12 @@ const GoalProgressDetail = ({ goal, onBack }: GoalProgressDetailProps) => {
         <div className="flex items-center gap-4">
           <Button variant="outline" size="sm" onClick={onBack} className="shrink-0">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Назад
+            {t('back')}
           </Button>
           <div className="flex-1">
             <h2 className="text-2xl font-bold">{goal.goal_name}</h2>
             <Badge className={`mt-2 ${getGoalTypeColor(goal.goal_type)}`}>
-              {goal.goal_type === 'strength' ? 'Сила' :
-               goal.goal_type === 'cardio' ? 'Кардио' :
-               goal.goal_type === 'endurance' ? 'Выносливость' :
-               'Состав тела'}
+              {getGoalTypeLabel(goal.goal_type)}
             </Badge>
           </div>
         </div>
@@ -163,9 +174,9 @@ const GoalProgressDetail = ({ goal, onBack }: GoalProgressDetailProps) => {
                     ? formatTimeDisplay(currentValue)
                     : currentValue
                   } ${goal.target_unit}` 
-                : 'Нет данных'}
+                : t('noData')}
             </div>
-            <p className="text-xs text-muted-foreground">Текущий результат</p>
+            <p className="text-xs text-muted-foreground">{t('currentResult')}</p>
           </CardContent>
         </Card>
 
@@ -177,7 +188,7 @@ const GoalProgressDetail = ({ goal, onBack }: GoalProgressDetailProps) => {
               </span>
               {getTrendIcon(weeklyChange)}
             </div>
-            <p className="text-xs text-muted-foreground">Изменение за период</p>
+            <p className="text-xs text-muted-foreground">{t('periodChange')}</p>
           </CardContent>
         </Card>
 
@@ -186,7 +197,7 @@ const GoalProgressDetail = ({ goal, onBack }: GoalProgressDetailProps) => {
             <div className="text-2xl font-bold">
               {goal.target_value} {goal.target_unit}
             </div>
-            <p className="text-xs text-muted-foreground">Целевое значение</p>
+            <p className="text-xs text-muted-foreground">{t('targetValue')}</p>
           </CardContent>
         </Card>
 
@@ -195,7 +206,7 @@ const GoalProgressDetail = ({ goal, onBack }: GoalProgressDetailProps) => {
             <div className="text-2xl font-bold">
               {getProgressPercentage().toFixed(1)}%
             </div>
-            <p className="text-xs text-muted-foreground">Прогресс к цели</p>
+            <p className="text-xs text-muted-foreground">{t('progressToGoal')}</p>
           </CardContent>
         </Card>
       </div>
@@ -206,7 +217,7 @@ const GoalProgressDetail = ({ goal, onBack }: GoalProgressDetailProps) => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5" />
-              График прогресса
+              {t('progressChart')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -216,12 +227,12 @@ const GoalProgressDetail = ({ goal, onBack }: GoalProgressDetailProps) => {
                   <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                   <XAxis 
                     dataKey="date" 
-                    tickFormatter={(date) => format(new Date(date), 'd MMM', { locale: ru })}
+                    tickFormatter={(date) => format(new Date(date), 'd MMM', { locale: dateLocale })}
                   />
                   <YAxis />
                   <Tooltip 
                     labelFormatter={(date) => formatTooltipDate(date)}
-                    formatter={(value: number) => [`${value} ${goal.target_unit}`, 'Значение']}
+                    formatter={(value: number) => [`${value} ${goal.target_unit}`, t('value')]}
                   />
                   <Line 
                     type="monotone" 
@@ -239,7 +250,7 @@ const GoalProgressDetail = ({ goal, onBack }: GoalProgressDetailProps) => {
                     strokeWidth={2}
                     strokeDasharray="5 5"
                     dot={false}
-                    name="Цель"
+                    name={t('goal')}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -251,9 +262,9 @@ const GoalProgressDetail = ({ goal, onBack }: GoalProgressDetailProps) => {
           <CardContent className="pt-6">
             <div className="text-center py-12">
               <Calendar className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Нет данных для отображения</h3>
+              <h3 className="text-lg font-semibold mb-2">{t('noChartData')}</h3>
               <p className="text-muted-foreground">
-                Добавьте измерения, чтобы увидеть график прогресса
+                {t('addMeasurementsHint')}
               </p>
             </div>
           </CardContent>
@@ -264,7 +275,7 @@ const GoalProgressDetail = ({ goal, onBack }: GoalProgressDetailProps) => {
       {goalData.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>История измерений</CardTitle>
+            <CardTitle>{t('measurementHistory')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2 max-h-60 overflow-y-auto">
@@ -278,7 +289,7 @@ const GoalProgressDetail = ({ goal, onBack }: GoalProgressDetailProps) => {
                       } {goal.target_unit}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {format(new Date(entry.date), 'd MMMM yyyy', { locale: ru })}
+                      {format(new Date(entry.date), 'd MMMM yyyy', { locale: dateLocale })}
                     </p>
                   </div>
                   {entry.change !== undefined && (
