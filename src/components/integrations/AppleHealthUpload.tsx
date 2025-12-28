@@ -219,7 +219,7 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
                 case 'apple_health_background_processing_error':
                   setUploadStatus('error');
                   clearInterval(statusInterval);
-                  throw new Error('Ошибка фоновой обработки');
+                  throw new Error(t('appleHealth.backgroundError'));
               }
             }
           } catch (error) {
@@ -255,18 +255,18 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
       console.error('Apple Health upload error:', error);
       
       // Определяем тип ошибки для более информативного сообщения
-      let errorMessage = error.message || 'Не удалось обработать файл Apple Health';
+      let errorMessage = error.message || t('appleHealth.errors.default');
       
       if (error.message?.includes('exceeded the maximum allowed size')) {
-        errorMessage = 'Файл превышает максимальный размер Storage (Global file size limit). Обратитесь к администратору для увеличения лимита.';
+        errorMessage = t('appleHealth.errors.storageSizeLimit');
       } else if (error.message?.includes('Payload too large')) {
-        errorMessage = 'Файл слишком большой для загрузки. Попробуйте уменьшить размер архива или обратитесь к администратору.';
+        errorMessage = t('appleHealth.errors.payloadTooLarge');
       } else if (error.message?.includes('timeout')) {
-        errorMessage = 'Превышено время ожидания загрузки. Попробуйте еще раз или проверьте соединение.';
+        errorMessage = t('appleHealth.errors.timeout');
       } else if (error.message?.includes('Edge Function returned a non-2xx status code') || error.message?.includes('Edge Function returned an error')) {
-        errorMessage = 'Ошибка обработки файла на сервере. Проверьте логи или обратитесь к администратору.';
+        errorMessage = t('appleHealth.errors.serverError');
       } else if (error.message?.includes('File not found') || error.message?.includes('Object not found')) {
-        errorMessage = 'Файл не найден после загрузки. Попробуйте загрузить файл заново.';
+        errorMessage = t('appleHealth.errors.fileNotFound');
       }
       
       await ErrorLogger.logFileUploadError(
@@ -390,24 +390,24 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
           </div>
         )}
 
-        {uploadStatus === 'complete' && uploadResult && (
+      {uploadStatus === 'complete' && uploadResult && (
           <div className="space-y-4">
             <Alert>
               <CheckCircle className="h-4 w-4" />
               <AlertDescription>
-                <strong>Файл успешно загружен!</strong>
+                <strong>{t('appleHealth.uploadSuccess')}</strong>
                 <ul className="mt-2 space-y-1 text-sm">
-                  <li>• Размер файла: {uploadResult.results?.fileSizeMB ?? lastFileSizeMB ?? 0}MB</li>
-                  <li>• Статус: {uploadResult.results?.status === 'processing_started' ? 'Обработка началась' : 'Готово'}</li>
-                  <li>• Обработка данных выполняется в фоновом режиме</li>
+                  <li>• {t('appleHealth.complete.fileSize', { size: uploadResult.results?.fileSizeMB ?? lastFileSizeMB ?? 0 })}</li>
+                  <li>• {t('appleHealth.complete.status')}: {uploadResult.results?.status === 'processing_started' ? t('appleHealth.complete.processingStarted') : t('appleHealth.complete.done')}</li>
+                  <li>• {t('appleHealth.complete.backgroundProcessing')}</li>
                 </ul>
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Результаты обработки будут сохранены автоматически и появятся в ваших метриках.
+                  {t('appleHealth.complete.resultsWillAppear')}
                 </p>
               </AlertDescription>
             </Alert>
             <Button onClick={resetUpload} variant="outline" className="w-full">
-              {t('appleHealth.uploadAnother', { defaultValue: 'Загрузить еще один файл' })}
+              {t('appleHealth.uploadAnother')}
             </Button>
           </div>
         )}

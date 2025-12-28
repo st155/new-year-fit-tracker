@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dumbbell, Heart, TrendingUp, Weight, Activity, Target } from 'lucide-react';
 import { GoalCard } from './GoalCard';
@@ -25,6 +26,7 @@ interface GroupedGoalsViewProps {
 }
 
 export function GroupedGoalsView({ goals, clientId, onRefresh }: GroupedGoalsViewProps) {
+  const { t } = useTranslation('trainerDashboard');
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [showMeasurement, setShowMeasurement] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
@@ -53,32 +55,32 @@ export function GroupedGoalsView({ goals, clientId, onRefresh }: GroupedGoalsVie
 
   const typeLabels: Record<string, { label: string; icon: JSX.Element; color: string }> = {
     strength: { 
-      label: 'Сила', 
+      label: t('goalTypes.strength'), 
       icon: <Dumbbell className="h-5 w-5" />,
       color: 'bg-red-500/10 text-red-600'
     },
     cardio: { 
-      label: 'Кардио', 
+      label: t('goalTypes.cardio'), 
       icon: <Heart className="h-5 w-5" />,
       color: 'bg-pink-500/10 text-pink-600'
     },
     endurance: { 
-      label: 'Выносливость', 
+      label: t('goalTypes.endurance'), 
       icon: <TrendingUp className="h-5 w-5" />,
       color: 'bg-blue-500/10 text-blue-600'
     },
     body_composition: { 
-      label: 'Состав тела', 
+      label: t('goalTypes.body_composition'), 
       icon: <Weight className="h-5 w-5" />,
       color: 'bg-green-500/10 text-green-600'
     },
     flexibility: { 
-      label: 'Гибкость', 
+      label: t('goalTypes.flexibility'), 
       icon: <Activity className="h-5 w-5" />,
       color: 'bg-purple-500/10 text-purple-600'
     },
     other: { 
-      label: 'Другое', 
+      label: t('goalTypes.other'), 
       icon: <Target className="h-5 w-5" />,
       color: 'bg-gray-500/10 text-gray-600'
     }
@@ -98,7 +100,7 @@ export function GroupedGoalsView({ goals, clientId, onRefresh }: GroupedGoalsVie
     <>
       <Tabs defaultValue="all" className="space-y-4">
         <TabsList className="w-full overflow-x-auto flex md:grid md:grid-cols-6">
-          <TabsTrigger value="all">Все ({goals.length})</TabsTrigger>
+          <TabsTrigger value="all">{t('goalTypes.all', { count: goals.length })}</TabsTrigger>
           {Object.entries(typeLabels).map(([type, { label }]) => {
             const count = groupedGoals[type]?.length || 0;
             if (count === 0) return null;
