@@ -7,8 +7,9 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Heart, Moon, Zap, Activity, Calendar } from 'lucide-react';
 import { format, subDays, subMonths } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import { terraApi } from '@/lib/api';
+import { useTranslation } from 'react-i18next';
 
 interface WhoopMetric {
   metric_name: string;
@@ -37,12 +38,15 @@ interface WhoopMetricsProps {
 
 export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
   const { user } = useAuth();
+  const { t, i18n } = useTranslation('health');
   const [metrics, setMetrics] = useState<WhoopMetric[]>([]);
   const [aggregatedMetrics, setAggregatedMetrics] = useState<AggregatedMetric[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>('7d');
   const [loading, setLoading] = useState(true);
   const [aggregatedLoading, setAggregatedLoading] = useState(true);
   const [syncAttempted, setSyncAttempted] = useState(false);
+
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
 
   useEffect(() => {
     if (user) {
@@ -270,11 +274,11 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
   const getCategoryTitle = (category: string) => {
     switch (category) {
       case 'recovery':
-        return 'Восстановление';
+        return t('whoop.categories.recovery');
       case 'sleep':
-        return 'Сон';
+        return t('whoop.categories.sleep');
       case 'workout':
-        return 'Тренировки';
+        return t('whoop.categories.workout');
       default:
         return category;
     }
@@ -282,18 +286,18 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
 
   const getMetricDisplayName = (metricName: string) => {
     const translations: Record<string, string> = {
-      'Recovery Score': 'Очки восстановления',
-      'Sleep Efficiency': 'Эффективность сна',
-      'Sleep Performance': 'Качество сна', 
-      'Sleep Duration': 'Продолжительность сна',
-      'Sleep Need Fulfillment': 'Выполнение потребности во сне',
-      'Day Strain': 'Дневная нагрузка',
-      'Workout Strain': 'Нагрузка тренировки',
-      'Average Heart Rate': 'Средний пульс',
-      'Max Heart Rate': 'Максимальный пульс',
-      'Resting HR': 'Пульс покоя',
-      'HRV (rMSSD)': 'Вариабельность пульса',
-      'Workout Calories': 'Калории тренировки',
+      'Recovery Score': t('whoop.metrics.recoveryScore'),
+      'Sleep Efficiency': t('whoop.metrics.sleepEfficiency'),
+      'Sleep Performance': t('whoop.metrics.sleepPerformance'), 
+      'Sleep Duration': t('whoop.metrics.sleepDuration'),
+      'Sleep Need Fulfillment': t('whoop.metrics.sleepNeedFulfillment'),
+      'Day Strain': t('whoop.metrics.dayStrain'),
+      'Workout Strain': t('whoop.metrics.workoutStrain'),
+      'Average Heart Rate': t('whoop.metrics.averageHeartRate'),
+      'Max Heart Rate': t('whoop.metrics.maxHeartRate'),
+      'Resting HR': t('whoop.metrics.restingHR'),
+      'HRV (rMSSD)': t('whoop.metrics.hrv'),
+      'Workout Calories': t('whoop.metrics.workoutCalories'),
     };
     return translations[metricName] || metricName;
   };
@@ -301,13 +305,13 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
   const getPeriodLabel = (period: TimePeriod) => {
     switch (period) {
       case '7d':
-        return 'Неделя';
+        return t('whoop.periods.week');
       case '30d':
-        return 'Месяц';
+        return t('whoop.periods.month');
       case '6m':
-        return '6 месяцев';
+        return t('whoop.periods.sixMonths');
       default:
-        return 'Неделя';
+        return t('whoop.periods.week');
     }
   };
 
@@ -318,7 +322,7 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
-              Сводка за {getPeriodLabel(selectedPeriod).toLowerCase()}
+              {t('whoop.summaryFor', { period: getPeriodLabel(selectedPeriod).toLowerCase() })}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -338,12 +342,12 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
-              Сводка за {getPeriodLabel(selectedPeriod).toLowerCase()}
+              {t('whoop.summaryFor', { period: getPeriodLabel(selectedPeriod).toLowerCase() })}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground text-center py-4">
-              Нет данных Whoop за выбранный период
+              {t('whoop.noDataForPeriod')}
             </p>
           </CardContent>
         </Card>
@@ -365,7 +369,7 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
-              Сводка за {getPeriodLabel(selectedPeriod).toLowerCase()}
+              {t('whoop.summaryFor', { period: getPeriodLabel(selectedPeriod).toLowerCase() })}
             </CardTitle>
             <div className="flex items-center gap-2">
               <Button
@@ -373,21 +377,21 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
                 size="sm"
                 onClick={() => setSelectedPeriod('7d')}
               >
-                Неделя
+                {t('whoop.periods.week')}
               </Button>
               <Button
                 variant={selectedPeriod === '30d' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setSelectedPeriod('30d')}
               >
-                Месяц
+                {t('whoop.periods.month')}
               </Button>
               <Button
                 variant={selectedPeriod === '6m' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setSelectedPeriod('6m')}
               >
-                6 месяцев
+                {t('whoop.periods.sixMonths')}
               </Button>
             </div>
           </div>
@@ -408,19 +412,19 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
                           {getMetricDisplayName(metric.metric_name)}
                         </span>
                         <Badge variant="outline" className="text-xs">
-                          {metric.data_points} дней
+                          {metric.data_points} {t('whoop.days')}
                         </Badge>
                       </div>
                       
                       <div className="space-y-1">
                         <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>Среднее</span>
+                          <span>{t('whoop.average')}</span>
                           <span className="font-medium">
                             {metric.unit === '%' ? Math.round(metric.avg_value) : metric.avg_value.toFixed(1)} {metric.unit}
                           </span>
                         </div>
                         <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>Диапазон</span>
+                          <span>{t('whoop.range')}</span>
                           <span>
                             {metric.unit === '%' ? Math.round(metric.min_value) : metric.min_value.toFixed(1)} - {metric.unit === '%' ? Math.round(metric.max_value) : metric.max_value.toFixed(1)} {metric.unit}
                           </span>
@@ -445,7 +449,7 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Данные Whoop</CardTitle>
+          <CardTitle>{t('whoop.title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="animate-pulse space-y-4">
@@ -477,7 +481,7 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
-            Данные за {format(selectedDate, 'd MMMM yyyy', { locale: ru })}
+            {t('whoop.dataFor', { date: format(selectedDate, 'd MMMM yyyy', { locale: dateLocale }) })}
             <Badge variant="secondary" className="ml-auto">
               Whoop
             </Badge>
@@ -492,7 +496,7 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
             </div>
           ) : metrics.length === 0 ? (
             <p className="text-muted-foreground text-center py-4">
-              Нет данных Whoop за выбранную дату
+              {t('whoop.noDataForDate')}
             </p>
           ) : (
             <div className="space-y-6">
@@ -504,30 +508,17 @@ export function WhoopMetrics({ selectedDate }: WhoopMetricsProps) {
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {categoryMetrics.map((metric, index) => (
-                      <div key={index} className="p-4 border rounded-lg space-y-2">
+                      <div key={index} className="p-3 border rounded-lg space-y-2 bg-muted/30">
                         <div className="flex items-center justify-between">
                           <span className="text-sm font-medium">
                             {getMetricDisplayName(metric.metric_name)}
                           </span>
-                          {getMetricIcon(category, metric.metric_name)}
                         </div>
-                        <div className="flex items-baseline gap-2">
-                          <span 
-                            className={`text-2xl font-bold ${getMetricColor(category, metric.value, metric.unit)}`}
-                          >
-                            {metric.unit === '%' ? Math.round(metric.value) : metric.value.toFixed(1)}
-                          </span>
-                          <span className="text-sm text-muted-foreground">
-                            {metric.unit}
-                          </span>
+                        <div className={`text-2xl font-bold ${getMetricColor(metric.metric_category, metric.value, metric.unit)}`}>
+                          {metric.unit === '%' ? Math.round(metric.value) : metric.value.toFixed(1)} {metric.unit}
                         </div>
                         {metric.unit === '%' && (
-                          <Progress value={metric.value} className="h-2" />
-                        )}
-                        {metric.notes && (
-                          <p className="text-xs text-muted-foreground capitalize">
-                            {metric.notes}
-                          </p>
+                          <Progress value={metric.value} className="h-1.5" />
                         )}
                       </div>
                     ))}

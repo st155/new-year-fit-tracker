@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { terraApi } from '@/lib/api/client';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface RealtimeSyncResult {
   success: boolean;
@@ -11,6 +12,7 @@ interface RealtimeSyncResult {
 
 export function useTerraRealtimeSync() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('integrations');
 
   return useMutation({
     mutationFn: async (provider: string = 'WHOOP'): Promise<RealtimeSyncResult> => {
@@ -21,12 +23,12 @@ export function useTerraRealtimeSync() {
     },
     onSuccess: (data) => {
       if (data.metricsWritten.length > 0) {
-        toast.success('Данные обновлены', {
-          description: `Обновлено ${data.metricsWritten.length} метрик за ${Math.round(data.duration / 1000)}с`,
+        toast.success(t('terra.dataUpdated'), {
+          description: t('terra.metricsUpdatedCount', { count: data.metricsWritten.length, seconds: Math.round(data.duration / 1000) }),
         });
       } else {
-        toast.info('Нет новых данных', {
-          description: 'Все данные актуальны',
+        toast.info(t('terra.noNewData'), {
+          description: t('terra.dataUpToDate'),
         });
       }
       
@@ -40,7 +42,7 @@ export function useTerraRealtimeSync() {
       queryClient.invalidateQueries({ queryKey: ['multi-source-widgets'] });
     },
     onError: (error: Error) => {
-      toast.error('Ошибка синхронизации', {
+      toast.error(t('terra.syncError'), {
         description: error.message,
       });
     },

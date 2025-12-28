@@ -1,8 +1,25 @@
 {
-  "loading": "Loading goal...",
+  "loading": "Loading progress data...",
   "notFound": "Goal not found",
   "accessDenied": "You don't have access to this goal",
   "loadError": "Error loading goal",
   "deletedOrNoAccess": "The goal may have been deleted or you don't have permission to view it",
-  "back": "Back"
+  "back": "Back",
+  "noData": "No data",
+  "currentResult": "Current result",
+  "periodChange": "Period change",
+  "targetValue": "Target value",
+  "progressToGoal": "Progress to goal",
+  "progressChart": "Progress chart",
+  "noChartData": "No data to display",
+  "addMeasurementsHint": "Add measurements to see the progress chart",
+  "measurementHistory": "Measurement history",
+  "value": "Value",
+  "goal": "Goal",
+  "types": {
+    "strength": "Strength",
+    "cardio": "Cardio",
+    "endurance": "Endurance",
+    "bodyComposition": "Body composition"
+  }
 }

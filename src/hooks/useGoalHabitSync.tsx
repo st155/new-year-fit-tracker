@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Hook for auto-logging measurements when habits are completed
@@ -9,6 +10,7 @@ import { toast } from 'sonner';
  */
 export function useGoalHabitSync(userId?: string) {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('goals');
 
   useEffect(() => {
     if (!userId) return;
@@ -67,7 +69,7 @@ export function useGoalHabitSync(userId?: string) {
           queryClient.invalidateQueries({ queryKey: ['challenge-goals', userId] });
 
           toast.success(`✅ ${habit.name} → ${goal.goal_name}`, {
-            description: 'Прогресс автоматически записан',
+            description: t('sync.autoLogged'),
           });
         }
       )
