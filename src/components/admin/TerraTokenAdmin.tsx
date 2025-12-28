@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import i18n from 'i18next';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -55,7 +57,7 @@ import {
   Eye
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import {
   useTerraTokens,
   useUsersList,
@@ -86,6 +88,8 @@ const PROVIDERS = [
 ];
 
 export function TerraTokenAdmin() {
+  const { t } = useTranslation('admin');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
   const { data: tokens, isLoading, refetch } = useTerraTokens();
   const { data: users } = useUsersList();
   const createToken = useCreateTerraToken();
@@ -270,19 +274,19 @@ export function TerraTokenAdmin() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Terra Token Management</h2>
+          <h2 className="text-2xl font-bold">{t('terra.title')}</h2>
           <p className="text-muted-foreground">
-            Управление токенами интеграций (Whoop, Garmin, etc.)
+            {t('terra.subtitle')}
           </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => refetch()}>
             <RefreshCw className="h-4 w-4 mr-2" />
-            Обновить
+            {t('common.refresh')}
           </Button>
           <Button size="sm" onClick={() => setShowCreateDialog(true)}>
             <Plus className="h-4 w-4 mr-2" />
-            Создать токен
+            {t('terra.createToken')}
           </Button>
         </div>
       </div>
@@ -296,10 +300,10 @@ export function TerraTokenAdmin() {
                 <Skull className="h-5 w-5 text-destructive" />
                 <div>
                   <p className="font-medium text-destructive">
-                    Обнаружено {deadTokensCount} мёртвых подключений
+                    {t('terra.deadTokensFound', { count: deadTokensCount })}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Токены активны, но данные не поступали более 7 дней
+                    {t('terra.deadTokensDesc')}
                   </p>
                 </div>
               </div>
@@ -309,7 +313,7 @@ export function TerraTokenAdmin() {
                 onClick={() => setFilterDead(!filterDead)}
               >
                 <AlertTriangle className="h-4 w-4 mr-2" />
-                {filterDead ? 'Показать все' : 'Показать мёртвые'}
+                {filterDead ? t('terra.showAll') : t('terra.showDead')}
               </Button>
             </div>
           </CardContent>
@@ -321,24 +325,24 @@ export function TerraTokenAdmin() {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <Unplug className="h-5 w-5 text-warning" />
-            Очистка застрявших подключений
+            {t('terra.orphanCleanup.title')}
           </CardTitle>
           <CardDescription>
-            Для пользователей с ошибкой "session expired" — проверьте и сбросьте подключения в Terra API
+            {t('terra.orphanCleanup.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex gap-3 items-end">
             <div className="flex-1 space-y-2">
-              <Label>Выберите пользователя</Label>
+              <Label>{t('terra.orphanCleanup.selectUser')}</Label>
               <Select value={selectedOrphanUserId} onValueChange={setSelectedOrphanUserId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Поиск пользователя..." />
+                  <SelectValue placeholder={t('terra.orphanCleanup.searchUser')} />
                 </SelectTrigger>
                 <SelectContent>
                   <div className="p-2">
                     <Input
-                      placeholder="Поиск..."
+                      placeholder={t('common.search')}
                       value={orphanSearchQuery}
                       onChange={(e) => setOrphanSearchQuery(e.target.value)}
                       className="mb-2"
@@ -387,7 +391,7 @@ export function TerraTokenAdmin() {
               ) : (
                 <Eye className="h-4 w-4 mr-2" />
               )}
-              Проверить Terra API
+              {t('terra.checkTerraApi')}
             </Button>
             <Button
               variant="destructive"
@@ -397,17 +401,17 @@ export function TerraTokenAdmin() {
                 const userName = user?.full_name || selectedOrphanUserId.substring(0, 8);
                 deauthAllTerraUsers.mutateAsync({ targetUserId: selectedOrphanUserId }).then(result => {
                   if (result.total === 0) {
-                    toast.info(`У ${userName} нет подключений в Terra API`, {
-                      description: 'Пользователь может попробовать подключиться заново'
+                    toast.info(t('terra.orphanCleanup.noConnections', { name: userName }), {
+                      description: t('terra.orphanCleanup.canReconnect')
                     });
                   } else {
-                    toast.success(`Сброшено ${result.deauthenticated}/${result.total} подключений для ${userName}`, {
-                      description: 'Пользователь может переподключить интеграцию'
+                    toast.success(t('terra.orphanCleanup.reset', { deauthenticated: result.deauthenticated, total: result.total, name: userName }), {
+                      description: t('terra.orphanCleanup.canReconnectAfter')
                     });
                   }
                   setSelectedOrphanUserId('');
                 }).catch(err => {
-                  toast.error(`Ошибка сброса: ${err.message}`);
+                  toast.error(t('terra.orphanCleanup.error', { message: err.message }));
                 });
               }}
               disabled={!selectedOrphanUserId || deauthAllTerraUsers.isPending}
@@ -417,7 +421,7 @@ export function TerraTokenAdmin() {
               ) : (
                 <Unplug className="h-4 w-4 mr-2" />
               )}
-              Сбросить все
+              {t('terra.orphanCleanup.resetAll')}
             </Button>
           </div>
           
@@ -425,7 +429,7 @@ export function TerraTokenAdmin() {
           <div className="mt-4 pt-4 border-t border-border/50">
             <p className="text-sm font-medium mb-3 flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-warning" />
-              Быстрый сброс для известных проблемных пользователей:
+              {t('terra.orphanCleanup.quickReset')}
             </p>
             <div className="flex flex-wrap gap-2">
               {[
@@ -441,16 +445,16 @@ export function TerraTokenAdmin() {
                   onClick={() => {
                     deauthAllTerraUsers.mutateAsync({ targetUserId: user.id }).then(result => {
                       if (result.total === 0) {
-                        toast.info(`У ${user.name} нет подключений в Terra API`, {
-                          description: 'Пользователь может попробовать подключиться заново'
+                        toast.info(t('terra.orphanCleanup.noConnections', { name: user.name }), {
+                          description: t('terra.orphanCleanup.canReconnect')
                         });
                       } else {
-                        toast.success(`✅ ${user.name}: сброшено ${result.deauthenticated}/${result.total} подключений`, {
-                          description: 'Пользователь может переподключить интеграцию'
+                        toast.success(t('terra.orphanCleanup.resetSuccess', { name: user.name, deauthenticated: result.deauthenticated, total: result.total }), {
+                          description: t('terra.orphanCleanup.canReconnectAfter')
                         });
                       }
                     }).catch(err => {
-                      toast.error(`❌ Ошибка для ${user.name}: ${err.message}`);
+                      toast.error(t('terra.orphanCleanup.errorFor', { name: user.name, message: err.message }));
                     });
                   }}
                   disabled={deauthAllTerraUsers.isPending}
@@ -470,7 +474,7 @@ export function TerraTokenAdmin() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Поиск по имени, Terra ID или провайдеру..."
+              placeholder={t('terra.table.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -482,22 +486,22 @@ export function TerraTokenAdmin() {
       {/* Tokens Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Активные токены ({tokens?.length || 0})</CardTitle>
+          <CardTitle>{t('terra.table.title', { count: tokens?.length || 0 })}</CardTitle>
           <CardDescription>
-            Связи между пользователями и их Terra User ID
+            {t('terra.table.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Пользователь</TableHead>
-                <TableHead>Terra User ID</TableHead>
-                <TableHead>Провайдер</TableHead>
-                <TableHead>Статус</TableHead>
-                <TableHead>Последняя синхр.</TableHead>
-                <TableHead>Посл. данные</TableHead>
-                <TableHead className="text-right">Действия</TableHead>
+                <TableHead>{t('terra.table.user')}</TableHead>
+                <TableHead>{t('terra.table.terraId')}</TableHead>
+                <TableHead>{t('terra.table.provider')}</TableHead>
+                <TableHead>{t('terra.table.status')}</TableHead>
+                <TableHead>{t('terra.table.lastSync')}</TableHead>
+                <TableHead>{t('terra.table.lastData')}</TableHead>
+                <TableHead className="text-right">{t('terra.table.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -513,7 +517,7 @@ export function TerraTokenAdmin() {
                       </Avatar>
                       <div>
                         <p className="font-medium">
-                          {token.profile?.full_name || 'Без имени'}
+                          {token.profile?.full_name || t('terra.table.noName')}
                         </p>
                         <p className="text-xs text-muted-foreground font-mono">
                           {token.user_id.substring(0, 8)}...
@@ -528,7 +532,7 @@ export function TerraTokenAdmin() {
                       </code>
                     ) : (
                       <Badge variant="outline" className="text-destructive">
-                        Отсутствует
+                        {t('terra.table.missing')}
                       </Badge>
                     )}
                   </TableCell>
@@ -539,19 +543,19 @@ export function TerraTokenAdmin() {
                     {token.is_active ? (
                       <div className="flex items-center gap-1 text-success">
                         <CheckCircle2 className="h-4 w-4" />
-                        <span className="text-sm">Активен</span>
+                        <span className="text-sm">{t('terra.table.active')}</span>
                       </div>
                     ) : (
                       <div className="flex items-center gap-1 text-destructive">
                         <XCircle className="h-4 w-4" />
-                        <span className="text-sm">Неактивен</span>
+                        <span className="text-sm">{t('terra.table.inactive')}</span>
                       </div>
                     )}
                   </TableCell>
                   <TableCell>
                     {token.last_sync_date ? (
                       <span className="text-sm text-muted-foreground">
-                        {format(new Date(token.last_sync_date), 'dd MMM yyyy HH:mm', { locale: ru })}
+                        {format(new Date(token.last_sync_date), 'dd MMM yyyy HH:mm', { locale: dateLocale })}
                       </span>
                     ) : (
                       <span className="text-sm text-muted-foreground">—</span>
@@ -563,7 +567,7 @@ export function TerraTokenAdmin() {
                         <span className={`text-sm ${token.is_dead ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
                           {formatDistanceToNow(new Date(token.last_webhook_date), { 
                             addSuffix: true, 
-                            locale: ru 
+                            locale: dateLocale 
                           })}
                         </span>
                         {token.is_dead && (
@@ -573,7 +577,7 @@ export function TerraTokenAdmin() {
                                 <Skull className="h-4 w-4 text-destructive" />
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>Нет данных {token.days_since_webhook} дней</p>
+                                <p>{t('terra.table.noDataDays', { days: token.days_since_webhook })}</p>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
@@ -603,7 +607,7 @@ export function TerraTokenAdmin() {
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>
-                              <p>Запросить данные за 30 дней</p>
+                              <p>{t('terra.table.request30Days')}</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
@@ -620,7 +624,7 @@ export function TerraTokenAdmin() {
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Проверить Terra API</p>
+                            <p>{t('terra.checkTerraApi')}</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -645,7 +649,7 @@ export function TerraTokenAdmin() {
               {(!filteredTokens || filteredTokens.length === 0) && (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                    {filterDead ? 'Мёртвые токены не найдены' : 'Токены не найдены'}
+                    {filterDead ? t('terra.table.noDeadTokens') : t('terra.table.noTokens')}
                   </TableCell>
                 </TableRow>
               )}

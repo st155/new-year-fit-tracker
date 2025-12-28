@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Calendar, ChevronRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -11,6 +12,7 @@ interface Alert {
 }
 
 export function RetestAlertBanner() {
+  const { t } = useTranslation('dashboard');
   const { user } = useAuth();
 
   const { data: alerts } = useQuery({
@@ -38,8 +40,11 @@ export function RetestAlertBanner() {
   // Extract biomarker names from messages
   const biomarkerNames = alerts
     .map(alert => {
-      const match = alert.message?.match(/пересдать\s+(.+?)(?:\s+для|\s*$)/i);
-      return match?.[1] || 'анализ';
+      // Try to extract from Russian text
+      const matchRu = alert.message?.match(/пересдать\s+(.+?)(?:\s+для|\s*$)/i);
+      // Try to extract from English text
+      const matchEn = alert.message?.match(/retest\s+(.+?)(?:\s+for|\s*$)/i);
+      return matchRu?.[1] || matchEn?.[1] || t('retest.analysis');
     })
     .slice(0, 2);
 
@@ -61,14 +66,14 @@ export function RetestAlertBanner() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <span className="text-xs font-medium text-foreground">
-                Пора пересдать анализы
+                {t('retest.title')}
               </span>
               <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-orange-500/20 text-orange-500 font-medium">
                 {alerts.length}
               </span>
             </div>
             <p className="text-[11px] text-muted-foreground truncate">
-              {displayText}{moreCount > 0 ? ` и ещё ${moreCount}` : ''}
+              {displayText}{moreCount > 0 ? ` ${t('retest.andMore', { count: moreCount })}` : ''}
             </p>
           </div>
 

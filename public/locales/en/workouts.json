@@ -157,5 +157,11 @@
     "min": "min",
     "km": "km",
     "kcal": "kcal"
+  },
+  "map": {
+    "title": "Route Map",
+    "noGps": "GPS data unavailable",
+    "deviceRequired": "Detailed route track requires loading data from the device",
+    "inDevelopment": "Feature in development"
   }
 }

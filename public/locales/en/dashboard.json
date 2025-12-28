@@ -1,4 +1,9 @@
 {
+  "retest": {
+    "title": "Time to retest",
+    "analysis": "analysis",
+    "andMore": "and {{count}} more"
+  },
   "title": "Dashboard",
   "myMetrics": "My Metrics",
   "refresh": "Refresh",

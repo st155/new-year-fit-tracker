@@ -188,6 +188,23 @@
       "saving": "Saving data to database...",
       "complete": "Processing complete!",
       "backgroundContinue": "Processing may continue in background"
+    },
+    "backgroundError": "Background processing error",
+    "errors": {
+      "default": "Could not process Apple Health file",
+      "storageSizeLimit": "File exceeds maximum Storage size. Contact administrator to increase limit.",
+      "payloadTooLarge": "File too large to upload. Try reducing archive size.",
+      "timeout": "Upload timeout. Please try again.",
+      "serverError": "Server file processing error. Check logs.",
+      "fileNotFound": "File not found after upload. Please try again."
+    },
+    "complete": {
+      "fileSize": "File size: {{size}}MB",
+      "status": "Status",
+      "processingStarted": "Processing started",
+      "done": "Done",
+      "backgroundProcessing": "Data processing is running in background",
+      "resultsWillAppear": "Processing results will be saved automatically and appear in your metrics."
     }
   }
 }
