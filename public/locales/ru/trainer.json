@@ -865,5 +865,28 @@
     "nameStem": "Склонение",
     "context": "Из контекста",
     "recognized": "Распознан"
+  },
+  "chatList": {
+    "noConversations": "Нет диалогов"
+  },
+  "globalSearch": {
+    "placeholder": "Поиск клиентов...",
+    "loading": "Загрузка...",
+    "noResults": "Клиенты не найдены.",
+    "yourClients": "Ваши клиенты",
+    "unknown": "Неизвестно",
+    "lastActive": "Последняя активность:"
+  },
+  "progressCharts": {
+    "title": "Прогресс за период",
+    "description": "Отслеживайте метрики и улучшения клиента",
+    "line": "Линия",
+    "area": "Область",
+    "bar": "Столбцы",
+    "days7": "7 дней",
+    "days30": "30 дней",
+    "days90": "90 дней",
+    "year1": "1 год",
+    "allTime": "Всё время"
   }
 }

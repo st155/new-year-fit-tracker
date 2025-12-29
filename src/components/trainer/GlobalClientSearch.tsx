@@ -6,6 +6,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Activity } from "lucide-react";
 import { format } from "date-fns";
+import { ru, enUS } from "date-fns/locale";
+import { useTranslation } from "react-i18next";
 
 interface Client {
   client_id: string;
@@ -21,6 +23,8 @@ interface GlobalClientSearchProps {
 }
 
 export const GlobalClientSearch = ({ open, onOpenChange }: GlobalClientSearchProps) => {
+  const { t, i18n } = useTranslation('trainer');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -81,12 +85,12 @@ export const GlobalClientSearch = ({ open, onOpenChange }: GlobalClientSearchPro
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="p-0 max-w-2xl">
         <Command className="rounded-lg border-0">
-          <CommandInput placeholder="Search clients..." />
+          <CommandInput placeholder={t('globalSearch.placeholder')} />
           <CommandList>
             <CommandEmpty>
-              {loading ? "Loading..." : "No clients found."}
+              {loading ? t('globalSearch.loading') : t('globalSearch.noResults')}
             </CommandEmpty>
-            <CommandGroup heading="Your Clients">
+            <CommandGroup heading={t('globalSearch.yourClients')}>
               {clients.map((client) => (
                 <CommandItem
                   key={client.client_id}
@@ -101,12 +105,12 @@ export const GlobalClientSearch = ({ open, onOpenChange }: GlobalClientSearchPro
                   </Avatar>
                   <div className="flex-1">
                     <p className="font-medium">
-                      {client.full_name || client.username || "Unknown"}
+                      {client.full_name || client.username || t('globalSearch.unknown')}
                     </p>
                     {client.last_activity && (
                       <p className="text-sm text-muted-foreground flex items-center gap-1">
                         <Activity className="h-3 w-3" />
-                        Last active: {format(new Date(client.last_activity), "MMM d, yyyy")}
+                        {t('globalSearch.lastActive')} {format(new Date(client.last_activity), "MMM d, yyyy", { locale: dateLocale })}
                       </p>
                     )}
                   </div>
