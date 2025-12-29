@@ -2,7 +2,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { formatDistanceToNow } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 
 interface ChatListProps {
   conversations: Array<{
@@ -19,6 +20,9 @@ interface ChatListProps {
 }
 
 export const ChatList = ({ conversations, selectedUserId, onSelectConversation }: ChatListProps) => {
+  const { t, i18n } = useTranslation('trainer');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
+  
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -54,7 +58,7 @@ export const ChatList = ({ conversations, selectedUserId, onSelectConversation }
                     <span className="text-xs opacity-70">
                       {formatDistanceToNow(new Date(conv.last_message_time), {
                         addSuffix: true,
-                        locale: ru
+                        locale: dateLocale
                       })}
                     </span>
                   )}
@@ -76,7 +80,7 @@ export const ChatList = ({ conversations, selectedUserId, onSelectConversation }
 
         {conversations.length === 0 && (
           <div className="text-center py-8 text-muted-foreground">
-            Нет диалогов
+            {t('chatList.noConversations')}
           </div>
         )}
       </div>

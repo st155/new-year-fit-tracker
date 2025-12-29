@@ -865,5 +865,28 @@
     "nameStem": "Name stem",
     "context": "From context",
     "recognized": "Recognized"
+  },
+  "chatList": {
+    "noConversations": "No conversations"
+  },
+  "globalSearch": {
+    "placeholder": "Search clients...",
+    "loading": "Loading...",
+    "noResults": "No clients found.",
+    "yourClients": "Your Clients",
+    "unknown": "Unknown",
+    "lastActive": "Last active:"
+  },
+  "progressCharts": {
+    "title": "Progress Over Time",
+    "description": "Track client metrics and improvements",
+    "line": "Line",
+    "area": "Area",
+    "bar": "Bar",
+    "days7": "7 days",
+    "days30": "30 days",
+    "days90": "90 days",
+    "year1": "1 year",
+    "allTime": "All time"
   }
 }
