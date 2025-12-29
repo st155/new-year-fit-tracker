@@ -856,5 +856,14 @@
     "error": "Error",
     "enterValidValue": "Enter a valid value",
     "addFailed": "Failed to add measurement"
+  },
+  "recognizedClient": {
+    "alias": "Alias",
+    "fullName": "Full name",
+    "username": "Username",
+    "namePart": "Name part",
+    "nameStem": "Name stem",
+    "context": "From context",
+    "recognized": "Recognized"
   }
 }
