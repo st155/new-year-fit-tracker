@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import { LineChart as LineChartIcon } from 'lucide-react';
 import { formatMeasurement } from '@/lib/units';
 
@@ -27,28 +28,31 @@ interface GoalProgressChartProps {
 }
 
 export function GoalProgressChart({ goal, measurements }: GoalProgressChartProps) {
+  const { t, i18n } = useTranslation('trainerDashboard');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
+
   const chartData = useMemo(() => {
     const sorted = [...measurements]
       .filter(m => m.goal_id === goal.id)
       .sort((a, b) => new Date(a.measurement_date).getTime() - new Date(b.measurement_date).getTime());
 
     return sorted.map(m => ({
-      date: format(new Date(m.measurement_date), 'dd MMM', { locale: ru }),
+      date: format(new Date(m.measurement_date), 'dd MMM', { locale: dateLocale }),
       value: m.value,
       target: goal.target_value
     }));
-  }, [goal, measurements]);
+  }, [goal, measurements, dateLocale]);
 
   if (chartData.length === 0) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>{goal.goal_name} - График прогресса</CardTitle>
+          <CardTitle>{goal.goal_name} - {t('progressChart.title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
             <LineChartIcon className="h-12 w-12 mb-2" />
-            <p className="text-sm">Нет данных для графика</p>
+            <p className="text-sm">{t('progressChart.noData')}</p>
           </div>
         </CardContent>
       </Card>
@@ -58,7 +62,7 @@ export function GoalProgressChart({ goal, measurements }: GoalProgressChartProps
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{goal.goal_name} - График прогресса</CardTitle>
+        <CardTitle>{goal.goal_name} - {t('progressChart.title')}</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
@@ -81,7 +85,7 @@ export function GoalProgressChart({ goal, measurements }: GoalProgressChartProps
               dataKey="value" 
               stroke="hsl(var(--primary))" 
               strokeWidth={2}
-              name="Текущее"
+              name={t('progressChart.current')}
               dot={{ r: 4 }}
             />
             <Line 
@@ -90,7 +94,7 @@ export function GoalProgressChart({ goal, measurements }: GoalProgressChartProps
               stroke="hsl(var(--muted-foreground))" 
               strokeWidth={1}
               strokeDasharray="5 5"
-              name="Цель"
+              name={t('progressChart.target')}
               dot={false}
             />
           </LineChart>

@@ -297,5 +297,168 @@
     "date": "Date",
     "reliability": "Reliability",
     "deviation": "Deviation"
+  },
+  "aiSuggestions": {
+    "title": "AI Goal Recommendations",
+    "refresh": "Refresh",
+    "noSuggestions": "No active recommendations",
+    "generate": "Generate Recommendations",
+    "analysisComplete": "✨ Analysis Complete",
+    "createdCount": "Created {{count}} recommendations",
+    "error": "Error",
+    "loadFailed": "Failed to load recommendations",
+    "generateFailed": "Failed to generate recommendations",
+    "applied": "✅ Applied",
+    "appliedDesc": "Recommendation successfully applied",
+    "applyFailed": "Failed to apply recommendation",
+    "dismissed": "Dismissed",
+    "dismissedDesc": "Recommendation dismissed",
+    "dismissFailed": "Failed to dismiss recommendation",
+    "pausedByAI": "Paused by AI recommendation",
+    "trendAhead": "📈 Ahead of schedule",
+    "trendOnTrack": "✅ On track",
+    "trendBehind": "⚠️ Behind schedule",
+    "trendStagnant": "⛔ Stagnant",
+    "recommendation": "💡 Recommendation:",
+    "increaseTarget": "Increase target:",
+    "decreaseTarget": "Decrease target:",
+    "pauseGoal": "Pause goal",
+    "confidence": "AI Confidence:",
+    "priority": "Priority",
+    "apply": "Apply",
+    "dismiss": "Dismiss"
+  },
+  "filters": {
+    "title": "Filters",
+    "period": "Period",
+    "last7days": "Last 7 days",
+    "last30days": "Last 30 days",
+    "last90days": "Last 90 days",
+    "customRange": "Custom range",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "pickDate": "Pick a date",
+    "dataSources": "Data Sources",
+    "metricTypesLabel": "Metric Types",
+    "minConfidence": "Min Confidence Score",
+    "reset": "Reset Filters",
+    "apply": "Apply",
+    "sources": {
+      "whoop": "Whoop",
+      "oura": "Oura",
+      "manual": "Manual",
+      "inbody": "InBody",
+      "appleHealth": "Apple Health"
+    },
+    "metricTypes": {
+      "recovery": "Recovery",
+      "sleep": "Sleep",
+      "activity": "Activity",
+      "bodyComposition": "Body Composition"
+    }
+  },
+  "assignedPlans": {
+    "title": "Training Plans",
+    "assignPlan": "Assign Plan",
+    "noPlans": "No assigned plans",
+    "noPlansDesc": "Assign a training plan to track client progress",
+    "assignFirst": "Assign First Plan",
+    "unknownPlan": "Unknown plan",
+    "started": "Started",
+    "weekOf": "Week {{current}} of {{total}}",
+    "progress": "Progress",
+    "history": "Plan History",
+    "loadError": "Failed to load assigned plans",
+    "statusUpdated": "Plan status updated",
+    "statusError": "Failed to update status",
+    "status": {
+      "active": "Active",
+      "paused": "Paused",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "actions": {
+      "openPlan": "Open Plan",
+      "pause": "Pause",
+      "resume": "Resume",
+      "complete": "Complete",
+      "cancel": "Cancel",
+      "cancelPlan": "Cancel Plan"
+    },
+    "dialog": {
+      "pauseTitle": "Pause plan?",
+      "pauseDesc": "Plan \"{{name}}\" will be paused. You can resume it later.",
+      "resumeTitle": "Resume plan?",
+      "resumeDesc": "Plan \"{{name}}\" will be resumed.",
+      "completeTitle": "Complete plan?",
+      "completeDesc": "Plan \"{{name}}\" will be marked as completed.",
+      "cancelTitle": "Cancel plan?",
+      "cancelDesc": "Plan \"{{name}}\" will be cancelled. This action cannot be undone."
+    }
+  },
+  "healthScore": {
+    "title": "Health Score",
+    "clickForDetails": "Click for detailed breakdown",
+    "breakdown": "Health Score Breakdown",
+    "breakdownDesc": "Comprehensive health assessment based on multiple factors",
+    "lastUpdated": "Last updated",
+    "levels": {
+      "excellent": "Excellent",
+      "good": "Good",
+      "fair": "Fair",
+      "poor": "Poor"
+    },
+    "components": {
+      "recovery": "Recovery",
+      "sleep": "Sleep Quality",
+      "activity": "Activity Level",
+      "consistency": "Consistency",
+      "trend": "Progress Trend"
+    }
+  },
+  "strengthWorkouts": {
+    "title": "Strength Workouts",
+    "noWorkouts": "No strength workouts for selected period",
+    "exercises": "ex.",
+    "sets": "sets",
+    "volume": "t volume",
+    "superset": "Superset",
+    "kg": "kg",
+    "reps": "reps",
+    "periods": {
+      "week": "Week",
+      "month": "Month",
+      "quarter": "3 months",
+      "all": "All time"
+    }
+  },
+  "goalCard": {
+    "measurements": "measurements",
+    "current": "Current",
+    "target": "Target",
+    "lastMeasurement": "Last",
+    "addMeasurement": "Add Measurement"
+  },
+  "progressChart": {
+    "title": "Progress Chart",
+    "noData": "No data for chart",
+    "current": "Current",
+    "target": "Target"
+  },
+  "goalsOverview": {
+    "noGoals": "No active goals",
+    "noGoalsDesc": "Create goals to track client progress",
+    "measurements": "measurements",
+    "start": "Start",
+    "target": "Target",
+    "history": "History (last 10 entries)",
+    "lastMeasurement": "Last measurement",
+    "value": "Value",
+    "progress": {
+      "achieved": "🎉 Goal achieved!",
+      "almostDone": "💪 Almost done!",
+      "halfway": "⚡ Halfway there",
+      "keepGoing": "🚀 Keep going"
+    }
   }
 }

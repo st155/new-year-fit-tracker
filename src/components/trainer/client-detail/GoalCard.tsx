@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -5,7 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Dumbbell, Heart, TrendingUp, Weight, Activity, Target, Edit, Plus, Calendar } from 'lucide-react';
 import { formatMeasurement, formatStrengthGoal, isStrengthWeightGoal } from '@/lib/units';
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
 interface Goal {
@@ -29,6 +30,9 @@ interface GoalCardProps {
 }
 
 export function GoalCard({ goal, onAddMeasurement, onEdit }: GoalCardProps) {
+  const { t, i18n } = useTranslation('trainerDashboard');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
+
   const getGoalIcon = (type: string) => {
     switch (type) {
       case 'strength':
@@ -64,7 +68,7 @@ export function GoalCard({ goal, onAddMeasurement, onEdit }: GoalCardProps) {
             <div>
               <CardTitle className="text-lg">{goal.goal_name}</CardTitle>
               <CardDescription className="text-xs">
-                {goal.measurements_count || 0} измерений
+                {goal.measurements_count || 0} {t('goalCard.measurements')}
               </CardDescription>
             </div>
           </div>
@@ -91,7 +95,7 @@ export function GoalCard({ goal, onAddMeasurement, onEdit }: GoalCardProps) {
           
           <div className="flex justify-between items-center text-sm">
             <div>
-              <span className="text-muted-foreground">Текущее: </span>
+              <span className="text-muted-foreground">{t('goalCard.current')}: </span>
               <span className="font-semibold">
                 {isStrengthWeightGoal(goal.goal_type, goal.target_unit)
                   ? formatStrengthGoal(goal.current_value || 0, goal.target_unit, goal.current_reps)
@@ -99,7 +103,7 @@ export function GoalCard({ goal, onAddMeasurement, onEdit }: GoalCardProps) {
               </span>
             </div>
             <div>
-              <span className="text-muted-foreground">Цель: </span>
+              <span className="text-muted-foreground">{t('goalCard.target')}: </span>
               <span className="font-semibold">
                 {isStrengthWeightGoal(goal.goal_type, goal.target_unit)
                   ? formatStrengthGoal(goal.target_value, goal.target_unit, goal.target_reps)
@@ -111,7 +115,7 @@ export function GoalCard({ goal, onAddMeasurement, onEdit }: GoalCardProps) {
           {goal.last_measurement_date && (
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Calendar className="h-3 w-3" />
-              Последнее: {format(new Date(goal.last_measurement_date), 'dd.MM.yyyy', { locale: ru })}
+              {t('goalCard.lastMeasurement')}: {format(new Date(goal.last_measurement_date), 'dd.MM.yyyy', { locale: dateLocale })}
             </div>
           )}
 
@@ -123,7 +127,7 @@ export function GoalCard({ goal, onAddMeasurement, onEdit }: GoalCardProps) {
               onClick={onAddMeasurement}
             >
               <Plus className="h-4 w-4 mr-2" />
-              Добавить измерение
+              {t('goalCard.addMeasurement')}
             </Button>
           )}
         </div>
