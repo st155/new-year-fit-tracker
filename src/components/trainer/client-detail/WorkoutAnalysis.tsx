@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell } from 'recharts';
 import { format, subDays } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import { Activity, TrendingUp, Flame, Zap } from 'lucide-react';
 import { UnifiedMetric } from '@/hooks/metrics';
 import { mapTerraActivityType } from '@/lib/terra-activity-types';
@@ -14,6 +15,8 @@ interface WorkoutAnalysisProps {
 }
 
 export function WorkoutAnalysis({ metrics, clientName }: WorkoutAnalysisProps) {
+  const { t, i18n } = useTranslation('trainerDashboard');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
   const thirtyDaysAgo = useMemo(() => subDays(new Date(), 30), []);
 
   // Filter workout-related metrics from last 30 days
@@ -31,9 +34,9 @@ export function WorkoutAnalysis({ metrics, clientName }: WorkoutAnalysisProps) {
   // Normalize activity types - group similar ones
   const normalizeActivityType = (type: string): string => {
     // Group numeric "Активность N" types
-    if (/^Активность \d+$/.test(type)) return 'Другая активность';
+    if (/^Активность \d+$/.test(type)) return t('workoutAnalysis.otherActivity');
     // Group unknown types
-    if (type === 'Тренировка' || type === 'Unknown') return 'Другая активность';
+    if (type === 'Тренировка' || type === 'Unknown') return t('workoutAnalysis.otherActivity');
     return type;
   };
 
@@ -41,7 +44,7 @@ export function WorkoutAnalysis({ metrics, clientName }: WorkoutAnalysisProps) {
   const isRealWorkout = (type: string): boolean => {
     const nonWorkoutTypes = [
       'Медитация', 'Массаж', 'Сценическое выступление', 'Кэдди',
-      'Другая активность', 'Дыхательная практика', 'Сон'
+      t('workoutAnalysis.otherActivity'), 'Дыхательная практика', 'Сон'
     ];
     return !nonWorkoutTypes.includes(type);
   };
@@ -95,7 +98,7 @@ export function WorkoutAnalysis({ metrics, clientName }: WorkoutAnalysisProps) {
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       .slice(-14) // Last 14 days
       .map(d => ({
-        date: format(new Date(d.date), 'dd MMM', { locale: ru }),
+        date: format(new Date(d.date), 'dd MMM', { locale: dateLocale }),
         dayStrain: d.dayStrain,
         workoutStrain: d.workoutStrain
       }));
@@ -109,7 +112,7 @@ export function WorkoutAnalysis({ metrics, clientName }: WorkoutAnalysisProps) {
       ? (dayStrains.reduce((sum, m) => sum + m.value, 0) / dayStrains.length).toFixed(1)
       : '0';
     
-    const popularType = workoutsByType.length > 0 ? workoutsByType[0].name : 'Нет данных';
+    const popularType = workoutsByType.length > 0 ? workoutsByType[0].name : t('workoutAnalysis.noDataShort');
     
     // Calculate streak (consecutive days with workouts)
     const sortedDates = [...new Set(workoutMetrics.map(m => m.measurement_date))]
@@ -152,13 +155,13 @@ export function WorkoutAnalysis({ metrics, clientName }: WorkoutAnalysisProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Activity className="h-5 w-5" />
-            Анализ тренировок
+            {t('workoutAnalysis.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
             <Activity className="h-12 w-12 mb-2 opacity-50" />
-            <p className="text-sm">Нет данных о тренировках за последние 30 дней</p>
+            <p className="text-sm">{t('workoutAnalysis.noData')}</p>
           </div>
         </CardContent>
       </Card>
@@ -173,10 +176,10 @@ export function WorkoutAnalysis({ metrics, clientName }: WorkoutAnalysisProps) {
           <CardContent className="pt-6">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <Activity className="h-4 w-4" />
-              <span className="text-sm">Тренировок</span>
+              <span className="text-sm">{t('workoutAnalysis.workouts')}</span>
             </div>
             <div className="text-3xl font-bold">{stats.workoutCount}</div>
-            <p className="text-xs text-muted-foreground mt-1">за 30 дней</p>
+            <p className="text-xs text-muted-foreground mt-1">{t('workoutAnalysis.last30days')}</p>
           </CardContent>
         </Card>
 
@@ -184,7 +187,7 @@ export function WorkoutAnalysis({ metrics, clientName }: WorkoutAnalysisProps) {
           <CardContent className="pt-6">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <Flame className="h-4 w-4" />
-              <span className="text-sm">Ср. интенсивность</span>
+              <span className="text-sm">{t('workoutAnalysis.avgIntensity')}</span>
             </div>
             <div className="text-3xl font-bold">{stats.avgStrain}</div>
             <p className="text-xs text-muted-foreground mt-1">Day Strain</p>
@@ -195,10 +198,10 @@ export function WorkoutAnalysis({ metrics, clientName }: WorkoutAnalysisProps) {
           <CardContent className="pt-6">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <TrendingUp className="h-4 w-4" />
-              <span className="text-sm">Популярный тип</span>
+              <span className="text-sm">{t('workoutAnalysis.popularType')}</span>
             </div>
             <div className="text-xl font-bold truncate">{stats.popularType}</div>
-            <p className="text-xs text-muted-foreground mt-1">чаще всего</p>
+            <p className="text-xs text-muted-foreground mt-1">{t('workoutAnalysis.mostOften')}</p>
           </CardContent>
         </Card>
 
@@ -206,10 +209,10 @@ export function WorkoutAnalysis({ metrics, clientName }: WorkoutAnalysisProps) {
           <CardContent className="pt-6">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <Zap className="h-4 w-4" />
-              <span className="text-sm">Streak</span>
+              <span className="text-sm">{t('workoutAnalysis.streak')}</span>
             </div>
             <div className="text-3xl font-bold">{stats.streak}</div>
-            <p className="text-xs text-muted-foreground mt-1">дней подряд</p>
+            <p className="text-xs text-muted-foreground mt-1">{t('workoutAnalysis.consecutiveDays')}</p>
           </CardContent>
         </Card>
       </div>
@@ -218,7 +221,7 @@ export function WorkoutAnalysis({ metrics, clientName }: WorkoutAnalysisProps) {
       {workoutsByType.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Распределение по типам тренировок</CardTitle>
+            <CardTitle className="text-lg">{t('workoutAnalysis.typeDistribution')}</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
@@ -239,7 +242,7 @@ export function WorkoutAnalysis({ metrics, clientName }: WorkoutAnalysisProps) {
                     borderRadius: '8px'
                   }}
                 />
-                <Bar dataKey="count" name="Количество">
+                <Bar dataKey="count" name={t('workoutAnalysis.count')}>
                   {workoutsByType.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
@@ -255,7 +258,7 @@ export function WorkoutAnalysis({ metrics, clientName }: WorkoutAnalysisProps) {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Интенсивность тренировок (Strain)</CardTitle>
+              <CardTitle className="text-lg">{t('workoutAnalysis.intensityStrain')}</CardTitle>
               <div className="flex gap-2 text-xs">
                 <Badge variant="outline" className="bg-chart-2/10">Light &lt;10</Badge>
                 <Badge variant="outline" className="bg-chart-3/10">Moderate 10-14</Badge>

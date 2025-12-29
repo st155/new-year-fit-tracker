@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +15,7 @@ import {
   TrendingDown 
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { ru, enUS } from 'date-fns/locale';
 import { useState } from 'react';
 
 interface TimelineEvent {
@@ -44,6 +46,8 @@ const EVENT_COLORS: Record<TimelineEvent['type'], string> = {
 };
 
 export function RecentActivityTimeline() {
+  const { t, i18n } = useTranslation('trainerDashboard');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
   const { user } = useAuth();
   const [filter, setFilter] = useState<TimelineEvent['type'] | 'all'>('all');
   const [limit, setLimit] = useState(20);
@@ -95,19 +99,19 @@ export function RecentActivityTimeline() {
   });
 
   const filterOptions: Array<{ value: TimelineEvent['type'] | 'all'; label: string }> = [
-    { value: 'all', label: 'All' },
-    { value: 'measurement', label: 'Measurements' },
-    { value: 'goal', label: 'Goals' },
-    { value: 'alert', label: 'Alerts' },
-    { value: 'sync', label: 'Syncs' },
-    { value: 'conflict', label: 'Conflicts' },
+    { value: 'all', label: t('activityTimeline.filterAll') },
+    { value: 'measurement', label: t('activityTimeline.filterMeasurements') },
+    { value: 'goal', label: t('activityTimeline.filterGoals') },
+    { value: 'alert', label: t('activityTimeline.filterAlerts') },
+    { value: 'sync', label: t('activityTimeline.filterSyncs') },
+    { value: 'conflict', label: t('activityTimeline.filterConflicts') },
   ];
 
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Recent Activity</CardTitle>
+          <CardTitle>{t('activityTimeline.title')}</CardTitle>
           <div className="flex gap-2">
             {filterOptions.map(option => (
               <Button
@@ -131,7 +135,7 @@ export function RecentActivityTimeline() {
           ) : events.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
               <Activity className="h-8 w-8 mb-2 opacity-50" />
-              <p className="text-sm">No recent activity</p>
+              <p className="text-sm">{t('activityTimeline.noActivity')}</p>
             </div>
           ) : (
             <div className="relative">
@@ -162,7 +166,7 @@ export function RecentActivityTimeline() {
                                 {event.client_name}
                               </Badge>
                               <span className="text-xs text-muted-foreground">
-                                {formatDistanceToNow(new Date(event.created_at), { addSuffix: true })}
+                                {formatDistanceToNow(new Date(event.created_at), { addSuffix: true, locale: dateLocale })}
                               </span>
                             </div>
                           </div>
@@ -181,7 +185,7 @@ export function RecentActivityTimeline() {
                     size="sm"
                     onClick={() => setLimit(prev => prev + 20)}
                   >
-                    Load More
+                    {t('activityTimeline.loadMore')}
                   </Button>
                 </div>
               )}

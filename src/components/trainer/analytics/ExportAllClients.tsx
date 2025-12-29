@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -8,6 +9,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 
 export function ExportAllClients() {
+  const { t } = useTranslation('trainerDashboard');
   const { user } = useAuth();
   const [isExporting, setIsExporting] = useState(false);
 
@@ -71,7 +73,7 @@ export function ExportAllClients() {
 
   const handleExport = () => {
     if (!clients || clients.length === 0) {
-      toast.error('No client data to export');
+      toast.error(t('export.noData'));
       return;
     }
 
@@ -79,7 +81,13 @@ export function ExportAllClients() {
 
     try {
       // Create CSV content
-      const headers = ['Client Name', 'Avg Recovery', 'Avg Sleep (hrs)', 'Steps (7d)', 'Last Sync'];
+      const headers = [
+        t('export.headerClientName'),
+        t('export.headerAvgRecovery'),
+        t('export.headerAvgSleep'),
+        t('export.headerSteps7d'),
+        t('export.headerLastSync')
+      ];
       const rows = clients.map(c => [
         c.name,
         c.avgRecovery,
@@ -106,10 +114,10 @@ export function ExportAllClients() {
       link.click();
       document.body.removeChild(link);
 
-      toast.success('Export completed successfully');
+      toast.success(t('export.success'));
     } catch (error) {
       console.error('Export error:', error);
-      toast.error('Failed to export data');
+      toast.error(t('export.failed'));
     } finally {
       setIsExporting(false);
     }
@@ -124,7 +132,7 @@ export function ExportAllClients() {
       className="gap-2"
     >
       <Download className="h-4 w-4" />
-      {isExporting ? 'Exporting...' : 'Export All Clients'}
+      {isExporting ? t('export.exporting') : t('export.exportAll')}
     </Button>
   );
 }
