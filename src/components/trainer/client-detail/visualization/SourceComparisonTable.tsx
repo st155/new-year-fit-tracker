@@ -3,7 +3,8 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatSourceName } from '@/hooks/useClientDetailData';
 import { format, parseISO } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 
 interface SourceData {
   source: string;
@@ -23,24 +24,27 @@ interface SourceComparisonTableProps {
 }
 
 export function SourceComparisonTable({ comparisons }: SourceComparisonTableProps) {
+  const { t, i18n } = useTranslation('trainerDashboard');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
+
   if (comparisons.length === 0 || comparisons.every(c => c.sources.length === 0)) {
     return null;
   }
 
   const getConfidenceBadge = (confidence: number) => {
     if (confidence >= 80) {
-      return <Badge variant="default" className="bg-green-500">Высокая</Badge>;
+      return <Badge variant="default" className="bg-green-500">{t('visualization.confidenceHigh')}</Badge>;
     } else if (confidence >= 60) {
-      return <Badge variant="default" className="bg-yellow-500">Средняя</Badge>;
+      return <Badge variant="default" className="bg-yellow-500">{t('visualization.confidenceMedium')}</Badge>;
     } else {
-      return <Badge variant="default" className="bg-red-500">Низкая</Badge>;
+      return <Badge variant="default" className="bg-red-500">{t('visualization.confidenceLow')}</Badge>;
     }
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Сравнение источников данных</CardTitle>
+        <CardTitle>{t('visualization.sourceComparison')}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
@@ -58,7 +62,7 @@ export function SourceComparisonTable({ comparisons }: SourceComparisonTableProp
                   <h4 className="font-medium">{comparison.metricName}</h4>
                   {diffPercent > 10 && (
                     <Badge variant="outline" className="text-orange-500">
-                      Расхождение {diffPercent.toFixed(1)}%
+                      {t('visualization.discrepancy')} {diffPercent.toFixed(1)}%
                     </Badge>
                   )}
                 </div>
@@ -66,11 +70,11 @@ export function SourceComparisonTable({ comparisons }: SourceComparisonTableProp
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Источник</TableHead>
-                      <TableHead>Значение</TableHead>
-                      <TableHead>Дата</TableHead>
-                      <TableHead>Надежность</TableHead>
-                      <TableHead>Отклонение</TableHead>
+                      <TableHead>{t('visualization.source')}</TableHead>
+                      <TableHead>{t('visualization.value')}</TableHead>
+                      <TableHead>{t('visualization.date')}</TableHead>
+                      <TableHead>{t('visualization.reliability')}</TableHead>
+                      <TableHead>{t('visualization.deviation')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -92,7 +96,7 @@ export function SourceComparisonTable({ comparisons }: SourceComparisonTableProp
                             {source.value.toFixed(1)}
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">
-                            {format(parseISO(source.date), 'dd MMM yyyy', { locale: ru })}
+                            {format(parseISO(source.date), 'dd MMM yyyy', { locale: dateLocale })}
                           </TableCell>
                           <TableCell>
                             {getConfidenceBadge(source.confidence)}

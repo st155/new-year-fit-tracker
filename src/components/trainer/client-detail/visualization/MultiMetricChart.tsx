@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LineChart, BarChart, AreaChart } from 'lucide-react';
 import { OptimizedChart, ChartConfig } from '@/components/charts/OptimizedChart';
+import { useTranslation } from 'react-i18next';
 
 interface MultiMetricChartProps {
   data: any[];
@@ -20,6 +21,7 @@ const METRIC_COLORS = [
 ];
 
 export function MultiMetricChart({ data, selectedMetrics, onMetricToggle }: MultiMetricChartProps) {
+  const { t } = useTranslation('trainerDashboard');
   const [chartType, setChartType] = useState<'line' | 'bar' | 'area'>('line');
   const [visibleMetrics, setVisibleMetrics] = useState<Set<string>>(new Set(selectedMetrics));
 
@@ -46,8 +48,8 @@ export function MultiMetricChart({ data, selectedMetrics, onMetricToggle }: Mult
       <Card>
         <CardContent className="flex items-center justify-center h-96">
           <div className="text-center text-muted-foreground">
-            <p className="text-lg font-medium mb-2">Выберите метрики для отображения</p>
-            <p className="text-sm">Используйте селектор метрик слева</p>
+            <p className="text-lg font-medium mb-2">{t('visualization.selectMetrics')}</p>
+            <p className="text-sm">{t('visualization.useSelector')}</p>
           </div>
         </CardContent>
       </Card>
@@ -58,7 +60,7 @@ export function MultiMetricChart({ data, selectedMetrics, onMetricToggle }: Mult
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Графики метрик</CardTitle>
+          <CardTitle>{t('visualization.chartTitle')}</CardTitle>
           
           {/* Chart Type Selector */}
           <div className="flex gap-2">
