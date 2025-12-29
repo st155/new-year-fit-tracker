@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, FileText, AlertTriangle, Bell, Download } from 'lucide-react';
@@ -9,6 +10,7 @@ import { toast } from 'sonner';
 import { useState } from 'react';
 
 export function QuickActionsPanel() {
+  const { t } = useTranslation('trainerDashboard');
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isSyncing, setIsSyncing] = useState(false);
@@ -35,12 +37,12 @@ export function QuickActionsPanel() {
     },
     onSuccess: (count) => {
       queryClient.invalidateQueries({ queryKey: ['trainer-clients'] });
-      toast.success(`Sync started for ${count} clients`);
+      toast.success(t('quickActions.syncStarted', { count }));
       setIsSyncing(false);
     },
     onError: (error) => {
       console.error('Sync error:', error);
-      toast.error('Failed to start sync');
+      toast.error(t('quickActions.syncFailed'));
       setIsSyncing(false);
     },
   });
@@ -48,23 +50,23 @@ export function QuickActionsPanel() {
   const actions = [
     {
       icon: RefreshCw,
-      label: 'Sync All Clients',
-      description: 'Refresh data from all connected devices',
+      label: t('quickActions.syncAll'),
+      description: t('quickActions.syncAllDesc'),
       onClick: () => syncAllMutation.mutate(),
       loading: isSyncing,
       variant: 'default' as const,
     },
     {
       icon: FileText,
-      label: 'Weekly Report',
-      description: 'Generate comprehensive weekly report',
-      onClick: () => toast.info('Report generation coming soon'),
+      label: t('quickActions.weeklyReport'),
+      description: t('quickActions.weeklyReportDesc'),
+      onClick: () => toast.info(t('quickActions.reportComingSoon')),
       variant: 'outline' as const,
     },
     {
       icon: AlertTriangle,
-      label: 'Resolve Conflicts',
-      description: 'View and resolve data conflicts',
+      label: t('quickActions.resolveConflicts'),
+      description: t('quickActions.resolveConflictsDesc'),
       onClick: () => {
         // Scroll to conflicts section or open modal
         const conflictsSection = document.getElementById('conflicts-section');
@@ -74,9 +76,9 @@ export function QuickActionsPanel() {
     },
     {
       icon: Bell,
-      label: 'View Alerts',
-      description: 'Check active client alerts',
-      onClick: () => toast.info('Alerts dashboard coming soon'),
+      label: t('quickActions.viewAlerts'),
+      description: t('quickActions.viewAlertsDesc'),
+      onClick: () => toast.info(t('quickActions.alertsComingSoon')),
       variant: 'outline' as const,
     },
   ];

@@ -3,6 +3,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Card as TremorCard, Metric, Text, BarChart, DonutChart } from '@tremor/react';
@@ -38,6 +39,7 @@ interface ClientEngagement {
 }
 
 export function TrainerAnalyticsDashboard() {
+  const { t } = useTranslation('trainerDashboard');
   const { user } = useAuth();
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [engagement, setEngagement] = useState<ClientEngagement[]>([]);
@@ -135,7 +137,7 @@ export function TrainerAnalyticsDashboard() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Загрузка аналитики...</CardTitle>
+          <CardTitle>{t('analytics.loading')}</CardTitle>
         </CardHeader>
       </Card>
     );
@@ -145,8 +147,8 @@ export function TrainerAnalyticsDashboard() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Нет данных</CardTitle>
-          <CardDescription>Добавьте клиентов для просмотра аналитики</CardDescription>
+          <CardTitle>{t('analytics.noData')}</CardTitle>
+          <CardDescription>{t('analytics.addClientsHint')}</CardDescription>
         </CardHeader>
       </Card>
     );
@@ -162,10 +164,10 @@ export function TrainerAnalyticsDashboard() {
   };
 
   const healthDistribution = [
-    { name: 'Отлично (80+)', value: categories.topPerformers, color: COLORS[0] },
-    { name: 'Хорошо (60-79)', value: categories.goodPerformers, color: COLORS[1] },
-    { name: 'Требует внимания (40-59)', value: categories.needsAttention, color: COLORS[2] },
-    { name: 'В зоне риска (<40)', value: categories.atRisk, color: COLORS[3] },
+    { name: t('analytics.excellent80'), value: categories.topPerformers, color: COLORS[0] },
+    { name: t('analytics.good60'), value: categories.goodPerformers, color: COLORS[1] },
+    { name: t('analytics.needsAttention'), value: categories.needsAttention, color: COLORS[2] },
+    { name: t('analytics.atRisk'), value: categories.atRisk, color: COLORS[3] },
   ].filter(item => item.value > 0);
 
   return (
@@ -173,8 +175,8 @@ export function TrainerAnalyticsDashboard() {
       {/* Quick Actions Panel */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Аналитика тренера</h1>
-          <p className="text-muted-foreground">Общая статистика и активность клиентов</p>
+          <h1 className="text-3xl font-bold">{t('analytics.title')}</h1>
+          <p className="text-muted-foreground">{t('analytics.subtitle')}</p>
         </div>
         <ExportAllClients />
       </div>
@@ -185,40 +187,40 @@ export function TrainerAnalyticsDashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <TremorCard className="glass-medium border-white/10" decoration="top" decorationColor="cyan">
           <div className="flex items-center justify-between">
-            <Text>Всего клиентов</Text>
+            <Text>{t('analytics.totalClients')}</Text>
             <Users className="h-4 w-4 text-muted-foreground" />
           </div>
           <Metric className="mt-2">{summary.totalClients}</Metric>
           <Text className="text-muted-foreground">
-            {summary.activeClients} с данными за 7 дней
+            {summary.activeClients} {t('analytics.withDataLast7')}
           </Text>
         </TremorCard>
 
         <TremorCard className="glass-medium border-white/10" decoration="top" decorationColor="blue">
           <div className="flex items-center justify-between">
-            <Text>Средний Health Score</Text>
+            <Text>{t('analytics.avgHealthScore')}</Text>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </div>
           <Metric className="mt-2">{summary.avgHealthScore}</Metric>
           <Text className="text-muted-foreground">
-            Из 100 возможных
+            {t('analytics.outOf100')}
           </Text>
         </TremorCard>
 
         <TremorCard className="glass-medium border-white/10" decoration="top" decorationColor="amber">
           <div className="flex items-center justify-between">
-            <Text>Клиенты с алертами</Text>
+            <Text>{t('analytics.clientsWithAlerts')}</Text>
             <AlertCircle className="h-4 w-4 text-amber-500" />
           </div>
           <Metric className="mt-2 text-amber-500">{summary.clientsAtRisk}</Metric>
           <Text className="text-muted-foreground">
-            Низкое восстановление или просроченные задачи
+            {t('analytics.lowRecoveryOrOverdue')}
           </Text>
         </TremorCard>
 
         <TremorCard className="glass-medium border-white/10" decoration="top" decorationColor="emerald">
           <div className="flex items-center justify-between">
-            <Text>Топ-исполнители</Text>
+            <Text>{t('analytics.topPerformers')}</Text>
             <Award className="h-4 w-4 text-emerald-500" />
           </div>
           <Metric className="mt-2 text-emerald-500">{summary.topPerformers}</Metric>
@@ -230,15 +232,15 @@ export function TrainerAnalyticsDashboard() {
 
       <Tabs defaultValue="engagement" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="engagement">Вовлеченность</TabsTrigger>
-          <TabsTrigger value="distribution">Распределение</TabsTrigger>
-          <TabsTrigger value="timeline">Активность</TabsTrigger>
+          <TabsTrigger value="engagement">{t('analytics.engagement')}</TabsTrigger>
+          <TabsTrigger value="distribution">{t('analytics.distribution')}</TabsTrigger>
+          <TabsTrigger value="timeline">{t('analytics.activity')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="engagement" className="space-y-4">
           <TremorCard className="glass-medium border-white/10">
-            <Text className="text-lg font-semibold mb-1">Активность клиентов (последние 7 дней)</Text>
-            <Text className="text-muted-foreground mb-4">Количество синхронизированных метрик</Text>
+            <Text className="text-lg font-semibold mb-1">{t('analytics.clientActivity7d')}</Text>
+            <Text className="text-muted-foreground mb-4">{t('analytics.syncedMetricsCount')}</Text>
             <BarChart
               className="h-80"
               data={engagement}
@@ -255,7 +257,7 @@ export function TrainerAnalyticsDashboard() {
 
         <TabsContent value="distribution" className="space-y-4">
           <TremorCard className="glass-medium border-white/10">
-            <Text className="text-lg font-semibold mb-4">Распределение клиентов по Health Score</Text>
+            <Text className="text-lg font-semibold mb-4">{t('analytics.healthDistribution')}</Text>
             <DonutChart
               className="h-80"
               data={healthDistribution}
