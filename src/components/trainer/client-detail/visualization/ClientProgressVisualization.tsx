@@ -8,6 +8,7 @@ import { MultiMetricChart } from './MultiMetricChart';
 import { SourceComparisonTable } from './SourceComparisonTable';
 import { MetricHeatmap } from './MetricHeatmap';
 import { Activity, Moon, Zap, Heart, Weight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface ClientProgressVisualizationProps {
   clientId: string;
@@ -44,6 +45,7 @@ export function ClientProgressVisualization({
   clientId, 
   unifiedMetrics 
 }: ClientProgressVisualizationProps) {
+  const { t } = useTranslation('trainerDashboard');
   const [timeRange, setTimeRange] = useState({
     start: subDays(new Date(), 30),
     end: new Date(),
@@ -85,7 +87,7 @@ export function ClientProgressVisualization({
     <div className="space-y-6">
       {/* Time Range Selector */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Визуализация прогресса</h2>
+        <h2 className="text-2xl font-bold">{t('visualization.title')}</h2>
         <TimeRangeSelector
           timeRange={timeRange}
           onTimeRangeChange={setTimeRange}

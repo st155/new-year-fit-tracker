@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { TrendingUp, TrendingDown, Minus, LucideIcon } from 'lucide-react';
 import { Line, LineChart, ResponsiveContainer } from 'recharts';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 interface MetricStatsCardProps {
   title: string;
@@ -31,6 +32,8 @@ export function MetricStatsCard({
   sparklineData,
   color = 'hsl(var(--primary))',
 }: MetricStatsCardProps) {
+  const { t } = useTranslation('trainerDashboard');
+
   const getTrendIcon = () => {
     switch (trend) {
       case 'up':
@@ -77,7 +80,7 @@ export function MetricStatsCard({
               {current.toFixed(1)}
               <span className="text-sm font-normal text-muted-foreground ml-1">{unit}</span>
             </div>
-            <p className="text-xs text-muted-foreground">Текущее значение</p>
+            <p className="text-xs text-muted-foreground">{t('visualization.currentValue')}</p>
           </div>
 
           {/* Sparkline */}
@@ -100,15 +103,15 @@ export function MetricStatsCard({
           {/* Stats Row */}
           <div className="grid grid-cols-3 gap-2 pt-2 border-t">
             <div>
-              <p className="text-xs text-muted-foreground">Среднее</p>
+              <p className="text-xs text-muted-foreground">{t('visualization.average')}</p>
               <p className="font-medium text-sm">{average.toFixed(1)}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Мин</p>
+              <p className="text-xs text-muted-foreground">{t('visualization.min')}</p>
               <p className="font-medium text-sm">{min.toFixed(1)}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Макс</p>
+              <p className="text-xs text-muted-foreground">{t('visualization.max')}</p>
               <p className="font-medium text-sm">{max.toFixed(1)}</p>
             </div>
           </div>

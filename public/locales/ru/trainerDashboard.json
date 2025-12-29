@@ -272,5 +272,30 @@
   "notifications": {
     "allMarkedRead": "Все уведомления отмечены как прочитанные",
     "updateError": "Ошибка обновления уведомлений"
+  },
+  "visualization": {
+    "title": "Визуализация прогресса",
+    "currentValue": "Текущее значение",
+    "average": "Среднее",
+    "min": "Мин",
+    "max": "Макс",
+    "selectMetrics": "Выберите метрики для отображения",
+    "useSelector": "Используйте селектор метрик слева",
+    "chartTitle": "Графики метрик",
+    "days7": "7 дней",
+    "days30": "30 дней",
+    "days90": "90 дней",
+    "months6": "6 месяцев",
+    "year1": "1 год",
+    "sourceComparison": "Сравнение источников данных",
+    "confidenceHigh": "Высокая",
+    "confidenceMedium": "Средняя",
+    "confidenceLow": "Низкая",
+    "discrepancy": "Расхождение",
+    "source": "Источник",
+    "value": "Значение",
+    "date": "Дата",
+    "reliability": "Надежность",
+    "deviation": "Отклонение"
   }
 }

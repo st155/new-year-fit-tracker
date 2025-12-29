@@ -272,5 +272,30 @@
   "notifications": {
     "allMarkedRead": "All notifications marked as read",
     "updateError": "Error updating notifications"
+  },
+  "visualization": {
+    "title": "Progress Visualization",
+    "currentValue": "Current value",
+    "average": "Average",
+    "min": "Min",
+    "max": "Max",
+    "selectMetrics": "Select metrics to display",
+    "useSelector": "Use the metric selector on the left",
+    "chartTitle": "Metric Charts",
+    "days7": "7 days",
+    "days30": "30 days",
+    "days90": "90 days",
+    "months6": "6 months",
+    "year1": "1 year",
+    "sourceComparison": "Source Comparison",
+    "confidenceHigh": "High",
+    "confidenceMedium": "Medium",
+    "confidenceLow": "Low",
+    "discrepancy": "Discrepancy",
+    "source": "Source",
+    "value": "Value",
+    "date": "Date",
+    "reliability": "Reliability",
+    "deviation": "Deviation"
   }
 }
