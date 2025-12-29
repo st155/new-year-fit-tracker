@@ -856,5 +856,14 @@
     "error": "Ошибка",
     "enterValidValue": "Введите корректное значение",
     "addFailed": "Не удалось добавить измерение"
+  },
+  "recognizedClient": {
+    "alias": "Псевдоним",
+    "fullName": "Полное имя",
+    "username": "Username",
+    "namePart": "Часть имени",
+    "nameStem": "Склонение",
+    "context": "Из контекста",
+    "recognized": "Распознан"
   }
 }
