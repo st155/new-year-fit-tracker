@@ -1,10 +1,11 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, TrendingDown, Target, Calendar } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 
 interface Goal {
   id: string;
@@ -32,6 +33,9 @@ interface GoalsProgressOverviewProps {
 }
 
 export function GoalsProgressOverview({ goals, measurements }: GoalsProgressOverviewProps) {
+  const { t, i18n } = useTranslation('trainerDashboard');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
+
   const getTrend = (goal: Goal) => {
     const goalMeasurements = measurements
       .filter(m => m.goal_id === goal.id)
@@ -51,18 +55,18 @@ export function GoalsProgressOverview({ goals, measurements }: GoalsProgressOver
     return measurements
       .filter(m => m.goal_id === goalId)
       .sort((a, b) => new Date(a.measurement_date).getTime() - new Date(b.measurement_date).getTime())
-      .slice(-10) // Last 10 measurements
+      .slice(-10)
       .map(m => ({
-        date: format(new Date(m.measurement_date), 'dd MMM', { locale: ru }),
+        date: format(new Date(m.measurement_date), 'dd MMM', { locale: dateLocale }),
         value: m.value
       }));
   };
 
   const getProgressEmoji = (percentage: number) => {
-    if (percentage >= 100) return '🎉 Цель достигнута!';
-    if (percentage >= 80) return '💪 Почти готово!';
-    if (percentage >= 50) return '⚡ На полпути';
-    return '🚀 Продолжаем';
+    if (percentage >= 100) return t('goalsOverview.progress.achieved');
+    if (percentage >= 80) return t('goalsOverview.progress.almostDone');
+    if (percentage >= 50) return t('goalsOverview.progress.halfway');
+    return t('goalsOverview.progress.keepGoing');
   };
 
   if (goals.length === 0) {
@@ -70,8 +74,8 @@ export function GoalsProgressOverview({ goals, measurements }: GoalsProgressOver
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground">
           <Target className="h-16 w-16 mb-4 opacity-50" />
-          <p className="text-lg font-medium">Нет активных целей</p>
-          <p className="text-sm">Создайте цели для отслеживания прогресса клиента</p>
+          <p className="text-lg font-medium">{t('goalsOverview.noGoals')}</p>
+          <p className="text-sm">{t('goalsOverview.noGoalsDesc')}</p>
         </CardContent>
       </Card>
     );
@@ -99,7 +103,7 @@ export function GoalsProgressOverview({ goals, measurements }: GoalsProgressOver
                       {goal.goal_type}
                     </Badge>
                     <span className="text-sm text-muted-foreground">
-                      {goal.measurements_count} измерений
+                      {goal.measurements_count} {t('goalsOverview.measurements')}
                     </span>
                   </div>
                 </div>
@@ -123,11 +127,11 @@ export function GoalsProgressOverview({ goals, measurements }: GoalsProgressOver
                   autoColor
                 />
                 <div className="flex justify-between items-center text-xs text-muted-foreground">
-                  <span>Начало</span>
+                  <span>{t('goalsOverview.start')}</span>
                   <span className="font-medium">
                     {getProgressEmoji(goal.progress_percentage)}
                   </span>
-                  <span>Цель</span>
+                  <span>{t('goalsOverview.target')}</span>
                 </div>
               </div>
 
@@ -136,7 +140,7 @@ export function GoalsProgressOverview({ goals, measurements }: GoalsProgressOver
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="h-4 w-4" />
-                    <span>История изменений (последние 10 записей)</span>
+                    <span>{t('goalsOverview.history')}</span>
                   </div>
                   <ResponsiveContainer width="100%" height={150}>
                     <AreaChart data={chartData}>
@@ -163,7 +167,7 @@ export function GoalsProgressOverview({ goals, measurements }: GoalsProgressOver
                           border: '1px solid hsl(var(--border))',
                           borderRadius: '8px'
                         }}
-                        formatter={(value: number) => [`${value.toFixed(1)} ${goal.target_unit}`, 'Значение']}
+                        formatter={(value: number) => [`${value.toFixed(1)} ${goal.target_unit}`, t('goalsOverview.value')]}
                       />
                       <Area
                         type="monotone"
@@ -182,7 +186,7 @@ export function GoalsProgressOverview({ goals, measurements }: GoalsProgressOver
                 <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2 border-t">
                   <Calendar className="h-4 w-4" />
                   <span>
-                    Последнее измерение: {format(new Date(goal.last_measurement_date), 'dd MMMM yyyy', { locale: ru })}
+                    {t('goalsOverview.lastMeasurement')}: {format(new Date(goal.last_measurement_date), 'dd MMMM yyyy', { locale: dateLocale })}
                   </span>
                 </div>
               )}

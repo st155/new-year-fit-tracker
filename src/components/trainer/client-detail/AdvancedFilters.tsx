@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -9,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Card, CardContent } from '@/components/ui/card';
 import { CalendarIcon, Filter, X } from 'lucide-react';
 import { format } from 'date-fns';
+import { ru, enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
 export interface FilterState {
@@ -26,23 +28,25 @@ interface AdvancedFiltersProps {
   onReset: () => void;
 }
 
-const SOURCE_OPTIONS = [
-  { value: 'whoop', label: 'Whoop' },
-  { value: 'oura', label: 'Oura' },
-  { value: 'manual', label: 'Manual' },
-  { value: 'inbody', label: 'InBody' },
-  { value: 'apple_health', label: 'Apple Health' },
-];
-
-const METRIC_TYPE_OPTIONS = [
-  { value: 'recovery', label: 'Recovery' },
-  { value: 'sleep', label: 'Sleep' },
-  { value: 'activity', label: 'Activity' },
-  { value: 'body', label: 'Body Composition' },
-];
-
 export function AdvancedFilters({ filters, onFiltersChange, onReset }: AdvancedFiltersProps) {
+  const { t, i18n } = useTranslation('trainerDashboard');
   const [isOpen, setIsOpen] = useState(false);
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
+
+  const SOURCE_OPTIONS = [
+    { value: 'whoop', label: t('filters.sources.whoop') },
+    { value: 'oura', label: t('filters.sources.oura') },
+    { value: 'manual', label: t('filters.sources.manual') },
+    { value: 'inbody', label: t('filters.sources.inbody') },
+    { value: 'apple_health', label: t('filters.sources.appleHealth') },
+  ];
+
+  const METRIC_TYPE_OPTIONS = [
+    { value: 'recovery', label: t('filters.metricTypes.recovery') },
+    { value: 'sleep', label: t('filters.metricTypes.sleep') },
+    { value: 'activity', label: t('filters.metricTypes.activity') },
+    { value: 'body', label: t('filters.metricTypes.bodyComposition') },
+  ];
 
   const handleSourceToggle = (source: string) => {
     const newSources = filters.sources.includes(source)
@@ -73,7 +77,7 @@ export function AdvancedFilters({ filters, onFiltersChange, onReset }: AdvancedF
         className="gap-2"
       >
         <Filter className="h-4 w-4" />
-        Filters
+        {t('filters.title')}
         {activeFilterCount > 0 && (
           <span className="ml-1 rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">
             {activeFilterCount}
@@ -86,7 +90,7 @@ export function AdvancedFilters({ filters, onFiltersChange, onReset }: AdvancedF
           <CardContent className="p-4 space-y-4">
             {/* Period Selection */}
             <div className="space-y-2">
-              <Label>Period</Label>
+              <Label>{t('filters.period')}</Label>
               <Select
                 value={filters.period}
                 onValueChange={(value: any) => 
@@ -97,10 +101,10 @@ export function AdvancedFilters({ filters, onFiltersChange, onReset }: AdvancedF
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="7d">Last 7 days</SelectItem>
-                  <SelectItem value="30d">Last 30 days</SelectItem>
-                  <SelectItem value="90d">Last 90 days</SelectItem>
-                  <SelectItem value="custom">Custom range</SelectItem>
+                  <SelectItem value="7d">{t('filters.last7days')}</SelectItem>
+                  <SelectItem value="30d">{t('filters.last30days')}</SelectItem>
+                  <SelectItem value="90d">{t('filters.last90days')}</SelectItem>
+                  <SelectItem value="custom">{t('filters.customRange')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -109,7 +113,7 @@ export function AdvancedFilters({ filters, onFiltersChange, onReset }: AdvancedF
             {filters.period === 'custom' && (
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-2">
-                  <Label>Start Date</Label>
+                  <Label>{t('filters.startDate')}</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -120,7 +124,7 @@ export function AdvancedFilters({ filters, onFiltersChange, onReset }: AdvancedF
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {filters.customStart ? format(filters.customStart, "PPP") : "Pick a date"}
+                        {filters.customStart ? format(filters.customStart, "PPP", { locale: dateLocale }) : t('filters.pickDate')}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -130,13 +134,14 @@ export function AdvancedFilters({ filters, onFiltersChange, onReset }: AdvancedF
                         onSelect={(date) => 
                           onFiltersChange({ ...filters, customStart: date })
                         }
+                        locale={dateLocale}
                       />
                     </PopoverContent>
                   </Popover>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>End Date</Label>
+                  <Label>{t('filters.endDate')}</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -147,7 +152,7 @@ export function AdvancedFilters({ filters, onFiltersChange, onReset }: AdvancedF
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {filters.customEnd ? format(filters.customEnd, "PPP") : "Pick a date"}
+                        {filters.customEnd ? format(filters.customEnd, "PPP", { locale: dateLocale }) : t('filters.pickDate')}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -157,6 +162,7 @@ export function AdvancedFilters({ filters, onFiltersChange, onReset }: AdvancedF
                         onSelect={(date) => 
                           onFiltersChange({ ...filters, customEnd: date })
                         }
+                        locale={dateLocale}
                       />
                     </PopoverContent>
                   </Popover>
@@ -166,7 +172,7 @@ export function AdvancedFilters({ filters, onFiltersChange, onReset }: AdvancedF
 
             {/* Data Sources */}
             <div className="space-y-2">
-              <Label>Data Sources</Label>
+              <Label>{t('filters.dataSources')}</Label>
               <div className="grid grid-cols-2 gap-2">
                 {SOURCE_OPTIONS.map(option => (
                   <div key={option.value} className="flex items-center space-x-2">
@@ -188,7 +194,7 @@ export function AdvancedFilters({ filters, onFiltersChange, onReset }: AdvancedF
 
             {/* Metric Types */}
             <div className="space-y-2">
-              <Label>Metric Types</Label>
+              <Label>{t('filters.metricTypesLabel')}</Label>
               <div className="grid grid-cols-2 gap-2">
                 {METRIC_TYPE_OPTIONS.map(option => (
                   <div key={option.value} className="flex items-center space-x-2">
@@ -211,7 +217,7 @@ export function AdvancedFilters({ filters, onFiltersChange, onReset }: AdvancedF
             {/* Confidence Threshold */}
             <div className="space-y-2">
               <div className="flex justify-between">
-                <Label>Min Confidence Score</Label>
+                <Label>{t('filters.minConfidence')}</Label>
                 <span className="text-sm text-muted-foreground">{filters.minConfidence}%</span>
               </div>
               <Slider
@@ -234,14 +240,14 @@ export function AdvancedFilters({ filters, onFiltersChange, onReset }: AdvancedF
                 className="flex-1 gap-2"
               >
                 <X className="h-4 w-4" />
-                Reset Filters
+                {t('filters.reset')}
               </Button>
               <Button
                 size="sm"
                 onClick={() => setIsOpen(false)}
                 className="flex-1"
               >
-                Apply
+                {t('filters.apply')}
               </Button>
             </div>
           </CardContent>

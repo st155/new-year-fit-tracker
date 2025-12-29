@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Progress } from '@/components/ui/progress';
@@ -20,40 +21,42 @@ interface ClientHealthScoreProps {
   className?: string;
 }
 
-function getScoreColor(score: number): { color: string; label: string; gradient: string } {
-  if (score >= 80) {
-    return { 
-      color: 'hsl(var(--success))', 
-      label: 'Excellent',
-      gradient: 'from-green-500/20 to-green-600/10'
-    };
-  } else if (score >= 60) {
-    return { 
-      color: 'hsl(var(--primary))', 
-      label: 'Good',
-      gradient: 'from-blue-500/20 to-blue-600/10'
-    };
-  } else if (score >= 40) {
-    return { 
-      color: 'hsl(var(--warning))', 
-      label: 'Fair',
-      gradient: 'from-yellow-500/20 to-yellow-600/10'
-    };
-  } else {
-    return { 
-      color: 'hsl(var(--destructive))', 
-      label: 'Poor',
-      gradient: 'from-red-500/20 to-red-600/10'
-    };
-  }
-}
-
 export function ClientHealthScore({ 
   totalScore, 
   breakdown, 
   lastUpdated,
   className 
 }: ClientHealthScoreProps) {
+  const { t } = useTranslation('trainerDashboard');
+
+  const getScoreColor = (score: number): { color: string; label: string; gradient: string } => {
+    if (score >= 80) {
+      return { 
+        color: 'hsl(var(--success))', 
+        label: t('healthScore.levels.excellent'),
+        gradient: 'from-green-500/20 to-green-600/10'
+      };
+    } else if (score >= 60) {
+      return { 
+        color: 'hsl(var(--primary))', 
+        label: t('healthScore.levels.good'),
+        gradient: 'from-blue-500/20 to-blue-600/10'
+      };
+    } else if (score >= 40) {
+      return { 
+        color: 'hsl(var(--warning))', 
+        label: t('healthScore.levels.fair'),
+        gradient: 'from-yellow-500/20 to-yellow-600/10'
+      };
+    } else {
+      return { 
+        color: 'hsl(var(--destructive))', 
+        label: t('healthScore.levels.poor'),
+        gradient: 'from-red-500/20 to-red-600/10'
+      };
+    }
+  };
+
   const { color, label, gradient } = getScoreColor(totalScore);
 
   return (
@@ -95,7 +98,7 @@ export function ClientHealthScore({
 
               {/* Info */}
               <div className="flex-1">
-                <h3 className="text-lg font-semibold mb-1">Health Score</h3>
+                <h3 className="text-lg font-semibold mb-1">{t('healthScore.title')}</h3>
                 <Badge 
                   variant={totalScore >= 80 ? 'default' : 'secondary'}
                   className="mb-2"
@@ -103,7 +106,7 @@ export function ClientHealthScore({
                   {label}
                 </Badge>
                 <p className="text-sm text-muted-foreground">
-                  Click for detailed breakdown
+                  {t('healthScore.clickForDetails')}
                 </p>
               </div>
             </div>
@@ -114,9 +117,9 @@ export function ClientHealthScore({
       <PopoverContent className="w-80" align="start">
         <div className="space-y-4">
           <div>
-            <h4 className="font-semibold mb-2">Health Score Breakdown</h4>
+            <h4 className="font-semibold mb-2">{t('healthScore.breakdown')}</h4>
             <p className="text-sm text-foreground/70 mb-4">
-              Comprehensive health assessment based on multiple factors
+              {t('healthScore.breakdownDesc')}
             </p>
           </div>
 
@@ -125,7 +128,7 @@ export function ClientHealthScore({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Heart className="h-4 w-4 text-red-500" />
-                <span className="text-sm font-medium">Recovery</span>
+                <span className="text-sm font-medium">{t('healthScore.components.recovery')}</span>
               </div>
                   <span className="text-sm font-medium text-foreground/90">
                     {breakdown.recovery.toFixed(0)}/25
@@ -139,7 +142,7 @@ export function ClientHealthScore({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Moon className="h-4 w-4 text-blue-500" />
-                <span className="text-sm font-medium">Sleep Quality</span>
+                <span className="text-sm font-medium">{t('healthScore.components.sleep')}</span>
               </div>
               <span className="text-sm font-medium text-foreground/90">
                 {breakdown.sleep.toFixed(0)}/25
@@ -153,7 +156,7 @@ export function ClientHealthScore({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Activity className="h-4 w-4 text-green-500" />
-                <span className="text-sm font-medium">Activity Level</span>
+                <span className="text-sm font-medium">{t('healthScore.components.activity')}</span>
               </div>
                   <span className="text-sm font-medium text-foreground/90">
                     {breakdown.activity.toFixed(0)}/20
@@ -167,7 +170,7 @@ export function ClientHealthScore({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-purple-500" />
-                <span className="text-sm font-medium">Consistency</span>
+                <span className="text-sm font-medium">{t('healthScore.components.consistency')}</span>
               </div>
               <span className="text-sm font-medium text-foreground/90">
                 {breakdown.consistency.toFixed(0)}/15
@@ -181,7 +184,7 @@ export function ClientHealthScore({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-orange-500" />
-                <span className="text-sm font-medium">Progress Trend</span>
+                <span className="text-sm font-medium">{t('healthScore.components.trend')}</span>
               </div>
                   <span className="text-sm font-medium text-foreground/90">
                     {breakdown.trend.toFixed(0)}/15
@@ -192,7 +195,7 @@ export function ClientHealthScore({
 
           {lastUpdated && (
             <div className="pt-2 border-t text-xs text-foreground/60">
-              Last updated: {lastUpdated.toLocaleDateString()}
+              {t('healthScore.lastUpdated')}: {lastUpdated.toLocaleDateString()}
             </div>
           )}
         </div>

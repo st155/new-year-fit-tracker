@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from 'react-i18next';
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
-import { ru } from "date-fns/locale";
+import { ru, enUS } from "date-fns/locale";
 import { Dumbbell, Calendar, ChevronDown, ChevronUp, Weight, Repeat } from "lucide-react";
 import { useState } from "react";
 import {
@@ -52,16 +53,19 @@ interface GroupedWorkout {
   totalVolume: number;
 }
 
-const PERIOD_OPTIONS = [
-  { value: '7', label: 'Неделя' },
-  { value: '30', label: 'Месяц' },
-  { value: '90', label: '3 месяца' },
-  { value: 'all', label: 'Всё время' },
-];
-
 export function ClientStrengthWorkouts({ clientId }: ClientStrengthWorkoutsProps) {
+  const { t, i18n } = useTranslation('trainerDashboard');
   const [period, setPeriod] = useState('30');
   const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
+
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
+
+  const PERIOD_OPTIONS = [
+    { value: '7', label: t('strengthWorkouts.periods.week') },
+    { value: '30', label: t('strengthWorkouts.periods.month') },
+    { value: '90', label: t('strengthWorkouts.periods.quarter') },
+    { value: 'all', label: t('strengthWorkouts.periods.all') },
+  ];
 
   const { data: workouts, isLoading } = useQuery({
     queryKey: ['client-strength-workouts', clientId, period],
@@ -167,7 +171,7 @@ export function ClientStrengthWorkouts({ clientId }: ClientStrengthWorkoutsProps
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Dumbbell className="h-5 w-5" />
-            Силовые тренировки
+            {t('strengthWorkouts.title')}
           </CardTitle>
           <Select value={period} onValueChange={setPeriod}>
             <SelectTrigger className="w-[140px]">
@@ -187,13 +191,13 @@ export function ClientStrengthWorkouts({ clientId }: ClientStrengthWorkoutsProps
         {!workouts || workouts.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <Dumbbell className="h-12 w-12 mx-auto mb-3 opacity-50" />
-            <p>Нет силовых тренировок за выбранный период</p>
+            <p>{t('strengthWorkouts.noWorkouts')}</p>
           </div>
         ) : (
           <div className="space-y-3">
             {workouts.map(workout => {
               const isExpanded = expandedDates.has(workout.date);
-              const formattedDate = format(new Date(workout.date), 'd MMMM yyyy', { locale: ru });
+              const formattedDate = format(new Date(workout.date), 'd MMMM yyyy', { locale: dateLocale });
               
               return (
                 <Collapsible key={workout.date} open={isExpanded}>
@@ -206,14 +210,14 @@ export function ClientStrengthWorkouts({ clientId }: ClientStrengthWorkoutsProps
                         <Calendar className="h-4 w-4 text-muted-foreground" />
                         <span className="font-medium">{formattedDate}</span>
                         <Badge variant="secondary">
-                          {workout.exercises.length} упр.
+                          {workout.exercises.length} {t('strengthWorkouts.exercises')}
                         </Badge>
                         <Badge variant="outline">
-                          {workout.totalSets} сетов
+                          {workout.totalSets} {t('strengthWorkouts.sets')}
                         </Badge>
                         {workout.totalVolume > 0 && (
                           <Badge variant="outline" className="hidden sm:inline-flex">
-                            {(workout.totalVolume / 1000).toFixed(1)}т объём
+                            {(workout.totalVolume / 1000).toFixed(1)}{t('strengthWorkouts.volume')}
                           </Badge>
                         )}
                       </div>
@@ -236,7 +240,7 @@ export function ClientStrengthWorkouts({ clientId }: ClientStrengthWorkoutsProps
                             <span className="font-medium">{exercise.name}</span>
                             {exercise.supersetGroup && (
                               <Badge variant="secondary" className="text-xs">
-                                Суперсет {exercise.supersetGroup}
+                                {t('strengthWorkouts.superset')} {exercise.supersetGroup}
                               </Badge>
                             )}
                           </div>
@@ -249,7 +253,7 @@ export function ClientStrengthWorkouts({ clientId }: ClientStrengthWorkoutsProps
                                 {set.weight > 0 ? (
                                   <>
                                     <Weight className="h-3 w-3 text-muted-foreground" />
-                                    <span>{set.weight}кг</span>
+                                    <span>{set.weight}{t('strengthWorkouts.kg')}</span>
                                     <span className="text-muted-foreground">×</span>
                                     <Repeat className="h-3 w-3 text-muted-foreground" />
                                     <span>{set.reps}</span>
@@ -257,7 +261,7 @@ export function ClientStrengthWorkouts({ clientId }: ClientStrengthWorkoutsProps
                                 ) : (
                                   <>
                                     <Repeat className="h-3 w-3 text-muted-foreground" />
-                                    <span>{set.reps} повт.</span>
+                                    <span>{set.reps} {t('strengthWorkouts.reps')}</span>
                                   </>
                                 )}
                               </div>

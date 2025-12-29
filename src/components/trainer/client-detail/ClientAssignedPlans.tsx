@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -35,7 +36,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { format, differenceInWeeks, differenceInDays } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 
 interface AssignedPlan {
@@ -58,6 +59,7 @@ interface ClientAssignedPlansProps {
 }
 
 export function ClientAssignedPlans({ clientId, onAssignPlan }: ClientAssignedPlansProps) {
+  const { t, i18n } = useTranslation('trainerDashboard');
   const { user } = useAuth();
   const navigate = useNavigate();
   const [plans, setPlans] = useState<AssignedPlan[]>([]);
@@ -69,6 +71,8 @@ export function ClientAssignedPlans({ clientId, onAssignPlan }: ClientAssignedPl
     planId: string;
     planName: string;
   } | null>(null);
+
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
 
   useEffect(() => {
     if (clientId) {
@@ -102,7 +106,7 @@ export function ClientAssignedPlans({ clientId, onAssignPlan }: ClientAssignedPl
       setPlans(data || []);
     } catch (error) {
       console.error('Error loading assigned plans:', error);
-      toast.error('Не удалось загрузить назначенные планы');
+      toast.error(t('assignedPlans.loadError'));
     } finally {
       setLoading(false);
     }
@@ -121,10 +125,10 @@ export function ClientAssignedPlans({ clientId, onAssignPlan }: ClientAssignedPl
       setPlans((prev) =>
         prev.map((p) => (p.id === planId ? { ...p, status: newStatus } : p))
       );
-      toast.success('Статус плана обновлён');
+      toast.success(t('assignedPlans.statusUpdated'));
     } catch (error) {
       console.error('Error updating plan status:', error);
-      toast.error('Не удалось обновить статус');
+      toast.error(t('assignedPlans.statusError'));
     } finally {
       setActionLoading(null);
       setConfirmDialog(null);
@@ -136,7 +140,7 @@ export function ClientAssignedPlans({ clientId, onAssignPlan }: ClientAssignedPl
       open: true,
       action,
       planId: plan.id,
-      planName: plan.training_plans?.name || 'План',
+      planName: plan.training_plans?.name || t('assignedPlans.unknownPlan'),
     });
   };
 
@@ -158,24 +162,24 @@ export function ClientAssignedPlans({ clientId, onAssignPlan }: ClientAssignedPl
 
     const texts = {
       pause: {
-        title: 'Приостановить план?',
-        description: `План \\"${confirmDialog.planName}\\" будет приостановлен. Вы сможете возобновить его позже.`,
-        button: 'Приостановить',
+        title: t('assignedPlans.dialog.pauseTitle'),
+        description: t('assignedPlans.dialog.pauseDesc', { name: confirmDialog.planName }),
+        button: t('assignedPlans.actions.pause'),
       },
       resume: {
-        title: 'Возобновить план?',
-        description: `План \\"${confirmDialog.planName}\\" будет возобновлён.`,
-        button: 'Возобновить',
+        title: t('assignedPlans.dialog.resumeTitle'),
+        description: t('assignedPlans.dialog.resumeDesc', { name: confirmDialog.planName }),
+        button: t('assignedPlans.actions.resume'),
       },
       complete: {
-        title: 'Завершить план?',
-        description: `План \\"${confirmDialog.planName}\\" будет отмечен как завершённый.`,
-        button: 'Завершить',
+        title: t('assignedPlans.dialog.completeTitle'),
+        description: t('assignedPlans.dialog.completeDesc', { name: confirmDialog.planName }),
+        button: t('assignedPlans.actions.complete'),
       },
       cancel: {
-        title: 'Отменить план?',
-        description: `План \\"${confirmDialog.planName}\\" будет отменён. Это действие нельзя отменить.`,
-        button: 'Отменить план',
+        title: t('assignedPlans.dialog.cancelTitle'),
+        description: t('assignedPlans.dialog.cancelDesc', { name: confirmDialog.planName }),
+        button: t('assignedPlans.actions.cancelPlan'),
       },
     };
 
@@ -202,10 +206,10 @@ export function ClientAssignedPlans({ clientId, onAssignPlan }: ClientAssignedPl
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { variant: 'default' | 'secondary' | 'outline' | 'destructive'; label: string }> = {
-      active: { variant: 'default', label: 'Активен' },
-      paused: { variant: 'secondary', label: 'На паузе' },
-      completed: { variant: 'outline', label: 'Завершён' },
-      cancelled: { variant: 'destructive', label: 'Отменён' },
+      active: { variant: 'default', label: t('assignedPlans.status.active') },
+      paused: { variant: 'secondary', label: t('assignedPlans.status.paused') },
+      completed: { variant: 'outline', label: t('assignedPlans.status.completed') },
+      cancelled: { variant: 'destructive', label: t('assignedPlans.status.cancelled') },
     };
     return variants[status] || { variant: 'outline' as const, label: status };
   };
@@ -231,24 +235,24 @@ export function ClientAssignedPlans({ clientId, onAssignPlan }: ClientAssignedPl
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <CardTitle className="flex items-center gap-2">
             <Dumbbell className="h-5 w-5" />
-            Тренировочные планы
+            {t('assignedPlans.title')}
           </CardTitle>
           <Button onClick={onAssignPlan} size="sm">
             <Plus className="h-4 w-4 mr-2" />
-            Назначить план
+            {t('assignedPlans.assignPlan')}
           </Button>
         </CardHeader>
         <CardContent>
           {plans.length === 0 ? (
             <div className="text-center py-8">
               <Dumbbell className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
-              <h3 className="text-lg font-medium mb-2">Нет назначенных планов</h3>
+              <h3 className="text-lg font-medium mb-2">{t('assignedPlans.noPlans')}</h3>
               <p className="text-muted-foreground mb-4">
-                Назначьте клиенту тренировочный план для отслеживания прогресса
+                {t('assignedPlans.noPlansDesc')}
               </p>
               <Button onClick={onAssignPlan}>
                 <Plus className="h-4 w-4 mr-2" />
-                Назначить первый план
+                {t('assignedPlans.assignFirst')}
               </Button>
             </div>
           ) : (
@@ -270,7 +274,7 @@ export function ClientAssignedPlans({ clientId, onAssignPlan }: ClientAssignedPl
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
                               <h4 className="font-medium truncate">
-                                {plan.training_plans?.name || 'Неизвестный план'}
+                                {plan.training_plans?.name || t('assignedPlans.unknownPlan')}
                               </h4>
                               <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
                             </div>
@@ -284,16 +288,16 @@ export function ClientAssignedPlans({ clientId, onAssignPlan }: ClientAssignedPl
                             <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
                               <span className="flex items-center gap-1">
                                 <Calendar className="h-3.5 w-3.5" />
-                                Начат {format(new Date(plan.start_date), 'd MMM yyyy', { locale: ru })}
+                                {t('assignedPlans.started')} {format(new Date(plan.start_date), 'd MMM yyyy', { locale: dateLocale })}
                               </span>
                               <span>
-                                Неделя {currentWeek} из {plan.training_plans?.duration_weeks || '?'}
+                                {t('assignedPlans.weekOf', { current: currentWeek, total: plan.training_plans?.duration_weeks || '?' })}
                               </span>
                             </div>
 
                             <div className="space-y-1">
                               <div className="flex items-center justify-between text-sm">
-                                <span className="text-muted-foreground">Прогресс</span>
+                                <span className="text-muted-foreground">{t('assignedPlans.progress')}</span>
                                 <span className="font-medium">{Math.round(progress)}%</span>
                               </div>
                               <Progress value={progress} className="h-2" />
@@ -316,22 +320,22 @@ export function ClientAssignedPlans({ clientId, onAssignPlan }: ClientAssignedPl
                                 onClick={() => plan.plan_id && navigate(`/training-plans/${plan.plan_id}`)}
                               >
                                 <ExternalLink className="h-4 w-4 mr-2" />
-                                Открыть план
+                                {t('assignedPlans.actions.openPlan')}
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleAction('pause', plan)}>
                                 <Pause className="h-4 w-4 mr-2" />
-                                Приостановить
+                                {t('assignedPlans.actions.pause')}
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleAction('complete', plan)}>
                                 <CheckCircle className="h-4 w-4 mr-2" />
-                                Завершить
+                                {t('assignedPlans.actions.complete')}
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => handleAction('cancel', plan)}
                                 className="text-destructive"
                               >
                                 <XCircle className="h-4 w-4 mr-2" />
-                                Отменить
+                                {t('assignedPlans.actions.cancel')}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -346,7 +350,7 @@ export function ClientAssignedPlans({ clientId, onAssignPlan }: ClientAssignedPl
               {otherPlans.length > 0 && (
                 <details className="group">
                   <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-2">
-                    История планов ({otherPlans.length})
+                    {t('assignedPlans.history')} ({otherPlans.length})
                   </summary>
                   <div className="space-y-2 mt-2">
                     {otherPlans.map((plan) => {
@@ -359,13 +363,13 @@ export function ClientAssignedPlans({ clientId, onAssignPlan }: ClientAssignedPl
                         >
                           <div className="flex items-center gap-3">
                             <span className="font-medium">
-                              {plan.training_plans?.name || 'Неизвестный план'}
+                              {plan.training_plans?.name || t('assignedPlans.unknownPlan')}
                             </span>
                             <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-sm text-muted-foreground">
-                              {format(new Date(plan.start_date), 'd MMM yyyy', { locale: ru })}
+                              {format(new Date(plan.start_date), 'd MMM yyyy', { locale: dateLocale })}
                             </span>
                             {plan.status === 'paused' && (
                               <Button
@@ -374,7 +378,7 @@ export function ClientAssignedPlans({ clientId, onAssignPlan }: ClientAssignedPl
                                 onClick={() => handleAction('resume', plan)}
                               >
                                 <Play className="h-4 w-4 mr-1" />
-                                Возобновить
+                                {t('assignedPlans.actions.resume')}
                               </Button>
                             )}
                           </div>
@@ -400,7 +404,7 @@ export function ClientAssignedPlans({ clientId, onAssignPlan }: ClientAssignedPl
             <AlertDialogDescription>{getActionText().description}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Отмена</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={confirmAction}>
               {getActionText().button}
             </AlertDialogAction>

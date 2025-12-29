@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -46,6 +47,7 @@ interface AIGoalSuggestionsProps {
 }
 
 export function AIGoalSuggestions({ clientId, trainerId, onOpenChat }: AIGoalSuggestionsProps) {
+  const { t } = useTranslation('trainerDashboard');
   const [suggestions, setSuggestions] = useState<AIGoalSuggestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -71,8 +73,8 @@ export function AIGoalSuggestions({ clientId, trainerId, onOpenChat }: AIGoalSug
     } catch (error) {
       console.error('Error loading suggestions:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось загрузить рекомендации',
+        title: t('aiSuggestions.error'),
+        description: t('aiSuggestions.loadFailed'),
         variant: 'destructive',
       });
     } finally {
@@ -88,16 +90,16 @@ export function AIGoalSuggestions({ clientId, trainerId, onOpenChat }: AIGoalSug
       if (error) throw error;
 
       toast({
-        title: '✨ Анализ завершен',
-        description: data.analysis_summary || `Создано ${data.suggestions_count} рекомендаций`,
+        title: t('aiSuggestions.analysisComplete'),
+        description: data.analysis_summary || t('aiSuggestions.createdCount', { count: data.suggestions_count }),
       });
 
       loadSuggestions();
     } catch (error) {
       console.error('Error generating suggestions:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось создать рекомендации',
+        title: t('aiSuggestions.error'),
+        description: t('aiSuggestions.generateFailed'),
         variant: 'destructive',
       });
     } finally {
@@ -118,9 +120,8 @@ export function AIGoalSuggestions({ clientId, trainerId, onOpenChat }: AIGoalSug
       if (suggestion.suggestion_type === 'adjust_target') {
         actionType = 'update_goal_target';
       } else if (suggestion.suggestion_type === 'pause_goal') {
-        // For pause, we could set a status or deadline
         actionType = 'update_goal_target';
-        actionData.notes = 'Приостановлено по рекомендации AI';
+        actionData.notes = t('aiSuggestions.pausedByAI');
       }
 
       const { data, error } = await adminApi.trainerExecute({
@@ -132,27 +133,25 @@ export function AIGoalSuggestions({ clientId, trainerId, onOpenChat }: AIGoalSug
 
       if (error) throw error;
 
-      // Update suggestion status
       await supabase
         .from('ai_goal_suggestions')
         .update({ status: 'accepted', applied_at: new Date().toISOString() })
         .eq('id', suggestion.id);
 
-      // Invalidate queries
       queryClient.invalidateQueries({ queryKey: ['goals', clientId] });
       queryClient.invalidateQueries({ queryKey: ['goal-progress', clientId] });
 
       toast({
-        title: '✅ Применено',
-        description: 'Рекомендация успешно применена',
+        title: t('aiSuggestions.applied'),
+        description: t('aiSuggestions.appliedDesc'),
       });
 
       loadSuggestions();
     } catch (error) {
       console.error('Error applying suggestion:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось применить рекомендацию',
+        title: t('aiSuggestions.error'),
+        description: t('aiSuggestions.applyFailed'),
         variant: 'destructive',
       });
     } finally {
@@ -168,16 +167,16 @@ export function AIGoalSuggestions({ clientId, trainerId, onOpenChat }: AIGoalSug
         .eq('id', id);
 
       toast({
-        title: 'Отклонено',
-        description: 'Рекомендация отклонена',
+        title: t('aiSuggestions.dismissed'),
+        description: t('aiSuggestions.dismissedDesc'),
       });
 
       loadSuggestions();
     } catch (error) {
       console.error('Error dismissing suggestion:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось отклонить рекомендацию',
+        title: t('aiSuggestions.error'),
+        description: t('aiSuggestions.dismissFailed'),
         variant: 'destructive',
       });
     }
@@ -186,7 +185,6 @@ export function AIGoalSuggestions({ clientId, trainerId, onOpenChat }: AIGoalSug
   useEffect(() => {
     loadSuggestions();
 
-    // Realtime subscription
     const channel = supabase
       .channel('ai_suggestions')
       .on(
@@ -227,6 +225,16 @@ export function AIGoalSuggestions({ clientId, trainerId, onOpenChat }: AIGoalSug
     }
   };
 
+  const getTrendLabel = (trend: string) => {
+    switch (trend) {
+      case 'ahead': return t('aiSuggestions.trendAhead');
+      case 'on_track': return t('aiSuggestions.trendOnTrack');
+      case 'behind': return t('aiSuggestions.trendBehind');
+      case 'stagnant': return t('aiSuggestions.trendStagnant');
+      default: return '';
+    }
+  };
+
   const getPriorityColor = (priority: number) => {
     if (priority === 1) return 'bg-red-100 text-red-800 border-red-300';
     if (priority === 2) return 'bg-orange-100 text-orange-800 border-orange-300';
@@ -250,7 +258,7 @@ export function AIGoalSuggestions({ clientId, trainerId, onOpenChat }: AIGoalSug
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
-            <CardTitle>AI-Рекомендации по целям</CardTitle>
+            <CardTitle>{t('aiSuggestions.title')}</CardTitle>
             {suggestions.length > 0 && (
               <Badge variant="secondary">{suggestions.length}</Badge>
             )}
@@ -266,7 +274,7 @@ export function AIGoalSuggestions({ clientId, trainerId, onOpenChat }: AIGoalSug
             ) : (
               <RefreshCw className="h-4 w-4" />
             )}
-            <span className="ml-2">Обновить</span>
+            <span className="ml-2">{t('aiSuggestions.refresh')}</span>
           </Button>
         </div>
       </CardHeader>
@@ -275,7 +283,7 @@ export function AIGoalSuggestions({ clientId, trainerId, onOpenChat }: AIGoalSug
           <div className="text-center py-8">
             <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-sm text-muted-foreground mb-4">
-              Нет активных рекомендаций
+              {t('aiSuggestions.noSuggestions')}
             </p>
             <Button onClick={() => generateSuggestions(false)} disabled={generating}>
               {generating ? (
@@ -283,7 +291,7 @@ export function AIGoalSuggestions({ clientId, trainerId, onOpenChat }: AIGoalSug
               ) : (
                 <Sparkles className="h-4 w-4 mr-2" />
               )}
-              Сгенерировать рекомендации
+              {t('aiSuggestions.generate')}
             </Button>
           </div>
         ) : (
@@ -309,30 +317,27 @@ export function AIGoalSuggestions({ clientId, trainerId, onOpenChat }: AIGoalSug
                           {suggestion.goals?.goal_name}
                         </h4>
                         <p className={`text-sm font-medium ${getTrendColor(suggestion.progress_trend)}`}>
-                          {suggestion.progress_trend === 'ahead' && '📈 Опережает график'}
-                          {suggestion.progress_trend === 'on_track' && '✅ По плану'}
-                          {suggestion.progress_trend === 'behind' && '⚠️ Отстает'}
-                          {suggestion.progress_trend === 'stagnant' && '⛔ Застой'}
+                          {getTrendLabel(suggestion.progress_trend)}
                         </p>
                       </div>
                     </div>
                     <Badge className={getPriorityColor(suggestion.priority)}>
-                      Приоритет: {suggestion.priority}
+                      {t('aiSuggestions.priority')}: {suggestion.priority}
                     </Badge>
                   </div>
 
                   {/* Recommendation */}
                   <div className="bg-muted/50 rounded-lg p-4">
-                    <p className="text-sm font-medium mb-2">💡 Рекомендация:</p>
+                    <p className="text-sm font-medium mb-2">{t('aiSuggestions.recommendation')}</p>
                     <p className="text-sm">{suggestion.recommendation_text}</p>
                   </div>
 
                   {/* Action */}
                   <div className="bg-primary/5 rounded-lg p-4 border border-primary/20">
                     <p className="text-sm font-semibold mb-2">
-                      ✅ {suggestion.suggested_action.type === 'increase_target' && 'Увеличить цель:'}
-                      {suggestion.suggested_action.type === 'decrease_target' && 'Снизить цель:'}
-                      {suggestion.suggested_action.type === 'pause' && 'Приостановить цель'}
+                      ✅ {suggestion.suggested_action.type === 'increase_target' && t('aiSuggestions.increaseTarget')}
+                      {suggestion.suggested_action.type === 'decrease_target' && t('aiSuggestions.decreaseTarget')}
+                      {suggestion.suggested_action.type === 'pause' && t('aiSuggestions.pauseGoal')}
                     </p>
                     {suggestion.suggested_action.old_value && suggestion.suggested_action.new_value && (
                       <p className="text-lg font-bold text-primary">
@@ -347,7 +352,7 @@ export function AIGoalSuggestions({ clientId, trainerId, onOpenChat }: AIGoalSug
                   {/* Confidence */}
                   <div>
                     <div className="flex items-center justify-between text-sm mb-2">
-                      <span className="text-muted-foreground">Уверенность AI:</span>
+                      <span className="text-muted-foreground">{t('aiSuggestions.confidence')}</span>
                       <span className="font-medium">{suggestion.confidence_score}%</span>
                     </div>
                     <Progress value={suggestion.confidence_score} className="h-2" />
@@ -365,7 +370,7 @@ export function AIGoalSuggestions({ clientId, trainerId, onOpenChat }: AIGoalSug
                       ) : (
                         <Check className="h-4 w-4 mr-2" />
                       )}
-                      Применить
+                      {t('aiSuggestions.apply')}
                     </Button>
                     <Button
                       onClick={() => dismissSuggestion(suggestion.id)}
@@ -373,7 +378,7 @@ export function AIGoalSuggestions({ clientId, trainerId, onOpenChat }: AIGoalSug
                       disabled={applying === suggestion.id}
                     >
                       <X className="h-4 w-4 mr-2" />
-                      Отклонить
+                      {t('aiSuggestions.dismiss')}
                     </Button>
                     {onOpenChat && (
                       <Button
