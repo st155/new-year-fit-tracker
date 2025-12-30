@@ -6,6 +6,7 @@ import { AIPendingAction } from '@/hooks/useAIPendingActions';
 import { Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ArrowDown } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface VirtualizedMessageListProps {
   messages: AIMessage[];
@@ -41,6 +42,7 @@ export const VirtualizedMessageList = ({
   showScrollButton,
   onScrollToBottom
 }: VirtualizedMessageListProps) => {
+  const { t } = useTranslation('trainer');
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom on new messages
@@ -59,10 +61,9 @@ export const VirtualizedMessageList = ({
     return (
       <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground p-4">
         <Bot className="h-16 w-16 mb-4 opacity-50" />
-        <h3 className="text-lg font-medium mb-2">Начните разговор с AI</h3>
+        <h3 className="text-lg font-medium mb-2">{t('chat.startConversation')}</h3>
         <p className="text-sm max-w-md">
-          Задавайте вопросы, анализируйте клиентов или обсуждайте планы тренировок.
-          Используйте @username для упоминания конкретных клиентов.
+          {t('chat.startConversationDesc')}
         </p>
       </div>
     );

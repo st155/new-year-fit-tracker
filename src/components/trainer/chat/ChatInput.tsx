@@ -4,6 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Send } from 'lucide-react';
 import { MentionAutocomplete, ClientSuggestion } from '../MentionAutocomplete';
 import { useDebounce } from '@/hooks/primitive/useDebounce';
+import { useTranslation } from 'react-i18next';
 
 interface ChatInputProps {
   onSend: (message: string, mentionedClientIds: string[], mentionedNames: string[]) => void;
@@ -28,6 +29,7 @@ export const ChatInput = ({
   mentions,
   onMentionsChange
 }: ChatInputProps) => {
+  const { t } = useTranslation('trainer');
   const [input, setInput] = useState('');
   const [showMentionSuggestions, setShowMentionSuggestions] = useState(false);
   const [mentionQuery, setMentionQuery] = useState('');
@@ -192,7 +194,7 @@ export const ChatInput = ({
             value={input}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            placeholder="Напишите сообщение... (@ для упоминания клиента)"
+            placeholder={t('chat.inputPlaceholder')}
             disabled={disabled}
             className="min-h-[44px] max-h-[200px] resize-none"
             rows={1}

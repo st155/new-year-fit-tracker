@@ -1,4 +1,5 @@
 import { Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface AIStatusIndicatorProps {
   sendingState: 'idle' | 'sending' | 'processing' | 'error' | 'timeout';
@@ -6,6 +7,8 @@ interface AIStatusIndicatorProps {
 }
 
 export const AIStatusIndicator = ({ sendingState, elapsedTime }: AIStatusIndicatorProps) => {
+  const { t } = useTranslation('trainer');
+  
   if (sendingState === 'idle') return null;
 
   return (
@@ -13,23 +16,23 @@ export const AIStatusIndicator = ({ sendingState, elapsedTime }: AIStatusIndicat
       {sendingState === 'sending' && (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
-          <span>Отправка...</span>
+          <span>{t('chat.sending')}</span>
         </div>
       )}
       {sendingState === 'processing' && (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
-          <span>AI думает... {elapsedTime > 0 && `(${elapsedTime}с)`}</span>
+          <span>{t('chat.aiThinking', { seconds: elapsedTime })}</span>
         </div>
       )}
       {sendingState === 'error' && (
         <div className="text-sm text-destructive">
-          Ошибка отправки сообщения
+          {t('chat.sendError')}
         </div>
       )}
       {sendingState === 'timeout' && (
         <div className="text-sm text-destructive">
-          Превышено время ожидания
+          {t('chat.timeout')}
         </div>
       )}
     </div>
