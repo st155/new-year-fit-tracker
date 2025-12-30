@@ -888,5 +888,55 @@
     "days90": "90 дней",
     "year1": "1 год",
     "allTime": "Всё время"
+  },
+  "chat": {
+    "aiWorkingWithClient": "AI работает с этим клиентом",
+    "profile": "Профиль",
+    "chatWithAI": "Чат с AI",
+    "useUsernameHint": "Используйте @username для работы с клиентами",
+    "inputPlaceholder": "Напишите сообщение... (@ для упоминания клиента)",
+    "autoExecuted": "Автоматически выполнено",
+    "executionError": "Ошибка выполнения",
+    "partiallyExecuted": "Частично выполнено",
+    "success": "успешно",
+    "unknownError": "Неизвестная ошибка",
+    "collapse": "Свернуть",
+    "showAll": "Показать все ({{count}})",
+    "planReady": "План готов к выполнению",
+    "execute": "Выполнить",
+    "reconsider": "Пересмотреть",
+    "preparingPlan": "⏳ Подготовка плана...",
+    "planAwaiting": "План ожидает подтверждения",
+    "actionsCount": "Действий: {{count}}",
+    "preparingStructuredPlan": "Готовлю структурированный план...",
+    "think": "Подумать",
+    "startConversation": "Начните разговор с AI",
+    "startConversationDesc": "Задавайте вопросы, анализируйте клиентов или обсуждайте планы тренировок. Используйте @username для упоминания конкретных клиентов.",
+    "sending": "Отправка...",
+    "aiThinking": "AI думает... ({{seconds}}с)",
+    "sendError": "Ошибка отправки сообщения",
+    "timeout": "Превышено время ожидания",
+    "searchPlaceholder": "Поиск диалогов..."
+  },
+  "mention": {
+    "loading": "Загрузка клиентов…",
+    "notFound": "Клиент не найден",
+    "noClients": "Нет доступных клиентов",
+    "clientsCount_one": "{{count}} клиент",
+    "clientsCount_few": "{{count}} клиента",
+    "clientsCount_many": "{{count}} клиентов",
+    "clientsCount_other": "{{count}} клиентов"
+  },
+  "attachment": {
+    "unsupportedType": "Неподдерживаемый тип файла. Загрузите изображения, PDF или CSV файлы.",
+    "sizeLimit": "Размер файла должен быть менее 10МБ",
+    "notAuthenticated": "Не авторизован",
+    "success": "Файл успешно прикреплён",
+    "failed": "Не удалось загрузить файл",
+    "uploading": "Загрузка...",
+    "attach": "Прикрепить файл"
+  },
+  "search": {
+    "clientPlaceholder": "Найти клиента: имя, логин..."
   }
 }

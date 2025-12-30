@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Paperclip, X, FileImage, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useTranslation } from 'react-i18next';
 
 interface FileAttachmentProps {
   onFileUploaded: (fileUrl: string, fileName: string, fileType: string) => void;
@@ -15,6 +16,7 @@ interface UploadedFile {
 }
 
 export const FileAttachment = ({ onFileUploaded }: FileAttachmentProps) => {
+  const { t } = useTranslation('trainer');
   const [uploading, setUploading] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<UploadedFile[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -32,13 +34,13 @@ export const FileAttachment = ({ onFileUploaded }: FileAttachmentProps) => {
     // Validate file type
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'text/csv'];
     if (!allowedTypes.includes(file.type)) {
-      toast.error("Unsupported file type. Please upload images, PDF, or CSV files.");
+      toast.error(t('attachment.unsupportedType'));
       return;
     }
 
     // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
-      toast.error("File size must be less than 10MB");
+      toast.error(t('attachment.sizeLimit'));
       return;
     }
 
@@ -46,7 +48,7 @@ export const FileAttachment = ({ onFileUploaded }: FileAttachmentProps) => {
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
+      if (!user) throw new Error(t('attachment.notAuthenticated'));
 
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
@@ -69,10 +71,10 @@ export const FileAttachment = ({ onFileUploaded }: FileAttachmentProps) => {
 
       setAttachedFiles([...attachedFiles, uploadedFile]);
       onFileUploaded(publicUrl, file.name, file.type);
-      toast.success("File attached successfully");
+      toast.success(t('attachment.success'));
     } catch (error: any) {
       console.error("Upload error:", error);
-      toast.error(error.message || "Failed to upload file");
+      toast.error(error.message || t('attachment.failed'));
     } finally {
       setUploading(false);
       if (fileInputRef.current) {
@@ -110,7 +112,7 @@ export const FileAttachment = ({ onFileUploaded }: FileAttachmentProps) => {
         type="button"
       >
         <Paperclip className="h-4 w-4 mr-2" />
-        {uploading ? "Uploading..." : "Attach file"}
+        {uploading ? t('attachment.uploading') : t('attachment.attach')}
       </Button>
 
       {attachedFiles.length > 0 && (

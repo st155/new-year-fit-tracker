@@ -7,9 +7,10 @@ import { Bot, User, Loader2, CheckCircle, XCircle, AlertCircle, ExternalLink, Fi
 import { AIMessage } from '@/types/trainer';
 import { AIPendingAction } from '@/hooks/useAIPendingActions';
 import { formatDistanceToNow } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import { useState } from 'react';
 import { RecognizedClientBadge } from '@/components/trainer/ai/RecognizedClientBadge';
+import { useTranslation } from 'react-i18next';
 
 interface MessageBubbleProps {
   message: AIMessage;
@@ -45,6 +46,9 @@ export const MessageBubble = memo(({
   onApprovePlan,
   onReconsiderPlan
 }: MessageBubbleProps) => {
+  const { t, i18n } = useTranslation('trainer');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
+  
   const isOptimistic = message.metadata?.isOptimistic;
   const status = message.metadata?.status;
   const isAutoExecuted = message.role === 'system' && message.metadata?.autoExecuted;
@@ -189,19 +193,19 @@ export const MessageBubble = memo(({
                         : 'text-amber-900 dark:text-amber-100'
                   }`}>
                     {failCount === 0 && successCount > 0
-                      ? 'Автоматически выполнено'
+                      ? t('chat.autoExecuted')
                       : failCount > 0 && successCount === 0
-                        ? 'Ошибка выполнения'
-                        : 'Частично выполнено'
+                        ? t('chat.executionError')
+                        : t('chat.partiallyExecuted')
                     }
                   </span>
                   {successCount === totalCount && totalCount > 0 ? (
                     <Badge variant="secondary" className="bg-green-600 text-white text-xs">
-                      {successCount}/{totalCount} успешно
+                      {successCount}/{totalCount} {t('chat.success')}
                     </Badge>
                   ) : totalCount > 0 ? (
                     <Badge variant="destructive" className="text-xs">
-                      {successCount}/{totalCount} успешно
+                      {successCount}/{totalCount} {t('chat.success')}
                     </Badge>
                   ) : null}
                 </div>
@@ -230,7 +234,7 @@ export const MessageBubble = memo(({
                             <span className={result.success ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'}>
                               {result.success 
                                 ? (result.message || result.action_type)
-                                : `${result.action || result.action_type}: ${result.error || 'Неизвестная ошибка'}`
+                                : `${result.action || result.action_type}: ${result.error || t('chat.unknownError')}`
                               }
                             </span>
                           </div>
@@ -248,12 +252,12 @@ export const MessageBubble = memo(({
                         {expanded ? (
                           <>
                             <ChevronUp className="h-3 w-3 mr-1" />
-                            Свернуть
+                            {t('chat.collapse')}
                           </>
                         ) : (
                           <>
                             <ChevronDown className="h-3 w-3 mr-1" />
-                            Показать все ({results.length})
+                            {t('chat.showAll', { count: results.length })}
                           </>
                         )}
                       </Button>
@@ -277,7 +281,7 @@ export const MessageBubble = memo(({
             <Sparkles className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
             <div className="flex-1 min-w-0">
               <h4 className="font-medium text-amber-900 dark:text-amber-100 text-sm">
-                План готов к выполнению
+                {t('chat.planReady')}
               </h4>
               <p className="text-xs text-amber-700 dark:text-amber-300 mt-1 whitespace-pre-wrap break-words">
                 {pendingAction.action_plan}
@@ -292,7 +296,7 @@ export const MessageBubble = memo(({
               className="flex-1 justify-center bg-green-600 hover:bg-green-700 text-white"
             >
               {executing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
-              Выполнить
+              {t('chat.execute')}
             </Button>
             <Button 
               size="sm" 
@@ -302,7 +306,7 @@ export const MessageBubble = memo(({
               className="flex-1 justify-center"
             >
               <XCircle className="h-4 w-4 mr-2" />
-              Пересмотреть
+              {t('chat.reconsider')}
             </Button>
           </div>
         </div>
@@ -332,7 +336,7 @@ export const MessageBubble = memo(({
           
           <div className="flex items-center justify-end gap-1 mt-1">
             <span className="text-xs text-muted-foreground">
-              {formatDistanceToNow(new Date(message.created_at), { addSuffix: true, locale: ru })}
+              {formatDistanceToNow(new Date(message.created_at), { addSuffix: true, locale: dateLocale })}
             </span>
             {isOptimistic && (
               <>
@@ -378,20 +382,20 @@ export const MessageBubble = memo(({
                 <FileText className="h-4 w-4 text-primary" />
               )}
               <Badge variant="secondary" className="text-xs">
-                {isPreparing ? '⏳ Подготовка плана...' : 'План ожидает подтверждения'}
+                {isPreparing ? t('chat.preparingPlan') : t('chat.planAwaiting')}
               </Badge>
             </div>
             
             {!isPreparing && actionCount > 0 && (
               <div className="text-xs text-muted-foreground mb-3">
-                Действий: {actionCount}
+                {t('chat.actionsCount', { count: actionCount })}
               </div>
             )}
             
             {isPreparing ? (
               <div className="flex items-center gap-2 text-sm text-yellow-600 dark:text-yellow-400">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Готовлю структурированный план...</span>
+                <span>{t('chat.preparingStructuredPlan')}</span>
               </div>
             ) : (
               <div className="flex gap-2">
@@ -399,18 +403,18 @@ export const MessageBubble = memo(({
                   size="sm"
                   onClick={onApprovePlan}
                   disabled={sending}
-                  className="bg-green-600 hover:bg-green-700 text-white"
-                >
-                  <CheckCircle className="h-3 w-3 mr-1" />
-                  Выполнить
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    {t('chat.execute')}
                 </Button>
                 <Button
                   size="sm"
-                  variant="outline"
-                  onClick={onReconsiderPlan}
-                  disabled={sending}
-                >
-                  Подумать
+                    variant="outline"
+                    onClick={onReconsiderPlan}
+                    disabled={sending}
+                  >
+                    {t('chat.think')}
                 </Button>
               </div>
             )}
@@ -418,7 +422,7 @@ export const MessageBubble = memo(({
         )}
         
         <span className="text-xs text-muted-foreground mt-1 block">
-          {formatDistanceToNow(new Date(message.created_at), { addSuffix: true, locale: ru })}
+          {formatDistanceToNow(new Date(message.created_at), { addSuffix: true, locale: dateLocale })}
         </span>
       </div>
     </div>

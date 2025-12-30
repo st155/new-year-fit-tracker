@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 
 interface Client {
   user_id: string;
@@ -18,9 +19,11 @@ interface ClientSearchAutocompleteProps {
   placeholder?: string;
 }
 
-export const ClientSearchAutocomplete = ({ onSelect, placeholder = "Найти клиента: имя, логин..." }: ClientSearchAutocompleteProps) => {
+export const ClientSearchAutocomplete = ({ onSelect, placeholder }: ClientSearchAutocompleteProps) => {
+  const { t } = useTranslation('trainer');
   const { user } = useAuth();
   const [search, setSearch] = useState('');
+  const actualPlaceholder = placeholder || t('search.clientPlaceholder');
   const [results, setResults] = useState<Client[]>([]);
   const [allClients, setAllClients] = useState<Client[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -92,7 +95,7 @@ export const ClientSearchAutocomplete = ({ onSelect, placeholder = "Найти �
         <div className="relative">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder={placeholder}
+            placeholder={actualPlaceholder}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"

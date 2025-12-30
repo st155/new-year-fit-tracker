@@ -888,5 +888,53 @@
     "days90": "90 days",
     "year1": "1 year",
     "allTime": "All time"
+  },
+  "chat": {
+    "aiWorkingWithClient": "AI is working with this client",
+    "profile": "Profile",
+    "chatWithAI": "Chat with AI",
+    "useUsernameHint": "Use @username to work with clients",
+    "inputPlaceholder": "Type a message... (@ to mention client)",
+    "autoExecuted": "Automatically executed",
+    "executionError": "Execution error",
+    "partiallyExecuted": "Partially executed",
+    "success": "success",
+    "unknownError": "Unknown error",
+    "collapse": "Collapse",
+    "showAll": "Show all ({{count}})",
+    "planReady": "Plan ready to execute",
+    "execute": "Execute",
+    "reconsider": "Reconsider",
+    "preparingPlan": "⏳ Preparing plan...",
+    "planAwaiting": "Plan awaiting confirmation",
+    "actionsCount": "Actions: {{count}}",
+    "preparingStructuredPlan": "Preparing structured plan...",
+    "think": "Think",
+    "startConversation": "Start a conversation with AI",
+    "startConversationDesc": "Ask questions, analyze clients, or discuss training plans. Use @username to mention specific clients.",
+    "sending": "Sending...",
+    "aiThinking": "AI thinking... ({{seconds}}s)",
+    "sendError": "Failed to send message",
+    "timeout": "Timeout exceeded",
+    "searchPlaceholder": "Search conversations..."
+  },
+  "mention": {
+    "loading": "Loading clients…",
+    "notFound": "Client not found",
+    "noClients": "No clients available",
+    "clientsCount_one": "{{count}} client",
+    "clientsCount_other": "{{count}} clients"
+  },
+  "attachment": {
+    "unsupportedType": "Unsupported file type. Please upload images, PDF, or CSV files.",
+    "sizeLimit": "File size must be less than 10MB",
+    "notAuthenticated": "Not authenticated",
+    "success": "File attached successfully",
+    "failed": "Failed to upload file",
+    "uploading": "Uploading...",
+    "attach": "Attach file"
+  },
+  "search": {
+    "clientPlaceholder": "Find client: name, username..."
   }
 }

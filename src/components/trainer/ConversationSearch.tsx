@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from 'react-i18next';
 
 interface ConversationSearchProps {
   onSearch: (query: string) => void;
@@ -10,9 +11,11 @@ interface ConversationSearchProps {
 
 export const ConversationSearch = ({ 
   onSearch, 
-  placeholder = "Search conversations..." 
+  placeholder 
 }: ConversationSearchProps) => {
+  const { t } = useTranslation('trainer');
   const [query, setQuery] = useState("");
+  const actualPlaceholder = placeholder || t('chat.searchPlaceholder');
 
   const handleSearch = (value: string) => {
     setQuery(value);
@@ -30,7 +33,7 @@ export const ConversationSearch = ({
       <Input
         value={query}
         onChange={(e) => handleSearch(e.target.value)}
-        placeholder={placeholder}
+        placeholder={actualPlaceholder}
         className="pl-9 pr-9"
       />
       {query && (

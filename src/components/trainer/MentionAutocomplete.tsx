@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export interface ClientSuggestion {
   user_id: string;
@@ -26,6 +27,7 @@ export const MentionAutocomplete = ({
   position,
   loading = false,
 }: MentionAutocompleteProps) => {
+  const { t } = useTranslation('trainer');
   const [selectedIndex, setSelectedIndex] = useState(0);
   
   // No filtering here - clients are already filtered in parent component
@@ -69,7 +71,7 @@ if (loading) {
     >
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
-        <span>Загрузка клиентов…</span>
+        <span>{t('mention.loading')}</span>
       </div>
     </div>
   );
@@ -82,7 +84,7 @@ if (filteredClients.length === 0) {
       style={{ top: `${safeTop}px`, left: `${safeLeft}px` }}
     >
       <p className="text-sm text-muted-foreground">
-        {query ? 'Клиент не найден' : 'Нет доступных клиентов'}
+        {query ? t('mention.notFound') : t('mention.noClients')}
       </p>
     </div>
   );
@@ -95,7 +97,7 @@ if (filteredClients.length === 0) {
     >
       <div className="sticky top-0 bg-background dark:bg-slate-900 border-b border-border px-3 py-2">
         <p className="text-xs text-muted-foreground">
-          {filteredClients.length} {filteredClients.length === 1 ? 'клиент' : 'клиентов'}
+          {t('mention.clientsCount', { count: filteredClients.length })}
           <span className="ml-2 text-[10px]">↑↓ Enter Esc</span>
         </p>
       </div>
