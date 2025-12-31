@@ -83,7 +83,9 @@
   },
   "ai": {
     "newConversation": "New conversation",
+    "newChat": "New Chat",
     "noConversations": "No conversations",
+    "startNewChat": "Start a new chat to begin",
     "deleteConversation": "Delete conversation?",
     "deleteDescription": "This action cannot be undone. The conversation and all messages will be deleted.",
     "cancel": "Cancel",
@@ -1009,5 +1011,29 @@
     "lowActivityDesc": "Only {{days}} active days this week. Try to increase daily activity.",
     "insufficientData": "Insufficient Data",
     "insufficientDataDesc": "Only {{days}} days of data received in the last 7 days. Check device sync."
+  },
+  "sync": {
+    "checking": "Checking sync status...",
+    "allSynced": "All data synced",
+    "staleData": "Stale Data",
+    "requireSync": "{{count}} integrations need sync",
+    "syncAll": "Sync All",
+    "lastData": "Last data: {{days}} days ago",
+    "critical": "Critical",
+    "stale": "Stale",
+    "started": "Sync started for {{source}} ({{name}})",
+    "error": "Error: {{message}}",
+    "starting": "Starting sync for {{count}} integrations"
+  },
+  "conflicts": {
+    "loading": "Loading conflicts...",
+    "noConflicts": "No conflicts found",
+    "title": "Data Conflicts",
+    "found": "Found {{count}} conflicts",
+    "autoResolve": "Auto-resolve",
+    "select": "Select",
+    "resolved": "Conflict resolved (selected {{source}})",
+    "resolveError": "Error resolving conflict",
+    "loadError": "Error loading conflicts"
   }
 }
