@@ -938,5 +938,48 @@
   },
   "search": {
     "clientPlaceholder": "Найти клиента: имя, логин..."
+  },
+  "exerciseSelector": {
+    "title": "Выбор упражнения",
+    "searchPlaceholder": "Поиск упражнения...",
+    "all": "Все"
+  },
+  "goalTemplates": {
+    "title": "Шаблоны целей",
+    "description": "Создавайте переиспользуемые шаблоны целей для быстрого назначения",
+    "created": "Шаблон успешно создан",
+    "deleted": "Шаблон удалён",
+    "assigning": "Назначение цели клиенту...",
+    "newTemplate": "Новый шаблон",
+    "createTemplate": "Создание шаблона цели",
+    "templateName": "Название шаблона",
+    "namePlaceholder": "например, Стандартное похудение",
+    "goalType": "Тип цели",
+    "types": {
+      "weight": "Вес",
+      "bodyFat": "Процент жира",
+      "muscleMass": "Мышечная масса",
+      "vo2max": "VO₂ Max",
+      "steps": "Шаги в день"
+    },
+    "targetValue": "Целевое значение",
+    "unit": "Единица измерения",
+    "descriptionLabel": "Описание",
+    "descriptionPlaceholder": "Опциональное описание...",
+    "create": "Создать шаблон",
+    "myTemplates": "Мои шаблоны",
+    "target": "Цель:",
+    "type": "Тип:",
+    "used": "Использован:",
+    "times": "раз",
+    "communityTemplates": "Шаблоны сообщества",
+    "public": "Публичный"
+  },
+  "notifications": {
+    "title": "Уведомления",
+    "allMarkedRead": "Все уведомления отмечены как прочитанные",
+    "markAllRead": "Прочитать все",
+    "empty": "Нет уведомлений",
+    "client": "Клиент:"
   }
 }

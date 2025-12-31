@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -15,6 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Bell, AlertTriangle, CheckCircle2, TrendingDown, Calendar, MessageSquare, Check } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { ru, enUS } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -42,10 +44,12 @@ const NOTIFICATION_ICONS: Record<string, any> = {
 };
 
 export function TrainerNotifications() {
+  const { t, i18n } = useTranslation('trainer');
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
 
   // Fetch notifications
   const { data: notifications = [] } = useQuery({
@@ -93,7 +97,7 @@ export function TrainerNotifications() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['trainer-notifications'] });
-      toast.success('All notifications marked as read');
+      toast.success(t('notifications.allMarkedRead'));
     },
   });
 
@@ -126,7 +130,7 @@ export function TrainerNotifications() {
 
       <DropdownMenuContent align="end" className="w-80">
         <DropdownMenuLabel className="flex items-center justify-between">
-          <span>Notifications</span>
+          <span>{t('notifications.title')}</span>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
@@ -138,7 +142,7 @@ export function TrainerNotifications() {
               className="h-7 text-xs"
             >
               <Check className="h-3 w-3 mr-1" />
-              Mark all read
+              {t('notifications.markAllRead')}
             </Button>
           )}
         </DropdownMenuLabel>
@@ -148,7 +152,7 @@ export function TrainerNotifications() {
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
               <Bell className="h-8 w-8 mb-2 opacity-50" />
-              <p className="text-sm">No notifications</p>
+              <p className="text-sm">{t('notifications.empty')}</p>
             </div>
           ) : (
             notifications.map((notification) => {
@@ -177,11 +181,11 @@ export function TrainerNotifications() {
                       </p>
                       {notification.metadata?.client_name && (
                         <p className="text-xs text-primary mt-1">
-                          Client: {notification.metadata.client_name}
+                          {t('notifications.client')} {notification.metadata.client_name}
                         </p>
                       )}
                       <p className="text-xs text-muted-foreground mt-1">
-                        {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                        {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true, locale: dateLocale })}
                       </p>
                     </div>
                   </div>

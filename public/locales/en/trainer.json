@@ -936,5 +936,48 @@
   },
   "search": {
     "clientPlaceholder": "Find client: name, username..."
+  },
+  "exerciseSelector": {
+    "title": "Select Exercise",
+    "searchPlaceholder": "Search exercises...",
+    "all": "All"
+  },
+  "goalTemplates": {
+    "title": "Goal Templates",
+    "description": "Create reusable goal templates for quick assignment",
+    "created": "Template created successfully",
+    "deleted": "Template deleted",
+    "assigning": "Assigning goal to client...",
+    "newTemplate": "New Template",
+    "createTemplate": "Create Goal Template",
+    "templateName": "Template Name",
+    "namePlaceholder": "e.g., Weight Loss Standard",
+    "goalType": "Goal Type",
+    "types": {
+      "weight": "Weight",
+      "bodyFat": "Body Fat %",
+      "muscleMass": "Muscle Mass",
+      "vo2max": "VO₂ Max",
+      "steps": "Daily Steps"
+    },
+    "targetValue": "Target Value",
+    "unit": "Unit",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Optional description...",
+    "create": "Create Template",
+    "myTemplates": "My Templates",
+    "target": "Target:",
+    "type": "Type:",
+    "used": "Used:",
+    "times": "times",
+    "communityTemplates": "Community Templates",
+    "public": "Public"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "allMarkedRead": "All notifications marked as read",
+    "markAllRead": "Mark all read",
+    "empty": "No notifications",
+    "client": "Client:"
   }
 }
