@@ -40,5 +40,14 @@
     "leaveFailed": "Не удалось выйти из челленджа",
     "notFoundParticipation": "Не удалось найти участие в челлендже",
     "checkPermissions": "Проверьте права доступа"
+  },
+  "extend": {
+    "button": "Продлить на 10 дней",
+    "title": "Продлить челлендж?",
+    "description": "Дата окончания будет изменена с {{currentDate}} на {{newDate}}",
+    "confirm": "Продлить",
+    "extending": "Продление...",
+    "cancel": "Отмена",
+    "success": "Челлендж продлён до {{date}}!"
   }
 }

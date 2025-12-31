@@ -10,7 +10,8 @@ import {
   leaveChallenge, 
   createChallenge, 
   updateChallenge, 
-  deleteChallenge 
+  deleteChallenge,
+  extendChallenge 
 } from '../../services/challenges.service';
 import type { ChallengeCreateInput, ChallengeUpdateInput } from '../../types';
 import { toast } from 'sonner';
@@ -86,11 +87,24 @@ export function useChallengeMutations() {
     },
   });
 
+  const extendChallengeMutation = useMutation({
+    mutationFn: ({ challengeId, days }: { challengeId: string; days?: number }) => 
+      extendChallenge(challengeId, days),
+    onSuccess: (data, { challengeId }) => {
+      queryClient.invalidateQueries({ queryKey: challengeKeys.detail(challengeId) });
+      queryClient.invalidateQueries({ queryKey: challengeKeys.lists() });
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to extend challenge: ${error.message}`);
+    },
+  });
+
   return {
     joinChallenge: joinChallengeMutation,
     leaveChallenge: leaveChallengeMutation,
     createChallenge: createChallengeMutation,
     updateChallenge: updateChallengeMutation,
     deleteChallenge: deleteChallengeMutation,
+    extendChallenge: extendChallengeMutation,
   };
 }
