@@ -196,5 +196,16 @@
     "deactivate": "Deactivate",
     "activate": "Activate",
     "dismissed": "Recommendation dismissed"
+  },
+  "ingestion": {
+    "loading": "Loading document...",
+    "loadError": "Error loading document. Please try again.",
+    "retryStarted": "Document sent for reprocessing",
+    "retryError": "Reprocessing error",
+    "reprocessing": "Reprocessing...",
+    "reprocess": "Reprocess document",
+    "pending": "Pending processing...",
+    "processingAI": "AI processing...",
+    "unknownError": "Unknown error"
   }
 }

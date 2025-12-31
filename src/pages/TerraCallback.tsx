@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -22,10 +23,11 @@ const PROVIDER_NAMES: Record<string, string> = {
 };
 
 export default function TerraCallback() {
+  const { t } = useTranslation('integrations');
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<Status>('processing');
-  const [message, setMessage] = useState('Обработка подключения...');
+  const [message, setMessage] = useState(t('callback.processing'));
   
   // Detect if we're running in a popup window
   const isPopup = window.opener !== null && window.opener !== window;
@@ -135,7 +137,7 @@ export default function TerraCallback() {
       if (authError || !uid) {
         console.error('❌ User not logged in on callback page:', authError);
         setStatus('error');
-        setMessage('Вы не авторизованы. Войдите в аккаунт и попробуйте подключить устройство снова.');
+        setMessage(t('callback.notAuthorized'));
         
         // Don't auto-redirect, let user see the message and act
         return;
@@ -146,7 +148,7 @@ export default function TerraCallback() {
       if (!providerParam) {
         console.error('❌ No provider detected in URL or sessionStorage');
         setStatus('error');
-        setMessage('Не удалось определить устройство. Попробуйте подключить еще раз.');
+        setMessage(t('callback.noProvider'));
         setTimeout(() => navigate('/integrations'), 3000);
         return;
       }
@@ -161,7 +163,7 @@ export default function TerraCallback() {
         
         try {
           setStatus('processing');
-          setMessage('Подтверждаем подключение...');
+          setMessage(t('callback.confirming'));
 
           const { data: existing } = await supabase
             .from('terra_tokens')
@@ -190,18 +192,18 @@ export default function TerraCallback() {
           
           // Запускаем синхронизацию
           setStatus('success');
-          setMessage('Устройство подключено! Запускаем синхронизацию данных...');
+          setMessage(t('callback.connectedSyncing'));
           try {
             const { error } = await terraApi.syncData();
             if (error) {
               console.error('Sync error:', error);
-              setMessage('Устройство подключено! Данные можно синхронизировать вручную.');
+              setMessage(t('callback.connectedManualSync'));
             } else {
-              setMessage('Устройство подключено и данные синхронизированы!');
+              setMessage(t('callback.connectedSynced'));
             }
           } catch (e) {
             console.error('Sync error:', e);
-            setMessage('Устройство подключено! Данные можно синхронизировать вручную.');
+            setMessage(t('callback.connectedManualSync'));
           }
 
           // Clear sessionStorage
@@ -233,7 +235,7 @@ export default function TerraCallback() {
         setStatus('error');
         
         if (isSessionExpired) {
-          setMessage('Сессия авторизации истекла. Это может произойти, если авторизация заняла больше 5 минут. Нажмите "Попробовать снова" для повторной попытки.');
+          setMessage(t('callback.sessionExpired'));
         } else {
           setMessage(decodedError);
         }
@@ -272,7 +274,7 @@ export default function TerraCallback() {
           
             if (uid) {
               setStatus('processing');
-              setMessage(`Сохраняем подключение ${PROVIDER_NAMES[providerParam] || providerParam}...`);
+              setMessage(t('callback.savingConnection', { provider: PROVIDER_NAMES[providerParam] || providerParam }));
 
               const { data: existing } = await supabase
                 .from('terra_tokens')
@@ -304,7 +306,7 @@ export default function TerraCallback() {
               });
 
               setStatus('success');
-              setMessage(`${PROVIDER_NAMES[providerParam] || providerParam} подключён! Ожидаем данные от Terra...`);
+              setMessage(t('callback.waitingTerra', { provider: PROVIDER_NAMES[providerParam] || providerParam }));
 
               // Poll for active token for 15 seconds
               let pollAttempts = 0;
@@ -345,23 +347,23 @@ export default function TerraCallback() {
           }
         
         setStatus('success');
-        setMessage('Устройство успешно подключено! Запускаем синхронизацию данных...');
+        setMessage(t('callback.connectedSyncing'));
         
         // Автоматически запускаем синхронизацию данных после подключения
         try {
-          setMessage('Синхронизируем данные...');
+          setMessage(t('callback.syncingData'));
           
           const { error } = await terraApi.syncData();
           
           if (error) {
             console.error('Sync error:', error);
-            setMessage('Устройство подключено! Данные можно синхронизировать вручную.');
+            setMessage(t('callback.connectedManualSync'));
           } else {
-            setMessage('Устройство подключено и данные синхронизированы!');
+            setMessage(t('callback.connectedSynced'));
           }
         } catch (e) {
           console.error('Sync error:', e);
-          setMessage('Устройство подключено! Данные можно синхронизировать вручную.');
+          setMessage(t('callback.connectedManualSync'));
         }
         
         // If popup, notify parent and close
@@ -376,7 +378,7 @@ export default function TerraCallback() {
       // Фоллбек: проверяем, появился ли активный terra_token для пользователя с коротким поллингом (до 12с)
       try {
         setStatus('processing');
-        setMessage('Проверяем подключение...');
+        setMessage(t('callback.checkingConnection'));
         const { data: userRes } = await supabase.auth.getUser();
         const userId = userRes.user?.id;
 
@@ -400,22 +402,22 @@ export default function TerraCallback() {
 
           if (tokensReady) {
             setStatus('success');
-            setMessage('Устройство успешно подключено! Запускаем синхронизацию...');
+            setMessage(t('callback.connectedSyncing'));
 
             // Автоматически запускаем синхронизацию
             try {
-              setMessage('Синхронизируем данные...');
+              setMessage(t('callback.syncingData'));
               const { error: syncError } = await terraApi.syncData();
 
               if (syncError) {
                 console.error('Sync error:', syncError);
-                setMessage('Устройство подключено! Данные можно синхронизировать вручную.');
+                setMessage(t('callback.connectedManualSync'));
               } else {
-              setMessage('Устройство подключено и данные синхронизированы!');
+              setMessage(t('callback.connectedSynced'));
             }
           } catch (e) {
             console.error('Sync error:', e);
-            setMessage('Устройство подключено! Данные можно синхронизировать вручную.');
+            setMessage(t('callback.connectedManualSync'));
           }
           
           // If popup, notify parent and close
@@ -434,13 +436,13 @@ export default function TerraCallback() {
       } catch (e) {
         console.error('Terra callback check error', e);
         setStatus('error');
-        setMessage('Не удалось подтвердить подключение');
+        setMessage(t('callback.confirmFailed'));
         setTimeout(() => navigate('/integrations'), 5000);
       }
     };
 
     run();
-  }, [searchParams, navigate]);
+  }, [searchParams, navigate, t]);
 
   const getIcon = () => {
     switch (status) {
@@ -456,11 +458,11 @@ export default function TerraCallback() {
   const getTitle = () => {
     switch (status) {
       case 'processing':
-        return 'Подключение устройства...';
+        return t('callback.processing');
       case 'success':
-        return 'Успешно подключено!';
+        return t('callback.success');
       case 'error':
-        return 'Ошибка подключения';
+        return t('callback.connectionError');
     }
   };
 
@@ -480,7 +482,7 @@ export default function TerraCallback() {
             <Alert className="border-green-500 bg-green-50 dark:bg-green-950/20">
               <CheckCircle2 className="h-4 w-4 text-green-600" />
               <AlertDescription>
-                Ваше устройство подключено. Данные будут автоматически синхронизироваться каждые 6 часов.
+                {t('callback.autoSyncEnabled')}
               </AlertDescription>
             </Alert>
           )}
@@ -494,18 +496,18 @@ export default function TerraCallback() {
             </Alert>
           )}
 
-          {status === 'error' && message.includes('истекла') && (
+          {status === 'error' && (message.includes('истекла') || message.includes('expired')) && (
             <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950/20">
               <AlertDescription className="text-sm space-y-3">
-                <p className="font-semibold">Как исправить:</p>
+                <p className="font-semibold">{t('callback.howToFix')}</p>
                 <ol className="list-decimal list-inside space-y-1.5 text-muted-foreground">
-                  <li>Откройте приложение WHOOP/Oura/Garmin на телефоне</li>
-                  <li>Выйдите из аккаунта и войдите заново</li>
-                  <li>Вернитесь сюда и нажмите "Попробовать снова"</li>
-                  <li>Завершите авторизацию <strong>в течение 5 минут</strong></li>
+                  <li>{t('callback.fixStep1')}</li>
+                  <li>{t('callback.fixStep2')}</li>
+                  <li>{t('callback.fixStep3')}</li>
+                  <li dangerouslySetInnerHTML={{ __html: t('callback.fixStep4') }} />
                 </ol>
                 <p className="text-xs text-muted-foreground pt-1">
-                  Если проблема повторяется, попробуйте подключиться с другого браузера или устройства.
+                  {t('callback.fixTip')}
                 </p>
               </AlertDescription>
             </Alert>
@@ -515,7 +517,7 @@ export default function TerraCallback() {
             {status === 'success' && (
               <Button onClick={() => navigate('/fitness-data?tab=integrations')} className="w-full">
                 <ArrowRight className="h-4 w-4 mr-2" />
-                Перейти к интеграциям
+                {t('callback.goToIntegrations')}
               </Button>
             )}
 
@@ -534,14 +536,14 @@ export default function TerraCallback() {
                   }} 
                   className="w-full"
                 >
-                  Попробовать снова
+                  {t('callback.retry')}
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => navigate('/integrations')}
                   className="w-full"
                 >
-                  Вернуться к интеграциям
+                  {t('callback.backToSettings')}
                 </Button>
               </>
             )}

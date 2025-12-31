@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { documentsApi } from '@/lib/api';
@@ -14,6 +15,7 @@ import { AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 const MedicalIngestionCockpit = () => {
+  const { t } = useTranslation('medicalDocs');
   const { documentId } = useParams<{ documentId: string }>();
   const queryClient = useQueryClient();
   const { recommendations } = useDoctorRecommendations(documentId || '');
@@ -66,11 +68,11 @@ const MedicalIngestionCockpit = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['medical-document', documentId] });
-      toast.success('Документ отправлен на повторную обработку');
+      toast.success(t('ingestion.retryStarted'));
     },
     onError: (error: any) => {
       console.error('Retry failed:', error);
-      toast.error('Ошибка повторной обработки', { description: error.message });
+      toast.error(t('ingestion.retryError'), { description: error.message });
     },
     onSettled: () => {
       setIsRetrying(false);
@@ -81,7 +83,7 @@ const MedicalIngestionCockpit = () => {
   // Users can manually retry via ErrorDetailsPanel if needed
 
   if (isLoading) {
-    return <PageLoader message="Загрузка документа..." />;
+    return <PageLoader message={t('ingestion.loading')} />;
   }
 
   if (error || !document) {
@@ -90,7 +92,7 @@ const MedicalIngestionCockpit = () => {
         <Alert variant="destructive" className="max-w-md">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            Ошибка загрузки документа. Попробуйте снова.
+            {t('ingestion.loadError')}
           </AlertDescription>
         </Alert>
       </div>
@@ -111,7 +113,7 @@ const MedicalIngestionCockpit = () => {
           <div className="p-4">
             <ErrorDetailsPanel
               documentId={documentId!}
-              processingError={document.processing_error || 'Unknown error'}
+              processingError={document.processing_error || t('ingestion.unknownError')}
               processingErrorDetails={document.processing_error_details}
               onRetry={() => retryMutation.mutate()}
               isRetrying={isRetrying}
@@ -131,7 +133,7 @@ const MedicalIngestionCockpit = () => {
                   className="flex items-center gap-2 px-4 py-2 bg-neutral-900 border border-purple-500/50 text-purple-400 rounded-lg hover:bg-neutral-800 hover:border-purple-500 transition-all disabled:opacity-50"
                 >
                   <span>🔄</span>
-                  <span>{isRetrying ? 'Переобработка...' : 'Переобработать документ'}</span>
+                  <span>{isRetrying ? t('ingestion.reprocessing') : t('ingestion.reprocess')}</span>
                 </button>
               </div>
             )}
@@ -156,7 +158,7 @@ const MedicalIngestionCockpit = () => {
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4" />
               <p className="text-green-400 font-mono">
-                {document.processing_status === 'pending' ? 'Ожидает обработки...' : 'Обрабатывается AI...'}
+                {document.processing_status === 'pending' ? t('ingestion.pending') : t('ingestion.processingAI')}
               </p>
             </div>
           </div>
