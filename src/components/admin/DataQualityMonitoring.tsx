@@ -21,8 +21,10 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export function DataQualityMonitoring() {
+  const { t } = useTranslation('admin');
   const { data: monitoring, isLoading } = useMonitoringData();
   const { data: jobStats } = useJobProcessingStats();
   const { data: qualityTrends } = useDataQualityTrends();
@@ -35,9 +37,9 @@ export function DataQualityMonitoring() {
     setIsRetrying(true);
     try {
       const result = await retryJobs();
-      toast.success(`Retried ${result?.[0]?.retried_count || 0} failed jobs`);
+      toast.success(t('dataQuality.toasts.retriedJobs', { count: result?.[0]?.retried_count || 0 }));
     } catch (error) {
-      toast.error('Failed to retry jobs');
+      toast.error(t('dataQuality.toasts.retryError'));
     } finally {
       setIsRetrying(false);
     }
@@ -47,9 +49,9 @@ export function DataQualityMonitoring() {
     setIsEnqueuing(true);
     try {
       const result = await enqueueCalculations();
-      toast.success(`Enqueued ${result?.[0]?.jobs_created || 0} confidence calculations`);
+      toast.success(t('dataQuality.toasts.enqueuedJobs', { count: result?.[0]?.jobs_created || 0 }));
     } catch (error) {
-      toast.error('Failed to enqueue calculations');
+      toast.error(t('dataQuality.toasts.enqueueError'));
     } finally {
       setIsEnqueuing(false);
     }
@@ -96,10 +98,9 @@ export function DataQualityMonitoring() {
             <div className="flex items-start gap-3">
               <AlertTriangle className="h-5 w-5 text-destructive mt-0.5" />
               <div className="flex-1">
-                <CardTitle className="text-destructive">Action Required: Initialize Data Quality System</CardTitle>
+                <CardTitle className="text-destructive">{t('dataQuality.initRequired.title')}</CardTitle>
                 <CardDescription className="mt-2">
-                  The confidence cache is empty. Click "Initialize Data Quality" below to populate confidence scores 
-                  for all metrics. This will enable data quality indicators, conflict resolution, and source prioritization.
+                  {t('dataQuality.initRequired.description')}
                 </CardDescription>
               </div>
             </div>
@@ -114,17 +115,17 @@ export function DataQualityMonitoring() {
               {isEnqueuing ? (
                 <>
                   <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  Initializing...
+                  {t('dataQuality.initRequired.initializing')}
                 </>
               ) : (
                 <>
                   <Zap className="h-4 w-4 mr-2" />
-                  Initialize Data Quality System
+                  {t('dataQuality.initRequired.button')}
                 </>
               )}
             </Button>
             <p className="text-xs text-muted-foreground mt-2 text-center">
-              This will create background jobs to calculate confidence scores for all metrics (typically 2-3 minutes)
+              {t('dataQuality.initRequired.hint')}
             </p>
           </CardContent>
         </Card>
@@ -133,9 +134,9 @@ export function DataQualityMonitoring() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Data Quality Monitoring</h2>
+          <h2 className="text-2xl font-bold">{t('dataQuality.title')}</h2>
           <p className="text-muted-foreground">
-            Real-time system health and data quality metrics
+            {t('dataQuality.subtitle')}
           </p>
         </div>
         <div className="flex gap-2">
@@ -146,7 +147,7 @@ export function DataQualityMonitoring() {
             disabled={isRetrying || !jobs.failed}
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${isRetrying ? 'animate-spin' : ''}`} />
-            Retry Failed Jobs
+            {t('dataQuality.retryFailed')}
           </Button>
           <Button
             variant="default"
@@ -155,7 +156,7 @@ export function DataQualityMonitoring() {
             disabled={isEnqueuing}
           >
             <Zap className={`h-4 w-4 mr-2 ${isEnqueuing ? 'animate-spin' : ''}`} />
-            Recalculate All
+            {t('dataQuality.recalculateAll')}
           </Button>
         </div>
       </div>
@@ -165,7 +166,7 @@ export function DataQualityMonitoring() {
         {/* Job Queue Status */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Job Queue</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dataQuality.jobQueue')}</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -173,17 +174,17 @@ export function DataQualityMonitoring() {
             <div className="flex gap-1 mt-2">
               {jobs.pending ? (
                 <Badge variant="secondary" className="text-xs">
-                  {jobs.pending} pending
+                  {t('dataQuality.pending', { count: jobs.pending })}
                 </Badge>
               ) : null}
               {jobs.processing ? (
                 <Badge variant="default" className="text-xs">
-                  {jobs.processing} active
+                  {t('dataQuality.active', { count: jobs.processing })}
                 </Badge>
               ) : null}
               {jobs.failed ? (
                 <Badge variant="destructive" className="text-xs">
-                  {jobs.failed} failed
+                  {t('dataQuality.failed', { count: jobs.failed })}
                 </Badge>
               ) : null}
             </div>
@@ -193,7 +194,7 @@ export function DataQualityMonitoring() {
         {/* Confidence Score */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Confidence</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dataQuality.avgConfidence')}</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -202,7 +203,7 @@ export function DataQualityMonitoring() {
             </div>
             <Progress value={confidence.avg_confidence} className="mt-2" />
             <p className="text-xs text-muted-foreground mt-1">
-              {confidence.total_metrics} metrics tracked
+              {t('dataQuality.metricsTracked', { count: confidence.total_metrics })}
             </p>
           </CardContent>
         </Card>
@@ -210,14 +211,14 @@ export function DataQualityMonitoring() {
         {/* Webhook Processing */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Webhooks (24h)</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dataQuality.webhooks24h')}</CardTitle>
             <Database className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{webhooks.total_webhooks}</div>
             <Progress value={successRate} className="mt-2" />
             <p className="text-xs text-muted-foreground mt-1">
-              {successRate.toFixed(1)}% success rate
+              {t('dataQuality.successRate', { rate: successRate.toFixed(1) })}
             </p>
           </CardContent>
         </Card>
@@ -225,7 +226,7 @@ export function DataQualityMonitoring() {
         {/* System Health */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">System Health</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dataQuality.systemHealth')}</CardTitle>
             {jobs.failed || webhooks.failed > 0 ? (
               <AlertTriangle className="h-4 w-4 text-destructive" />
             ) : (
@@ -234,12 +235,12 @@ export function DataQualityMonitoring() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {jobs.failed || webhooks.failed > 0 ? 'Degraded' : 'Healthy'}
+              {jobs.failed || webhooks.failed > 0 ? t('dataQuality.degraded') : t('dataQuality.healthy')}
             </div>
             <p className="text-xs text-muted-foreground mt-2">
               {jobs.failed || webhooks.failed > 0
-                ? 'Some operations failed'
-                : 'All systems operational'}
+                ? t('dataQuality.operationsFailed')
+                : t('dataQuality.allOperational')}
             </p>
           </CardContent>
         </Card>
@@ -248,16 +249,16 @@ export function DataQualityMonitoring() {
       {/* Confidence Distribution */}
       <Card>
         <CardHeader>
-          <CardTitle>Data Quality Distribution</CardTitle>
+          <CardTitle>{t('dataQuality.distribution.title')}</CardTitle>
           <CardDescription>
-            Breakdown of confidence scores across all metrics
+            {t('dataQuality.distribution.subtitle')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Excellent (≥80%)</span>
+                <span className="text-sm font-medium">{t('dataQuality.distribution.excellent')}</span>
                 <Badge variant="default">{confidence.excellent}</Badge>
               </div>
               <Progress
@@ -267,7 +268,7 @@ export function DataQualityMonitoring() {
             </div>
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Good (60-79%)</span>
+                <span className="text-sm font-medium">{t('dataQuality.distribution.good')}</span>
                 <Badge variant="secondary">{confidence.good}</Badge>
               </div>
               <Progress
@@ -277,7 +278,7 @@ export function DataQualityMonitoring() {
             </div>
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Fair (40-59%)</span>
+                <span className="text-sm font-medium">{t('dataQuality.distribution.fair')}</span>
                 <Badge variant="outline">{confidence.fair}</Badge>
               </div>
               <Progress
@@ -287,7 +288,7 @@ export function DataQualityMonitoring() {
             </div>
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Poor (&lt;40%)</span>
+                <span className="text-sm font-medium">{t('dataQuality.distribution.poor')}</span>
                 <Badge variant="destructive">{confidence.poor}</Badge>
               </div>
               <Progress
@@ -304,13 +305,13 @@ export function DataQualityMonitoring() {
         {/* Cache Hit Rate */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium">Cache Performance</CardTitle>
-            <CardDescription>Confidence score cache efficiency</CardDescription>
+            <CardTitle className="text-sm font-medium">{t('dataQuality.cachePerformance')}</CardTitle>
+            <CardDescription>{t('dataQuality.cacheEfficiency')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">Hit Rate</span>
+                <span className="text-xs text-muted-foreground">{t('dataQuality.hitRate')}</span>
                 <span className="text-lg font-bold">
                   {confidence.total_metrics > 0 
                     ? ((confidence.excellent + confidence.good) / confidence.total_metrics * 100).toFixed(1) 
@@ -323,7 +324,7 @@ export function DataQualityMonitoring() {
                   : 0} 
               />
               <p className="text-xs text-muted-foreground mt-2">
-                {confidence.excellent + confidence.good} of {confidence.total_metrics} cached
+                {t('dataQuality.cached', { cached: confidence.excellent + confidence.good, total: confidence.total_metrics })}
               </p>
             </div>
           </CardContent>
@@ -332,8 +333,8 @@ export function DataQualityMonitoring() {
         {/* Low Quality Metrics Alert */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium">Data Quality Alerts</CardTitle>
-            <CardDescription>Metrics requiring attention</CardDescription>
+            <CardTitle className="text-sm font-medium">{t('dataQuality.alerts.title')}</CardTitle>
+            <CardDescription>{t('dataQuality.alerts.subtitle')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -341,9 +342,9 @@ export function DataQualityMonitoring() {
                 <div className="flex items-center gap-2 p-2 bg-destructive/10 rounded-md">
                   <AlertTriangle className="h-4 w-4 text-destructive" />
                   <div className="flex-1">
-                    <p className="text-sm font-medium">Low Confidence</p>
+                    <p className="text-sm font-medium">{t('dataQuality.alerts.lowConfidence')}</p>
                     <p className="text-xs text-muted-foreground">
-                      {confidence.poor} metrics below 40%
+                      {t('dataQuality.alerts.metricsBelow', { count: confidence.poor })}
                     </p>
                   </div>
                 </div>
@@ -352,9 +353,9 @@ export function DataQualityMonitoring() {
                 <div className="flex items-center gap-2 p-2 bg-warning/10 rounded-md">
                   <Clock className="h-4 w-4 text-warning" />
                   <div className="flex-1">
-                    <p className="text-sm font-medium">Moderate Quality</p>
+                    <p className="text-sm font-medium">{t('dataQuality.alerts.moderateQuality')}</p>
                     <p className="text-xs text-muted-foreground">
-                      {confidence.fair} metrics at 40-59%
+                      {t('dataQuality.alerts.metricsAt', { count: confidence.fair })}
                     </p>
                   </div>
                 </div>
@@ -363,9 +364,9 @@ export function DataQualityMonitoring() {
                 <div className="flex items-center gap-2 p-2 bg-success/10 rounded-md">
                   <CheckCircle2 className="h-4 w-4 text-success" />
                   <div className="flex-1">
-                    <p className="text-sm font-medium">All Clear</p>
+                    <p className="text-sm font-medium">{t('dataQuality.alerts.allClear')}</p>
                     <p className="text-xs text-muted-foreground">
-                      No quality issues detected
+                      {t('dataQuality.alerts.noIssues')}
                     </p>
                   </div>
                 </div>
@@ -379,8 +380,8 @@ export function DataQualityMonitoring() {
       {jobStats && jobStats.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Job Processing Activity</CardTitle>
-            <CardDescription>Last 7 days of background job execution</CardDescription>
+            <CardTitle>{t('dataQuality.jobActivity.title')}</CardTitle>
+            <CardDescription>{t('dataQuality.jobActivity.subtitle')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -398,11 +399,11 @@ export function DataQualityMonitoring() {
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-xs text-muted-foreground">
-                      {stat.count} jobs
+                      {stat.count} {t('dataQuality.jobs')}
                     </span>
                     {stat.avg_duration_seconds && (
                       <span className="text-xs text-muted-foreground">
-                        ~{stat.avg_duration_seconds.toFixed(1)}s avg
+                        {t('dataQuality.avg', { seconds: stat.avg_duration_seconds.toFixed(1) })}
                       </span>
                     )}
                     <Badge

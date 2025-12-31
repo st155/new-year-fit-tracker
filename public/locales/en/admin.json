@@ -108,5 +108,70 @@
     "noErrorsDesc": "Great! No errors found for the selected filter.",
     "errorDetails": "Error details:",
     "copy": "Copy"
+  },
+  "appleHealth": {
+    "confirmDelete": "Are you sure you want to delete all Apple Health data? This action cannot be undone.",
+    "deleting": "Deleting...",
+    "deleteButton": "Delete Apple Health data"
+  },
+  "dataQuality": {
+    "title": "Data Quality Monitoring",
+    "subtitle": "Real-time system health and data quality metrics",
+    "retryFailed": "Retry Failed Jobs",
+    "recalculateAll": "Recalculate All",
+    "jobQueue": "Job Queue",
+    "pending": "{{count}} pending",
+    "active": "{{count}} active",
+    "failed": "{{count}} failed",
+    "avgConfidence": "Avg Confidence",
+    "metricsTracked": "{{count}} metrics tracked",
+    "webhooks24h": "Webhooks (24h)",
+    "successRate": "{{rate}}% success rate",
+    "systemHealth": "System Health",
+    "degraded": "Degraded",
+    "healthy": "Healthy",
+    "operationsFailed": "Some operations failed",
+    "allOperational": "All systems operational",
+    "distribution": {
+      "title": "Data Quality Distribution",
+      "subtitle": "Breakdown of confidence scores across all metrics",
+      "excellent": "Excellent (≥80%)",
+      "good": "Good (60-79%)",
+      "fair": "Fair (40-59%)",
+      "poor": "Poor (<40%)"
+    },
+    "cachePerformance": "Cache Performance",
+    "cacheEfficiency": "Confidence score cache efficiency",
+    "hitRate": "Hit Rate",
+    "cached": "{{cached}} of {{total}} cached",
+    "alerts": {
+      "title": "Data Quality Alerts",
+      "subtitle": "Metrics requiring attention",
+      "lowConfidence": "Low Confidence",
+      "metricsBelow": "{{count}} metrics below 40%",
+      "moderateQuality": "Moderate Quality",
+      "metricsAt": "{{count}} metrics at 40-59%",
+      "allClear": "All Clear",
+      "noIssues": "No quality issues detected"
+    },
+    "jobActivity": {
+      "title": "Job Processing Activity",
+      "subtitle": "Last 7 days of background job execution"
+    },
+    "jobs": "jobs",
+    "avg": "~{{seconds}}s avg",
+    "initRequired": {
+      "title": "Action Required: Initialize Data Quality System",
+      "description": "The confidence cache is empty. Click below to calculate confidence scores for all metrics. This will enable data quality indicators, conflict resolution, and source prioritization.",
+      "button": "Initialize Data Quality System",
+      "initializing": "Initializing...",
+      "hint": "This will create background jobs to calculate confidence scores for all metrics (typically 2-3 minutes)"
+    },
+    "toasts": {
+      "retriedJobs": "Retried {{count}} failed jobs",
+      "retryError": "Failed to retry jobs",
+      "enqueuedJobs": "Enqueued {{count}} confidence calculations",
+      "enqueueError": "Failed to enqueue calculations"
+    }
   }
 }
