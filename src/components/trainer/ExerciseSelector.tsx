@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ interface ExerciseSelectorProps {
 }
 
 export const ExerciseSelector = ({ open, onClose, onSelect }: ExerciseSelectorProps) => {
+  const { t } = useTranslation('trainer');
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
@@ -35,7 +37,7 @@ export const ExerciseSelector = ({ open, onClose, onSelect }: ExerciseSelectorPr
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Выбор упражнения</DialogTitle>
+          <DialogTitle>{t('exerciseSelector.title')}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -43,7 +45,7 @@ export const ExerciseSelector = ({ open, onClose, onSelect }: ExerciseSelectorPr
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Поиск упражнения..."
+              placeholder={t('exerciseSelector.searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9"
@@ -57,7 +59,7 @@ export const ExerciseSelector = ({ open, onClose, onSelect }: ExerciseSelectorPr
               className="cursor-pointer"
               onClick={() => setSelectedCategory(null)}
             >
-              Все
+              {t('exerciseSelector.all')}
             </Badge>
             {EXERCISE_CATEGORIES.map(cat => (
               <Badge

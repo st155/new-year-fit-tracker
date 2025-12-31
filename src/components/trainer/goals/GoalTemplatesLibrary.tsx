@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -27,6 +28,7 @@ interface GoalTemplate {
 }
 
 export function GoalTemplatesLibrary() {
+  const { t } = useTranslation('trainer');
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -72,7 +74,7 @@ export function GoalTemplatesLibrary() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['goal-templates'] });
-      toast.success('Template created successfully');
+      toast.success(t('goalTemplates.created'));
       setIsCreateOpen(false);
       setNewTemplate({
         template_name: '',
@@ -98,14 +100,14 @@ export function GoalTemplatesLibrary() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['goal-templates'] });
-      toast.success('Template deleted');
+      toast.success(t('goalTemplates.deleted'));
     },
   });
 
   // Use template (copy to client)
   const useTemplate = async (template: GoalTemplate, clientId: string) => {
     // This would be called from ClientDetailView with clientId
-    toast.info('Assigning goal to client...');
+    toast.info(t('goalTemplates.assigning'));
   };
 
   const myTemplates = templates.filter(t => t.trainer_id === user?.id);
@@ -116,33 +118,33 @@ export function GoalTemplatesLibrary() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Goal Templates</h2>
+          <h2 className="text-2xl font-bold">{t('goalTemplates.title')}</h2>
           <p className="text-muted-foreground">
-            Create reusable goal templates for quick assignment
+            {t('goalTemplates.description')}
           </p>
         </div>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
             <Button className="gap-2">
               <Plus className="h-4 w-4" />
-              New Template
+              {t('goalTemplates.newTemplate')}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create Goal Template</DialogTitle>
+              <DialogTitle>{t('goalTemplates.createTemplate')}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label>Template Name</Label>
+                <Label>{t('goalTemplates.templateName')}</Label>
                 <Input
                   value={newTemplate.template_name}
                   onChange={(e) => setNewTemplate({ ...newTemplate, template_name: e.target.value })}
-                  placeholder="e.g., Weight Loss Standard"
+                  placeholder={t('goalTemplates.namePlaceholder')}
                 />
               </div>
               <div>
-                <Label>Goal Type</Label>
+                <Label>{t('goalTemplates.goalType')}</Label>
                 <Select
                   value={newTemplate.goal_type}
                   onValueChange={(value) => setNewTemplate({ ...newTemplate, goal_type: value })}
@@ -151,17 +153,17 @@ export function GoalTemplatesLibrary() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="weight">Weight</SelectItem>
-                    <SelectItem value="body_fat">Body Fat %</SelectItem>
-                    <SelectItem value="muscle_mass">Muscle Mass</SelectItem>
-                    <SelectItem value="vo2max">VO₂ Max</SelectItem>
-                    <SelectItem value="steps">Daily Steps</SelectItem>
+                    <SelectItem value="weight">{t('goalTemplates.types.weight')}</SelectItem>
+                    <SelectItem value="body_fat">{t('goalTemplates.types.bodyFat')}</SelectItem>
+                    <SelectItem value="muscle_mass">{t('goalTemplates.types.muscleMass')}</SelectItem>
+                    <SelectItem value="vo2max">{t('goalTemplates.types.vo2max')}</SelectItem>
+                    <SelectItem value="steps">{t('goalTemplates.types.steps')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Target Value</Label>
+                  <Label>{t('goalTemplates.targetValue')}</Label>
                   <Input
                     type="number"
                     value={newTemplate.target_value}
@@ -169,7 +171,7 @@ export function GoalTemplatesLibrary() {
                   />
                 </div>
                 <div>
-                  <Label>Unit</Label>
+                  <Label>{t('goalTemplates.unit')}</Label>
                   <Input
                     value={newTemplate.unit}
                     onChange={(e) => setNewTemplate({ ...newTemplate, unit: e.target.value })}
@@ -177,11 +179,11 @@ export function GoalTemplatesLibrary() {
                 </div>
               </div>
               <div>
-                <Label>Description</Label>
+                <Label>{t('goalTemplates.descriptionLabel')}</Label>
                 <Textarea
                   value={newTemplate.description}
                   onChange={(e) => setNewTemplate({ ...newTemplate, description: e.target.value })}
-                  placeholder="Optional description..."
+                  placeholder={t('goalTemplates.descriptionPlaceholder')}
                 />
               </div>
               <Button
@@ -189,7 +191,7 @@ export function GoalTemplatesLibrary() {
                 onClick={() => createMutation.mutate(newTemplate)}
                 disabled={!newTemplate.template_name || !newTemplate.target_value}
               >
-                Create Template
+                {t('goalTemplates.create')}
               </Button>
             </div>
           </DialogContent>
@@ -198,7 +200,7 @@ export function GoalTemplatesLibrary() {
 
       {/* My Templates */}
       <div>
-        <h3 className="text-lg font-semibold mb-4">My Templates ({myTemplates.length})</h3>
+        <h3 className="text-lg font-semibold mb-4">{t('goalTemplates.myTemplates')} ({myTemplates.length})</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {myTemplates.map(template => (
             <Card key={template.id}>
@@ -220,18 +222,18 @@ export function GoalTemplatesLibrary() {
               </CardHeader>
               <CardContent className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Target:</span>
+                  <span className="text-muted-foreground">{t('goalTemplates.target')}</span>
                   <span className="font-medium">
                     {template.target_value} {template.unit}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Type:</span>
+                  <span className="text-muted-foreground">{t('goalTemplates.type')}</span>
                   <Badge variant="secondary">{template.goal_type}</Badge>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Used:</span>
-                  <span>{template.usage_count} times</span>
+                  <span className="text-muted-foreground">{t('goalTemplates.used')}</span>
+                  <span>{template.usage_count} {t('goalTemplates.times')}</span>
                 </div>
                 {template.description && (
                   <p className="text-xs text-muted-foreground mt-2">
@@ -248,7 +250,7 @@ export function GoalTemplatesLibrary() {
       {publicTemplates.length > 0 && (
         <div>
           <h3 className="text-lg font-semibold mb-4">
-            Community Templates ({publicTemplates.length})
+            {t('goalTemplates.communityTemplates')} ({publicTemplates.length})
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {publicTemplates.map(template => (
@@ -257,19 +259,19 @@ export function GoalTemplatesLibrary() {
                   <div className="flex items-center gap-2">
                     <Target className="h-4 w-4" />
                     <CardTitle className="text-base">{template.template_name}</CardTitle>
-                    <Badge variant="outline" className="ml-auto">Public</Badge>
+                    <Badge variant="outline" className="ml-auto">{t('goalTemplates.public')}</Badge>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Target:</span>
+                    <span className="text-muted-foreground">{t('goalTemplates.target')}</span>
                     <span className="font-medium">
                       {template.target_value} {template.unit}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Used:</span>
-                    <span>{template.usage_count} times</span>
+                    <span className="text-muted-foreground">{t('goalTemplates.used')}</span>
+                    <span>{template.usage_count} {t('goalTemplates.times')}</span>
                   </div>
                 </CardContent>
               </Card>
