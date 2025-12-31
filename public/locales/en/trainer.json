@@ -979,5 +979,35 @@
     "markAllRead": "Mark all read",
     "empty": "No notifications",
     "client": "Client:"
+  },
+  "alerts": {
+    "title": "Important Notifications",
+    "loading": "Loading alerts...",
+    "markedRead": "Alert marked as read",
+    "dismissError": "Error dismissing alert",
+    "critical": "{{count}} critical",
+    "warnings": "{{count}} warnings",
+    "client": "Client"
+  },
+  "insights": {
+    "title": "Automated Insights",
+    "analyzing": "Analyzing data...",
+    "allGood": "All Good",
+    "allGoodDesc": "Automated analysis found no issues. Client is in good shape.",
+    "found": "Found {{count}} important observations based on client data",
+    "overtrainingRisk": "Overtraining Risk",
+    "overtrainingDesc": "High strain ({{strain}}) with low recovery ({{recovery}}%). Rest recommended.",
+    "excellentRecovery": "Excellent Recovery",
+    "excellentRecoveryDesc": "High recovery level ({{recovery}}%) and low strain. Intensity can be increased.",
+    "insufficientSleep": "Insufficient Sleep",
+    "insufficientSleepDesc": "Average sleep duration: {{hours}}h. 7-9 hours recommended.",
+    "sleepImprovement": "Sleep Quality Improvement",
+    "sleepImprovementDesc": "Sleep increased by {{minutes}} minutes per week. Great progress!",
+    "stableActivity": "Stable Activity",
+    "stableActivityDesc": "{{days}} days with activity >5000 steps. Average: {{steps}} steps/day.",
+    "lowActivity": "Low Activity",
+    "lowActivityDesc": "Only {{days}} active days this week. Try to increase daily activity.",
+    "insufficientData": "Insufficient Data",
+    "insufficientDataDesc": "Only {{days}} days of data received in the last 7 days. Check device sync."
   }
 }

@@ -9,8 +9,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 interface UserNotification {
   id: string;
@@ -48,10 +49,12 @@ interface Alert {
 }
 
 export function AlertsPanel() {
+  const { t, i18n } = useTranslation('trainer');
   const { user } = useAuth();
   const navigate = useNavigate();
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
 
   useEffect(() => {
     if (user) {
@@ -138,10 +141,10 @@ export function AlertsPanel() {
       if (error) throw error;
 
       setAlerts(alerts.filter(a => a.id !== alertId));
-      toast.success('Алерт отмечен как прочитанный');
+      toast.success(t('alerts.markedRead'));
     } catch (error) {
       console.error('Error dismissing alert:', error);
-      toast.error('Ошибка при закрытии алерта');
+      toast.error(t('alerts.dismissError'));
     }
   };
 
@@ -180,7 +183,7 @@ export function AlertsPanel() {
     return (
       <Card>
         <CardContent className="py-8">
-          <div className="text-center text-muted-foreground">Загрузка алертов...</div>
+          <div className="text-center text-muted-foreground">{t('alerts.loading')}</div>
         </CardContent>
       </Card>
     );
@@ -199,15 +202,15 @@ export function AlertsPanel() {
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-destructive" />
-            Важные уведомления
+            {t('alerts.title')}
           </CardTitle>
           <div className="flex gap-2">
             {criticalAlerts.length > 0 && (
-              <Badge variant="destructive">{criticalAlerts.length} критичных</Badge>
+              <Badge variant="destructive">{t('alerts.critical', { count: criticalAlerts.length })}</Badge>
             )}
             {warningAlerts.length > 0 && (
               <Badge variant="outline" className="border-orange-500 text-orange-600">
-                {warningAlerts.length} предупреждений
+                {t('alerts.warnings', { count: warningAlerts.length })}
               </Badge>
             )}
           </div>
@@ -231,7 +234,7 @@ export function AlertsPanel() {
                       <div className="font-semibold text-sm">{alert.title}</div>
                       <p className="text-sm text-muted-foreground">{alert.message}</p>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span>{format(new Date(alert.created_at), 'dd MMM, HH:mm', { locale: ru })}</span>
+                        <span>{format(new Date(alert.created_at), 'dd MMM, HH:mm', { locale: dateLocale })}</span>
                       </div>
                     </div>
                   </div>
@@ -244,7 +247,7 @@ export function AlertsPanel() {
                         onClick={() => handleViewClient(alert.data.client_id!)}
                       >
                         <ExternalLink className="h-3 w-3 mr-1" />
-                        Клиент
+                        {t('alerts.client')}
                       </Button>
                     )}
                     <Button
