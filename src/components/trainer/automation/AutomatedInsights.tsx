@@ -17,6 +17,7 @@ import {
   ThumbsUp,
   Info
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Insight {
   type: 'warning' | 'success' | 'info' | 'danger';
@@ -33,6 +34,7 @@ interface AutomatedInsightsProps {
 }
 
 export function AutomatedInsights({ clientId }: AutomatedInsightsProps) {
+  const { t } = useTranslation('trainer');
   const [insights, setInsights] = useState<Insight[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -78,8 +80,8 @@ export function AutomatedInsights({ clientId }: AutomatedInsightsProps) {
           insights.push({
             type: 'danger',
             category: 'strain',
-            title: 'Риск перетренированности',
-            description: `Высокая нагрузка (${avgStrain.toFixed(1)}) при низком восстановлении (${avgRecovery.toFixed(0)}%). Рекомендуется отдых.`,
+            title: t('insights.overtrainingRisk'),
+            description: t('insights.overtrainingDesc', { strain: avgStrain.toFixed(1), recovery: avgRecovery.toFixed(0) }),
             metric_value: avgRecovery,
             trend: 'down',
             priority: 1,
@@ -88,8 +90,8 @@ export function AutomatedInsights({ clientId }: AutomatedInsightsProps) {
           insights.push({
             type: 'success',
             category: 'recovery',
-            title: 'Отличное восстановление',
-            description: `Высокий уровень восстановления (${avgRecovery.toFixed(0)}%) и низкая нагрузка. Можно увеличить интенсивность.`,
+            title: t('insights.excellentRecovery'),
+            description: t('insights.excellentRecoveryDesc', { recovery: avgRecovery.toFixed(0) }),
             metric_value: avgRecovery,
             trend: 'up',
             priority: 3,
@@ -107,8 +109,8 @@ export function AutomatedInsights({ clientId }: AutomatedInsightsProps) {
           insights.push({
             type: 'warning',
             category: 'sleep',
-            title: 'Недостаточный сон',
-            description: `Средняя продолжительность сна: ${recentSleep.toFixed(1)}ч. Рекомендуется 7-9 часов.`,
+            title: t('insights.insufficientSleep'),
+            description: t('insights.insufficientSleepDesc', { hours: recentSleep.toFixed(1) }),
             metric_value: recentSleep,
             trend: recentSleep < prevSleep ? 'down' : 'stable',
             priority: 2,
@@ -117,8 +119,8 @@ export function AutomatedInsights({ clientId }: AutomatedInsightsProps) {
           insights.push({
             type: 'success',
             category: 'sleep',
-            title: 'Улучшение качества сна',
-            description: `Сон увеличился на ${((recentSleep - prevSleep) * 60).toFixed(0)} минут в неделю. Отличный прогресс!`,
+            title: t('insights.sleepImprovement'),
+            description: t('insights.sleepImprovementDesc', { minutes: ((recentSleep - prevSleep) * 60).toFixed(0) }),
             metric_value: recentSleep,
             trend: 'up',
             priority: 4,
@@ -136,8 +138,8 @@ export function AutomatedInsights({ clientId }: AutomatedInsightsProps) {
           insights.push({
             type: 'success',
             category: 'activity',
-            title: 'Стабильная активность',
-            description: `${consistency} дней с активностью >5000 шагов. Средняя: ${avgSteps.toFixed(0)} шагов/день.`,
+            title: t('insights.stableActivity'),
+            description: t('insights.stableActivityDesc', { days: consistency, steps: avgSteps.toFixed(0) }),
             metric_value: avgSteps,
             trend: 'up',
             priority: 5,
@@ -146,8 +148,8 @@ export function AutomatedInsights({ clientId }: AutomatedInsightsProps) {
           insights.push({
             type: 'info',
             category: 'activity',
-            title: 'Низкая активность',
-            description: `Только ${consistency} активных дней на неделе. Попробуйте увеличить ежедневную активность.`,
+            title: t('insights.lowActivity'),
+            description: t('insights.lowActivityDesc', { days: consistency }),
             metric_value: avgSteps,
             trend: 'down',
             priority: 3,
@@ -161,8 +163,8 @@ export function AutomatedInsights({ clientId }: AutomatedInsightsProps) {
         insights.push({
           type: 'warning',
           category: 'general',
-          title: 'Недостаточно данных',
-          description: `За последние 7 дней получены данные только за ${uniqueDates.size} дней. Проверьте синхронизацию устройств.`,
+          title: t('insights.insufficientData'),
+          description: t('insights.insufficientDataDesc', { days: uniqueDates.size }),
           priority: 2,
         });
       }
@@ -201,7 +203,7 @@ export function AutomatedInsights({ clientId }: AutomatedInsightsProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Анализ данных...</CardTitle>
+          <CardTitle>{t('insights.analyzing')}</CardTitle>
         </CardHeader>
       </Card>
     );
@@ -211,9 +213,9 @@ export function AutomatedInsights({ clientId }: AutomatedInsightsProps) {
     return (
       <Alert>
         <ThumbsUp className="h-4 w-4" />
-        <AlertTitle>Все в порядке</AlertTitle>
+        <AlertTitle>{t('insights.allGood')}</AlertTitle>
         <AlertDescription>
-          Автоматический анализ не выявил проблем. Клиент находится в хорошей форме.
+          {t('insights.allGoodDesc')}
         </AlertDescription>
       </Alert>
     );
@@ -224,10 +226,10 @@ export function AutomatedInsights({ clientId }: AutomatedInsightsProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Zap className="h-5 w-5" />
-          Автоматические инсайты
+          {t('insights.title')}
         </CardTitle>
         <CardDescription>
-          Найдено {insights.length} важных наблюдений на основе данных клиента
+          {t('insights.found', { count: insights.length })}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
