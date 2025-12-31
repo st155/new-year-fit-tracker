@@ -497,3 +497,28 @@ export async function deleteChallenge(id: string): Promise<void> {
 
   if (error) throw error;
 }
+
+/**
+ * Extend a challenge by N days
+ */
+export async function extendChallenge(challengeId: string, days: number = 10): Promise<Challenge> {
+  // Get current end date
+  const { data: challenge, error: fetchError } = await supabase
+    .from('challenges')
+    .select('end_date')
+    .eq('id', challengeId)
+    .single();
+
+  if (fetchError) throw fetchError;
+  if (!challenge) throw new Error('Challenge not found');
+
+  // Calculate new end date
+  const currentEndDate = new Date(challenge.end_date);
+  const newEndDate = new Date(currentEndDate);
+  newEndDate.setDate(newEndDate.getDate() + days);
+
+  // Update challenge
+  return updateChallenge(challengeId, {
+    end_date: newEndDate.toISOString().split('T')[0]
+  });
+}

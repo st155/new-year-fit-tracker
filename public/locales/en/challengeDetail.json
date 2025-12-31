@@ -40,5 +40,14 @@
     "leaveFailed": "Failed to leave challenge",
     "notFoundParticipation": "Could not find challenge participation",
     "checkPermissions": "Check your permissions"
+  },
+  "extend": {
+    "button": "Extend by 10 days",
+    "title": "Extend challenge?",
+    "description": "End date will change from {{currentDate}} to {{newDate}}",
+    "confirm": "Extend",
+    "extending": "Extending...",
+    "cancel": "Cancel",
+    "success": "Challenge extended until {{date}}!"
   }
 }

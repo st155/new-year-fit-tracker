@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
-import { useChallengeDetailQuery, useParticipantQuery } from "@/features/challenges";
+import { useChallengeDetailQuery, useParticipantQuery, useChallengeMutations } from "@/features/challenges";
 import { captureBaseline } from "@/features/challenges/utils";
 import { useDifficultyLevel } from "@/hooks/useDifficultyLevel";
 import { ChallengeFeed } from "@/components/challenge/ChallengeFeed";
@@ -13,6 +13,7 @@ import { ChallengeInfoBlock } from "@/components/challenges/ChallengeInfoBlock";
 import { ChallengeStatsOverview } from "@/components/challenges/ChallengeStatsOverview";
 import { DifficultySelectorDialog } from "@/components/challenge/DifficultySelectorDialog";
 import { DifficultyBadge } from "@/components/challenge/DifficultyBadge";
+import { ExtendChallengeButton } from "@/components/challenges/ExtendChallengeButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MessageSquare, Trophy, Target, LogOut, Info, Calendar, Users, UserPlus, ArrowLeft, List, FileText } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,9 +24,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { supabase } from "@/integrations/supabase/client";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 import { ru, enUS } from "date-fns/locale";
-
 
 export default function ChallengeDetail() {
   const { t, i18n } = useTranslation('challengeDetail');
@@ -37,8 +37,45 @@ export default function ChallengeDetail() {
   const { data: isParticipant = false, refetch: refetchParticipation } = useParticipantQuery(id, user?.id);
   const { data: difficultyLevel = 0 } = useDifficultyLevel(id, user?.id);
   const [showDifficultyDialog, setShowDifficultyDialog] = useState(false);
+  const { extendChallenge: extendMutation } = useChallengeMutations();
 
   const dateLocale = i18n.language === 'ru' ? ru : enUS;
+
+  // Check if user is creator or trainer
+  const { data: isTrainerOrCreator = false } = useQuery({
+    queryKey: ["challenge-trainer-check", id, user?.id],
+    queryFn: async () => {
+      if (!id || !user?.id) return false;
+      
+      // Check if creator
+      if (challenge?.created_by === user.id) return true;
+      
+      // Check if trainer
+      const { data } = await supabase
+        .from("challenge_trainers")
+        .select("id")
+        .eq("challenge_id", id)
+        .eq("trainer_id", user.id)
+        .maybeSingle();
+      
+      return !!data;
+    },
+    enabled: !!id && !!user?.id && !!challenge,
+  });
+
+  const handleExtendChallenge = (newEndDate: string) => {
+    if (!id) return;
+    extendMutation.mutate(
+      { challengeId: id, days: 10 },
+      {
+        onSuccess: (data) => {
+          toast.success(t("extend.success", { 
+            date: format(new Date(data.end_date), "d MMMM yyyy", { locale: dateLocale }) 
+          }));
+        },
+      }
+    );
+  };
 
   // Fetch challenge disciplines for difficulty dialog
   const { data: disciplines = [] } = useQuery({
@@ -259,6 +296,15 @@ export default function ChallengeDetail() {
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
+              )}
+              
+              {isTrainerOrCreator && (
+                <ExtendChallengeButton
+                  challengeId={id!}
+                  currentEndDate={challenge.end_date}
+                  onExtend={handleExtendChallenge}
+                  isPending={extendMutation.isPending}
+                />
               )}
             </div>
 
