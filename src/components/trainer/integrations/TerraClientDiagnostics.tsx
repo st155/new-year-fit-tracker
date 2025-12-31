@@ -22,7 +22,6 @@ import {
   Loader2, 
   Unlink, 
   AlertCircle, 
-  CheckCircle, 
   Copy,
   Settings2
 } from "lucide-react";
@@ -34,7 +33,8 @@ import {
 } from "@/hooks/admin/useTerraTokenAdmin";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
-import { ru } from "date-fns/locale";
+import { ru, enUS } from "date-fns/locale";
+import { useTranslation } from "react-i18next";
 
 interface TerraClientDiagnosticsProps {
   clientId: string;
@@ -42,6 +42,9 @@ interface TerraClientDiagnosticsProps {
 }
 
 export function TerraClientDiagnostics({ clientId, clientName }: TerraClientDiagnosticsProps) {
+  const { t, i18n } = useTranslation('trainer');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
+  
   const [open, setOpen] = useState(false);
   const [terraUsers, setTerraUsers] = useState<TerraApiUser[]>([]);
   const [referenceId, setReferenceId] = useState<string>("");
@@ -84,7 +87,7 @@ export function TerraClientDiagnostics({ clientId, clientName }: TerraClientDiag
 
   const copyReferenceId = () => {
     navigator.clipboard.writeText(clientId);
-    toast.success("Reference ID скопирован");
+    toast.success(t('terraDiag.copied'));
   };
 
   const isLoading = getTerraUsers.isPending;
@@ -100,9 +103,9 @@ export function TerraClientDiagnostics({ clientId, clientName }: TerraClientDiag
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Terra диагностика: {clientName}</DialogTitle>
+          <DialogTitle>{t('terraDiag.title', { name: clientName })}</DialogTitle>
           <DialogDescription className="flex items-center gap-2">
-            Reference ID: 
+            {t('terraDiag.referenceId')}: 
             <code className="bg-muted px-2 py-0.5 rounded text-xs font-mono">
               {clientId}
             </code>
@@ -126,7 +129,7 @@ export function TerraClientDiagnostics({ clientId, clientName }: TerraClientDiag
               ) : (
                 <RefreshCw className="h-4 w-4" />
               )}
-              Fetch Terra Users
+              {t('terraDiag.fetchUsers')}
             </Button>
 
             {terraUsers.length > 0 && (
@@ -141,7 +144,7 @@ export function TerraClientDiagnostics({ clientId, clientName }: TerraClientDiag
                 ) : (
                   <Unlink className="h-4 w-4" />
                 )}
-                Deauth All ({terraUsers.length})
+                {t('terraDiag.deauthAll', { count: terraUsers.length })}
               </Button>
             )}
           </div>
@@ -152,18 +155,18 @@ export function TerraClientDiagnostics({ clientId, clientName }: TerraClientDiag
               {terraUsers.length === 0 ? (
                 <div className="p-8 text-center text-muted-foreground">
                   <AlertCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p>Terra подключений не найдено</p>
-                  <p className="text-xs mt-1">Нет активных соединений для этого пользователя</p>
+                  <p>{t('terraDiag.noConnections')}</p>
+                  <p className="text-xs mt-1">{t('terraDiag.noActiveConnections')}</p>
                 </div>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Provider</TableHead>
-                      <TableHead>Terra User ID</TableHead>
-                      <TableHead>Last Webhook</TableHead>
-                      <TableHead>Scopes</TableHead>
-                      <TableHead className="w-[100px]">Действия</TableHead>
+                      <TableHead>{t('terraDiag.provider')}</TableHead>
+                      <TableHead>{t('terraDiag.terraUserId')}</TableHead>
+                      <TableHead>{t('terraDiag.lastWebhook')}</TableHead>
+                      <TableHead>{t('terraDiag.scopes')}</TableHead>
+                      <TableHead className="w-[100px]">{t('terraDiag.actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -184,7 +187,7 @@ export function TerraClientDiagnostics({ clientId, clientName }: TerraClientDiag
                             <span className="text-sm">
                               {formatDistanceToNow(new Date(user.last_webhook_update), {
                                 addSuffix: true,
-                                locale: ru
+                                locale: dateLocale
                               })}
                             </span>
                           ) : (
@@ -222,11 +225,11 @@ export function TerraClientDiagnostics({ clientId, clientName }: TerraClientDiag
           {/* Help text */}
           {!hasLoaded && (
             <div className="text-sm text-muted-foreground bg-muted/50 p-4 rounded-lg">
-              <p className="font-medium mb-2">Инструменты диагностики:</p>
+              <p className="font-medium mb-2">{t('terraDiag.helpTitle')}</p>
               <ul className="list-disc list-inside space-y-1 text-xs">
-                <li><strong>Fetch Terra Users</strong> — получить все активные Terra соединения из API</li>
-                <li><strong>Deauth</strong> — отключить соединение в Terra API и удалить локальный токен</li>
-                <li>Если после Deauth проблема остаётся — обратитесь в поддержку Terra с Reference ID</li>
+                <li>{t('terraDiag.helpFetch')}</li>
+                <li>{t('terraDiag.helpDeauth')}</li>
+                <li>{t('terraDiag.helpSupport')}</li>
               </ul>
             </div>
           )}

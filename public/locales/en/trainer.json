@@ -1035,5 +1035,23 @@
     "resolved": "Conflict resolved (selected {{source}})",
     "resolveError": "Error resolving conflict",
     "loadError": "Error loading conflicts"
+  },
+  "terraDiag": {
+    "title": "Terra diagnostics: {{name}}",
+    "copied": "Reference ID copied",
+    "referenceId": "Reference ID",
+    "fetchUsers": "Fetch Terra Users",
+    "deauthAll": "Deauth All ({{count}})",
+    "noConnections": "No Terra connections found",
+    "noActiveConnections": "No active connections for this user",
+    "provider": "Provider",
+    "terraUserId": "Terra User ID",
+    "lastWebhook": "Last Webhook",
+    "scopes": "Scopes",
+    "actions": "Actions",
+    "helpTitle": "Diagnostic tools:",
+    "helpFetch": "Fetch Terra Users — get all active Terra connections from API",
+    "helpDeauth": "Deauth — disconnect in Terra API and delete local token",
+    "helpSupport": "If issue persists after Deauth — contact Terra support with Reference ID"
   }
 }

@@ -1037,5 +1037,23 @@
     "resolved": "Конфликт разрешён (выбран {{source}})",
     "resolveError": "Ошибка при разрешении конфликта",
     "loadError": "Ошибка загрузки конфликтов"
+  },
+  "terraDiag": {
+    "title": "Terra диагностика: {{name}}",
+    "copied": "Reference ID скопирован",
+    "referenceId": "Reference ID",
+    "fetchUsers": "Получить пользователей Terra",
+    "deauthAll": "Отключить все ({{count}})",
+    "noConnections": "Terra подключений не найдено",
+    "noActiveConnections": "Нет активных соединений для этого пользователя",
+    "provider": "Провайдер",
+    "terraUserId": "Terra User ID",
+    "lastWebhook": "Последний вебхук",
+    "scopes": "Области доступа",
+    "actions": "Действия",
+    "helpTitle": "Инструменты диагностики:",
+    "helpFetch": "Fetch Terra Users — получить все активные Terra соединения из API",
+    "helpDeauth": "Deauth — отключить соединение в Terra API и удалить локальный токен",
+    "helpSupport": "Если после Deauth проблема остаётся — обратитесь в поддержку Terra с Reference ID"
   }
 }
