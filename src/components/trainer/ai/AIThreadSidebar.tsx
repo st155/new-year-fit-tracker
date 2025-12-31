@@ -1,11 +1,12 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus, MessageSquare, Trash2, Settings as SettingsIcon, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { useAIChat } from './useAIChat';
 import { formatDistanceToNow } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,6 +20,8 @@ import {
 } from '@/components/ui/alert-dialog';
 
 export function AIThreadSidebar() {
+  const { t, i18n } = useTranslation('trainer');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
   const { 
     conversations, 
     currentConversation, 
@@ -66,7 +69,7 @@ export function AIThreadSidebar() {
           onClick={() => startNewConversation()}
         >
           <Plus className="h-4 w-4 mr-2" />
-          New Chat
+          {t('ai.newChat')}
         </Button>
       </div>
       
@@ -76,8 +79,8 @@ export function AIThreadSidebar() {
           {conversations.length === 0 ? (
             <div className="text-center py-8 px-4">
               <MessageSquare className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
-              <p className="text-sm text-muted-foreground">No conversations yet</p>
-              <p className="text-xs text-muted-foreground mt-1">Start a new chat to begin</p>
+              <p className="text-sm text-muted-foreground">{t('ai.noConversations')}</p>
+              <p className="text-xs text-muted-foreground mt-1">{t('ai.startNewChat')}</p>
             </div>
           ) : (
             conversations.map(conv => {
@@ -115,13 +118,13 @@ export function AIThreadSidebar() {
                         "flex-1 truncate text-sm",
                         isActive ? "font-bold text-primary" : "font-medium"
                       )}>
-                        {conv.title || 'Untitled Conversation'}
+                        {conv.title || t('ai.untitled')}
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground">
                       {conv.last_message_at && formatDistanceToNow(new Date(conv.last_message_at), { 
                         addSuffix: true,
-                        locale: ru 
+                        locale: dateLocale 
                       })}
                     </p>
                   </button>
@@ -141,15 +144,15 @@ export function AIThreadSidebar() {
                     </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Delete conversation?</AlertDialogTitle>
+                      <AlertDialogTitle>{t('ai.deleteConversation')}</AlertDialogTitle>
                       <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete this conversation and all its messages.
+                        {t('ai.deleteDescription')}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogCancel>{t('ai.cancel')}</AlertDialogCancel>
                       <AlertDialogAction onClick={() => deleteConversation(conv.id)}>
-                        Delete
+                        {t('ai.delete')}
                       </AlertDialogAction>
                     </AlertDialogFooter>
                     </AlertDialogContent>
