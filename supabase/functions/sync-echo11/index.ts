@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const ECHO11_SYNC_URL = "https://vglmxiqcbhgioofgkybp.supabase.co/functions/v1/receive-elite10-sync";
+const ECHO11_SYNC_URL = "https://ftnlxzcaahvuuisffhka.supabase.co/functions/v1/sync-elite10-data";
 const TARGET_USER_ID = "a527db40-3f7f-448f-8782-da632711e818"; // Sergey Tokarev
 
 const corsHeaders = {
