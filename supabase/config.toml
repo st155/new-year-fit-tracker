@@ -276,3 +276,9 @@ verify_jwt = false
 
 [functions.whoop-sync-admin]
 verify_jwt = true
+
+[functions.sync-echo11]
+verify_jwt = false
+
+[functions.sync-echo11.cron]
+schedule = "*/30 * * * *"
