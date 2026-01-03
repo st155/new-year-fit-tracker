@@ -6,6 +6,8 @@ import { useHabitsQuery } from '@/features/habits';
 import { useCompleteHabit, useHabitInsights, useDeleteHabit } from '@/features/habits/hooks';
 import { useUserLevel } from '@/hooks/useUserLevel';
 import { useSocialNotifications } from '@/hooks/useSocialNotifications';
+import { useRecoveryMode } from '@/hooks/useRecoveryMode';
+import { RecoveryModeOverlay } from '@/components/recovery';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -61,6 +63,10 @@ export default function HabitsV3() {
   const { completeHabit, isCompleting } = useCompleteHabit();
   const { levelInfo } = useUserLevel();
   const { deleteHabit, archiveHabit, isDeleting, isArchiving } = useDeleteHabit();
+  
+  // Recovery mode detection
+  const recoveryMode = useRecoveryMode();
+  const [recoveryDismissed, setRecoveryDismissed] = useState(false);
   
   // Enable social notifications
   useSocialNotifications(!!user?.id);
@@ -162,6 +168,17 @@ export default function HabitsV3() {
           onRetry={refetch}
         />
       </div>
+    );
+  }
+
+  // Show recovery mode overlay if active and not dismissed
+  if (recoveryMode.isActive && !recoveryDismissed) {
+    return (
+      <RecoveryModeOverlay
+        metrics={recoveryMode.metrics}
+        reason={recoveryMode.reason}
+        onDismiss={() => setRecoveryDismissed(true)}
+      />
     );
   }
 
