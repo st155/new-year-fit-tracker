@@ -50,7 +50,7 @@ serve(async (req) => {
     // Get today's workouts
     const { data: workouts, error: workoutsError } = await supabase
       .from("workouts")
-      .select("id, sport, start_time, end_time, duration_seconds, calories, avg_hr, source_data")
+      .select("id, workout_type, start_time, end_time, duration_minutes, calories_burned, heart_rate_avg, source_data")
       .eq("user_id", TARGET_USER_ID)
       .gte("start_time", `${yesterday}T00:00:00Z`)
       .order("start_time", { ascending: false })
@@ -81,10 +81,10 @@ serve(async (req) => {
     
     if (workouts && workouts.length > 0) {
       const latestWorkout = workouts[0];
-      workoutType = latestWorkout.sport || "workout";
+      workoutType = latestWorkout.workout_type || "workout";
       
-      const durationMinutes = (latestWorkout.duration_seconds || 0) / 60;
-      const avgHr = latestWorkout.avg_hr || 0;
+      const durationMinutes = latestWorkout.duration_minutes || 0;
+      const avgHr = latestWorkout.heart_rate_avg || 0;
       
       if (durationMinutes >= 90 || avgHr >= 160) {
         workoutIntensity = "Extreme";
@@ -105,7 +105,7 @@ serve(async (req) => {
       hrv: getMetricValue("HRV"),
       workout_type: workoutType,
       workout_intensity: workoutIntensity,
-      nutrition_status: "balanced", // Default, can be enhanced later
+      nutrition_status: "Maintenance", // Default, can be enhanced later
       metrics_count: metrics?.length || 0,
       workouts_count: workouts?.length || 0,
     };
