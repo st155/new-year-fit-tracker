@@ -23,8 +23,8 @@ export interface RecoveryModeState {
 
 // Thresholds for detecting illness/recovery mode
 const THRESHOLDS = {
-  RHR_HIGH: 100,           // RHR > 100 bpm = definitely sick
-  RHR_ELEVATED: 80,        // RHR > 80 bpm = elevated (check with recovery)
+  RHR_HIGH: 65,            // RHR > 65 bpm = elevated (illness indicator)
+  RHR_ELEVATED: 55,        // RHR > 55 bpm = slightly elevated (check with recovery)
   RECOVERY_CRITICAL: 25,   // Recovery < 25% = critical
   RECOVERY_LOW: 40,        // Recovery < 40% = low (check with RHR)
   HRV_CRITICAL: 20,        // HRV < 20 ms = very low
