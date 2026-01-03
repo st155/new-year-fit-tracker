@@ -68,12 +68,8 @@ serve(async (req) => {
       return metric?.value ?? null;
     };
 
-    // Calculate sleep quality from available metrics
-    let sleepQuality = getMetricValue("Sleep Quality") ?? getMetricValue("Sleep Score");
-    if (!sleepQuality && getMetricValue("Sleep Efficiency")) {
-      // Convert efficiency (0-100%) to quality (1-10)
-      sleepQuality = Math.round((getMetricValue("Sleep Efficiency")! / 100) * 10);
-    }
+    // Get sleep quality - use Sleep Efficiency directly as percentage (0-100)
+    const sleepQuality = getMetricValue("Sleep Quality") ?? getMetricValue("Sleep Score") ?? getMetricValue("Sleep Efficiency");
 
     // Determine workout intensity from duration and type
     let workoutIntensity = "Rest";
@@ -100,7 +96,7 @@ serve(async (req) => {
     const payload = {
       user_id: TARGET_USER_ID,
       date: today,
-      sleep_quality: sleepQuality ? Math.min(10, Math.max(1, Math.round(sleepQuality / 10))) : null,
+      sleep_quality: sleepQuality ? Math.round(sleepQuality) : null, // Now passes 95% instead of 1
       recovery_score: getMetricValue("Recovery Score"),
       hrv: getMetricValue("HRV"),
       workout_type: workoutType,
