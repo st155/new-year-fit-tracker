@@ -2787,7 +2787,15 @@ export type Database = {
           user_id?: string
           visibility?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "habit_feed_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       habit_journal_entries: {
         Row: {
