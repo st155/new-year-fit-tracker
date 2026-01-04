@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Dumbbell } from "lucide-react";
+import { syncTodayToEcho11 } from "@/utils/elite10Connector";
 
 interface LogWorkoutDialogProps {
   isOpen: boolean;
@@ -21,7 +22,6 @@ export function LogWorkoutDialog({ isOpen, onClose, onSuccess }: LogWorkoutDialo
     
     setLoading(true);
     try {
-      const today = new Date().toISOString().split('T')[0];
       const now = new Date().toISOString();
       
       // Create workout record
@@ -37,6 +37,16 @@ export function LogWorkoutDialog({ isOpen, onClose, onSuccess }: LogWorkoutDialo
       if (workoutError) throw workoutError;
 
       toast.success('Workout logged successfully! 🎉');
+      
+      // Sync to Echo11 (non-blocking)
+      syncTodayToEcho11({
+        sleep_quality: null,
+        recovery_score: null,
+        workout_type: 'Other',
+        workout_intensity: 'Medium',
+        nutrition_status: null,
+      }).catch(e => console.warn('[Echo11] Sync failed:', e));
+      
       onSuccess();
       onClose();
     } catch (error) {
