@@ -1,9 +1,11 @@
 /**
  * Elite10 → Echo11 Connector
  * 
- * Syncs fitness data with Echo11's AI assistant.
+ * Syncs fitness data with Echo11's AI assistant via Edge Function.
  * The AI will adapt its recommendations based on your physical state.
  */
+
+import { supabase } from "@/integrations/supabase/client";
 
 export interface Elite10DailyData {
   user_id: string;
@@ -11,7 +13,7 @@ export interface Elite10DailyData {
   sleep_quality: number; // 0-100
   recovery_score: number; // 0-100
   workout_type: string; // 'Leg Day', 'Cardio', 'Upper Body', 'Rest', etc.
-  workout_intensity: 'Low' | 'Medium' | 'High' | 'Extreme';
+  workout_intensity: 'Low' | 'Medium' | 'High' | 'Extreme' | null;
   nutrition_status: 'Fasting' | 'Surplus' | 'Deficit' | 'Maintenance';
 }
 
@@ -20,7 +22,7 @@ export interface HistoricalDayData {
   sleep_quality: number; // 0-100
   recovery_score: number; // 0-100
   workout_type: string;
-  workout_intensity: 'Low' | 'Medium' | 'High' | 'Extreme';
+  workout_intensity: 'Low' | 'Medium' | 'High' | 'Extreme' | null;
   nutrition_status?: 'Fasting' | 'Surplus' | 'Deficit' | 'Maintenance';
 }
 
@@ -40,26 +42,16 @@ export interface HistoricalSyncResult {
   results: Array<{ date: string; success: boolean; error?: string }>;
 }
 
-// Echo11 Sync Endpoint
-const ECHO11_SYNC_URL = "https://ftnlxzcaahvuuisffhka.supabase.co/functions/v1/sync-elite10-data";
-
 /**
- * Push daily fitness data from Elite10 to Echo11
+ * Push daily fitness data from Elite10 to Echo11 via Edge Function
  */
 export async function pushToEcho11(
-  data: Elite10DailyData, 
-  syncSecret: string
+  data: Omit<Elite10DailyData, 'user_id'>
 ): Promise<PushResult> {
   try {
     // Validate required fields
-    if (!data.user_id) {
-      return { success: false, error: "Missing user_id" };
-    }
     if (!data.date) {
       return { success: false, error: "Missing date" };
-    }
-    if (!syncSecret) {
-      return { success: false, error: "Missing sync secret" };
     }
 
     // Validate date format
@@ -76,41 +68,19 @@ export async function pushToEcho11(
       return { success: false, error: "recovery_score must be between 0 and 100" };
     }
 
-    const response = await fetch(ECHO11_SYNC_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Elite10-Secret": syncSecret,
-      },
-      body: JSON.stringify(data),
+    const { data: result, error } = await supabase.functions.invoke('echo11-sync', {
+      body: { days: [data] }
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      let errorMessage: string;
-
-      try {
-        const errorJson = JSON.parse(errorText);
-        errorMessage = errorJson.error || errorJson.message || errorText;
-      } catch {
-        errorMessage = errorText;
-      }
-
-      return { 
-        success: false, 
-        error: `HTTP ${response.status}: ${errorMessage}` 
-      };
+    if (error) {
+      return { success: false, error: error.message };
     }
 
-    const result = await response.json();
+    if (result.failed > 0) {
+      return { success: false, error: result.errors?.[0] || 'Unknown error' };
+    }
 
-    return { 
-      success: true, 
-      cognitive_load_capacity: result.cognitive_load_capacity,
-      focus_mode: result.focus_mode,
-      physical_energy_tag: result.physical_energy_tag,
-      ai_strategy: result.ai_strategy,
-    };
+    return { success: true };
   } catch (error) {
     return { 
       success: false, 
@@ -140,17 +110,14 @@ export function calculateCognitiveCapacity(
  * Quick sync for today's data
  */
 export async function syncTodayToEcho11(
-  userId: string,
-  metrics: Omit<Elite10DailyData, 'user_id' | 'date'>,
-  syncSecret: string
+  metrics: Omit<Elite10DailyData, 'user_id' | 'date'>
 ): Promise<PushResult> {
   const today = new Date().toISOString().split('T')[0];
 
   return pushToEcho11({
-    user_id: userId,
     date: today,
     ...metrics,
-  }, syncSecret);
+  });
 }
 
 /**
@@ -164,78 +131,49 @@ export function mapDurationToIntensity(durationMinutes: number): 'Low' | 'Medium
 }
 
 /**
- * Sync historical data (multiple days) to Echo11
+ * Sync historical data (multiple days) to Echo11 via Edge Function
  */
 export async function syncHistoricalToEcho11(
-  userId: string,
   days: HistoricalDayData[],
-  syncSecret: string,
   onProgress?: (current: number, total: number) => void
 ): Promise<HistoricalSyncResult> {
-  const results: HistoricalSyncResult['results'] = [];
-  const errors: string[] = [];
-  let successCount = 0;
-  let failedCount = 0;
-
-  for (let i = 0; i < days.length; i++) {
-    const day = days[i];
-    
-    try {
-      const response = await fetch(ECHO11_SYNC_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Elite10-Secret": syncSecret,
-        },
-        body: JSON.stringify({
-          user_id: userId,
-          date: day.date,
-          sleep_quality: day.sleep_quality,
-          recovery_score: day.recovery_score,
-          workout_type: day.workout_type,
-          workout_intensity: day.workout_intensity,
-          nutrition_status: day.nutrition_status || 'Maintenance',
-        }),
-      });
-
-      if (response.ok) {
-        successCount++;
-        results.push({ date: day.date, success: true });
-      } else {
-        failedCount++;
-        const errorText = await response.text();
-        let errorMessage: string;
-        try {
-          const errorJson = JSON.parse(errorText);
-          errorMessage = errorJson.error || errorJson.message || errorText;
-        } catch {
-          errorMessage = errorText;
-        }
-        errors.push(`${day.date}: ${errorMessage}`);
-        results.push({ date: day.date, success: false, error: errorMessage });
-      }
-    } catch (error) {
-      failedCount++;
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      errors.push(`${day.date}: ${errorMessage}`);
-      results.push({ date: day.date, success: false, error: errorMessage });
-    }
-
-    // Report progress
+  try {
+    // Report initial progress
     if (onProgress) {
-      onProgress(i + 1, days.length);
+      onProgress(0, days.length);
     }
 
-    // Small delay to avoid rate limiting
-    if (i < days.length - 1) {
-      await new Promise(resolve => setTimeout(resolve, 100));
+    const { data: result, error } = await supabase.functions.invoke('echo11-sync', {
+      body: { days }
+    });
+
+    if (error) {
+      return {
+        success: 0,
+        failed: days.length,
+        errors: [error.message],
+        results: days.map(d => ({ date: d.date, success: false, error: error.message }))
+      };
     }
+
+    // Report final progress
+    if (onProgress) {
+      onProgress(days.length, days.length);
+    }
+
+    return {
+      success: result.success || 0,
+      failed: result.failed || 0,
+      errors: result.errors || [],
+      results: result.results || []
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return {
+      success: 0,
+      failed: days.length,
+      errors: [errorMessage],
+      results: days.map(d => ({ date: d.date, success: false, error: errorMessage }))
+    };
   }
-
-  return {
-    success: successCount,
-    failed: failedCount,
-    errors,
-    results,
-  };
 }

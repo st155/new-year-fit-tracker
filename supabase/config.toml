@@ -282,3 +282,6 @@ verify_jwt = false
 
 [functions.sync-echo11.cron]
 schedule = "*/30 * * * *"
+
+[functions.echo11-sync]
+verify_jwt = true

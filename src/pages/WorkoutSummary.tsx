@@ -126,25 +126,22 @@ export default function WorkoutSummary() {
 
       // 🔗 Sync to Echo11 after successful save
       if (stats && user) {
-        const syncSecret = import.meta.env.VITE_ELITE10_SYNC_SECRET;
-        if (syncSecret && syncSecret !== 'your-elite10-sync-secret-here') {
-          const result = await syncTodayToEcho11(
-            user.id,
-            {
-              sleep_quality: 70, // TODO: get from health data
-              recovery_score: overallFeeling * 20, // 1-5 → 20-100
-              workout_type: summaryData.planName || 'Workout',
-              workout_intensity: mapDurationToIntensity(stats.duration),
-              nutrition_status: 'Maintenance', // TODO: get from nutrition data
-            },
-            syncSecret
-          );
+        try {
+          const result = await syncTodayToEcho11({
+            sleep_quality: 70, // TODO: get from health data
+            recovery_score: overallFeeling * 20, // 1-5 → 20-100
+            workout_type: summaryData.planName || 'Workout',
+            workout_intensity: mapDurationToIntensity(stats.duration),
+            nutrition_status: 'Maintenance', // TODO: get from nutrition data
+          });
           
           if (result.success) {
-            console.log('✅ Synced to Echo11:', result.ai_strategy);
+            console.log('✅ Synced to Echo11');
           } else {
             console.warn('⚠️ Echo11 sync failed:', result.error);
           }
+        } catch (syncError) {
+          console.warn('⚠️ Echo11 sync error:', syncError);
         }
       }
 
