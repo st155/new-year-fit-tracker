@@ -35,12 +35,6 @@ export function useSyncHistoricalData() {
       return;
     }
 
-    const syncSecret = import.meta.env.VITE_ELITE10_SYNC_SECRET;
-    if (!syncSecret) {
-      setProgress({ current: 0, total: 0, status: 'error', message: 'ELITE10_SYNC_SECRET не настроен' });
-      return;
-    }
-
     setProgress({ current: 0, total: days, status: 'loading', message: 'Загрузка данных...' });
     setResult(null);
 
@@ -160,8 +154,8 @@ export function useSyncHistoricalData() {
           ? getMostCommon(data.workout_types)
           : 'Rest';
 
-        // Determine intensity from RPE or default
-        let intensity: 'Low' | 'Medium' | 'High' | 'Extreme' = 'Low';
+        // Determine intensity from RPE or default to null if no workout
+        let intensity: 'Low' | 'Medium' | 'High' | 'Extreme' | null = null;
         if (data.workout_intensities.length > 0) {
           const avgRpe = data.workout_intensities.reduce((a, b) => a + b, 0) / data.workout_intensities.length;
           if (avgRpe >= 9) intensity = 'Extreme';
@@ -192,13 +186,11 @@ export function useSyncHistoricalData() {
         current: 0, 
         total: historicalData.length, 
         status: 'syncing', 
-        message: `Синхронизация 0/${historicalData.length}...` 
+        message: `Синхронизация...` 
       });
 
       const syncResult = await syncHistoricalToEcho11(
-        user.id,
         historicalData,
-        syncSecret,
         (current, total) => {
           setProgress({
             current,
