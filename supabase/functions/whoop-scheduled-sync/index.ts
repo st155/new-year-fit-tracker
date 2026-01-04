@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getWorkoutTypeName } from '../_shared/workout-types.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -484,10 +485,16 @@ async function syncUserData(serviceClient: any, tokenData: any) {
 
   // Fetch workouts
   try {
-    const workouts = await fetchAllWhoopData(accessToken, '/activity/workout', {
+    // Use V2 API endpoint: /workout (not /activity/workout)
+    const workouts = await fetchAllWhoopData(accessToken, '/workout', {
       start: `${startStr}T00:00:00.000Z`,
       end: `${endStr}T23:59:59.999Z`,
     });
+
+    console.log(`🏋️ [scheduled-sync] User ${userId}: Fetched ${workouts.length} workouts from WHOOP API`);
+    if (workouts.length > 0) {
+      console.log(`🏋️ [scheduled-sync] Sample workout structure:`, JSON.stringify(workouts[0]).slice(0, 500));
+    }
 
     // Track daily aggregates for workout metrics
     const dailyWorkoutStats: Record<string, { count: number; totalCalories: number; totalMinutes: number; totalDistance: number }> = {};
@@ -539,11 +546,13 @@ async function syncUserData(serviceClient: any, tokenData: any) {
         dailyWorkoutStats[measurementDate].totalDistance += distanceKm;
       }
 
+      // Get human-readable workout type name from sport_id
+      const workoutTypeName = getWorkoutTypeName(workout.sport_id);
+
       // Insert individual workout to workouts table
       workoutsToInsert.push({
         user_id: userId,
-        workout_type: workout.sport_id?.toString() || 'unknown',
-        workout_name: `Whoop Workout ${workout.id}`,
+        workout_type: workoutTypeName,
         start_time: workout.start,
         end_time: workout.end,
         duration_minutes: workout.start && workout.end
@@ -555,8 +564,11 @@ async function syncUserData(serviceClient: any, tokenData: any) {
         heart_rate_max: workout.score?.max_heart_rate,
         source: 'whoop',
         external_id: `whoop_workout_${workout.id}`,
+        source_data: { sport_id: workout.sport_id, score: workout.score, sport_name: workout.sport_name },
       });
     }
+
+    console.log(`🏋️ [scheduled-sync] User ${userId}: Prepared ${workoutsToInsert.length} workouts to insert`);
 
     // Add daily workout aggregate metrics
     for (const [date, stats] of Object.entries(dailyWorkoutStats)) {
@@ -654,12 +666,23 @@ async function syncUserData(serviceClient: any, tokenData: any) {
 
   // Insert workouts
   if (workoutsToInsert.length > 0) {
-    await serviceClient
+    console.log(`🏋️ [scheduled-sync] User ${userId}: Inserting ${workoutsToInsert.length} workouts to DB...`);
+    
+    const { error: workoutError, data: workoutData } = await serviceClient
       .from('workouts')
       .upsert(workoutsToInsert, {
         onConflict: 'user_id,external_id',
         ignoreDuplicates: false,
-      });
+      })
+      .select('id');
+
+    if (workoutError) {
+      console.error(`❌ [scheduled-sync] User ${userId}: Failed to insert workouts:`, workoutError);
+    } else {
+      console.log(`✅ [scheduled-sync] User ${userId}: Successfully inserted ${workoutData?.length || 0} workouts`);
+    }
+  } else {
+    console.log(`ℹ️ [scheduled-sync] User ${userId}: No workouts to insert`);
   }
 
   // Update last sync time
