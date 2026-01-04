@@ -1,7 +1,7 @@
 import { Suspense, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
-import { AuthProvider } from "@/hooks/useAuth";
+import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { PageLoader } from "@/components/ui/page-loader";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { SafeRouter } from "@/lib/SafeRouter";
@@ -12,6 +12,7 @@ import { initWebVitals } from "@/lib/web-vitals";
 import { logger } from "@/lib/logger";
 import { DISABLE_SW } from "@/lib/safe-flags";
 import { AppRoutes } from "./app/AppRoutes";
+import { useAutoEcho11Sync } from "@/hooks/useAutoEcho11Sync";
 
 
 const queryClient = new QueryClient({
@@ -86,6 +87,7 @@ const AppContent = () => {
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
       <SafeRouter>
         <AuthProvider>
+          <Echo11SyncProvider />
           <Suspense fallback={<PageLoader message="Loading application..." />}>
             <AppRoutes />
           </Suspense>
@@ -93,6 +95,13 @@ const AppContent = () => {
       </SafeRouter>
     </ThemeProvider>
   );
+};
+
+// Separate component to use auth context
+const Echo11SyncProvider = () => {
+  const { user } = useAuth();
+  useAutoEcho11Sync(user?.id);
+  return null;
 };
 
 // Main application component with authentication and routing

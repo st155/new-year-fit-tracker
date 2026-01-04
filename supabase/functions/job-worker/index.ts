@@ -985,6 +985,42 @@ async function processTerraWebhookData(
     metricsCount: processedCount 
   });
 
+  // Sync to Echo11 after processing metrics
+  if (processedCount > 0 && user_id) {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      const { data: todayMetrics } = await supabase
+        .from('unified_metrics')
+        .select('metric_name, value')
+        .eq('user_id', user_id)
+        .eq('measurement_date', today);
+
+      if (todayMetrics && todayMetrics.length > 0) {
+        const sleepQuality = todayMetrics.find(m => 
+          m.metric_name === 'Sleep Efficiency')?.value || null;
+        const recoveryScore = todayMetrics.find(m => 
+          m.metric_name === 'Recovery Score')?.value || null;
+
+        await supabase.functions.invoke('echo11-sync', {
+          body: {
+            days: [{
+              date: today,
+              sleep_quality: sleepQuality,
+              recovery_score: recoveryScore,
+              workout_type: null,
+              workout_intensity: null,
+            }]
+          }
+        });
+        
+        logger.info('Echo11 sync triggered after Terra webhook', { userId: user_id });
+      }
+    } catch (syncError: any) {
+      logger.warn('Echo11 sync failed (non-critical)', { error: syncError.message });
+    }
+  }
+
   return { 
     success: true, 
     processedCount, 
