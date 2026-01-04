@@ -72,7 +72,7 @@ serve(async (req) => {
     const sleepQuality = getMetricValue("Sleep Quality") ?? getMetricValue("Sleep Score") ?? getMetricValue("Sleep Efficiency");
 
     // Determine workout intensity from duration and type
-    let workoutIntensity = "Rest";
+    let workoutIntensity: string | null = null;
     let workoutType = "none";
     
     if (workouts && workouts.length > 0) {
