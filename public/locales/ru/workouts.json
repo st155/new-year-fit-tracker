@@ -27,7 +27,18 @@
     "sets": "Подходов",
     "intensity": "Интенсивность",
     "kgPerMin": "{{value}} кг/мин",
-    "summaryTitle": "Краткая сводка"
+    "summaryTitle": "Краткая сводка",
+    "title": "Статистика",
+    "streak": "Серия",
+    "streakDays": " дней",
+    "workouts": "Тренировок",
+    "time": "Время",
+    "timeHours": " ч",
+    "volume": "Объем",
+    "volumeTons": " т",
+    "week": "Неделя",
+    "month": "Месяц",
+    "allTime": "Все время"
   },
   "feeling": {
     "title": "Как ты себя чувствуешь?",
@@ -130,19 +141,6 @@
     "thu": "Чт",
     "fri": "Пт",
     "sat": "Сб"
-  },
-  "stats": {
-    "title": "Статистика",
-    "streak": "Серия",
-    "streakDays": " дней",
-    "workouts": "Тренировок",
-    "time": "Время",
-    "timeHours": " ч",
-    "volume": "Объем",
-    "volumeTons": " т",
-    "week": "Неделя",
-    "month": "Месяц",
-    "allTime": "Все время"
   },
   "heartRateZones": {
     "title": "Зоны пульса",
@@ -309,5 +307,17 @@
     "saved": "Тренировка сохранена!",
     "saveError": "Ошибка сохранения",
     "loading": "Загрузка статистики..."
+  },
+  "management": {
+    "backToWorkouts": "Назад к тренировкам",
+    "title": "Планы и История",
+    "subtitle": "Управляй своими тренировками",
+    "inProgress": "В процессе",
+    "tabs": {
+      "plan": "План",
+      "planDesc": "Текущая программа",
+      "logbook": "Журнал",
+      "logbookDesc": "История тренировок"
+    }
   }
 }

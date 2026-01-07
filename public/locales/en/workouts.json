@@ -27,7 +27,18 @@
     "sets": "Sets",
     "intensity": "Intensity",
     "kgPerMin": "{{value}} kg/min",
-    "summaryTitle": "Summary"
+    "summaryTitle": "Summary",
+    "title": "Statistics",
+    "streak": "Streak",
+    "streakDays": " days",
+    "workouts": "Workouts",
+    "time": "Time",
+    "timeHours": " h",
+    "volume": "Volume",
+    "volumeTons": " t",
+    "week": "Week",
+    "month": "Month",
+    "allTime": "All time"
   },
   "feeling": {
     "title": "How do you feel?",
@@ -132,19 +143,6 @@
     "thu": "Thu",
     "fri": "Fri",
     "sat": "Sat"
-  },
-  "stats": {
-    "title": "Statistics",
-    "streak": "Streak",
-    "streakDays": " days",
-    "workouts": "Workouts",
-    "time": "Time",
-    "timeHours": " h",
-    "volume": "Volume",
-    "volumeTons": " t",
-    "week": "Week",
-    "month": "Month",
-    "allTime": "All time"
   },
   "heartRateZones": {
     "title": "Heart Rate Zones",
@@ -309,5 +307,17 @@
     "saved": "Workout saved!",
     "saveError": "Error saving",
     "loading": "Loading statistics..."
+  },
+  "management": {
+    "backToWorkouts": "Back to workouts",
+    "title": "Plans & History",
+    "subtitle": "Manage your workouts",
+    "inProgress": "In progress",
+    "tabs": {
+      "plan": "Plan",
+      "planDesc": "Current program",
+      "logbook": "Logbook",
+      "logbookDesc": "Workout history"
+    }
   }
 }

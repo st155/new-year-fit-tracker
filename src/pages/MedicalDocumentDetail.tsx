@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Loader2, FileText, Calendar, Building2, Activity, Edit2, Save, AlertCircle, RefreshCw, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -37,19 +38,20 @@ import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 import { showSuccessToast, showErrorToast } from '@/lib/toast-utils';
 
-const processingStages = {
-  'downloading': { label: '📄 Загрузка PDF', progress: 10 },
-  'converting': { label: '🔄 Конвертация в base64', progress: 20 },
-  'analyzing': { label: '🤖 Анализ с Gemini AI', progress: 50 },
-  'saving': { label: '💾 Сохранение биомаркеров', progress: 85 },
-  'complete': { label: '✅ Готово!', progress: 100 },
-} as const;
-
 export default function MedicalDocumentDetail() {
+  const { t } = useTranslation('medicalDocs');
   const { documentId } = useParams<{ documentId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  
+  const processingStages = {
+    'downloading': { label: t('detail.processing.downloading'), progress: 10 },
+    'converting': { label: t('detail.processing.converting'), progress: 20 },
+    'analyzing': { label: t('detail.processing.analyzing'), progress: 50 },
+    'saving': { label: t('detail.processing.saving'), progress: 85 },
+    'complete': { label: t('detail.processing.complete'), progress: 100 },
+  } as const;
   
   const { documents, updateDocument, deleteDocument } = useMedicalDocuments();
   const { results, isLoading, parseDocument } = useLabTestResults(documentId);
