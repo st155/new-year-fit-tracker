@@ -207,5 +207,116 @@
     "pending": "Pending processing...",
     "processingAI": "AI processing...",
     "unknownError": "Unknown error"
+  },
+  "detail": {
+    "notFound": "Document not found",
+    "back": "Go back",
+    "processAI": "Process AI",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "infoTitle": "Document Information",
+    "processing": {
+      "downloading": "📄 Downloading PDF",
+      "converting": "🔄 Converting to base64",
+      "analyzing": "🤖 Analyzing with Gemini AI",
+      "saving": "💾 Saving biomarkers",
+      "complete": "✅ Done!",
+      "inProgress": "Processing document...",
+      "hint": "This may take 10-15 seconds. Gemini is analyzing the entire PDF..."
+    },
+    "types": {
+      "inbody": "📊 InBody Analysis",
+      "blood_test": "🩸 Blood Test",
+      "fitness_report": "📋 Medical Report",
+      "progress_photo": "📸 Progress Photo",
+      "vo2max": "🫁 VO2max Test",
+      "caliper": "📏 Caliper",
+      "prescription": "💊 Prescription",
+      "training_program": "🏋️ Training Program",
+      "other": "📄 Other Document"
+    },
+    "labels": {
+      "documentType": "Document Type",
+      "documentDate": "Document Date",
+      "tags": "Tags (comma separated)",
+      "tagsPlaceholder": "blood test, cholesterol, checkup",
+      "notes": "Notes",
+      "notesPlaceholder": "Your notes for this document...",
+      "hideFromTrainer": "Hide from trainer",
+      "trainerVisibility": "Trainer visibility",
+      "hidden": "🔒 Hidden",
+      "visible": "👁️ Visible"
+    },
+    "error": {
+      "title": "Processing failed",
+      "unknown": "Unknown error while processing the document"
+    },
+    "unmatched": {
+      "title": "Unmatched Indicators",
+      "description": "{{count}} indicators were not automatically recognized. Help the system learn to recognize them.",
+      "rematch": "Rematch",
+      "manualMatch": "Match manually →"
+    },
+    "summary": {
+      "title": "Overview",
+      "totalIndicators": "Total indicators",
+      "categories": "Categories",
+      "analysisDate": "Analysis date",
+      "laboratory": "Laboratory",
+      "notSpecified": "Not specified"
+    },
+    "statusBadge": {
+      "low": "Low",
+      "normal": "Normal",
+      "high": "High"
+    },
+    "categories": {
+      "lipids": "Lipids",
+      "metabolic": "Metabolic",
+      "hormones": "Hormones",
+      "liver": "Liver",
+      "kidney": "Kidney",
+      "blood_count": "Blood Count",
+      "vitamins": "Vitamins",
+      "minerals": "Minerals",
+      "inflammation": "Inflammation",
+      "other": "Other"
+    },
+    "empty": {
+      "title": "No data extracted",
+      "description": "Click \"Process AI\" to extract biomarkers from the document.",
+      "processButton": "Process document"
+    },
+    "toast": {
+      "deleted": "Document deleted",
+      "deletedDesc": "Document successfully deleted",
+      "deleteError": "Delete error",
+      "filenameSaved": "Filename saved",
+      "filenameDesc": "Filename updated",
+      "error": "Error",
+      "processingComplete": "✅ Processing complete",
+      "biomarkersExtracted": "Biomarkers successfully extracted",
+      "statusReset": "Status reset",
+      "statusResetDesc": "Document ready for reprocessing",
+      "resetError": "Reset error",
+      "rematchComplete": "Rematching complete",
+      "rematchResult": "Rematched: {{matched}} of {{total}} indicators",
+      "rematchError": "Rematch error"
+    },
+    "deleteConfirmTitle": "Delete document?",
+    "deleteConfirmDesc": "This action cannot be undone. The document and all related data will be permanently deleted."
+  },
+  "management": {
+    "backToWorkouts": "Back to workouts",
+    "title": "Plans & History",
+    "subtitle": "Manage your workouts",
+    "inProgress": "In progress",
+    "tabs": {
+      "plan": "Plan",
+      "planDesc": "Current program",
+      "logbook": "Logbook",
+      "logbookDesc": "Workout history"
+    }
   }
 }

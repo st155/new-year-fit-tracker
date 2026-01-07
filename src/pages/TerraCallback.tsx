@@ -431,7 +431,7 @@ export default function TerraCallback() {
         }
 
         setStatus('error');
-        setMessage('Не удалось подтвердить подключение');
+        setMessage(t('callback.confirmFailed'));
         setTimeout(() => navigate('/integrations'), 5000);
       } catch (e) {
         console.error('Terra callback check error', e);
