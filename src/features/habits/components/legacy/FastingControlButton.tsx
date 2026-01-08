@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Play, Utensils, Square } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 interface FastingControlButtonProps {
   status: {
@@ -22,6 +23,7 @@ export function FastingControlButton({
   isLoading = false,
   className,
 }: FastingControlButtonProps) {
+  const { t } = useTranslation('habits');
   
   // Inactive state - Start Fasting
   if (!status.isFasting && !status.isEating) {
@@ -40,7 +42,7 @@ export function FastingControlButton({
         )}
       >
         <Play className="h-5 w-5 mr-2" />
-        Начать голодание
+        {t('fastingControl.startFasting')}
       </Button>
     );
   }
@@ -62,7 +64,7 @@ export function FastingControlButton({
         )}
       >
         <Utensils className="h-5 w-5 mr-2" />
-        Окно питания
+        {t('fastingControl.eatingWindow')}
       </Button>
     );
   }
@@ -83,7 +85,7 @@ export function FastingControlButton({
       )}
     >
       <Square className="h-5 w-5 mr-2" />
-      Закончить есть
+      {t('fastingControl.endEating')}
     </Button>
   );
 }

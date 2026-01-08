@@ -294,5 +294,27 @@
     "trend": "Trend"
   },
   "streakDays_one": "{{count}} day",
-  "streakDays_other": "{{count}} days"
+  "streakDays_other": "{{count}} days",
+  "overviewStats": {
+    "today": "Today",
+    "completed": "{{percent}}% completed",
+    "streak": "Streak",
+    "daysTo": "To {{target}} days: {{remaining}}",
+    "startStreak": "Start streak",
+    "xp": "Experience",
+    "toLevel": "{{current}}/1000 to level {{next}}"
+  },
+  "habitStats": {
+    "totalHabits": "Total habits",
+    "activeStreaks": "Active streaks",
+    "totalCompletions": "Total completions",
+    "averagePercent": "Average percent",
+    "habitOfWeek": "Habit of the week",
+    "days": "days"
+  },
+  "fastingControl": {
+    "startFasting": "Start fasting",
+    "eatingWindow": "Eating window",
+    "endEating": "End eating"
+  }
 }

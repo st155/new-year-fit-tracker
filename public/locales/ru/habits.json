@@ -296,5 +296,27 @@
   },
   "streakDays_one": "{{count}} день",
   "streakDays_few": "{{count}} дня",
-  "streakDays_many": "{{count}} дней"
+  "streakDays_many": "{{count}} дней",
+  "overviewStats": {
+    "today": "Сегодня",
+    "completed": "{{percent}}% выполнено",
+    "streak": "Серия",
+    "daysTo": "До {{target}} дней: {{remaining}}",
+    "startStreak": "Начните серию",
+    "xp": "Опыт",
+    "toLevel": "{{current}}/1000 до уровня {{next}}"
+  },
+  "habitStats": {
+    "totalHabits": "Всего привычек",
+    "activeStreaks": "Активные серии",
+    "totalCompletions": "Всего выполнений",
+    "averagePercent": "Средний процент",
+    "habitOfWeek": "Привычка недели",
+    "days": "дней"
+  },
+  "fastingControl": {
+    "startFasting": "Начать голодание",
+    "eatingWindow": "Окно питания",
+    "endEating": "Закончить есть"
+  }
 }

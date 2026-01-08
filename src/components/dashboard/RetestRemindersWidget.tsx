@@ -6,9 +6,11 @@ import { Badge } from '@/components/ui/badge';
 import { AlertCircle, Calendar, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 export function RetestRemindersWidget() {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation('dashboard');
 
   const { data: alerts, isLoading } = useQuery({
     queryKey: ['retest-reminders'],
@@ -39,7 +41,7 @@ export function RetestRemindersWidget() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <Calendar className="h-5 w-5 text-orange-500" />
-          Напоминания о пересдаче
+          {t('retestReminders.title')}
           <Badge variant="secondary" className="ml-auto">
             {alerts.length}
           </Badge>
@@ -61,7 +63,7 @@ export function RetestRemindersWidget() {
                   {alert.message}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {new Date(alert.created_at).toLocaleDateString('ru-RU')}
+                  {new Date(alert.created_at).toLocaleDateString(i18n.language === 'ru' ? 'ru-RU' : 'en-US')}
                 </p>
               </div>
               <Button
@@ -82,7 +84,7 @@ export function RetestRemindersWidget() {
           onClick={() => navigate('/supplements')}
           className="w-full mt-2"
         >
-          Перейти к добавкам
+          {t('retestReminders.goToSupplements')}
         </Button>
       </CardContent>
     </Card>

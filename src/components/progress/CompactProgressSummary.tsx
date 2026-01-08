@@ -1,6 +1,7 @@
 import { Trophy, Target, CheckCircle2, Zap, TrendingUp } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { useTranslation } from 'react-i18next';
 
 interface CompactProgressSummaryProps {
   totalGoals: number;
@@ -19,6 +20,8 @@ export const CompactProgressSummary = ({
   totalPoints,
   weeklyPoints
 }: CompactProgressSummaryProps) => {
+  const { t } = useTranslation('progress');
+  
   return (
     <div className="rounded-lg border bg-card p-3 space-y-2">
       {/* Progress Bar */}
@@ -36,25 +39,25 @@ export const CompactProgressSummary = ({
         <div className="flex items-center gap-1.5">
           <Target className="h-3.5 w-3.5 text-muted-foreground" />
           <span className="text-sm font-medium">{totalGoals}</span>
-          <span className="text-xs text-muted-foreground">целей</span>
+          <span className="text-xs text-muted-foreground">{t('summary.goals')}</span>
         </div>
 
         <div className="flex items-center gap-1.5">
           <CheckCircle2 className="h-3.5 w-3.5 text-success" />
           <span className="text-sm font-medium text-success">{completedGoals}</span>
-          <span className="text-xs text-muted-foreground">завершено</span>
+          <span className="text-xs text-muted-foreground">{t('summary.completed')}</span>
         </div>
 
         <div className="flex items-center gap-1.5">
           <TrendingUp className="h-3.5 w-3.5 text-accent" />
           <span className="text-sm font-medium text-accent">{inProgressGoals}</span>
-          <span className="text-xs text-muted-foreground">в процессе</span>
+          <span className="text-xs text-muted-foreground">{t('summary.inProgress')}</span>
         </div>
 
         <div className="flex items-center gap-1.5">
           <Zap className="h-3.5 w-3.5 text-[hsl(var(--gold))]" />
           <span className="text-sm font-medium text-[hsl(var(--gold))]">{totalPoints}</span>
-          <span className="text-xs text-muted-foreground">pts</span>
+          <span className="text-xs text-muted-foreground">{t('summary.pts')}</span>
           <span className="text-xs text-[hsl(var(--gold))]/70">+{weeklyPoints}</span>
         </div>
       </div>

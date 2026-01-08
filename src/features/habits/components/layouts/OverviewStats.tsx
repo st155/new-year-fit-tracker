@@ -5,6 +5,7 @@ import { Target, Flame, Trophy, TrendingUp } from 'lucide-react';
 import { CircularProgress } from '@/components/ui/circular-progress';
 import { SparklineChart } from '../charts/SparklineChart';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 interface OverviewStatsProps {
   todayCompleted: number;
@@ -27,7 +28,15 @@ export function OverviewStats({
   weekData = [3, 4, 2, 5, 4, 3, todayCompleted],
   xpData = [120, 150, 80, 200, 150, 120, 180]
 }: OverviewStatsProps) {
+  const { t } = useTranslation('habits');
   const todayProgress = todayTotal > 0 ? (todayCompleted / todayTotal) * 100 : 0;
+
+  const getStreakText = () => {
+    if (weekStreak <= 0) return t('overviewStats.startStreak');
+    const target = weekStreak < 7 ? 7 : weekStreak < 30 ? 30 : 100;
+    const remaining = target - weekStreak;
+    return t('overviewStats.daysTo', { target, remaining });
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -41,7 +50,7 @@ export function OverviewStats({
           <CardContent className="p-3">
             <div className="flex items-start justify-between mb-2">
               <div className="flex-1">
-                <p className="text-xs text-muted-foreground mb-1">Сегодня</p>
+                <p className="text-xs text-muted-foreground mb-1">{t('overviewStats.today')}</p>
                 <p className="text-2xl font-bold">
                   {todayCompleted}<span className="text-muted-foreground text-lg">/{todayTotal}</span>
                 </p>
@@ -60,7 +69,7 @@ export function OverviewStats({
             </div>
             
             <p className="text-xs text-muted-foreground">
-              {Math.round(todayProgress)}% выполнено
+              {t('overviewStats.completed', { percent: Math.round(todayProgress) })}
             </p>
           </CardContent>
         </Card>
@@ -76,7 +85,7 @@ export function OverviewStats({
           <CardContent className="p-3">
             <div className="flex items-start justify-between mb-2">
               <div>
-                <p className="text-xs text-muted-foreground mb-1">Серия</p>
+                <p className="text-xs text-muted-foreground mb-1">{t('overviewStats.streak')}</p>
                 <div className="flex items-center gap-2">
                   <Flame className="w-6 h-6 text-orange-500 animate-pulse" />
                   <p className="text-2xl font-bold">{weekStreak}</p>
@@ -113,9 +122,7 @@ export function OverviewStats({
             </div>
             
             <p className="text-xs text-muted-foreground">
-              {weekStreak > 0 
-                ? `До ${weekStreak < 7 ? '7' : weekStreak < 30 ? '30' : '100'} дней: ${weekStreak < 7 ? 7 - weekStreak : weekStreak < 30 ? 30 - weekStreak : 100 - weekStreak}`
-                : 'Начните серию'}
+              {getStreakText()}
             </p>
           </CardContent>
         </Card>
@@ -131,7 +138,7 @@ export function OverviewStats({
           <CardContent className="p-3">
             <div className="flex items-start justify-between mb-2">
               <div>
-                <p className="text-xs text-muted-foreground mb-1">Опыт</p>
+                <p className="text-xs text-muted-foreground mb-1">{t('overviewStats.xp')}</p>
                 <div className="flex items-center gap-2">
                   <Trophy className="w-6 h-6 text-amber-500" />
                   <p className="text-2xl font-bold">{totalXP.toLocaleString()}</p>
@@ -161,7 +168,7 @@ export function OverviewStats({
                 className="h-1.5"
               />
               <p className="text-xs text-muted-foreground">
-                {totalXP % 1000}/1000 до уровня {level + 1}
+                {t('overviewStats.toLevel', { current: totalXP % 1000, next: level + 1 })}
               </p>
             </div>
           </CardContent>

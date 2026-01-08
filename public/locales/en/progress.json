@@ -128,5 +128,11 @@
       "avgHR": "Avg HR",
       "sleep": "Sleep"
     }
+  },
+  "summary": {
+    "goals": "goals",
+    "completed": "completed",
+    "inProgress": "in progress",
+    "pts": "pts"
   }
 }
