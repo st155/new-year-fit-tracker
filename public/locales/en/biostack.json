@@ -103,7 +103,23 @@
     "failedActivateProtocol": "Failed to activate protocol",
     "failedDeactivateProtocol": "Failed to deactivate protocol",
     "failedUpdateProtocol": "Failed to update protocol",
-    "failedDeleteProtocol": "Failed to delete protocol"
+    "failedDeleteProtocol": "Failed to delete protocol",
+    
+    "extractedProtocols": "Extracted protocols from {{count}} documents",
+    "extractResult": "Success: {{success}}, errors: {{failed}}",
+    "changesSaved": "Changes saved",
+    "itemDeleted": "Item deleted",
+    "noDocuments": "No documents to process",
+    
+    "alertDismissed": "Alert dismissed",
+    "failedUpdateAlert": "Failed to update alert",
+    "failedDismissAlert": "Failed to dismiss alert",
+    "newAlertReceived": "New protocol alert received!",
+    
+    "noValidFiles": "No valid image files selected",
+    "skippedUnsupported": "Skipped: {{name}} - unsupported format",
+    "largeFileWarning": "Large file ({{size}}MB). Processing may be slow.",
+    "processingHeic": "Processing {{name}} as HEIC (iPhone format)"
   },
   "errors": {
     "notAuthenticated": "User not authenticated",

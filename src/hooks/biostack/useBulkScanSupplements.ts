@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { supplementsApi } from '@/lib/api/client';
 import { toast } from 'sonner';
 import heic2any from 'heic2any';
+import { useTranslation } from 'react-i18next';
 
 export interface BulkUploadItem {
   id: string;
@@ -26,6 +27,7 @@ interface UploadProgress {
 }
 
 export function useBulkScanSupplements() {
+  const { t } = useTranslation('biostack');
   const [items, setItems] = useState<BulkUploadItem[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState<UploadProgress>({ current: 0, total: 0, percentage: 0 });
@@ -169,13 +171,13 @@ export function useBulkScanSupplements() {
       
       if (!isSupported) {
         console.warn(`[BULK-SCAN] Skipping unsupported file: ${file.name} (${file.type})`);
-        toast.warning(`Skipped: ${file.name} - unsupported format`);
+        toast.warning(t('toast.skippedUnsupported', { name: file.name }));
       }
       return isSupported;
     });
     
     if (validFiles.length === 0) {
-      toast.error('No valid image files selected');
+      toast.error(t('toast.noValidFiles'));
       return;
     }
     
@@ -239,7 +241,7 @@ export function useBulkScanSupplements() {
     // Warn about large files
     if (file.size > 2 * 1024 * 1024) {
       console.warn(`[BULK-SCAN] ⚠️ Large file: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
-      toast.warning(`Large file (${(file.size / 1024 / 1024).toFixed(1)}MB). Processing may be slow.`);
+      toast.warning(t('toast.largeFileWarning', { size: (file.size / 1024 / 1024).toFixed(1) }));
     }
     
     let processedFile = file;
@@ -261,7 +263,7 @@ export function useBulkScanSupplements() {
       } catch (heicError) {
         // heic2any failed - send raw HEIC to Gemini (it supports HEIC natively)
         console.log(`[BULK-SCAN] ⚠️ heic2any failed, sending raw HEIC to Gemini (native support)`);
-        toast.info(`Processing ${file.name} as HEIC (iPhone format)`);
+        toast.info(t('toast.processingHeic', { name: file.name }));
         
         return new Promise((resolve, reject) => {
           const reader = new FileReader();

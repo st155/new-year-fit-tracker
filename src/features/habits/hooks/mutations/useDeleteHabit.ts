@@ -7,8 +7,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { habitsApi } from '@/lib/api/client';
 import { toast } from 'sonner';
 import { habitKeys } from '../keys';
+import { useTranslation } from 'react-i18next';
 
 export function useDeleteHabit() {
+  const { t } = useTranslation('habits');
   const queryClient = useQueryClient();
 
   const deleteHabit = useMutation({
@@ -34,11 +36,11 @@ export function useDeleteHabit() {
       queryClient.invalidateQueries({ queryKey: ['habit-stats'] });
 
       console.log('Deleted habit with', data.deletedCount, 'related records');
-      toast.success('Привычка успешно удалена');
+      toast.success(t('toast.habitDeleted'));
     },
     onError: (error) => {
       console.error('Error deleting habit:', error);
-      toast.error('Не удалось удалить привычку. Попробуйте архивировать.');
+      toast.error(t('toast.failedDeleteHabit'));
     },
   });
 
@@ -54,11 +56,11 @@ export function useDeleteHabit() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: habitKeys.all });
       queryClient.invalidateQueries({ queryKey: ['habit-feed'] });
-      toast.success('Привычка архивирована');
+      toast.success(t('toast.habitArchived'));
     },
     onError: (error) => {
       console.error('Error archiving habit:', error);
-      toast.error('Не удалось архивировать привычку');
+      toast.error(t('toast.failedArchiveHabit'));
     },
   });
 

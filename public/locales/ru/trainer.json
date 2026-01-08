@@ -130,7 +130,12 @@
     "deletedDesc": "Разговор удален",
     "deleteError": "Не удалось удалить разговор",
     "autoExecuted": "⚡ Действия выполнены автоматически",
-    "autoExecutedDesc": "Успешно: {{count}} действий"
+    "autoExecutedDesc": "Успешно: {{count}} действий",
+    "duplicateMeasurement": "Измерение для этой даты уже существует. Обновите существующее.",
+    "failedExecuteActions": "Не удалось выполнить действия. Попробуйте снова.",
+    "failedLoadClients": "Не удалось загрузить список клиентов",
+    "preparingPlan": "⚡ Подготовка плана",
+    "preparingPlanDesc": "AI готовит структурированный план действий..."
   },
   "trainingPlans": {
     "title": "Тренировочные планы",

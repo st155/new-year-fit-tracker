@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface LibraryEntry {
   id: string;
@@ -172,6 +173,7 @@ export function useAddToLibrary() {
 }
 
 export function useUpdateLibraryEntry() {
+  const { t } = useTranslation('biostack');
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -203,12 +205,13 @@ export function useUpdateLibraryEntry() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['supplement-library'] });
-      toast.success('Library entry updated');
+      toast.success(t('toast.libraryEntryUpdated'));
     },
   });
 }
 
 export function useRemoveFromLibrary() {
+  const { t } = useTranslation('biostack');
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -226,7 +229,7 @@ export function useRemoveFromLibrary() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['supplement-library'] });
-      toast.success('Removed from library');
+      toast.success(t('toast.removedFromLibrary'));
     },
   });
 }

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 export interface LifecycleAlert {
   id: string;
@@ -22,6 +23,7 @@ export interface LifecycleAlert {
 }
 
 export const useLifecycleAlerts = (userId: string | undefined) => {
+  const { t } = useTranslation('biostack');
   const queryClient = useQueryClient();
 
   // Fetch unread, non-dismissed alerts
@@ -75,7 +77,7 @@ export const useLifecycleAlerts = (userId: string | undefined) => {
     },
     onError: (error) => {
       console.error('❌ Error marking alert as read:', error);
-      toast.error('Failed to update alert');
+      toast.error(t('toast.failedUpdateAlert'));
     },
   });
 
@@ -94,11 +96,11 @@ export const useLifecycleAlerts = (userId: string | undefined) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['lifecycle-alerts', userId] });
-      toast.success('Alert dismissed');
+      toast.success(t('toast.alertDismissed'));
     },
     onError: (error) => {
       console.error('❌ Error dismissing alert:', error);
-      toast.error('Failed to dismiss alert');
+      toast.error(t('toast.failedDismissAlert'));
     },
   });
 
@@ -121,7 +123,7 @@ export const useLifecycleAlerts = (userId: string | undefined) => {
         (payload) => {
           console.log('🔔 New lifecycle alert received:', payload);
           queryClient.invalidateQueries({ queryKey: ['lifecycle-alerts', userId] });
-          toast.info('New protocol alert received!');
+          toast.info(t('toast.newAlertReceived'));
         }
       )
       .subscribe();

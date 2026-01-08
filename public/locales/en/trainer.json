@@ -130,7 +130,12 @@
     "deletedDesc": "Conversation deleted",
     "deleteError": "Failed to delete conversation",
     "autoExecuted": "⚡ Actions executed automatically",
-    "autoExecutedDesc": "Success: {{count}} actions"
+    "autoExecutedDesc": "Success: {{count}} actions",
+    "duplicateMeasurement": "Measurement already exists for this date. Please update the existing one.",
+    "failedExecuteActions": "Failed to execute actions. Please try again.",
+    "failedLoadClients": "Failed to load clients list",
+    "preparingPlan": "⚡ Preparing plan",
+    "preparingPlanDesc": "AI is preparing a structured action plan..."
   },
   "trainingPlans": {
     "title": "Training Plans",
