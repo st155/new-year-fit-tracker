@@ -78,6 +78,11 @@
     "title": "Напоминания о пересдаче",
     "goToSupplements": "Перейти к добавкам"
   },
+  "retest": {
+    "title": "Время пересдать",
+    "analysis": "анализ",
+    "andMore": "и ещё {{count}}"
+  },
   "trends": {
     "loading": "Анализ трендов...",
     "insightsTitle": "Инсайты и рекомендации",
