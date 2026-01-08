@@ -2,10 +2,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 export function useProtocolManagement() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { t } = useTranslation('biostack');
 
   // Fetch all protocols with items (both active and paused)
   const { data: activeProtocols = [], isLoading } = useQuery({
@@ -59,11 +61,11 @@ export function useProtocolManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['protocols-management'] });
-      toast.success('Protocol status updated');
+      toast.success(t('toast.protocolUpdated'));
     },
     onError: (error) => {
       console.error('Error toggling protocol:', error);
-      toast.error('Failed to update protocol');
+      toast.error(t('errors.genericError'));
     },
   });
 
@@ -102,11 +104,11 @@ export function useProtocolManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['protocols-management'] });
-      toast.success('Protocol deleted');
+      toast.success(t('toast.protocolDeleted'));
     },
     onError: (error) => {
       console.error('Error deleting protocol:', error);
-      toast.error('Failed to delete protocol');
+      toast.error(t('errors.genericError'));
     },
   });
 
@@ -119,7 +121,7 @@ export function useProtocolManagement() {
       protocolItemId: string; 
       servingsTaken?: number;
     }) => {
-      if (!user?.id) throw new Error('Not authenticated');
+      if (!user?.id) throw new Error(t('errors.notAuthenticated'));
 
       const { error } = await supabase
         .from('supplement_logs')
@@ -137,11 +139,11 @@ export function useProtocolManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['protocols-management'] });
-      toast.success('✅ Intake logged');
+      toast.success(t('common:success.saved'));
     },
     onError: (error) => {
       console.error('Error logging intake:', error);
-      toast.error('Failed to log intake');
+      toast.error(t('errors.genericError'));
     },
   });
 

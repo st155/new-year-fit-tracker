@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { supplementsApi } from '@/lib/api';
+import { useTranslation } from 'react-i18next';
 
 export interface SupplementCorrelation {
   biomarkerName: string;
@@ -29,6 +30,7 @@ interface AutoLinkParams {
 
 export function useAutoLinkBiomarkers() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('biostack');
 
   return useMutation({
     mutationFn: async ({ stackItemId, supplementName, userId }: AutoLinkParams): Promise<AutoLinkResult> => {
@@ -43,18 +45,16 @@ export function useAutoLinkBiomarkers() {
         queryClient.invalidateQueries({ queryKey: ['active-stack-with-biomarkers'] });
         queryClient.invalidateQueries({ queryKey: ['user-stack'] });
         
-        toast.success('Биомаркеры привязаны', {
-          description: `Найдено ${data.correlations.length} научных корреляций для ${variables.supplementName}`,
+        toast.success(t('toast.biomarkersLinked'), {
+          description: `${data.correlations.length} ${t('common:filters.all')} ${variables.supplementName}`,
         });
       } else if (!data.success) {
-        toast.info('Научные данные не найдены', {
-          description: `Для "${variables.supplementName}" пока нет данных в базе`,
-        });
+        toast.info(t('toast.noBiomarkersFound'));
       }
     },
     onError: (error: Error) => {
       console.error('[useAutoLinkBiomarkers] Error:', error);
-      toast.error('Ошибка привязки биомаркеров', {
+      toast.error(t('toast.linkBiomarkersFailed'), {
         description: error.message,
       });
     },

@@ -1,16 +1,18 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 export function useSyncProtocolsToLibrary() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('biostack');
 
   return useMutation({
     mutationFn: async () => {
       console.log('[SYNC-PROTOCOLS] Starting sync...');
       
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      if (!user) throw new Error(t('errors.notAuthenticated'));
 
       // Get all protocol items
       const { data: protocolItems, error: itemsError } = await supabase
@@ -30,7 +32,7 @@ export function useSyncProtocolsToLibrary() {
       console.log('[SYNC-PROTOCOLS] Found protocol items:', protocolItems?.length);
 
       if (!protocolItems || protocolItems.length === 0) {
-        return { synced: 0, message: 'No protocol items to sync' };
+        return { synced: 0, message: t('toast.noProtocolItems') };
       }
 
       // Sync each item to library
@@ -53,15 +55,15 @@ export function useSyncProtocolsToLibrary() {
       }
 
       console.log('[SYNC-PROTOCOLS] ✅ Synced', syncedCount, 'items');
-      return { synced: syncedCount, message: `Synced ${syncedCount} supplements from protocols` };
+      return { synced: syncedCount };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['supplement-library'] });
-      toast.success(`✅ ${data.message}`);
+      toast.success(t('toast.syncComplete', { count: data.synced }));
     },
     onError: (error) => {
       console.error('[SYNC-PROTOCOLS] Error:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to sync protocols');
+      toast.error(error instanceof Error ? error.message : t('toast.syncFailed'));
     },
   });
 }

@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { supplementsApi } from '@/lib/api';
+import { useTranslation } from 'react-i18next';
 
 interface AddSupplementToStackParams {
   supplementName: string;
@@ -16,10 +17,11 @@ interface AddSupplementToStackParams {
 export function useAddSupplementToStack() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { t } = useTranslation('biostack');
 
   const mutation = useMutation({
     mutationFn: async (params: AddSupplementToStackParams) => {
-      if (!user?.id) throw new Error('Not authenticated');
+      if (!user?.id) throw new Error(t('errors.notAuthenticated'));
 
       // Step 1: Find or create supplement product
       const { data: existingProducts } = await supabase
@@ -65,7 +67,7 @@ export function useAddSupplementToStack() {
         .maybeSingle();
 
       if (existingStack) {
-        throw new Error('Эта добавка уже в вашем стеке');
+        throw new Error(t('toast.alreadyInStack'));
       }
 
       // Step 3: Create user_stack entry
@@ -136,11 +138,11 @@ export function useAddSupplementToStack() {
       queryClient.invalidateQueries({ queryKey: ['user-stack'] });
       queryClient.invalidateQueries({ queryKey: ['manual-supplements-today'] });
       queryClient.invalidateQueries({ queryKey: ['supplement-library'] });
-      toast.success(`✅ ${data.supplementName} добавлена в стек`);
+      toast.success(t('toast.addedToStack', { name: data.supplementName }));
     },
     onError: (error: any) => {
       console.error('Failed to add supplement to stack:', error);
-      toast.error(error.message || 'Не удалось добавить в стек');
+      toast.error(error.message || t('toast.addToStackFailed'));
     },
   });
 

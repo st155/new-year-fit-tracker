@@ -1,9 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supplementsApi } from '@/lib/api';
+import { useTranslation } from 'react-i18next';
 
 export function useEnrichProduct() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('biostack');
 
   return useMutation({
     mutationFn: async (productId: string) => {
@@ -25,11 +27,11 @@ export function useEnrichProduct() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['supplement-library'] });
-      toast.success('✨ Product enriched with AI data');
+      toast.success(t('toast.productEnriched'));
     },
     onError: (error) => {
       console.error('[ENRICH-PRODUCT] Error:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to enrich product');
+      toast.error(error instanceof Error ? error.message : t('toast.enrichmentFailed'));
     },
   });
 }
