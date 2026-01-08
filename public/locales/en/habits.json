@@ -331,6 +331,7 @@
     "failedDeleteHabit": "Failed to delete habit. Try archiving instead.",
     "habitArchived": "Habit archived",
     "failedArchiveHabit": "Failed to archive habit",
-    "authRequired": "Authentication required"
+    "authRequired": "Authentication required",
+    "failedAddMember": "Failed to add member"
   }
 }

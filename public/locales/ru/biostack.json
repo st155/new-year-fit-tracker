@@ -103,7 +103,23 @@
     "failedActivateProtocol": "Не удалось активировать протокол",
     "failedDeactivateProtocol": "Не удалось деактивировать протокол",
     "failedUpdateProtocol": "Не удалось обновить протокол",
-    "failedDeleteProtocol": "Не удалось удалить протокол"
+    "failedDeleteProtocol": "Не удалось удалить протокол",
+    
+    "extractedProtocols": "Извлечены протоколы из {{count}} документов",
+    "extractResult": "Успешно: {{success}}, ошибок: {{failed}}",
+    "changesSaved": "Изменения сохранены",
+    "itemDeleted": "Элемент удалён",
+    "noDocuments": "Нет документов для обработки",
+    
+    "alertDismissed": "Уведомление скрыто",
+    "failedUpdateAlert": "Не удалось обновить уведомление",
+    "failedDismissAlert": "Не удалось скрыть уведомление",
+    "newAlertReceived": "Получено новое уведомление протокола!",
+    
+    "noValidFiles": "Не выбрано валидных файлов изображений",
+    "skippedUnsupported": "Пропущено: {{name}} - неподдерживаемый формат",
+    "largeFileWarning": "Большой файл ({{size}}МБ). Обработка может занять время.",
+    "processingHeic": "Обработка {{name}} как HEIC (формат iPhone)"
   },
   "errors": {
     "notAuthenticated": "Пользователь не авторизован",

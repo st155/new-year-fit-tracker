@@ -13,8 +13,10 @@ import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 export function SocialView() {
+  const { t } = useTranslation('habits');
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'all' | 'team'>('all');
@@ -27,7 +29,7 @@ export function SocialView() {
 
   const handleRefresh = async () => {
     await refetch();
-    toast.success('Лента обновлена');
+    toast.success(t('toast.feedRefreshed'));
   };
 
   const hasTeams = myTeams && myTeams.length > 0;

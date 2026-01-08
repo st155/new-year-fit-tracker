@@ -20,6 +20,7 @@ import { ClientDisambiguationModal } from './ClientDisambiguationModal';
 import { useIsMobile } from '@/hooks/primitive';
 import { toast } from 'sonner';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 interface AIChatWindowProps {
   messages: AIMessage[];
   currentConversation: AIConversation | null;
@@ -51,6 +52,7 @@ export const AIChatWindow = ({
   onRejectAction,
   executing
 }: AIChatWindowProps) => {
+  const { t } = useTranslation('trainer');
   const navigate = useNavigate();
   const { setSelectedClient } = useClientContext();
   const isMobile = useIsMobile();
@@ -231,7 +233,7 @@ export const AIChatWindow = ({
 
       if (error) {
         console.error('[@mentions] Error loading clients:', error);
-        toast.error('Не удалось загрузить список клиентов');
+        toast.error(t('aiToast.failedLoadClients'));
         setLoadingClients(false);
         return;
       }
@@ -408,8 +410,8 @@ export const AIChatWindow = ({
 
     // Show toast for confirmation
     if (isConfirmation) {
-      toast.success("⚡ Подготовка плана", {
-        description: "AI готовит структурированный план действий...",
+      toast.success(t('aiToast.preparingPlan'), {
+        description: t('aiToast.preparingPlanDesc'),
         duration: 3000
       });
     }

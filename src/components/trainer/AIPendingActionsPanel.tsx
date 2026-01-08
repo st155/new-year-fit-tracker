@@ -57,13 +57,13 @@ export const AIPendingActionsPanel = ({
     } catch (error: any) {
       // Handle specific errors
       if (error.message?.includes('AI rate limit exceeded') || error.message?.includes('429')) {
-        toast.error("AI rate limit exceeded. Please wait a few minutes and try again.");
+        toast.error(t('aiToast.rateLimitTitle'));
       } else if (error.message?.includes('AI credits exhausted') || error.message?.includes('402')) {
-        toast.error("AI credits exhausted. Please add more credits to your Lovable workspace to continue.");
+        toast.error(t('aiToast.creditsTitle'));
       } else if (error.message?.includes('duplicate key value') || error.message?.includes('23505')) {
-        toast.error("Measurement already exists for this date. Please update the existing one.");
+        toast.error(t('aiToast.duplicateMeasurement'));
       } else {
-        toast.error("Failed to execute actions. Please try again.");
+        toast.error(t('aiToast.failedExecuteActions'));
       }
       console.error('Failed to execute actions:', error);
     }

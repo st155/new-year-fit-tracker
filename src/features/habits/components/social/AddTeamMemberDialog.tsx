@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Search, UserPlus, X, Users } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
@@ -27,6 +28,7 @@ export function AddTeamMemberDialog({
   memberLimit,
   onSuccess,
 }: AddTeamMemberDialogProps) {
+  const { t } = useTranslation('habits');
   const [searchQuery, setSearchQuery] = useState('');
   const [isAdding, setIsAdding] = useState(false);
 
@@ -74,7 +76,7 @@ export function AddTeamMemberDialog({
 
   const handleAddMember = async (userId: string) => {
     if (currentMemberCount >= memberLimit) {
-      toast.error('Достигнут лимит участников команды');
+      toast.error(t('toast.memberLimitReached'));
       return;
     }
 
@@ -90,13 +92,13 @@ export function AddTeamMemberDialog({
 
       if (error) throw error;
 
-      toast.success('Участник добавлен в команду!');
+      toast.success(t('toast.memberAdded'));
       setSearchQuery('');
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
       console.error('Error adding member:', error);
-      toast.error(error.message || 'Не удалось добавить участника');
+      toast.error(error.message || t('toast.failedAddMember'));
     } finally {
       setIsAdding(false);
     }

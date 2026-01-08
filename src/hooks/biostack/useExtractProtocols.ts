@@ -3,8 +3,10 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { documentsApi } from '@/lib/api';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 export function useExtractProtocols() {
+  const { t } = useTranslation('biostack');
   const queryClient = useQueryClient();
   const [progress, setProgress] = useState<{ current: number; total: number } | null>(null);
 
@@ -55,9 +57,9 @@ export function useExtractProtocols() {
       setProgress(null);
       
       if (results.failed === 0) {
-        toast.success(`Извлечены протоколы из ${results.success} документов`);
+        toast.success(t('toast.extractedProtocols', { count: results.success }));
       } else {
-        toast.warning(`Успешно: ${results.success}, ошибок: ${results.failed}`);
+        toast.warning(t('toast.extractResult', { success: results.success, failed: results.failed }));
       }
     },
     onError: (error: Error) => {
@@ -74,6 +76,7 @@ export function useExtractProtocols() {
 }
 
 export function useToggleProtocolStatus() {
+  const { t } = useTranslation('biostack');
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -99,15 +102,16 @@ export function useToggleProtocolStatus() {
     },
     onSuccess: (_, { isActive }) => {
       queryClient.invalidateQueries({ queryKey: ['doctor-action-items'] });
-      toast.success(isActive ? 'Протокол активирован' : 'Протокол деактивирован');
+      toast.success(t(isActive ? 'toast.protocolActivated' : 'toast.protocolDeactivated'));
     },
     onError: (error: Error) => {
-      toast.error(`Ошибка: ${error.message}`);
+      toast.error(t('errors.genericError') + ': ' + error.message);
     },
   });
 }
 
 export function useUpdateActionItem() {
+  const { t } = useTranslation('biostack');
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -137,15 +141,16 @@ export function useUpdateActionItem() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['doctor-action-items'] });
-      toast.success('Изменения сохранены');
+      toast.success(t('toast.changesSaved'));
     },
     onError: (error: Error) => {
-      toast.error(`Ошибка: ${error.message}`);
+      toast.error(t('errors.genericError') + ': ' + error.message);
     },
   });
 }
 
 export function useDeleteActionItem() {
+  const { t } = useTranslation('biostack');
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -163,10 +168,10 @@ export function useDeleteActionItem() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['doctor-action-items'] });
-      toast.success('Элемент удалён');
+      toast.success(t('toast.itemDeleted'));
     },
     onError: (error: Error) => {
-      toast.error(`Ошибка: ${error.message}`);
+      toast.error(t('errors.genericError') + ': ' + error.message);
     },
   });
 }
