@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { RefreshCw, FlaskConical } from "lucide-react";
+import { Link } from "react-router-dom";
+import { RefreshCw, FlaskConical, Languages } from "lucide-react";
 import { ProtocolTestingPanel } from "@/components/protocols/ProtocolTestingPanel";
 import { ProfileHero } from "@/components/profile/ProfileHero";
 import { ProfileStats } from "@/components/profile/ProfileStats";
@@ -342,6 +343,18 @@ const ProfilePage = () => {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
+                <Link 
+                  to="/dev/i18n-analyzer" 
+                  className="flex items-center gap-3 p-3 rounded-lg bg-background/50 hover:bg-background/80 border border-border/50 transition-colors"
+                >
+                  <div className="p-2 bg-blue-500/20 rounded-lg">
+                    <Languages className="h-4 w-4 text-blue-500" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">i18n Analyzer</p>
+                    <p className="text-xs text-muted-foreground">Анализ локализации проекта</p>
+                  </div>
+                </Link>
                 <Echo11SyncCard />
                 <CleanupAppleHealthButton />
                 <ProtocolTestingPanel />

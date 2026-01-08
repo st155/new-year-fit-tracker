@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { PageLoader } from '@/components/ui/page-loader';
+import { FORCE_CLIENT_ROLE } from '@/lib/safe-flags';
 import {
   useI18nAnalysis,
   AnalyzerHeader,
@@ -10,9 +11,12 @@ import {
   type FilterState,
 } from '@/features/dev/i18n-analyzer';
 
+// Allow access in DEV mode OR in preview/iframe environments
+const IS_DEV_ENVIRONMENT = import.meta.env.DEV || FORCE_CLIENT_ROLE;
+
 export default function I18nAnalyzer() {
-  // Only accessible in DEV mode
-  if (!import.meta.env.DEV) {
+  // Only accessible in DEV mode or preview
+  if (!IS_DEV_ENVIRONMENT) {
     return <Navigate to="/" replace />;
   }
 
