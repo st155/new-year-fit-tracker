@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Check, Circle, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -90,6 +91,7 @@ function isStreakHabit(habit: any): boolean {
 }
 
 export function DailyHabitRow({ habit, onComplete, isCompleting, userId }: DailyHabitRowProps) {
+  const { t } = useTranslation('habits');
   const isCompleted = habit.completedToday;
   const emoji = getHabitEmoji(habit.name);
   const isStreak = isStreakHabit(habit);
@@ -169,7 +171,7 @@ export function DailyHabitRow({ habit, onComplete, isCompleting, userId }: Daily
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 400, damping: 20 }}
           >
-            {streakDays} {streakDays === 1 ? 'день' : streakDays < 5 ? 'дня' : 'дней'}
+            {t('streakDays', { count: streakDays })}
           </motion.div>
         </div>
       ) : (
