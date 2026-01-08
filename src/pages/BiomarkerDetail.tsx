@@ -104,7 +104,7 @@ export default function BiomarkerDetail() {
   const analysisAny = analysis as any;
   if ((!analysisAny || !analysisAny.success) && history && history.length > 0) {
     const latestResult = history[0];
-    const biomarkerName = latestResult.biomarker_master?.display_name || 'Биомаркер';
+    const biomarkerName = latestResult.biomarker_master?.display_name || t('defaultName');
     
     return (
       <div className="container mx-auto py-8 px-4 max-w-6xl">
@@ -197,10 +197,10 @@ export default function BiomarkerDetail() {
     'green';
 
   const statusText = 
-    statistics.latest < reference_ranges.min ? 'Ниже нормы' :
-    statistics.latest > reference_ranges.max ? 'Выше нормы' :
-    statistics.latest >= reference_ranges.optimal_min && statistics.latest <= reference_ranges.optimal_max ? 'Оптимально' :
-    'Норма';
+    statistics.latest < reference_ranges.min ? t('status.belowNormal') :
+    statistics.latest > reference_ranges.max ? t('status.aboveNormal') :
+    statistics.latest >= reference_ranges.optimal_min && statistics.latest <= reference_ranges.optimal_max ? t('status.optimal') :
+    t('status.normal');
 
   const TrendIcon = statistics.trend === 'increasing' ? TrendingUp : statistics.trend === 'decreasing' ? TrendingDown : Minus;
 

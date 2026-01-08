@@ -1,5 +1,6 @@
 {
   "invalidId": "Некорректный ID биомаркера",
+  "defaultName": "Биомаркер",
   "backToDocs": "Вернуться к документам",
   "measurementHistory": "История измерений",
   "lastValue": "Последнее значение",

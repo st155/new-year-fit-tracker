@@ -6,18 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useCategoryDetail } from '@/hooks/medical-documents/useCategoryDetail';
 import { CategoryMetricCard } from '@/components/medical-documents/CategoryMetricCard';
 import { motion } from 'framer-motion';
-
-const categoryLabels: Record<string, string> = {
-  blood_test: 'Анализы крови',
-  lab_urine: 'Анализы мочи',
-  imaging_report: 'МРТ/УЗИ',
-  clinical_note: 'Заключения',
-  prescription: 'Рецепты',
-  fitness_report: 'Фитнес-отчёты',
-  inbody: 'Состав тела',
-  progress_photo: 'Прогресс-фото',
-  other: 'Другие',
-};
+import { useTranslation } from 'react-i18next';
 
 const categoryIcons: Record<string, string> = {
   blood_test: '🩸',
@@ -32,6 +21,7 @@ const categoryIcons: Record<string, string> = {
 };
 
 export default function CategoryDetailPage() {
+  const { t } = useTranslation('categoryDetail');
   const { categoryId } = useParams<{ categoryId: string }>();
   const navigate = useNavigate();
   const { data, isLoading } = useCategoryDetail(categoryId!);
@@ -50,9 +40,9 @@ export default function CategoryDetailPage() {
     return (
       <div className="container mx-auto py-8 px-4 max-w-7xl">
         <div className="text-center">
-          <p className="text-muted-foreground">Нет данных для отображения</p>
+          <p className="text-muted-foreground">{t('noData')}</p>
           <Button onClick={() => navigate('/medical-documents')} variant="outline" className="mt-4">
-            Вернуться к документам
+            {t('backToDocs')}
           </Button>
         </div>
       </div>
@@ -73,10 +63,10 @@ export default function CategoryDetailPage() {
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <span className="text-3xl">{categoryIcons[categoryId!]}</span>
-            <h1 className="text-3xl font-bold">{categoryLabels[categoryId!]}</h1>
+            <h1 className="text-3xl font-bold">{t(`categories.${categoryId}`)}</h1>
           </div>
           <p className="text-muted-foreground mt-1">
-            {data.documentCount} документ{data.documentCount === 1 ? '' : data.documentCount < 5 ? 'а' : 'ов'}
+            {t('documentCount', { count: data.documentCount })}
             {data.dateRange && ` · ${data.dateRange.from} - ${data.dateRange.to}`}
           </p>
         </div>
@@ -93,7 +83,7 @@ export default function CategoryDetailPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <span className="text-2xl">🤖</span>
-                AI Саммари
+                {t('aiSummary')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -109,9 +99,9 @@ export default function CategoryDetailPage() {
       {data.metrics && data.metrics.length > 0 && (
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Показатели</h2>
+            <h2 className="text-xl font-semibold">{t('metrics')}</h2>
             <Badge variant="secondary">
-              {data.metrics.length} показател{data.metrics.length === 1 ? 'ь' : data.metrics.length < 5 ? 'я' : 'ей'}
+              {t('metricCount', { count: data.metrics.length })}
             </Badge>
           </div>
 
@@ -134,7 +124,7 @@ export default function CategoryDetailPage() {
       {data.documents && data.documents.length > 0 && (
         <div className="mt-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Документы</h2>
+            <h2 className="text-xl font-semibold">{t('documents')}</h2>
             <Badge variant="secondary">{data.documents.length}</Badge>
           </div>
           
@@ -167,9 +157,7 @@ export default function CategoryDetailPage() {
                             : 'bg-yellow-500/20 text-yellow-500 border-yellow-500/50'
                         }
                       >
-                        {doc.processing_status === 'completed' ? '✅ Обработан' : 
-                         doc.processing_status === 'processing' ? '⏳ Обработка' :
-                         doc.processing_status === 'error' ? '⚠️ Требует внимания' : '⏸️ Ожидает'}
+                        {t(`processingStatus.${doc.processing_status || 'pending'}`)}
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">
@@ -177,12 +165,12 @@ export default function CategoryDetailPage() {
                         day: 'numeric',
                         month: 'long',
                         year: 'numeric'
-                      }) : 'Дата не указана'}
+                      }) : t('dateNotSpecified')}
                     </p>
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-muted-foreground line-clamp-2">
-                      {doc.ai_summary || 'Нет описания'}
+                      {doc.ai_summary || t('noDescription')}
                     </p>
                   </CardContent>
                 </Card>
@@ -197,7 +185,7 @@ export default function CategoryDetailPage() {
         <Card className="py-12">
           <CardContent className="text-center">
             <p className="text-muted-foreground">
-              Нет данных для отображения в этой категории
+              {t('emptyCategory')}
             </p>
           </CardContent>
         </Card>
