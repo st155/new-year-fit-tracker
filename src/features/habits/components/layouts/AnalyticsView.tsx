@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -23,6 +24,7 @@ interface AnalyticsViewProps {
 }
 
 export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
+  const { t } = useTranslation('habits');
   const { completions, xpHistory, isLoading } = useHabitAnalytics(userId, 30);
   
   // Get habit insights
@@ -81,12 +83,12 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
     })).slice(-30);
   }, [xpHistory]);
 
-                  const timeOfDayChartData = [
-    { name: 'Утро', value: timeOfDayStats.morning, fill: 'hsl(var(--chart-1))' },
-    { name: 'День', value: timeOfDayStats.afternoon, fill: 'hsl(var(--chart-2))' },
-    { name: 'Вечер', value: timeOfDayStats.evening, fill: 'hsl(var(--chart-3))' },
-    { name: 'Ночь', value: timeOfDayStats.night, fill: 'hsl(var(--chart-4))' },
-    { name: 'Любое', value: timeOfDayStats.anytime, fill: 'hsl(var(--chart-5))' }
+  const timeOfDayChartData = [
+    { name: t('analytics.timeOfDay.morning'), value: timeOfDayStats.morning, fill: 'hsl(var(--chart-1))' },
+    { name: t('analytics.timeOfDay.afternoon'), value: timeOfDayStats.afternoon, fill: 'hsl(var(--chart-2))' },
+    { name: t('analytics.timeOfDay.evening'), value: timeOfDayStats.evening, fill: 'hsl(var(--chart-3))' },
+    { name: t('analytics.timeOfDay.night'), value: timeOfDayStats.night, fill: 'hsl(var(--chart-4))' },
+    { name: t('analytics.timeOfDay.anytime'), value: timeOfDayStats.anytime, fill: 'hsl(var(--chart-5))' }
   ];
 
   const COLORS = [
@@ -100,7 +102,7 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-muted-foreground">Загрузка аналитики...</div>
+        <div className="text-muted-foreground">{t('analytics.loading')}</div>
       </div>
     );
   }
@@ -114,17 +116,17 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Lightbulb className="h-5 w-5" />
-                Умные инсайты
+                {t('analytics.smartInsights')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="all" className="w-full">
                 <TabsList className="grid w-full grid-cols-5">
-                  <TabsTrigger value="all">Все</TabsTrigger>
-                  <TabsTrigger value="patterns">Паттерны</TabsTrigger>
-                  <TabsTrigger value="risks">Риски</TabsTrigger>
-                  <TabsTrigger value="optimize">Оптимизация</TabsTrigger>
-                  <TabsTrigger value="achieve">Достижения</TabsTrigger>
+                  <TabsTrigger value="all">{t('analytics.tabs.all')}</TabsTrigger>
+                  <TabsTrigger value="patterns">{t('analytics.tabs.patterns')}</TabsTrigger>
+                  <TabsTrigger value="risks">{t('analytics.tabs.risks')}</TabsTrigger>
+                  <TabsTrigger value="optimize">{t('analytics.tabs.optimize')}</TabsTrigger>
+                  <TabsTrigger value="achieve">{t('analytics.tabs.achieve')}</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="all" className="space-y-3 mt-4">
@@ -143,7 +145,7 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
                     ))
                   ) : (
                     <p className="text-sm text-muted-foreground text-center py-8">
-                      Недостаточно данных для анализа паттернов
+                      {t('analytics.empty.patterns')}
                     </p>
                   )}
                 </TabsContent>
@@ -155,7 +157,7 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
                     ))
                   ) : (
                     <p className="text-sm text-muted-foreground text-center py-8">
-                      Все привычки в безопасности! 🎉
+                      {t('analytics.empty.risks')}
                     </p>
                   )}
                 </TabsContent>
@@ -167,7 +169,7 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
                     ))
                   ) : (
                     <p className="text-sm text-muted-foreground text-center py-8">
-                      Нет рекомендаций по оптимизации
+                      {t('analytics.empty.optimize')}
                     </p>
                   )}
                 </TabsContent>
@@ -179,7 +181,7 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
                     ))
                   ) : (
                     <p className="text-sm text-muted-foreground text-center py-8">
-                      Продолжайте работать над привычками для достижений!
+                      {t('analytics.empty.achieve')}
                     </p>
                   )}
                 </TabsContent>
@@ -193,19 +195,19 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
           <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Trophy className="h-5 w-5" />
-                Награды и достижения
+                {t('analytics.rewards')}
               </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Streak Milestones */}
             <div>
-              <h4 className="text-sm font-semibold mb-4">🔥 Серийность</h4>
+              <h4 className="text-sm font-semibold mb-4">{t('analytics.streakTitle')}</h4>
               <StreakMilestoneTimeline currentStreak={analytics.currentStreak} />
             </div>
 
             {/* Achievement Progress */}
             <div>
-              <h4 className="text-sm font-semibold mb-4">📊 Прогресс достижений</h4>
+              <h4 className="text-sm font-semibold mb-4">{t('analytics.achievementProgress')}</h4>
               <AchievementProgress
                 items={[
                   // Mock data - in real app, calculate from user data
@@ -237,7 +239,7 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
               </div>
               <div>
                 <div className="text-2xl font-bold">{analytics.completionRate}%</div>
-                <div className="text-xs text-muted-foreground">Процент выполнения</div>
+                <div className="text-xs text-muted-foreground">{t('analytics.cards.completionRate')}</div>
               </div>
             </div>
           </Card>
@@ -249,7 +251,7 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
               </div>
               <div>
                 <div className="text-2xl font-bold">{analytics.currentStreak}</div>
-                <div className="text-xs text-muted-foreground">Текущая серия</div>
+                <div className="text-xs text-muted-foreground">{t('analytics.cards.currentStreak')}</div>
               </div>
             </div>
           </Card>
@@ -261,7 +263,7 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
               </div>
               <div>
                 <div className="text-2xl font-bold">{analytics.totalXP}</div>
-                <div className="text-xs text-muted-foreground">Всего опыта</div>
+                <div className="text-xs text-muted-foreground">{t('analytics.cards.totalXP')}</div>
               </div>
             </div>
           </Card>
@@ -273,7 +275,7 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
               </div>
               <div>
                 <div className="text-2xl font-bold">{analytics.activeHabits}</div>
-                <div className="text-xs text-muted-foreground">Активные привычки</div>
+                <div className="text-xs text-muted-foreground">{t('analytics.cards.activeHabits')}</div>
               </div>
             </div>
           </Card>
@@ -283,7 +285,7 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Completion Trend */}
           <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Тренд выполнения (30 дней)</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('analytics.charts.completionTrend')}</h3>
             <ResponsiveContainer width="100%" height={250}>
               <LineChart data={completionTrend}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -314,7 +316,7 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
 
           {/* XP Earnings */}
           <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Заработанный опыт</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('analytics.charts.xpEarned')}</h3>
             <ResponsiveContainer width="100%" height={250}>
               <AreaChart data={xpTrend}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -345,7 +347,7 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
 
           {/* Time of Day Distribution */}
           <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Лучшее время дня</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('analytics.charts.bestTime')}</h3>
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={timeOfDayChartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -373,7 +375,7 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
 
           {/* Category Distribution */}
           <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Распределение по категориям</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('analytics.charts.categoryDistribution')}</h3>
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
                 <Pie
@@ -404,7 +406,7 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
 
         {/* Top Habits List */}
         <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Топ 5 привычек</h3>
+          <h3 className="text-lg font-semibold mb-4">{t('analytics.charts.topHabits')}</h3>
           <div className="space-y-3">
             {topHabits.map((habit, index) => (
               <div 
@@ -420,7 +422,7 @@ export function AnalyticsView({ habits, userId }: AnalyticsViewProps) {
                 <div className="flex-1">
                   <div className="font-medium">{habit.name}</div>
                   <div className="text-sm text-muted-foreground">
-                    {habit.completionCount} выполнений · {habit.totalXP} XP
+                    {habit.completionCount} {t('analytics.charts.completions')} · {habit.totalXP} XP
                   </div>
                 </div>
               </div>

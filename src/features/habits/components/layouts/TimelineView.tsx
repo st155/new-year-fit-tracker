@@ -1,8 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, addDays, subDays } from 'date-fns';
+import { ru, enUS } from 'date-fns/locale';
 import { groupHabitsByHour, formatHour, getHourGradient, getCurrentTime } from '@/lib/timeline-utils';
 import { cn } from '@/lib/utils';
 
@@ -12,6 +14,7 @@ interface TimelineViewProps {
 }
 
 export function TimelineView({ habits, onHabitClick }: TimelineViewProps) {
+  const { t, i18n } = useTranslation('habits');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [currentTime, setCurrentTime] = useState(getCurrentTime());
 
@@ -30,7 +33,8 @@ export function TimelineView({ habits, onHabitClick }: TimelineViewProps) {
   );
 
   const hours = Array.from({ length: 24 }, (_, i) => i);
-  const isToday = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
+  const isTodayDate = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
 
   return (
     <div className="flex flex-col h-full">
@@ -47,7 +51,7 @@ export function TimelineView({ habits, onHabitClick }: TimelineViewProps) {
         <div className="flex items-center gap-2">
           <Calendar className="w-4 h-4 text-muted-foreground" />
           <span className="font-medium">
-            {isToday ? 'Сегодня' : format(selectedDate, 'MMMM d, yyyy')}
+            {isTodayDate ? t('timeline.today') : format(selectedDate, 'MMMM d, yyyy', { locale: dateLocale })}
           </span>
         </div>
 
@@ -55,7 +59,7 @@ export function TimelineView({ habits, onHabitClick }: TimelineViewProps) {
           variant="ghost"
           size="icon"
           onClick={() => setSelectedDate(addDays(selectedDate, 1))}
-          disabled={isToday}
+          disabled={isTodayDate}
         >
           <ChevronRight className="w-4 h-4" />
         </Button>
@@ -65,7 +69,7 @@ export function TimelineView({ habits, onHabitClick }: TimelineViewProps) {
       <ScrollArea className="flex-1">
         <div className="relative p-4 space-y-2">
           {hours.map(hour => {
-            const isCurrentHour = isToday && hour === currentTime.hour;
+            const isCurrentHour = isTodayDate && hour === currentTime.hour;
             const habitsAtHour = habitsByHour[hour] || [];
 
             return (
@@ -126,7 +130,7 @@ export function TimelineView({ habits, onHabitClick }: TimelineViewProps) {
                     ))
                   ) : (
                     <div className="text-xs text-muted-foreground/50 italic py-4">
-                      Нет запланированных привычек
+                      {t('timeline.noHabits', 'No scheduled habits')}
                     </div>
                   )}
                 </div>

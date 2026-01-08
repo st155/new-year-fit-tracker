@@ -238,5 +238,61 @@
     "deleted": "Habit deleted",
     "deletedDesc": "Habit and all related data deleted",
     "deleteError": "Failed to delete habit"
-  }
+  },
+  "timeline": {
+    "today": "Today",
+    "noHabits": "No scheduled habits"
+  },
+  "analytics": {
+    "loading": "Loading analytics...",
+    "smartInsights": "Smart Insights",
+    "tabs": {
+      "all": "All",
+      "patterns": "Patterns",
+      "risks": "Risks",
+      "optimize": "Optimize",
+      "achieve": "Achieve"
+    },
+    "empty": {
+      "patterns": "Not enough data to analyze patterns",
+      "risks": "All habits are safe! 🎉",
+      "optimize": "No optimization recommendations",
+      "achieve": "Keep working on habits for achievements!"
+    },
+    "rewards": "Rewards and Achievements",
+    "streakTitle": "🔥 Streak",
+    "achievementProgress": "📊 Achievement Progress",
+    "timeOfDay": {
+      "morning": "Morning",
+      "afternoon": "Afternoon",
+      "evening": "Evening",
+      "night": "Night",
+      "anytime": "Anytime"
+    },
+    "cards": {
+      "completionRate": "Completion Rate",
+      "currentStreak": "Current Streak",
+      "totalXP": "Total XP",
+      "activeHabits": "Active Habits"
+    },
+    "charts": {
+      "completionTrend": "Completion Trend (30 days)",
+      "xpEarned": "XP Earned",
+      "bestTime": "Best Time of Day",
+      "categoryDistribution": "Category Distribution",
+      "topHabits": "Top 5 Habits",
+      "completions": "completions"
+    }
+  },
+  "dashboard": {
+    "pending": "Pending completion",
+    "streak": "Current streak",
+    "total": "Total",
+    "average": "Average",
+    "completedToday": "Completed today",
+    "completed": "completed",
+    "trend": "Trend"
+  },
+  "streakDays_one": "{{count}} day",
+  "streakDays_other": "{{count}} days"
 }

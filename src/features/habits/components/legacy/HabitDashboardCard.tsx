@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from 'react-i18next';
 import { Card } from "@/components/ui/card";
 import { FastingControlButton } from "./FastingControlButton";
 import { useFastingWindow } from "@/hooks/useFastingWindow";
@@ -15,6 +16,7 @@ interface HabitDashboardCardProps {
 }
 
 export function HabitDashboardCard({ habit, userId }: HabitDashboardCardProps) {
+  const { t } = useTranslation('habits');
   const [elapsedTime, setElapsedTime] = useState<{
     days: number;
     hours: number;
@@ -277,7 +279,7 @@ export function HabitDashboardCard({ habit, userId }: HabitDashboardCardProps) {
             <div className="flex flex-col items-center">
               <CheckCircle2 className="h-16 w-16 text-green-500 mb-3 animate-scale-in" />
               <div className="text-lg font-semibold text-green-500">
-                Выполнено сегодня
+                {t('dashboard.completedToday')}
               </div>
             </div>
           ) : habit.habit_type === "numeric_counter" && targetValue ? (
@@ -293,13 +295,13 @@ export function HabitDashboardCard({ habit, userId }: HabitDashboardCardProps) {
                   />
                 </div>
                 <div className="text-xs text-muted-foreground text-center mt-2">
-                  {Math.round(progress)}% выполнено
+                  {Math.round(progress)}% {t('dashboard.completed')}
                 </div>
               </div>
             </div>
           ) : (
             <div className="text-sm text-muted-foreground">
-              Ожидает выполнения
+              {t('dashboard.pending')}
             </div>
           )}
         </div>
@@ -310,9 +312,9 @@ export function HabitDashboardCard({ habit, userId }: HabitDashboardCardProps) {
             <Flame className="h-5 w-5 text-orange-500" />
             <div>
               <div className="text-lg font-bold text-orange-400">
-                {currentStreak} {currentStreak === 1 ? 'день' : currentStreak < 5 ? 'дня' : 'дней'}
+                {t('streakDays', { count: currentStreak })}
               </div>
-              <div className="text-xs text-muted-foreground">Текущая серия</div>
+              <div className="text-xs text-muted-foreground">{t('dashboard.streak')}</div>
             </div>
           </div>
         )}
@@ -322,10 +324,10 @@ export function HabitDashboardCard({ habit, userId }: HabitDashboardCardProps) {
           <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border/50">
             <div className="flex items-center gap-1">
               <TrendingUp className="h-3 w-3" />
-              <span>Всего: {stats.total || 0}</span>
+              <span>{t('dashboard.total')}: {stats.total || 0}</span>
             </div>
             {stats.average && (
-              <span>Среднее: {stats.average.toFixed(1)}</span>
+              <span>{t('dashboard.average')}: {stats.average.toFixed(1)}</span>
             )}
           </div>
         )}
@@ -333,7 +335,7 @@ export function HabitDashboardCard({ habit, userId }: HabitDashboardCardProps) {
         {/* Recent Measurements + Sparkline */}
         {habit.habit_type === "numeric_counter" && measurements && measurements.length > 1 && (
           <div className="pt-3 space-y-3">
-            <div className="text-xs text-muted-foreground">Тренд</div>
+            <div className="text-xs text-muted-foreground">{t('dashboard.trend')}</div>
             <HabitSparkline 
               data={measurements.slice(0, 7).reverse().map(m => m.value)}
               width={200}
