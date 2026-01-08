@@ -74,6 +74,7 @@ const BiomarkerDetail = lazy(() => import("@/pages/BiomarkerDetail"));
 const MedicalIngestionCockpit = lazy(() => import("@/pages/MedicalIngestionCockpit"));
 const CategoryDetailPage = lazy(() => import("@/pages/CategoryDetailPage"));
 const ProtocolDetailPage = lazy(() => import("@/pages/ProtocolDetailPage"));
+const I18nAnalyzer = lazy(() => import("@/pages/dev/I18nAnalyzer"));
 
 export const AppRoutes = () => {
   const { user } = useAuth();
@@ -114,6 +115,7 @@ export const AppRoutes = () => {
           <>
             <Route path="/__debug" element={<DebugPage />} />
             <Route path="/__smoke" element={<SmokeHome />} />
+            <Route path="/dev/i18n-analyzer" element={<I18nAnalyzer />} />
           </>
         )}
         
