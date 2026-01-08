@@ -20,5 +20,40 @@
   "empty": {
     "title": "No active recommendations",
     "subtitle": "Upload medical documents or connect devices to get personal recommendations."
+  },
+  "categories": {
+    "sleep": {
+      "label": "Sleep",
+      "description": "Sleep quality and recovery recommendations",
+      "emptyMessage": "No sleep recommendations. Connect Whoop or Apple Watch for analysis."
+    },
+    "exercise": {
+      "label": "Exercise",
+      "description": "Physical activity recommendations",
+      "emptyMessage": "No exercise recommendations."
+    },
+    "supplement": {
+      "label": "Supplements",
+      "description": "Recommended supplements and medications",
+      "emptyMessage": "No supplement recommendations. Upload doctor's prescriptions."
+    },
+    "checkup": {
+      "label": "Checkups",
+      "description": "Follow-up tests and consultations",
+      "emptyMessage": "No scheduled checkups."
+    },
+    "lifestyle": {
+      "label": "Lifestyle",
+      "description": "Lifestyle recommendations",
+      "emptyMessage": "No lifestyle recommendations."
+    },
+    "nutrition": {
+      "label": "Nutrition",
+      "description": "Nutrition recommendations",
+      "emptyMessage": "No nutrition recommendations."
+    }
+  },
+  "priority": {
+    "important": "{{count}} important"
   }
 }

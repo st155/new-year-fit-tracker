@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Camera, Calendar, Eye, X } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,7 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import { ru } from "date-fns/locale";
+import { ru, enUS } from "date-fns/locale";
 import { FitnessCard } from "@/components/ui/fitness-card";
 import { cn } from "@/lib/utils";
 
@@ -26,9 +27,12 @@ interface ProgressPhoto {
 
 export function ProgressGallery() {
   const { user } = useAuth();
+  const { t, i18n } = useTranslation('goals');
   const [photos, setPhotos] = useState<ProgressPhoto[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPhoto, setSelectedPhoto] = useState<ProgressPhoto | null>(null);
+
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
 
   useEffect(() => {
     fetchProgressPhotos();
@@ -67,7 +71,7 @@ export function ProgressGallery() {
         unit: item.unit,
         notes: item.notes,
         goal: {
-          goal_name: (item.goals as any)?.goal_name || 'Неизвестная цель',
+          goal_name: (item.goals as any)?.goal_name || t('gallery.unknownGoal'),
           goal_type: (item.goals as any)?.goal_type || 'general'
         }
       })) || [];
@@ -95,7 +99,7 @@ export function ProgressGallery() {
       <FitnessCard className="p-6">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Загружаем галерею...</p>
+          <p className="text-muted-foreground">{t('gallery.loading')}</p>
         </div>
       </FitnessCard>
     );
@@ -108,13 +112,13 @@ export function ProgressGallery() {
           <div className="mb-6 p-6 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 inline-flex">
             <Camera className="h-12 w-12 text-primary/70" />
           </div>
-          <h3 className="text-xl font-bold mb-3 text-foreground">Галерея пуста</h3>
+          <h3 className="text-xl font-bold mb-3 text-foreground">{t('gallery.empty.title')}</h3>
           <p className="text-muted-foreground text-sm max-w-md mx-auto leading-relaxed">
-            Начните документировать свой прогресс! Добавляйте фотографии к измерениям, чтобы видеть визуальные изменения и мотивировать себя.
+            {t('gallery.empty.description')}
           </p>
           <div className="mt-8 p-4 rounded-xl bg-primary/5 border border-primary/20 max-w-md mx-auto">
             <p className="text-sm text-primary/80 italic">
-              📸 Совет: Делайте фото в одном месте при одинаковом освещении
+              {t('gallery.empty.tip')}
             </p>
           </div>
         </div>
@@ -128,10 +132,10 @@ export function ProgressGallery() {
         <div>
           <h2 className="text-xl font-semibold flex items-center gap-2">
             <Camera className="h-5 w-5 text-primary" />
-            Галерея прогресса
+            {t('gallery.title')}
           </h2>
           <p className="text-sm text-muted-foreground">
-            {photos.length} {photos.length === 1 ? 'фотография' : 'фотографий'}
+            {t('gallery.photoCount', { count: photos.length })}
           </p>
         </div>
       </div>
@@ -167,7 +171,7 @@ export function ProgressGallery() {
                     <div className="text-white text-xs">
                       <div className="flex items-center gap-1 mb-1">
                         <Calendar className="h-3 w-3" />
-                        {format(new Date(photo.measurement_date), 'dd MMM', { locale: ru })}
+                        {format(new Date(photo.measurement_date), 'dd MMM', { locale: dateLocale })}
                       </div>
                       <div className="font-semibold">
                         {photo.value} {photo.unit}
@@ -195,7 +199,7 @@ export function ProgressGallery() {
                     </Badge>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Calendar className="h-4 w-4" />
-                      {format(new Date(photo.measurement_date), 'dd MMMM yyyy', { locale: ru })}
+                      {format(new Date(photo.measurement_date), 'dd MMMM yyyy', { locale: dateLocale })}
                     </div>
                   </div>
                   

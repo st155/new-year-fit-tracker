@@ -180,5 +180,17 @@
     "deleteDescription": "Are you sure you want to delete the goal \"{{name}}\"? This action cannot be undone, and all related measurements will also be deleted.",
     "deleting": "Deleting...",
     "habitPrefix": "Habit: {{name}}"
+  },
+  "gallery": {
+    "title": "Progress Gallery",
+    "loading": "Loading gallery...",
+    "empty": {
+      "title": "Gallery is empty",
+      "description": "Start documenting your progress! Add photos to measurements to see visual changes and motivate yourself.",
+      "tip": "📸 Tip: Take photos in the same place with the same lighting"
+    },
+    "unknownGoal": "Unknown goal",
+    "photoCount_one": "{{count}} photo",
+    "photoCount_other": "{{count}} photos"
   }
 }
