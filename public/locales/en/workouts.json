@@ -319,5 +319,14 @@
       "logbook": "Logbook",
       "logbookDesc": "Workout history"
     }
+  },
+  "planReady": {
+    "toastTitle": "🎉 Your plan is ready!",
+    "toastDescription": "Start training right now",
+    "congratulations": "CONGRATULATIONS, {{name}}!",
+    "subtitle": "Your AI plan is ready!",
+    "startButton": "START",
+    "startAriaLabel": "Start training",
+    "fallbackName": "friend"
   }
 }

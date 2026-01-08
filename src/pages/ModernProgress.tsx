@@ -117,14 +117,14 @@ export default function ModernProgress() {
 
       // Add core goals as placeholders
       const coreGoals = [
-        { name: t('modern.coreGoals.pullups'), value: 17, unit: 'раз' },
-        { name: t('modern.coreGoals.benchPress'), value: 90, unit: 'кг' },
-        { name: t('modern.coreGoals.lunges'), value: 50, unit: 'кг×8' },
-        { name: t('modern.coreGoals.plank'), value: 4, unit: 'мин' },
-        { name: t('modern.coreGoals.pushups'), value: 60, unit: 'раз' },
-        { name: t('modern.coreGoals.vo2max'), value: 50, unit: 'мл/кг/мин' },
-        { name: t('modern.coreGoals.run1km'), value: 4.0, unit: 'мин' },
-        { name: t('modern.coreGoals.bodyFat'), value: 11, unit: '%' },
+        { name: t('modern.coreGoals.pullups'), value: 17, unit: t('modern.units.reps') },
+        { name: t('modern.coreGoals.benchPress'), value: 90, unit: t('modern.units.kg') },
+        { name: t('modern.coreGoals.lunges'), value: 50, unit: t('modern.units.kgx8') },
+        { name: t('modern.coreGoals.plank'), value: 4, unit: t('modern.units.min') },
+        { name: t('modern.coreGoals.pushups'), value: 60, unit: t('modern.units.reps') },
+        { name: t('modern.coreGoals.vo2max'), value: 50, unit: t('modern.units.mlKgMin') },
+        { name: t('modern.coreGoals.run1km'), value: 4.0, unit: t('modern.units.min') },
+        { name: t('modern.coreGoals.bodyFat'), value: 11, unit: t('modern.units.percent') },
       ];
 
       const existing = new Set(uniqueGoals.map((g: any) => (g.goal_name || '').toLowerCase()));

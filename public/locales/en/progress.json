@@ -114,6 +114,14 @@
       "run1km": "1 km Run",
       "bodyFat": "Body Fat Percentage"
     },
+    "units": {
+      "reps": "reps",
+      "kg": "kg",
+      "kgx8": "kg×8",
+      "min": "min",
+      "percent": "%",
+      "mlKgMin": "ml/kg/min"
+    },
     "summaryMetrics": {
       "steps": "Steps",
       "activeCalories": "Active Calories",
