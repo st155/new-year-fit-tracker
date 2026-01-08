@@ -170,7 +170,7 @@ const ClientHealthScoreWithData = ({ clientId }: { clientId: string }) => {
 export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
   const { navigationSource } = useClientContext();
   const navigate = useNavigate();
-  const { t } = useTranslation('trainer');
+  const { t } = useTranslation(['trainer', 'trainerDashboard']);
   const [showGoalDialog, setShowGoalDialog] = useState(false);
   const [showAssignPlanDialog, setShowAssignPlanDialog] = useState(false);
   const queryClient = useQueryClient();
@@ -461,11 +461,11 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                         }
                       />
                       <div className="flex justify-between text-sm text-muted-foreground">
-                        <span>{t('clientDetail.min')} {whoopSummary.recoveryScore.min}%</span>
-                        <span>{t('clientDetail.max')} {whoopSummary.recoveryScore.max}%</span>
+                        <span>{t('trainerDashboard:clientDetail.min')} {whoopSummary.recoveryScore.min}%</span>
+                        <span>{t('trainerDashboard:clientDetail.max')} {whoopSummary.recoveryScore.max}%</span>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Средний показатель за 7 дней
+                        {t('trainerDashboard:clientDetail.avg7days')}
                       </p>
                     </div>
                   </CardContent>
@@ -475,10 +475,10 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                 {whoopSummary.sleep.count > 0 && (
                   <Card>
                     <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between">
                         <CardTitle className="text-lg flex items-center gap-2">
                           <Moon className="h-5 w-5 text-blue-500" />
-                          Качество сна
+                          {t('trainerDashboard:clientDetail.sleepQuality')}
                         </CardTitle>
                         <Badge variant="outline">Whoop</Badge>
                       </div>
@@ -490,19 +490,19 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                         </div>
                         <div className="space-y-1">
                           <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Эффективность</span>
+                            <span className="text-muted-foreground">{t('trainerDashboard:clientDetail.efficiency')}</span>
                             <span className="font-medium">{whoopSummary.sleep.efficiencyAvg}%</span>
                           </div>
                           <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Производительность</span>
+                            <span className="text-muted-foreground">{t('trainerDashboard:clientDetail.performance')}</span>
                             <span className="font-medium">{whoopSummary.sleep.performanceAvg}%</span>
                           </div>
                           <div className="flex justify-between text-sm text-muted-foreground">
-                            <span>Диапазон: {whoopSummary.sleep.durationMin}ч - {whoopSummary.sleep.durationMax}ч</span>
+                            <span>{t('trainerDashboard:clientDetail.rangeHours', { min: whoopSummary.sleep.durationMin, max: whoopSummary.sleep.durationMax })}</span>
                           </div>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Средние показатели за 7 дней
+                          {t('trainerDashboard:clientDetail.avg7daysStats')}
                         </p>
                       </div>
                     </CardContent>
@@ -536,11 +536,11 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                           }
                         />
                         <div className="flex justify-between text-sm text-muted-foreground">
-                          <span>Мин: {whoopSummary.strain.dayStrainMin}</span>
-                          <span>Макс: {whoopSummary.strain.dayStrainMax}</span>
+                          <span>{t('trainerDashboard:clientDetail.min')}: {whoopSummary.strain.dayStrainMin}</span>
+                          <span>{t('trainerDashboard:clientDetail.max')}: {whoopSummary.strain.dayStrainMax}</span>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Средняя нагрузка за 7 дней
+                          {t('trainerDashboard:clientDetail.avgStrainLabel')}
                         </p>
                       </div>
                     </CardContent>
@@ -554,7 +554,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-lg flex items-center gap-2">
                           <TrendingUp className="h-5 w-5 text-purple-500" />
-                          Тренировки
+                          {t('trainerDashboard:clientDetail.workouts')}
                         </CardTitle>
                         <Badge variant="outline">Whoop</Badge>
                       </div>
@@ -566,12 +566,12 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                         </div>
                         <div className="space-y-1">
                           <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Средний Workout Strain</span>
+                            <span className="text-muted-foreground">{t('trainerDashboard:clientDetail.avgWorkoutStrain')}</span>
                             <span className="font-medium">{whoopSummary.strain.workoutStrainAvg}</span>
                           </div>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Тренировок за последние 7 дней
+                          {t('trainerDashboard:clientDetail.workoutsLast7days')}
                         </p>
                       </div>
                     </CardContent>
@@ -582,13 +582,13 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
               <Card>
                 <CardContent className="py-12 text-center">
                   <Activity className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
-                  <h3 className="text-lg font-semibold mb-2">Данные Whoop не найдены</h3>
+                  <h3 className="text-lg font-semibold mb-2">{t('trainerDashboard:clientDetail.whoopNotFound')}</h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                    У клиента не подключен Whoop или нет данных за последние 7 дней
+                    {t('trainerDashboard:clientDetail.whoopNotFoundDesc')}
                   </p>
                   <Button variant="outline" size="sm" asChild>
                     <a href="https://www.whoop.com" target="_blank" rel="noopener noreferrer">
-                      Узнать о Whoop
+                      {t('trainerDashboard:clientDetail.learnWhoop')}
                     </a>
                   </Button>
                 </CardContent>
@@ -600,8 +600,8 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
           <div className="space-y-4 mt-8">
             <h3 className="text-lg font-semibold flex items-center gap-2">
               <Moon className="h-5 w-5" />
-              Метрики здоровья от Oura
-              <Badge variant="outline" className="ml-2">Последние 7 дней</Badge>
+              {t('trainerDashboard:clientDetail.ouraMetrics')}
+              <Badge variant="outline" className="ml-2">{t('trainerDashboard:clientDetail.last7days')}</Badge>
             </h3>
 
             {ouraSummary && ouraSummary.sleep.count > 0 ? (
@@ -609,33 +609,33 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                 <CardHeader>
                   <div className="flex items-center gap-2">
                     <Moon className="h-5 w-5 text-purple-500" />
-                    <CardTitle>Статистика Oura (7 дней)</CardTitle>
+                    <CardTitle>{t('trainerDashboard:clientDetail.ouraStats')}</CardTitle>
                     <Badge variant="outline">Oura Ring</Badge>
                   </div>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <p className="text-sm font-medium text-muted-foreground">Сон</p>
+                    <p className="text-sm font-medium text-muted-foreground">{t('trainerDashboard:clientDetail.sleepLabel')}</p>
                     <div className="space-y-1">
-                      <p className="text-sm">Средняя продолжительность: <strong>{ouraSummary.sleep.durationAvg}h</strong></p>
-                      <p className="text-sm">Эффективность: <strong>{ouraSummary.sleep.efficiencyAvg}%</strong></p>
-                      <p className="text-sm">Глубокий сон: <strong>{ouraSummary.sleep.deepSleepAvg}h</strong></p>
-                      <p className="text-sm">REM сон: <strong>{ouraSummary.sleep.remSleepAvg}h</strong></p>
+                      <p className="text-sm">{t('trainerDashboard:clientDetail.avgDuration')}: <strong>{ouraSummary.sleep.durationAvg}h</strong></p>
+                      <p className="text-sm">{t('trainerDashboard:clientDetail.efficiency')}: <strong>{ouraSummary.sleep.efficiencyAvg}%</strong></p>
+                      <p className="text-sm">{t('trainerDashboard:clientDetail.deepSleep')}: <strong>{ouraSummary.sleep.deepSleepAvg}h</strong></p>
+                      <p className="text-sm">{t('trainerDashboard:clientDetail.remSleep')}: <strong>{ouraSummary.sleep.remSleepAvg}h</strong></p>
                     </div>
                   </div>
                   
                   <div className="space-y-2">
-                    <p className="text-sm font-medium text-muted-foreground">HRV</p>
+                    <p className="text-sm font-medium text-muted-foreground">{t('trainerDashboard:clientDetail.hrvLabel')}</p>
                     <div className="space-y-1">
-                      <p className="text-sm">Среднее: <strong>{ouraSummary.hrv.avg} ms</strong></p>
-                      <p className="text-sm">Диапазон: <strong>{ouraSummary.hrv.min} - {ouraSummary.hrv.max} ms</strong></p>
+                      <p className="text-sm">{t('trainerDashboard:clientDetail.average')}: <strong>{ouraSummary.hrv.avg} ms</strong></p>
+                      <p className="text-sm">{t('trainerDashboard:clientDetail.rangeLabel')}: <strong>{ouraSummary.hrv.min} - {ouraSummary.hrv.max} ms</strong></p>
                     </div>
                   </div>
                   
                   <div className="space-y-2">
-                    <p className="text-sm font-medium text-muted-foreground">Дыхание</p>
+                    <p className="text-sm font-medium text-muted-foreground">{t('trainerDashboard:clientDetail.breathingLabel')}</p>
                     <div className="space-y-1">
-                      <p className="text-sm">Средняя частота: <strong>{ouraSummary.respiratoryRate.avg} вдохов/мин</strong></p>
+                      <p className="text-sm">{t('trainerDashboard:clientDetail.avgRate')}: <strong>{ouraSummary.respiratoryRate.avg} {t('trainerDashboard:clientDetail.breathsPerMin')}</strong></p>
                     </div>
                   </div>
                 </CardContent>
@@ -644,13 +644,13 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
               <Card>
                 <CardContent className="py-12 text-center">
                   <Moon className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
-                  <h3 className="text-lg font-semibold mb-2">Данные Oura не найдены</h3>
+                  <h3 className="text-lg font-semibold mb-2">{t('trainerDashboard:clientDetail.ouraNotFound')}</h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                    У клиента не подключен Oura Ring или нет данных за последние 7 дней
+                    {t('trainerDashboard:clientDetail.ouraNotFoundDesc')}
                   </p>
                   <Button variant="outline" size="sm" asChild>
                     <a href="https://ouraring.com" target="_blank" rel="noopener noreferrer">
-                      Узнать об Oura Ring
+                      {t('trainerDashboard:clientDetail.learnOura')}
                     </a>
                   </Button>
                 </CardContent>
@@ -730,9 +730,9 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
           {/* Measurements List */}
           <Card>
             <CardHeader>
-              <CardTitle>Последние измерения</CardTitle>
+              <CardTitle>{t('trainerDashboard:clientDetail.recentMeasurements')}</CardTitle>
               <CardDescription>
-                Данные за последние 30 дней
+                {t('trainerDashboard:clientDetail.last30days')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -767,7 +767,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                 </div>
               ) : (
                 <p className="text-center text-muted-foreground py-8">
-                  Нет измерений за последний месяц
+                  {t('trainerDashboard:clientDetail.noMeasurementsMonth')}
                 </p>
               )}
             </CardContent>
@@ -783,7 +783,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
             <Card>
               <CardContent className="py-12">
                 <p className="text-center text-muted-foreground">
-                  Нет данных здоровья за последние 30 дней
+                  {t('trainerDashboard:clientDetail.noHealthData30')}
                 </p>
               </CardContent>
             </Card>
@@ -797,7 +797,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Activity className="h-5 w-5 text-blue-500" />
-                          <CardTitle className="text-lg">Шаги</CardTitle>
+                          <CardTitle className="text-lg">{t('trainerDashboard:clientDetail.steps')}</CardTitle>
                         </div>
                         {healthData.find(d => d.steps)?.steps_source && (
                           <Badge variant="outline" className="text-xs">

@@ -404,5 +404,11 @@
     "all": "All",
     "active": "Active",
     "completed": "Completed"
+  },
+  "pullToRefresh": {
+    "updated": "Updated",
+    "updatedDesc": "Data successfully refreshed",
+    "error": "Error",
+    "errorDesc": "Failed to refresh data"
   }
 }
