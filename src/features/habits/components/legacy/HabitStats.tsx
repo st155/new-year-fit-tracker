@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Flame, Trophy, TrendingUp, Award } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface HabitStatsProps {
   userId?: string;
@@ -11,6 +12,7 @@ interface HabitStatsProps {
 
 export function HabitStats({ userId }: HabitStatsProps) {
   const { user } = useAuth();
+  const { t } = useTranslation('habits');
   const [stats, setStats] = useState({
     totalHabits: 0,
     activeStreaks: 0,
@@ -94,7 +96,7 @@ export function HabitStats({ userId }: HabitStatsProps) {
 
   const statCards = [
     {
-      title: "Всего привычек",
+      title: t('habitStats.totalHabits'),
       value: stats.totalHabits,
       icon: TrendingUp,
       gradient: "from-primary/20 to-primary-end/20",
@@ -102,7 +104,7 @@ export function HabitStats({ userId }: HabitStatsProps) {
       glowColor: "shadow-glow",
     },
     {
-      title: "Активные серии",
+      title: t('habitStats.activeStreaks'),
       value: stats.activeStreaks,
       icon: Flame,
       gradient: "from-habit-negative/20 to-secondary/20",
@@ -110,7 +112,7 @@ export function HabitStats({ userId }: HabitStatsProps) {
       glowColor: "shadow-glow-negative",
     },
     {
-      title: "Всего выполнений",
+      title: t('habitStats.totalCompletions'),
       value: stats.totalCompletions,
       icon: Trophy,
       gradient: "from-gold/20 to-bronze/20",
@@ -118,7 +120,7 @@ export function HabitStats({ userId }: HabitStatsProps) {
       glowColor: "shadow-glow-gold",
     },
     {
-      title: "Средний процент",
+      title: t('habitStats.averagePercent'),
       value: `${Math.round(stats.averageCompletionRate)}%`,
       icon: TrendingUp,
       gradient: "from-habit-positive/20 to-success/20",
@@ -159,12 +161,12 @@ export function HabitStats({ userId }: HabitStatsProps) {
               <Award className="h-5 w-5 text-gold" />
             </div>
             <div className="flex-1">
-              <div className="text-xs text-muted-foreground mb-1">🏆 Привычка недели</div>
+              <div className="text-xs text-muted-foreground mb-1">🏆 {t('habitStats.habitOfWeek')}</div>
               <div className="font-semibold text-foreground">{stats.topHabit.name}</div>
             </div>
             <Badge variant="secondary" className="bg-gold/20 border-gold/30 text-gold">
               <Flame className="h-3 w-3 mr-1" />
-              {stats.topHabit.streak} дней
+              {stats.topHabit.streak} {t('habitStats.days')}
             </Badge>
           </div>
         </div>

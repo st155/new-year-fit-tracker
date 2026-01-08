@@ -1,4 +1,82 @@
 {
+  "qualityLabels": {
+    "recovery": {
+      "low": "Low recovery",
+      "medium": "Medium",
+      "excellent": "Excellent"
+    },
+    "sleepEfficiency": {
+      "poor": "Poor sleep",
+      "normal": "Normal",
+      "good": "Good sleep"
+    },
+    "sleepDuration": {
+      "low": "Not enough sleep",
+      "insufficient": "Insufficient",
+      "good": "Good",
+      "excellent": "Excellent"
+    },
+    "hrv": {
+      "veryLow": "Very low",
+      "low": "Low",
+      "normal": "Normal",
+      "excellent": "Excellent"
+    },
+    "strain": {
+      "rest": "Rest day",
+      "active": "Active day",
+      "intense": "Intense day"
+    },
+    "steps": {
+      "veryLow": "Very low",
+      "low": "Low",
+      "good": "Good",
+      "excellent": "Excellent"
+    },
+    "bodyFat": {
+      "critical": "Critically low",
+      "competition": "Competition",
+      "athletic": "Athletic",
+      "excellent": "Excellent",
+      "healthy": "Healthy",
+      "normal": "Normal",
+      "elevated": "Elevated",
+      "high": "High"
+    },
+    "calories": {
+      "low": "Low activity",
+      "medium": "Medium activity",
+      "good": "Good activity"
+    },
+    "restingHr": {
+      "veryLow": "Very low",
+      "athletic": "Athletic",
+      "excellent": "Excellent",
+      "good": "Good",
+      "normal": "Normal",
+      "elevated": "Elevated",
+      "high": "High"
+    }
+  },
+  "metricTooltips": {
+    "recovery": "Readiness score for exercise. >66 = excellent, 33-66 = medium, <33 = low recovery",
+    "sleepEfficiency": "Percentage of time asleep vs time in bed. >85% = excellent, 75-85% = normal, <75% = poor",
+    "sleepDuration": "Sleep duration. Recommended 7-9 hours for adults",
+    "hrv": "Heart rate variability. Indicator of recovery and stress adaptation. Higher is better",
+    "strain": "Daily strain score. 10-18 = optimal zone",
+    "restingHr": "Resting heart rate. Normal for adults: 40-85 bpm. Athletes: 40-60 bpm",
+    "steps": "Daily step count. Recommended: >10000 steps. Minimum: 8000",
+    "bodyFat": "Body fat percentage. Normal for men: 15-20%, for women: 20-28%. Athletes: 10-15% (m), 18-22% (f)",
+    "calories": "Calories burned through physical activity. Recommended: >500 kcal. Minimum: 200 kcal",
+    "maxHr": "Maximum heart rate for the day. Reflects workout intensity. Depends on age (formula: 220 - age)",
+    "weight": "Body weight. Interpretation depends on your goals (weight loss/gain)"
+  },
+  "sources_one": "{{count}} source",
+  "sources_other": "{{count}} sources",
+  "retestReminders": {
+    "title": "Retest Reminders",
+    "goToSupplements": "Go to supplements"
+  },
   "trends": {
     "loading": "Analyzing trends...",
     "insightsTitle": "Insights and Recommendations",

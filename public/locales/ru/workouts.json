@@ -357,5 +357,9 @@
     "startButton": "НАЧАТЬ",
     "startAriaLabel": "Начать тренировки",
     "fallbackName": "друг"
+  },
+  "completion": {
+    "saving": "Сохранение...",
+    "toMain": "К ГЛАВНОМУ ЭКРАНУ"
   }
 }

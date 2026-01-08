@@ -357,5 +357,9 @@
     "startButton": "START",
     "startAriaLabel": "Start training",
     "fallbackName": "friend"
+  },
+  "completion": {
+    "saving": "Saving...",
+    "toMain": "TO MAIN SCREEN"
   }
 }

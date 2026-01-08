@@ -128,5 +128,11 @@
       "avgHR": "Средний пульс",
       "sleep": "Сон"
     }
+  },
+  "summary": {
+    "goals": "целей",
+    "completed": "завершено",
+    "inProgress": "в процессе",
+    "pts": "pts"
   }
 }
