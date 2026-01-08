@@ -6,61 +6,12 @@
     "goals": "goals",
     "habits": "habits"
   },
-  "sources": {
-    "one": "{{count}} source",
-    "other": "{{count}} sources"
-  },
-  "time": {
-    "hours": "{{count}}h",
-    "days": "{{count}}d",
-    "minutesAgo": "{{count}}m ago",
-    "hoursAgo": "{{count}}h ago",
-    "today": "Today",
-    "yesterday": "Yesterday",
-    "dataToday": "Data for today",
-    "dataYesterday": "Data for yesterday - today's still processing",
-    "outdated": "Outdated",
-    "notUpdatedDays": "Data not updated for {{count}} days",
-    "lastUpdate": "Last:",
-    "noData": "No data"
-  },
-  "quality": {
-    "criticallyLow": "Critically low",
-    "competitive": "Competitive",
-    "athletic": "Athletic",
-    "excellent": "Excellent",
-    "healthy": "Healthy",
-    "healthyZone": "Healthy zone",
-    "normal": "Normal",
-    "elevated": "Elevated",
-    "high": "High",
-    "veryLow": "Very low",
-    "good": "Good",
-    "lowActivity": "Low activity",
-    "mediumActivity": "Medium activity",
-    "goodActivity": "Good activity",
-    "tooLow": "Too low",
-    "lowRecovery": "Low recovery",
-    "average": "Average",
-    "poorSleep": "Poor sleep",
-    "goodSleep": "Good sleep",
-    "notEnoughSleep": "Not enough sleep",
-    "restDay": "Rest day",
-    "activeDay": "Active day",
-    "intensiveDay": "Intensive day",
-    "tooFewSteps": "Too few steps"
-  },
-  "bodyFat": {
-    "healthyZone": "Healthy zone: 15-25%",
-    "inRange": "Normal",
-    "outOfRange": "Out of range"
-  },
-  "conflicts": {
-    "one": "{{count}} conflict",
-    "other": "{{count}} conflicts",
-    "detected": "Conflicting data detected",
-    "clickToResolve": "Click to resolve"
-  },
+  "sources_one": "{{count}} source",
+  "sources_other": "{{count}} sources",
+  "conflicts_one": "{{count}} conflict",
+  "conflicts_other": "{{count}} conflicts",
+  "conflictsDetected": "Conflicting data detected",
+  "conflictsClickToResolve": "Click to resolve",
   "tooltips": {
     "recovery": "Body readiness for exercise. >66 = excellent, 33-66 = average, <33 = low recovery",
     "sleepEfficiency": "Percentage of time asleep vs time in bed. >85% = excellent, 75-85% = normal, <75% = poor",
