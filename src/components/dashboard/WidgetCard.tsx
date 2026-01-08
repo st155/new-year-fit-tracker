@@ -20,7 +20,7 @@ import type { MultiSourceWidgetData } from '@/hooks/metrics/useMultiSourceWidget
 import type { WidgetHistoryData } from '@/hooks/metrics/useWidgetHistory';
 import { logger } from '@/lib/logger';
 import { format, parseISO } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import { HabitLevelWidget } from './widgets/HabitLevelWidget';
 import { HabitStreakWidget } from './widgets/HabitStreakWidget';
 import { HabitSocialWidget } from './widgets/HabitSocialWidget';
@@ -30,6 +30,7 @@ import {
   getPersonalizedQualityLabel,
   type PersonalBaseline 
 } from '@/hooks/metrics/usePersonalBaselines';
+import { useTranslation } from 'react-i18next';
 
 interface WidgetCardProps {
   widget: Widget;
@@ -234,69 +235,69 @@ const getMetricQualityColor = (metricName: string, value: number): string | null
 
 // Получение текстового индикатора качества метрики
 // Используем более мягкие оценки, учитывая индивидуальные особенности
-const getQualityLabel = (metricName: string, value: number): { icon: string; text: string; color: string } | null => {
+const getQualityLabel = (metricName: string, value: number, t: (key: string) => string): { icon: string; text: string; color: string } | null => {
   const name = metricName.toLowerCase();
   
   if (name.includes('recovery')) {
-    if (value < 33) return { icon: '🔴', text: 'Низкое восстановление', color: '#ef4444' };
-    if (value < 67) return { icon: '⚠️', text: 'Среднее', color: '#eab308' };
-    return { icon: '✅', text: 'Отличное', color: '#10b981' };
+    if (value < 33) return { icon: '🔴', text: t('quality.lowRecovery'), color: '#ef4444' };
+    if (value < 67) return { icon: '⚠️', text: t('quality.average'), color: '#eab308' };
+    return { icon: '✅', text: t('quality.excellent'), color: '#10b981' };
   }
   
   if (name.includes('sleep') && name.includes('efficiency')) {
-    if (value < 70) return { icon: '😴', text: 'Плохой сон', color: '#ef4444' };
-    if (value < 80) return { icon: '😐', text: 'Норма', color: '#eab308' };
-    return { icon: '😊', text: 'Хороший сон', color: '#10b981' };
+    if (value < 70) return { icon: '😴', text: t('quality.poorSleep'), color: '#ef4444' };
+    if (value < 80) return { icon: '😐', text: t('quality.normal'), color: '#eab308' };
+    return { icon: '😊', text: t('quality.goodSleep'), color: '#10b981' };
   }
   
   if (name.includes('sleep') && name.includes('duration')) {
-    if (value < 5.5) return { icon: '😴', text: 'Мало сна', color: '#ef4444' };
-    if (value < 6.5) return { icon: '😐', text: 'Недостаточно', color: '#eab308' };
-    if (value < 8) return { icon: '😊', text: 'Хорошо', color: '#10b981' };
-    return { icon: '🌟', text: 'Отлично', color: '#10b981' };
+    if (value < 5.5) return { icon: '😴', text: t('quality.poorSleep'), color: '#ef4444' };
+    if (value < 6.5) return { icon: '😐', text: t('quality.notEnoughSleep'), color: '#eab308' };
+    if (value < 8) return { icon: '😊', text: t('quality.good'), color: '#10b981' };
+    return { icon: '🌟', text: t('quality.excellent'), color: '#10b981' };
   }
   
   // HRV: Более мягкие пороги
   if (name.includes('hrv')) {
-    if (value < 15) return { icon: '🔴', text: 'Очень низкое', color: '#ef4444' };
-    if (value < 25) return { icon: '⚠️', text: 'Низковато', color: '#eab308' };
-    if (value < 50) return { icon: '😊', text: 'Норма', color: '#10b981' };
-    return { icon: '✅', text: 'Отличное', color: '#10b981' };
+    if (value < 15) return { icon: '🔴', text: t('quality.veryLow'), color: '#ef4444' };
+    if (value < 25) return { icon: '⚠️', text: t('quality.tooLow'), color: '#eab308' };
+    if (value < 50) return { icon: '😊', text: t('quality.normal'), color: '#10b981' };
+    return { icon: '✅', text: t('quality.excellent'), color: '#10b981' };
   }
   
   // Day Strain: Нет плохих значений
   if (name.includes('strain') && !name.includes('workout')) {
-    if (value < 8) return { icon: '😌', text: 'День отдыха', color: '#10b981' };
-    if (value <= 14) return { icon: '💪', text: 'Активный день', color: '#10b981' };
-    return { icon: '🔥', text: 'Интенсивный день', color: '#10b981' };
+    if (value < 8) return { icon: '😌', text: t('quality.restDay'), color: '#10b981' };
+    if (value <= 14) return { icon: '💪', text: t('quality.activeDay'), color: '#10b981' };
+    return { icon: '🔥', text: t('quality.intensiveDay'), color: '#10b981' };
   }
   
   // Steps
   if (name.includes('step')) {
-    if (value < 3000) return { icon: '🔴', text: 'Очень мало', color: '#ef4444' };
-    if (value < 5000) return { icon: '⚠️', text: 'Маловато', color: '#eab308' };
-    if (value >= 10000) return { icon: '✅', text: 'Отлично', color: '#10b981' };
-    if (value >= 8000) return { icon: '😊', text: 'Хорошо', color: '#10b981' };
+    if (value < 3000) return { icon: '🔴', text: t('quality.tooFewSteps'), color: '#ef4444' };
+    if (value < 5000) return { icon: '⚠️', text: t('quality.lowActivity'), color: '#eab308' };
+    if (value >= 10000) return { icon: '✅', text: t('quality.excellent'), color: '#10b981' };
+    if (value >= 8000) return { icon: '😊', text: t('quality.good'), color: '#10b981' };
     return null; // 5000-8000 нейтрально
   }
   
   // Body Fat Percentage - широкий диапазон нормы
   if (name.includes('body') && name.includes('fat')) {
-    if (value < 5) return { icon: '⚠️', text: 'Критически низкий', color: '#ef4444' };
-    if (value < 10) return { icon: '🏃', text: 'Соревновательный', color: '#10b981' };
-    if (value < 15) return { icon: '💪', text: 'Атлетический', color: '#10b981' };
-    if (value < 20) return { icon: '✅', text: 'Отличный', color: '#10b981' };
-    if (value < 25) return { icon: '😊', text: 'Здоровый', color: '#10b981' };
-    if (value < 30) return { icon: '📊', text: 'Норма', color: '#10b981' };
-    if (value < 35) return { icon: '⚠️', text: 'Повышенный', color: '#eab308' };
-    return { icon: '🔴', text: 'Высокий', color: '#ef4444' };
+    if (value < 5) return { icon: '⚠️', text: t('quality.criticallyLow'), color: '#ef4444' };
+    if (value < 10) return { icon: '🏃', text: t('quality.competitive'), color: '#10b981' };
+    if (value < 15) return { icon: '💪', text: t('quality.athletic'), color: '#10b981' };
+    if (value < 20) return { icon: '✅', text: t('quality.excellent'), color: '#10b981' };
+    if (value < 25) return { icon: '😊', text: t('quality.healthy'), color: '#10b981' };
+    if (value < 30) return { icon: '📊', text: t('quality.normal'), color: '#10b981' };
+    if (value < 35) return { icon: '⚠️', text: t('quality.elevated'), color: '#eab308' };
+    return { icon: '🔴', text: t('quality.high'), color: '#ef4444' };
   }
   
   // Active Calories
   if (name.includes('active') && name.includes('calories')) {
-    if (value < 100) return { icon: '🔴', text: 'Мало активности', color: '#ef4444' };
-    if (value < 300) return { icon: '⚠️', text: 'Средняя активность', color: '#eab308' };
-    return { icon: '✅', text: 'Хорошая активность', color: '#10b981' };
+    if (value < 100) return { icon: '🔴', text: t('quality.lowActivity'), color: '#ef4444' };
+    if (value < 300) return { icon: '⚠️', text: t('quality.mediumActivity'), color: '#eab308' };
+    return { icon: '✅', text: t('quality.goodActivity'), color: '#10b981' };
   }
   
   // Max Heart Rate - просто информация, не оценка
@@ -306,65 +307,65 @@ const getQualityLabel = (metricName: string, value: number): { icon: string; tex
   
   // Resting Heart Rate - широкий диапазон нормы
   if ((name.includes('resting') && name.includes('heart')) || name.includes('resting hr') || name.includes('пульс в покое')) {
-    if (value < 30) return { icon: '⚠️', text: 'Очень низкий', color: '#ef4444' };
-    if (value < 50) return { icon: '🏃', text: 'Атлетический', color: '#10b981' };
-    if (value < 60) return { icon: '✅', text: 'Отличный', color: '#10b981' };
-    if (value < 75) return { icon: '😊', text: 'Хороший', color: '#10b981' };
-    if (value < 90) return { icon: '📊', text: 'Норма', color: '#10b981' };
-    if (value < 100) return { icon: '⚠️', text: 'Повышенный', color: '#eab308' };
-    return { icon: '🔴', text: 'Высокий', color: '#ef4444' };
+    if (value < 30) return { icon: '⚠️', text: t('quality.veryLow'), color: '#ef4444' };
+    if (value < 50) return { icon: '🏃', text: t('quality.athletic'), color: '#10b981' };
+    if (value < 60) return { icon: '✅', text: t('quality.excellent'), color: '#10b981' };
+    if (value < 75) return { icon: '😊', text: t('quality.good'), color: '#10b981' };
+    if (value < 90) return { icon: '📊', text: t('quality.normal'), color: '#10b981' };
+    if (value < 100) return { icon: '⚠️', text: t('quality.elevated'), color: '#eab308' };
+    return { icon: '🔴', text: t('quality.high'), color: '#ef4444' };
   }
   
   return null;
 };
 
 // Получение пояснения для метрики
-const getMetricTooltip = (metricName: string): string | null => {
+const getMetricTooltip = (metricName: string, t: (key: string) => string): string | null => {
   const name = metricName.toLowerCase();
   console.log('[DEBUG getMetricTooltip]', metricName, '→', name);
   
   if (name.includes('recovery')) {
-    return 'Оценка готовности организма к нагрузкам. >66 = отличное, 33-66 = среднее, <33 = низкое восстановление';
+    return t('tooltips.recovery');
   }
   
   if (name.includes('sleep') && name.includes('efficiency')) {
-    return 'Процент времени, проведенного во сне от времени в постели. >85% = отлично, 75-85% = норма, <75% = плохо';
+    return t('tooltips.sleepEfficiency');
   }
   
   if (name.includes('sleep') && name.includes('duration')) {
-    return 'Продолжительность сна. Рекомендуется 7-9 часов для взрослых';
+    return t('tooltips.sleepDuration');
   }
   
   if (name.includes('hrv')) {
-    return 'Вариабельность сердечного ритма. Индикатор восстановления и адаптации к стрессу. Чем выше - тем лучше';
+    return t('tooltips.hrv');
   }
   
   if (name.includes('strain') && !name.includes('workout')) {
-    return 'Общая нагрузка за день. 10-18 = оптимальная зона';
+    return t('tooltips.strain');
   }
   
   if ((name.includes('resting') && name.includes('heart')) || name.includes('resting hr') || name.includes('пульс в покое')) {
-    return 'Пульс в покое. Норма для взрослых: 40-85 уд/мин. Атлеты: 40-60 уд/мин';
+    return t('tooltips.restingHR');
   }
   
   if (name.includes('step')) {
-    return 'Количество шагов за день. Рекомендуется: >10000 шагов. Минимум: 8000';
+    return t('tooltips.steps');
   }
   
   if (name.includes('body') && name.includes('fat')) {
-    return 'Процент жира в организме. Норма для мужчин: 15-20%, для женщин: 20-28%. Атлеты: 10-15% (м), 18-22% (ж)';
+    return t('tooltips.bodyFat');
   }
   
   if (name.includes('active') && name.includes('calories')) {
-    return 'Калории, сожженные через физическую активность. Рекомендуется: >500 kcal. Минимум: 200 kcal';
+    return t('tooltips.activeCalories');
   }
   
   if (name.includes('max') && name.includes('heart')) {
-    return 'Максимальный пульс за день. Отражает интенсивность тренировки. Норма зависит от возраста (формула: 220 - возраст)';
+    return t('tooltips.maxHR');
   }
   
   if (name.includes('weight')) {
-    return 'Масса тела. Интерпретация зависит от ваших целей (похудение/набор массы)';
+    return t('tooltips.weight');
   }
   
   return null;
@@ -375,6 +376,8 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t, i18n } = useTranslation('widgets');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
   
   // Load personal baselines for personalized quality assessment
   const { data: personalBaselines } = usePersonalBaselines();
@@ -415,9 +418,9 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
     const personalized = getPersonalizedQualityLabel(name, value, personalBaseline);
     if (personalized) return personalized;
     // Fallback to population-based
-    const populationLabel = getQualityLabel(name, value);
+    const populationLabel = getQualityLabel(name, value, t);
     return populationLabel ? { ...populationLabel, isPersonalized: false } : null;
-  }, [personalBaseline]);
+  }, [personalBaseline, t]);
 
   // Render special Habits 3.0 widgets (after hooks)
   if (metricName === '🏆 Habit Level') {
@@ -481,7 +484,7 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
                 {metricName}
               </h3>
               <p className="text-xs text-muted-foreground">
-                {multiSourceData.sources.length} {multiSourceData.sources.length === 1 ? 'источник' : 'источника'}
+                {t('sources', { count: multiSourceData.sources.length })}
               </p>
             </div>
             <Icon className="h-5 w-5" style={{ color }} />
@@ -555,15 +558,15 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
                 {metricName}
               </p>
               <p className="text-xs text-muted-foreground/60">
-                Мульти-режим
+                {t('modes.multi')}
               </p>
             </div>
             <Icon className="h-5 w-5 opacity-40" style={{ color }} />
           </div>
-          <p className="text-sm text-muted-foreground mb-2">Нет данных</p>
+          <p className="text-sm text-muted-foreground mb-2">{t('modes.noData')}</p>
           <p className="text-xs text-primary/70 flex items-center gap-1">
             <LinkIcon className="h-3 w-3" />
-            Нажмите для подключения
+            {t('modes.clickToConnect')}
           </p>
         </CardContent>
       </Card>
@@ -589,10 +592,10 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
             </div>
             <Icon className="h-5 w-5 opacity-40" style={{ color }} />
           </div>
-          <p className="text-sm text-muted-foreground mb-2">Нет данных</p>
+          <p className="text-sm text-muted-foreground mb-2">{t('modes.noData')}</p>
           <p className="text-xs text-primary/70 flex items-center gap-1">
             <LinkIcon className="h-3 w-3" />
-            Нажмите для подключения
+            {t('modes.clickToConnect')}
           </p>
         </CardContent>
       </Card>
@@ -610,7 +613,7 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
   const qualityColor = qualityResult.color;
   const isPersonalizedQuality = qualityResult.isPersonalized;
   const qualityLabel = getQualityLabelWithPersonalization(metricName, data.value);
-  const metricTooltip = getMetricTooltip(metricName);
+  const metricTooltip = getMetricTooltip(metricName, t);
   
   // Проверка на устаревшие данные с двумя уровнями (на основе дней)
   const startOf = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -649,10 +652,10 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
   };
   
   const getFreshnessIndicator = () => {
-    if (isToday) return { label: '🟢 Сегодня', variant: 'success' as const, tooltip: 'Данные за сегодня' };
-    if (isYesterday) return { label: '🟡 Вчера', variant: 'outline' as const, tooltip: 'Данные за вчера - сегодняшние еще обрабатываются' };
-    if (isDataWarning) return { label: '⏱️ 2д', variant: 'outline' as const, tooltip: 'Данные не обновлялись 2 дня' };
-    if (isDataStale) return { label: '⚠️ Устарело', variant: 'destructive' as const, tooltip: `Данные не обновлялись ${daysDiff} дней` };
+    if (isToday) return { label: `🟢 ${t('time.today')}`, variant: 'success' as const, tooltip: t('time.dataToday') };
+    if (isYesterday) return { label: `🟡 ${t('time.yesterday')}`, variant: 'outline' as const, tooltip: t('time.dataYesterday') };
+    if (isDataWarning) return { label: `⏱️ ${t('time.days', { count: 2 })}`, variant: 'outline' as const, tooltip: t('time.notUpdatedDays', { count: 2 }) };
+    if (isDataStale) return { label: `⚠️ ${t('time.outdated')}`, variant: 'destructive' as const, tooltip: t('time.notUpdatedDays', { count: daysDiff }) };
     return null;
   };
   
@@ -821,13 +824,13 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
             <div className="space-y-2 mt-2">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-muted-foreground">
-                  Здоровая зона: 15-25%
+                  {t('bodyFat.healthyZone')}
                 </span>
                 <Badge 
                   variant={data.value >= 15 && data.value <= 25 ? 'default' : 'outline'}
                   className="text-xs"
                 >
-                  {data.value >= 15 && data.value <= 25 ? 'В норме' : 'Вне нормы'}
+                  {data.value >= 15 && data.value <= 25 ? t('bodyFat.inRange') : t('bodyFat.outOfRange')}
                 </Badge>
               </div>
                   <Progress 
@@ -840,11 +843,11 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
                     }
                   />
               <p className="text-xs text-muted-foreground font-medium">
-                {data.value < 15 ? 'Слишком низкий' : 
-                 data.value <= 20 ? 'Атлетический' :
-                 data.value <= 25 ? 'Отличный' :
-                 data.value <= 28 ? 'Норма' :
-                 'Повышенный'}
+                {data.value < 15 ? t('quality.tooLow') : 
+                 data.value <= 20 ? t('quality.athletic') :
+                 data.value <= 25 ? t('quality.excellent') :
+                 data.value <= 28 ? t('quality.normal') :
+                 t('quality.elevated')}
               </p>
             </div>
           )}
@@ -864,21 +867,21 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
               
               // Recovery Score: если данные за вчера/сегодня → "Сегодня"
               if (isRecoveryScore && daysDiff <= 1) {
-                return <span className="text-muted-foreground">Сегодня</span>;
+                return <span className="text-muted-foreground">{t('time.today')}</span>;
               }
               
               // Sleep: если данные за сегодня → "Сегодня"
               if (isSleepMetric && daysDiff === 0) {
-                return <span className="text-muted-foreground">Сегодня</span>;
+                return <span className="text-muted-foreground">{t('time.today')}</span>;
               }
               
               // Workout метрики: "Последняя: [дата]" если > 1 дня
               if (isWorkoutMetric && daysDiff > 1) {
                 return (
                   <>
-                    <span className="text-muted-foreground">Последняя:</span>
+                    <span className="text-muted-foreground">{t('time.lastUpdate')}</span>
                     <span className="text-muted-foreground">
-                      {dataDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
+                      {format(dataDate, 'd MMM', { locale: dateLocale })}
                     </span>
                   </>
                 );
@@ -886,18 +889,18 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
               
               // Остальные метрики: "Сегодня" / "Вчера" / дата
               if (daysDiff === 0) {
-                return <span className="text-muted-foreground">Сегодня</span>;
+                return <span className="text-muted-foreground">{t('time.today')}</span>;
               } else if (daysDiff === 1) {
-                return <span className="text-muted-foreground">Вчера</span>;
+                return <span className="text-muted-foreground">{t('time.yesterday')}</span>;
               } else {
                 return (
                   <>
                     <span className="text-muted-foreground">
-                      {dataDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
+                      {format(dataDate, 'd MMM', { locale: dateLocale })}
                     </span>
                     {daysDiff > 1 && (
                       <span className="text-xs text-yellow-600 font-medium">
-                        ({daysDiff} дн. назад)
+                        ({t('time.days', { count: daysDiff })})
                       </span>
                     )}
                   </>
@@ -973,7 +976,7 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
             }
             
             return {
-              date: format(parseISO(date), 'd MMM', { locale: ru }),
+              date: format(parseISO(date), 'd MMM', { locale: dateLocale }),
               rawDate: date,
               withingsValue,
               inbodyValue,

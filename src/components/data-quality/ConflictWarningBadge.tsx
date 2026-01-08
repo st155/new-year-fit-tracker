@@ -4,6 +4,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { AlertTriangle } from 'lucide-react';
 import { useConflictDetection } from '@/hooks/composite/data/useMetricsV2';
 import { ConflictResolutionDialog } from './ConflictResolutionDialog';
+import { useTranslation } from 'react-i18next';
 
 interface ConflictWarningBadgeProps {
   metricName: string;
@@ -11,6 +12,7 @@ interface ConflictWarningBadgeProps {
 }
 
 export function ConflictWarningBadge({ metricName, onClick }: ConflictWarningBadgeProps) {
+  const { t } = useTranslation('widgets');
   const { data: conflicts, isLoading } = useConflictDetection(metricName);
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -37,13 +39,13 @@ export function ConflictWarningBadge({ metricName, onClick }: ConflictWarningBad
               }}
             >
               <AlertTriangle className="w-3 h-3" />
-              {conflicts.length} конфликт{conflicts.length > 1 ? 'а' : ''}
+              {t('conflicts', { count: conflicts.length })}
             </Badge>
           </TooltipTrigger>
           <TooltipContent className="max-w-xs">
             <div className="space-y-2">
-              <p className="font-semibold">Обнаружены конфликтующие данные</p>
-              <p className="text-xs text-muted-foreground">Нажмите для разрешения</p>
+              <p className="font-semibold">{t('conflicts.detected')}</p>
+              <p className="text-xs text-muted-foreground">{t('conflicts.clickToResolve')}</p>
             </div>
           </TooltipContent>
         </Tooltip>

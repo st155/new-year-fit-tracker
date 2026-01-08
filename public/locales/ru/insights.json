@@ -21,7 +21,17 @@
     "streak": "Стрейк: {{days}} дней - {{title}}",
     "streak_one": "Стрейк: {{days}} день - {{title}}",
     "allComplete": "Все привычки выполнены ({{done}}/{{total}})",
-    "progress": "Привычки: {{done}}/{{total}} выполнено"
+    "progress": "Привычки: {{done}}/{{total}} выполнено",
+    "atRisk": "Стрейк \"{{title}}\" ({{days}} дней) под угрозой",
+    "atRisk_one": "Стрейк \"{{title}}\" ({{days}} день) под угрозой",
+    "qualityDecreasing": "Качество выполнения \"{{title}}\" снижается",
+    "improveConsistency": "Улучшите регулярность \"{{title}}\" (сейчас {{percent}}%)",
+    "combine": "Объедините \"{{habit1}}\" и \"{{habit2}}\" для лучших результатов",
+    "newRecord": "Новый рекорд: {{days}} дней подряд \"{{title}}\"!",
+    "qualityGrade": "\"{{title}}\" - оценка качества {{grade}} ({{score}}/100)",
+    "moreSuccessful": "\"{{title}}\" на {{percent}}% успешнее {{timeLabel}}",
+    "togetherRate": "\"{{habit1}}\" и \"{{habit2}}\" выполняются вместе в {{percent}}% случаев",
+    "defaultName": "Привычка"
   },
   "achievements": {
     "stepsRecord": "Новый рекорд! {{steps}} шагов",
@@ -34,5 +44,39 @@
   },
   "recommendations": {
     "addMetric": "Добавьте метрику \"{{name}}\" для полной картины"
+  },
+  "correlations": {
+    "sleepRecovery": "Когда сон >{{hours}}ч, Recovery выше на {{percent}}%"
+  },
+  "anomalies": {
+    "lowActivity": "Необычно низкая активность: -{{percent}}% от среднего",
+    "lowSleep": "Сон ниже обычного: {{actual}}ч вместо {{average}}ч"
+  },
+  "predictions": {
+    "goalReached": "\"{{title}}\" будет достигнута через {{days}} дней",
+    "goalReached_one": "\"{{title}}\" будет достигнута через {{days}} день",
+    "goalReached_few": "\"{{title}}\" будет достигнута через {{days}} дня",
+    "goodProgress": "Хороший прогресс по цели \"{{title}}\""
+  },
+  "social": {
+    "topRank": "Вы на {{rank}} месте в \"{{title}}\"!"
+  },
+  "trainer": {
+    "unreadMessages": "{{count}} непрочитанных сообщений от тренера",
+    "unreadMessages_one": "{{count}} непрочитанное сообщение от тренера",
+    "unreadMessages_few": "{{count}} непрочитанных сообщения от тренера",
+    "newRecommendation": "Новая рекомендация от тренера"
+  },
+  "temporal": {
+    "weekendActivity": "В выходные активность {{direction}} на {{percent}}%",
+    "activityPeak": "Пик активности обычно {{time}}",
+    "falls": "падает",
+    "rises": "растёт"
+  },
+  "timeLabels": {
+    "morning": "утром",
+    "afternoon": "днём",
+    "evening": "вечером",
+    "night": "ночью"
   }
 }

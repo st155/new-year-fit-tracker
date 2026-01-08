@@ -4,6 +4,7 @@ import { Sparkles, Activity, RefreshCw } from 'lucide-react';
 import { useTodayInsights } from '@/hooks/useTodayInsights';
 import { memo } from 'react';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from 'react-i18next';
 
 interface InsightCard {
   emoji: string;
@@ -95,6 +96,7 @@ interface EnhancedAIInsightsProps {
 }
 
 const EnhancedAIInsightsComponent = ({ userId, healthScore }: EnhancedAIInsightsProps) => {
+  const { t } = useTranslation('widgets');
   const { data: insights, isLoading } = useTodayInsights(userId);
   
   if (isLoading || !insights) return null;
@@ -103,28 +105,28 @@ const EnhancedAIInsightsComponent = ({ userId, healthScore }: EnhancedAIInsights
     {
       emoji: '🔥',
       value: insights.metrics.today,
-      label: 'метрик',
+      label: t('stats.metrics'),
       sparklineData: insights.metrics.history,
       color: 'hsl(var(--chart-1))',
     },
     {
       emoji: '📈',
       value: insights.sources.today,
-      label: 'источников',
+      label: t('stats.sources'),
       sparklineData: insights.sources.history,
       color: 'hsl(var(--chart-2))',
     },
     {
       emoji: '🎯',
       value: insights.goals.active,
-      label: 'целей',
+      label: t('stats.goals'),
       sparklineData: insights.goals.history,
       color: 'hsl(var(--chart-3))',
     },
     {
       emoji: '⚡',
       value: insights.habits.active,
-      label: 'привычек',
+      label: t('stats.habits'),
       sparklineData: insights.habits.history,
       color: 'hsl(var(--chart-4))',
     },
@@ -136,12 +138,12 @@ const EnhancedAIInsightsComponent = ({ userId, healthScore }: EnhancedAIInsights
         <div className="flex items-center gap-3 overflow-x-auto no-scrollbar w-full">
           <div className="flex items-center gap-1.5 shrink-0">
             <Sparkles className="h-3.5 w-3.5 text-primary" />
-            <span className="text-xs font-medium text-muted-foreground">Мои метрики:</span>
+            <span className="text-xs font-medium text-muted-foreground">{t('myMetrics')}</span>
           </div>
           
           {cards.map((card, i) => (
             <Badge 
-              key={i} 
+              key={i}
               variant="outline" 
               className="shrink-0 px-2 py-1 gap-1.5 hover:bg-muted/50 transition-colors cursor-default"
             >
@@ -239,7 +241,7 @@ const EnhancedAIInsightsComponent = ({ userId, healthScore }: EnhancedAIInsights
                     onClick={healthScore.onRefresh}
                     disabled={healthScore.isRecalculating}
                     className="shrink-0 h-6 w-6"
-                    title="Обновить Health Score"
+                    title={t('refresh')}
                   >
                     <RefreshCw className={`h-3 w-3 ${healthScore.isRecalculating ? 'animate-spin' : ''}`} />
                   </Button>
