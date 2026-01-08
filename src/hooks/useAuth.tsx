@@ -383,7 +383,7 @@ export const useAuth = () => {
     role,
     roles,
     rolesLoading: effectiveRolesLoading,
-    isTrainer: roles.includes('trainer') || roles.includes('admin'),
+    isTrainer: roles.includes('trainer'),
     isAdmin: roles.includes('admin'),
     isClient: !roles.includes('trainer') && !roles.includes('admin'),
   };
