@@ -92,10 +92,10 @@ export default function MedicalDocumentDetail() {
     if (!documentId) return;
     try {
       await deleteDocument.mutateAsync(documentId);
-      showSuccessToast('Документ удалён', 'Документ успешно удалён');
+      showSuccessToast(t('detail.toast.deleted'), t('detail.toast.deletedDesc'));
       navigate('/medical-documents');
     } catch (error: any) {
-      showErrorToast('Ошибка удаления', error.message);
+      showErrorToast(t('detail.toast.deleteError'), error.message);
     }
   };
 
@@ -107,9 +107,9 @@ export default function MedicalDocumentDetail() {
         updates: { file_name: editedFileName.trim() },
       });
       setIsEditingFileName(false);
-      showSuccessToast('Название сохранено', 'Название файла обновлено');
+      showSuccessToast(t('detail.toast.filenameSaved'), t('detail.toast.filenameDesc'));
     } catch (error: any) {
-      showErrorToast('Ошибка', error.message);
+      showErrorToast(t('detail.toast.error'), error.message);
     }
   };
 
@@ -117,9 +117,9 @@ export default function MedicalDocumentDetail() {
     return (
       <div className="container mx-auto py-8 px-4">
         <div className="text-center">
-          <p className="text-muted-foreground">Документ не найден</p>
+          <p className="text-muted-foreground">{t('detail.notFound')}</p>
           <Button onClick={() => navigate('/medical-documents')} variant="outline" className="mt-4">
-            Вернуться
+            {t('detail.back')}
           </Button>
         </div>
       </div>
@@ -158,8 +158,8 @@ export default function MedicalDocumentDetail() {
           queryClient.invalidateQueries({ queryKey: ['medical-documents'] });
           
           toast({
-            title: '✅ Обработка завершена',
-            description: updatedDoc.ai_summary || 'Биомаркеры успешно извлечены',
+            title: t('detail.toast.processingComplete'),
+            description: updatedDoc.ai_summary || t('detail.toast.biomarkersExtracted'),
           });
           
           setProcessingStage(null);
@@ -192,12 +192,12 @@ export default function MedicalDocumentDetail() {
       // Invalidate queries to refresh UI
       queryClient.invalidateQueries({ queryKey: ['medical-documents'] });
       
-      showSuccessToast('Статус сброшен', 'Документ готов к повторной обработке');
+      showSuccessToast(t('detail.toast.statusReset'), t('detail.toast.statusResetDesc'));
       
       // Trigger parsing
       await handleParse();
     } catch (error: any) {
-      showErrorToast('Ошибка сброса', error.message);
+      showErrorToast(t('detail.toast.resetError'), error.message);
     }
   };
 
@@ -226,15 +226,15 @@ export default function MedicalDocumentDetail() {
   };
 
   const documentTypeLabels: Record<DocumentType, string> = {
-    inbody: 'InBody анализ',
-    blood_test: 'Анализ крови',
-    fitness_report: 'Медицинское заключение',
-    progress_photo: 'Фото прогресса',
-    vo2max: 'VO2max тест',
-    caliper: 'Калипер',
-    prescription: 'Рецепт',
-    training_program: 'Программа тренировок',
-    other: 'Другой документ',
+    inbody: t('detail.types.inbody'),
+    blood_test: t('detail.types.blood_test'),
+    fitness_report: t('detail.types.fitness_report'),
+    progress_photo: t('detail.types.progress_photo'),
+    vo2max: t('detail.types.vo2max'),
+    caliper: t('detail.types.caliper'),
+    prescription: t('detail.types.prescription'),
+    training_program: t('detail.types.training_program'),
+    other: t('detail.types.other'),
   };
 
   const groupedResults = results?.reduce((acc, result) => {
@@ -247,16 +247,16 @@ export default function MedicalDocumentDetail() {
   }, {} as Record<string, typeof results>);
 
   const categoryNames: Record<string, string> = {
-    lipids: 'Липиды',
-    metabolic: 'Метаболизм',
-    hormones: 'Гормоны',
-    liver: 'Печень',
-    kidney: 'Почки',
-    blood_count: 'Общий анализ крови',
-    vitamins: 'Витамины',
-    minerals: 'Минералы',
-    inflammation: 'Воспаление',
-    other: 'Другое',
+    lipids: t('detail.categories.lipids'),
+    metabolic: t('detail.categories.metabolic'),
+    hormones: t('detail.categories.hormones'),
+    liver: t('detail.categories.liver'),
+    kidney: t('detail.categories.kidney'),
+    blood_count: t('detail.categories.blood_count'),
+    vitamins: t('detail.categories.vitamins'),
+    minerals: t('detail.categories.minerals'),
+    inflammation: t('detail.categories.inflammation'),
+    other: t('detail.categories.other'),
   };
 
   const getStatusColor = (value: number, refMin?: number, refMax?: number) => {
@@ -278,11 +278,11 @@ export default function MedicalDocumentDetail() {
       queryClient.invalidateQueries({ queryKey: ['lab-test-results', documentId] });
       
       showSuccessToast(
-        'Пересопоставление завершено',
-        `Сопоставлено повторно: ${data?.rematchedCount || 0} из ${data?.totalUnmatched || 0} показателей`
+        t('detail.toast.rematchComplete'),
+        t('detail.toast.rematchResult', { matched: data?.rematchedCount || 0, total: data?.totalUnmatched || 0 })
       );
     } catch (error: any) {
-      showErrorToast('Ошибка пересопоставления', error.message);
+      showErrorToast(t('detail.toast.rematchError'), error.message);
     } finally {
       setIsRematching(false);
     }
@@ -325,7 +325,7 @@ export default function MedicalDocumentDetail() {
                   setEditedFileName(document.file_name);
                 }}
               >
-                Отмена
+                {t('detail.cancel')}
               </Button>
             </div>
           ) : (
@@ -361,7 +361,7 @@ export default function MedicalDocumentDetail() {
             <Button onClick={handleParse} disabled={parseDocument.isPending}>
               {parseDocument.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               <Activity className="mr-2 h-4 w-4" />
-              Обработать AI
+              {t('detail.processAI')}
             </Button>
           )}
 
@@ -373,15 +373,15 @@ export default function MedicalDocumentDetail() {
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Удалить документ?</AlertDialogTitle>
+                <AlertDialogTitle>{t('detail.deleteConfirmTitle')}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Это действие нельзя отменить. Документ и все связанные данные будут удалены навсегда.
+                  {t('detail.deleteConfirmDesc')}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Отмена</AlertDialogCancel>
+                <AlertDialogCancel>{t('detail.cancel')}</AlertDialogCancel>
                 <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
-                  Удалить
+                  {t('detail.delete')}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -406,7 +406,7 @@ export default function MedicalDocumentDetail() {
           <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">📝 Информация о документе</CardTitle>
+            <CardTitle className="text-lg">📝 {t('detail.infoTitle')}</CardTitle>
             {!isEditingMetadata ? (
               <Button
                 variant="outline"
@@ -414,7 +414,7 @@ export default function MedicalDocumentDetail() {
                 onClick={() => setIsEditingMetadata(true)}
               >
                 <Edit2 className="h-4 w-4 mr-2" />
-                Редактировать
+                {t('detail.edit')}
               </Button>
             ) : (
               <div className="flex gap-2">
@@ -423,7 +423,7 @@ export default function MedicalDocumentDetail() {
                   size="sm"
                   onClick={() => setIsEditingMetadata(false)}
                 >
-                  Отмена
+                  {t('detail.cancel')}
                 </Button>
                 <Button
                   size="sm"
@@ -435,7 +435,7 @@ export default function MedicalDocumentDetail() {
                   ) : (
                     <Save className="h-4 w-4 mr-2" />
                   )}
-                  Сохранить
+                  {t('detail.save')}
                 </Button>
               </div>
             )}
@@ -446,7 +446,7 @@ export default function MedicalDocumentDetail() {
             <form className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Тип документа</Label>
+                  <Label>{t('detail.labels.documentType')}</Label>
                   <Select
                     value={watch('document_type')}
                     onValueChange={(value) => setValue('document_type', value as DocumentType)}
@@ -455,21 +455,21 @@ export default function MedicalDocumentDetail() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="inbody">📊 InBody анализ</SelectItem>
-                      <SelectItem value="blood_test">🩸 Анализ крови</SelectItem>
-                      <SelectItem value="fitness_report">📋 Медицинское заключение</SelectItem>
-                      <SelectItem value="progress_photo">📸 Фото прогресса</SelectItem>
-                      <SelectItem value="vo2max">🫁 VO2max тест</SelectItem>
-                      <SelectItem value="caliper">📏 Калипер</SelectItem>
-                      <SelectItem value="prescription">💊 Рецепт</SelectItem>
-                      <SelectItem value="training_program">🏋️ Программа тренировок</SelectItem>
-                      <SelectItem value="other">📄 Другой документ</SelectItem>
+                      <SelectItem value="inbody">📊 {t('detail.types.inbody')}</SelectItem>
+                      <SelectItem value="blood_test">🩸 {t('detail.types.blood_test')}</SelectItem>
+                      <SelectItem value="fitness_report">📋 {t('detail.types.fitness_report')}</SelectItem>
+                      <SelectItem value="progress_photo">📸 {t('detail.types.progress_photo')}</SelectItem>
+                      <SelectItem value="vo2max">🫁 {t('detail.types.vo2max')}</SelectItem>
+                      <SelectItem value="caliper">📏 {t('detail.types.caliper')}</SelectItem>
+                      <SelectItem value="prescription">💊 {t('detail.types.prescription')}</SelectItem>
+                      <SelectItem value="training_program">🏋️ {t('detail.types.training_program')}</SelectItem>
+                      <SelectItem value="other">📄 {t('detail.types.other')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Дата документа</Label>
+                  <Label>{t('detail.labels.documentDate')}</Label>
                   <Input
                     type="date"
                     {...register('document_date')}
@@ -478,18 +478,18 @@ export default function MedicalDocumentDetail() {
               </div>
 
               <div className="space-y-2">
-                <Label>Теги (через запятую)</Label>
+                <Label>{t('detail.labels.tags')}</Label>
                 <Input
                   {...register('tags')}
-                  placeholder="анализ крови, холестерин, контроль"
+                  placeholder={t('detail.labels.tagsPlaceholder')}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Заметки</Label>
+                <Label>{t('detail.labels.notes')}</Label>
                 <Textarea
                   {...register('notes')}
-                  placeholder="Ваши заметки к документу..."
+                  placeholder={t('detail.labels.notesPlaceholder')}
                   rows={3}
                 />
               </div>
@@ -501,25 +501,25 @@ export default function MedicalDocumentDetail() {
                   onCheckedChange={(checked) => setValue('hidden_from_trainer', checked)}
                 />
                 <Label htmlFor="hidden-from-trainer" className="cursor-pointer">
-                  Скрыть от тренера
+                  {t('detail.labels.hideFromTrainer')}
                 </Label>
               </div>
             </form>
           ) : (
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Тип документа:</span>
+                <span className="text-muted-foreground">{t('detail.labels.documentType')}:</span>
                 <Badge variant="secondary">{documentTypeLabels[document.document_type]}</Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Дата документа:</span>
+                <span className="text-muted-foreground">{t('detail.labels.documentDate')}:</span>
                 <span className="font-medium">
                   {format(new Date(document.document_date || document.uploaded_at), 'dd MMMM yyyy', { locale: ru })}
                 </span>
               </div>
               {document.tags && document.tags.length > 0 && (
                 <div className="flex items-start justify-between gap-2">
-                  <span className="text-muted-foreground">Теги:</span>
+                  <span className="text-muted-foreground">{t('detail.labels.tags')}:</span>
                   <div className="flex flex-wrap gap-1 justify-end">
                     {document.tags.map(tag => (
                       <Badge key={tag} variant="outline" className="text-xs">
@@ -531,14 +531,14 @@ export default function MedicalDocumentDetail() {
               )}
               {document.notes && (
                 <div className="flex flex-col gap-1">
-                  <span className="text-muted-foreground">Заметки:</span>
+                  <span className="text-muted-foreground">{t('detail.labels.notes')}:</span>
                   <p className="text-foreground whitespace-pre-wrap">{document.notes}</p>
                 </div>
               )}
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Видимость для тренера:</span>
+                <span className="text-muted-foreground">{t('detail.labels.trainerVisibility')}:</span>
                 <Badge variant={document.hidden_from_trainer ? 'secondary' : 'default'}>
-                  {document.hidden_from_trainer ? '🔒 Скрыт' : '👁️ Виден'}
+                  {document.hidden_from_trainer ? t('detail.labels.hidden') : t('detail.labels.visible')}
                 </Badge>
               </div>
             </div>
@@ -550,9 +550,9 @@ export default function MedicalDocumentDetail() {
       {document.processing_status === 'error' && (
         <Alert variant="destructive" className="mb-6">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Обработка завершилась с ошибкой</AlertTitle>
+          <AlertTitle>{t('detail.error.title')}</AlertTitle>
           <AlertDescription className="flex flex-col gap-3">
-            <p>{document.processing_error || 'Неизвестная ошибка при обработке документа'}</p>
+            <p>{document.processing_error || t('detail.error.unknown')}</p>
             <Button 
               onClick={handleResetAndRetry}
               variant="outline"
@@ -573,12 +573,12 @@ export default function MedicalDocumentDetail() {
               <div className="flex items-center gap-3">
                 <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
                 <p className="font-medium">
-                  {processingStages[processingStage]?.label || 'Обработка документа...'}
+                  {processingStages[processingStage]?.label || t('detail.processing.inProgress')}
                 </p>
               </div>
               <Progress value={processingProgress} className="h-2" />
               <p className="text-sm text-muted-foreground">
-                Это может занять 10-15 секунд. Gemini анализирует весь PDF...
+                {t('detail.processing.hint')}
               </p>
             </div>
           </CardContent>
@@ -595,11 +595,10 @@ export default function MedicalDocumentDetail() {
           {unmatchedResults.length > 0 && (
             <Alert className="border-yellow-500/50 bg-yellow-500/10">
               <AlertCircle className="h-4 w-4 text-yellow-600" />
-              <AlertTitle>Несопоставленные показатели</AlertTitle>
+              <AlertTitle>{t('detail.unmatched.title')}</AlertTitle>
               <AlertDescription className="flex items-center justify-between">
                 <span>
-                  {unmatchedResults.length} показателей не распознаны автоматически. 
-                  Помогите системе научиться их распознавать.
+                  {t('detail.unmatched.description', { count: unmatchedResults.length })}
                 </span>
                 <div className="flex gap-2">
                   <Button 
@@ -610,14 +609,14 @@ export default function MedicalDocumentDetail() {
                   >
                     {isRematching && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     <RefreshCw className="mr-2 h-4 w-4" />
-                    Пересопоставить
+                    {t('detail.unmatched.rematch')}
                   </Button>
                   <Button 
                     variant="default" 
                     size="sm"
                     onClick={() => setShowMappingDialog(true)}
                   >
-                    Сопоставить вручную →
+                    {t('detail.unmatched.manualMatch')}
                   </Button>
                 </div>
               </AlertDescription>
@@ -627,28 +626,28 @@ export default function MedicalDocumentDetail() {
           {/* Summary Stats */}
           <Card>
             <CardHeader>
-              <CardTitle>Обзор</CardTitle>
+              <CardTitle>{t('detail.summary.title')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Всего показателей</p>
+                  <p className="text-sm text-muted-foreground">{t('detail.summary.totalIndicators')}</p>
                   <p className="text-2xl font-bold">{results.length}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Категорий</p>
+                  <p className="text-sm text-muted-foreground">{t('detail.summary.categories')}</p>
                   <p className="text-2xl font-bold">{Object.keys(groupedResults || {}).length}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Дата анализа</p>
+                  <p className="text-sm text-muted-foreground">{t('detail.summary.analysisDate')}</p>
                   <p className="text-lg font-semibold">
                     {results[0]?.test_date && format(new Date(results[0].test_date), 'dd.MM.yyyy')}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Лаборатория</p>
+                  <p className="text-sm text-muted-foreground">{t('detail.summary.laboratory')}</p>
                   <p className="text-lg font-semibold truncate">
-                    {results[0]?.laboratory_name || 'Не указана'}
+                    {results[0]?.laboratory_name || t('detail.summary.notSpecified')}
                   </p>
                 </div>
               </div>
@@ -698,9 +697,9 @@ export default function MedicalDocumentDetail() {
                             getStatusColor(result.normalized_value, result.ref_range_min, result.ref_range_max) === 'high' && 'text-red-600 bg-red-50 border-red-200'
                           )}
                         >
-                          {getStatusColor(result.normalized_value, result.ref_range_min, result.ref_range_max) === 'low' && 'Ниже'}
-                          {getStatusColor(result.normalized_value, result.ref_range_min, result.ref_range_max) === 'normal' && 'Норма'}
-                          {getStatusColor(result.normalized_value, result.ref_range_min, result.ref_range_max) === 'high' && 'Выше'}
+                          {getStatusColor(result.normalized_value, result.ref_range_min, result.ref_range_max) === 'low' && t('detail.status.low')}
+                          {getStatusColor(result.normalized_value, result.ref_range_min, result.ref_range_max) === 'normal' && t('detail.status.normal')}
+                          {getStatusColor(result.normalized_value, result.ref_range_min, result.ref_range_max) === 'high' && t('detail.status.high')}
                         </Badge>
                         
                         {(result.ref_range_min !== null && result.ref_range_max !== null) && (
@@ -721,11 +720,11 @@ export default function MedicalDocumentDetail() {
           <CardContent className="text-center py-12">
             <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
             <p className="text-muted-foreground mb-4">
-              Данные не извлечены. Нажмите "Обработать AI" чтобы извлечь биомаркеры из документа.
+              {t('detail.empty.title')}. {t('detail.empty.description')}
             </p>
             <Button onClick={handleParse} disabled={parseDocument.isPending}>
               {parseDocument.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Обработать документ
+              {t('detail.empty.processButton')}
             </Button>
           </CardContent>
         </Card>

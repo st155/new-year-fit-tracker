@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dumbbell, BookOpen, Calendar, ArrowLeft, TrendingUp } from "lucide-react";
@@ -9,6 +10,7 @@ import Logbook from "@/components/workout/Logbook";
 import TrainingPlan from "@/components/workout/TrainingPlan";
 
 export default function WorkoutManagement() {
+  const { t } = useTranslation('workouts');
   const [activeTab, setActiveTab] = useState<"plan" | "logbook">("plan");
   const navigate = useNavigate();
 
@@ -24,7 +26,7 @@ export default function WorkoutManagement() {
         className="mb-4"
       >
         <ArrowLeft className="w-4 h-4 mr-2" />
-        Назад к тренировкам
+        {t('management.backToWorkouts')}
       </Button>
       
       {/* Animated Header */}
@@ -44,15 +46,15 @@ export default function WorkoutManagement() {
               <Dumbbell className="w-10 h-10 text-primary" />
             </motion.div>
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold">Планы и История</h1>
-              <p className="text-muted-foreground mt-1">Управляй своими тренировками</p>
+              <h1 className="text-3xl md:text-4xl font-bold">{t('management.title')}</h1>
+              <p className="text-muted-foreground mt-1">{t('management.subtitle')}</p>
             </div>
           </div>
           
           <div className="flex gap-2">
             <Badge variant="outline" className="text-sm">
               <TrendingUp className="w-3 h-3 mr-1" />
-              В процессе
+              {t('management.inProgress')}
             </Badge>
           </div>
         </div>
@@ -67,8 +69,8 @@ export default function WorkoutManagement() {
           >
             <Calendar className="w-5 h-5" />
             <div className="text-center">
-              <div className="font-medium">План</div>
-              <div className="text-xs text-muted-foreground">Текущая программа</div>
+              <div className="font-medium">{t('management.tabs.plan')}</div>
+              <div className="text-xs text-muted-foreground">{t('management.tabs.planDesc')}</div>
             </div>
           </TabsTrigger>
           <TabsTrigger 
@@ -77,8 +79,8 @@ export default function WorkoutManagement() {
           >
             <BookOpen className="w-5 h-5" />
             <div className="text-center">
-              <div className="font-medium">Журнал</div>
-              <div className="text-xs text-muted-foreground">История тренировок</div>
+              <div className="font-medium">{t('management.tabs.logbook')}</div>
+              <div className="text-xs text-muted-foreground">{t('management.tabs.logbookDesc')}</div>
             </div>
           </TabsTrigger>
         </TabsList>
