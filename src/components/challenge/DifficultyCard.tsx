@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 interface DifficultyCardProps {
   level: number;
@@ -25,6 +26,8 @@ export function DifficultyCard({
   selected,
   onSelect,
 }: DifficultyCardProps) {
+  const { t } = useTranslation('challenges');
+
   return (
     <Card
       className={cn(
@@ -47,7 +50,7 @@ export function DifficultyCard({
           <div className="text-5xl">{icon}</div>
           <div className="text-right">
             <div className="text-2xl font-bold">{multiplier}</div>
-            <div className="text-xs text-muted-foreground">множитель</div>
+            <div className="text-xs text-muted-foreground">{t('difficulty.multiplier')}</div>
           </div>
         </div>
 
@@ -58,7 +61,7 @@ export function DifficultyCard({
 
         <div className="space-y-2 pt-2 border-t">
           <p className="text-xs font-semibold text-muted-foreground uppercase">
-            Примеры целей:
+            {t('difficulty.examples')}
           </p>
           {examples.map((example, idx) => (
             <div key={idx} className="text-sm flex items-center gap-2">
@@ -73,7 +76,7 @@ export function DifficultyCard({
           className="w-full"
           onClick={onSelect}
         >
-          {selected ? "Выбрано" : "Выбрать"}
+          {selected ? t('difficulty.selected') : t('difficulty.select')}
         </Button>
       </div>
     </Card>

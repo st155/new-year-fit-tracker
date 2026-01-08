@@ -56,5 +56,12 @@
     "saving": "Saving...",
     "cancel": "Cancel",
     "uploadAvatar": "Upload Avatar"
+  },
+  "stats": {
+    "habits": "Habits",
+    "workouts": "Workouts",
+    "streakDays": "Days streak",
+    "goals": "Goals",
+    "metrics": "Metrics"
   }
 }

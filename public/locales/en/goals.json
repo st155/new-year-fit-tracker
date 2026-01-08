@@ -192,5 +192,13 @@
     "unknownGoal": "Unknown goal",
     "photoCount_one": "{{count}} photo",
     "photoCount_other": "{{count}} photos"
+  },
+  "celebration": {
+    "milestones": {
+      "25": "25% achieved!",
+      "50": "Halfway there! 💪",
+      "75": "Almost there! 🔥",
+      "100": "Goal achieved! 🎉"
+    }
   }
 }

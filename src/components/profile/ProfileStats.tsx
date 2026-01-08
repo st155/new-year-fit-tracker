@@ -1,6 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { Target, Flame, Trophy, Dumbbell, BarChart3, TrendingUp } from 'lucide-react';
+import { Target, Flame, Trophy, Dumbbell, BarChart3 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface ProfileStatsProps {
@@ -52,6 +53,8 @@ export function ProfileStats({
   streakDays,
   isLoading 
 }: ProfileStatsProps) {
+  const { t, i18n } = useTranslation('profile');
+
   if (isLoading) {
     return (
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
@@ -66,36 +69,36 @@ export function ProfileStats({
     <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
       <StatCard
         icon={<Target className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500" />}
-        label="Привычек"
+        label={t('stats.habits')}
         value={habitsCount}
         gradient="from-blue-500/5 to-cyan-500/5 border-blue-500/20"
         delay={0}
       />
       <StatCard
         icon={<Dumbbell className="h-5 w-5 sm:h-6 sm:w-6 text-purple-500" />}
-        label="Тренировок"
+        label={t('stats.workouts')}
         value={workoutsCount}
         gradient="from-purple-500/5 to-pink-500/5 border-purple-500/20"
         delay={0.05}
       />
       <StatCard
         icon={<Flame className="h-5 w-5 sm:h-6 sm:w-6 text-orange-500" />}
-        label="Дней подряд"
+        label={t('stats.streakDays')}
         value={streakDays}
         gradient="from-orange-500/5 to-red-500/5 border-orange-500/20"
         delay={0.1}
       />
       <StatCard
         icon={<Trophy className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-500" />}
-        label="Целей"
+        label={t('stats.goals')}
         value={goalsCount}
         gradient="from-yellow-500/5 to-orange-500/5 border-yellow-500/20"
         delay={0.15}
       />
       <StatCard
         icon={<BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-green-500" />}
-        label="Метрик"
-        value={metricsCount.toLocaleString('ru-RU')}
+        label={t('stats.metrics')}
+        value={metricsCount.toLocaleString(i18n.language === 'ru' ? 'ru-RU' : 'en-US')}
         gradient="from-green-500/5 to-emerald-500/5 border-green-500/20"
         delay={0.2}
       />

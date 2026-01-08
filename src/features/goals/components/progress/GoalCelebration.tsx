@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import confetti from 'canvas-confetti';
 import { toast } from 'sonner';
 
@@ -9,6 +10,8 @@ interface GoalCelebrationProps {
 }
 
 export function GoalCelebration({ goalName, milestone = 100, trigger }: GoalCelebrationProps) {
+  const { t } = useTranslation('goals');
+
   useEffect(() => {
     if (!trigger) return;
 
@@ -16,13 +19,14 @@ export function GoalCelebration({ goalName, milestone = 100, trigger }: GoalCele
     
     // Milestone-specific celebration intensity
     const config = {
-      25: { duration: 1500, count: 30, message: '25% достигнуто!' },
-      50: { duration: 2000, count: 50, message: 'Половина пути пройдена! 💪' },
-      75: { duration: 2500, count: 80, message: 'Осталось совсем немного! 🔥' },
-      100: { duration: 3000, count: 150, message: 'Цель достигнута! 🎉' },
+      25: { duration: 1500, count: 30 },
+      50: { duration: 2000, count: 50 },
+      75: { duration: 2500, count: 80 },
+      100: { duration: 3000, count: 150 },
     };
 
-    const { duration, count, message } = config[milestone];
+    const { duration, count } = config[milestone];
+    const message = t(`celebration.milestones.${milestone}`);
 
     // Epic celebration for 100%
     if (milestone === 100) {
@@ -87,7 +91,7 @@ export function GoalCelebration({ goalName, milestone = 100, trigger }: GoalCele
       description: message,
       duration: 4000,
     });
-  }, [trigger, goalName, milestone]);
+  }, [trigger, goalName, milestone, t]);
 
   return null;
 }

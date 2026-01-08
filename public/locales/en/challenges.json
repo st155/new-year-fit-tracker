@@ -68,7 +68,11 @@
     "inhumanDesc": "+90% to each goal",
     "stepsPerDay": "Steps: {{value}} per day",
     "sleepHours": "Sleep: {{value}} hours",
-    "recoveryPercent": "Recovery: {{value}}%"
+    "recoveryPercent": "Recovery: {{value}}%",
+    "multiplier": "multiplier",
+    "examples": "Example goals:",
+    "selected": "Selected",
+    "select": "Select"
   },
   "report": {
     "resultsOf": "Results of {{name}}",

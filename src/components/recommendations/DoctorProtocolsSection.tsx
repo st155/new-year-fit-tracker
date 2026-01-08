@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,16 +26,16 @@ import { useProtocolGroups, DoctorActionItem, formatScheduleDisplay } from '@/ho
 import { useAddProtocolToLibrary } from '@/hooks/biostack/useDoctorProtocol';
 import { useExtractProtocols, useToggleProtocolStatus } from '@/hooks/biostack/useExtractProtocols';
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
-const ACTION_TYPE_CONFIG = {
-  supplement: { icon: Pill, label: 'Добавки', color: 'text-green-500' },
-  exercise: { icon: Dumbbell, label: 'Упражнения', color: 'text-blue-500' },
-  lifestyle: { icon: Heart, label: 'Образ жизни', color: 'text-pink-500' },
-  test: { icon: FlaskConical, label: 'Анализы', color: 'text-purple-500' },
-  medication: { icon: Pill, label: 'Медикаменты', color: 'text-orange-500' },
-  consultation: { icon: Stethoscope, label: 'Консультации', color: 'text-cyan-500' },
+const ACTION_TYPE_ICONS = {
+  supplement: { icon: Pill, color: 'text-green-500' },
+  exercise: { icon: Dumbbell, color: 'text-blue-500' },
+  lifestyle: { icon: Heart, color: 'text-pink-500' },
+  test: { icon: FlaskConical, color: 'text-purple-500' },
+  medication: { icon: Pill, color: 'text-orange-500' },
+  consultation: { icon: Stethoscope, color: 'text-cyan-500' },
 };
 
 interface ProtocolCardProps {
@@ -51,6 +52,7 @@ interface ProtocolCardProps {
 }
 
 function ProtocolCard({ protocol, onAddAll, isAdding, onNavigate }: ProtocolCardProps) {
+  const { t, i18n } = useTranslation('recommendations');
   const toggleStatus = useToggleProtocolStatus();
   
   const supplements = protocol.items.filter(i => i.action_type === 'supplement' || i.action_type === 'medication');
@@ -58,6 +60,7 @@ function ProtocolCard({ protocol, onAddAll, isAdding, onNavigate }: ProtocolCard
   const otherItems = protocol.items.filter(i => i.action_type !== 'supplement' && i.action_type !== 'medication');
   
   const isActive = protocol.items.some(item => item.status === 'active' || item.status === 'pending');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
 
   const handleToggle = (checked: boolean) => {
     toggleStatus.mutate({ documentId: protocol.documentId, isActive: checked });
@@ -75,8 +78,8 @@ function ProtocolCard({ protocol, onAddAll, isAdding, onNavigate }: ProtocolCard
               <CardTitle className="text-base">{protocol.protocolTag}</CardTitle>
               {protocol.prescriptionDate && (
                 <CardDescription className="text-xs">
-                  {format(new Date(protocol.prescriptionDate), 'd MMMM yyyy', { locale: ru })}
-                  {' • '}{protocol.items.length} элементов
+                  {format(new Date(protocol.prescriptionDate), 'd MMMM yyyy', { locale: dateLocale })}
+                  {' • '}{protocol.items.length} {t('protocols.items')}
                 </CardDescription>
               )}
             </div>
@@ -84,7 +87,7 @@ function ProtocolCard({ protocol, onAddAll, isAdding, onNavigate }: ProtocolCard
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground">
-                {isActive ? 'Активен' : 'Неактивен'}
+                {isActive ? t('protocols.status.active') : t('protocols.status.inactive')}
               </span>
               <Switch 
                 checked={isActive}
@@ -103,7 +106,7 @@ function ProtocolCard({ protocol, onAddAll, isAdding, onNavigate }: ProtocolCard
                 ) : (
                   <Package className="h-4 w-4 mr-2" />
                 )}
-                Добавить все ({pendingSupplements.length})
+                {t('protocols.addAll', { count: pendingSupplements.length })}
               </Button>
             )}
             <Button size="sm" variant="ghost" onClick={onNavigate}>
@@ -118,7 +121,7 @@ function ProtocolCard({ protocol, onAddAll, isAdding, onNavigate }: ProtocolCard
             <div>
               <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
                 <Pill className="h-3 w-3" />
-                Добавки и медикаменты ({supplements.length})
+                {t('protocols.supplementsAndMeds', { count: supplements.length })}
               </p>
               <div className="grid gap-2">
                 {supplements.slice(0, 3).map(item => (
@@ -136,7 +139,7 @@ function ProtocolCard({ protocol, onAddAll, isAdding, onNavigate }: ProtocolCard
                       )}
                       <span className="text-sm font-medium">{item.name}</span>
                       {item.priority === 'high' && (
-                        <Badge variant="destructive" className="text-xs">Важно</Badge>
+                        <Badge variant="destructive" className="text-xs">{t('protocols.important')}</Badge>
                       )}
                     </div>
                     <span className="text-xs text-muted-foreground">
@@ -147,7 +150,7 @@ function ProtocolCard({ protocol, onAddAll, isAdding, onNavigate }: ProtocolCard
                 ))}
                 {supplements.length > 3 && (
                   <p className="text-xs text-muted-foreground text-center py-1">
-                    + ещё {supplements.length - 3}
+                    {t('protocols.moreItems', { count: supplements.length - 3 })}
                   </p>
                 )}
               </div>
@@ -157,11 +160,11 @@ function ProtocolCard({ protocol, onAddAll, isAdding, onNavigate }: ProtocolCard
           {otherItems.length > 0 && (
             <div>
               <p className="text-xs font-medium text-muted-foreground mb-2">
-                Другие рекомендации ({otherItems.length})
+                {t('protocols.otherRecommendations', { count: otherItems.length })}
               </p>
               <div className="space-y-2">
                 {otherItems.slice(0, 2).map(item => {
-                  const config = ACTION_TYPE_CONFIG[item.action_type as keyof typeof ACTION_TYPE_CONFIG];
+                  const config = ACTION_TYPE_ICONS[item.action_type as keyof typeof ACTION_TYPE_ICONS];
                   const Icon = config?.icon || Heart;
                   return (
                     <div 
@@ -180,7 +183,7 @@ function ProtocolCard({ protocol, onAddAll, isAdding, onNavigate }: ProtocolCard
                 })}
                 {otherItems.length > 2 && (
                   <p className="text-xs text-muted-foreground text-center py-1">
-                    + ещё {otherItems.length - 2}
+                    {t('protocols.moreItems', { count: otherItems.length - 2 })}
                   </p>
                 )}
               </div>
@@ -193,6 +196,7 @@ function ProtocolCard({ protocol, onAddAll, isAdding, onNavigate }: ProtocolCard
 }
 
 export function DoctorProtocolsSection() {
+  const { t } = useTranslation('recommendations');
   const navigate = useNavigate();
   const { data: protocols, isLoading } = useProtocolGroups();
   const addProtocol = useAddProtocolToLibrary();
@@ -219,9 +223,9 @@ export function DoctorProtocolsSection() {
         <CardContent className="p-4">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h3 className="font-medium">Извлечь протоколы из документов</h3>
+              <h3 className="font-medium">{t('protocols.extract.title')}</h3>
               <p className="text-sm text-muted-foreground">
-                AI проанализирует все ваши медицинские документы и извлечёт рекомендации
+                {t('protocols.extract.description')}
               </p>
             </div>
             <Button 
@@ -234,13 +238,13 @@ export function DoctorProtocolsSection() {
               ) : (
                 <RefreshCw className="h-4 w-4 mr-2" />
               )}
-              {isExtracting ? 'Извлечение...' : 'Извлечь все протоколы'}
+              {isExtracting ? t('protocols.extract.extracting') : t('protocols.extract.button')}
             </Button>
           </div>
           {progress && (
             <div className="mt-4 space-y-2">
               <div className="flex justify-between text-sm text-muted-foreground">
-                <span>Обработка документов</span>
+                <span>{t('protocols.extract.progress')}</span>
                 <span>{progress.current} / {progress.total}</span>
               </div>
               <Progress value={(progress.current / progress.total) * 100} />
@@ -261,8 +265,7 @@ export function DoctorProtocolsSection() {
         <Alert>
           <FileText className="h-4 w-4" />
           <AlertDescription>
-            Нет протоколов от врачей. Загрузите медицинские документы с назначениями 
-            и нажмите "Извлечь все протоколы" для автоматического анализа.
+            {t('protocols.empty.title')}
           </AlertDescription>
         </Alert>
       ) : (
