@@ -114,6 +114,14 @@
       "run1km": "Бег 1 км",
       "bodyFat": "Процент жира"
     },
+    "units": {
+      "reps": "раз",
+      "kg": "кг",
+      "kgx8": "кг×8",
+      "min": "мин",
+      "percent": "%",
+      "mlKgMin": "мл/кг/мин"
+    },
     "summaryMetrics": {
       "steps": "Шаги",
       "activeCalories": "Активные калории",

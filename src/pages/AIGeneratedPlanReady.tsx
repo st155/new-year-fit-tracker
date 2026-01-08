@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { Sparkles } from 'lucide-react';
@@ -12,12 +13,13 @@ import { toast } from '@/hooks/use-toast';
 
 export default function AIGeneratedPlanReady() {
   const navigate = useNavigate();
+  const { t } = useTranslation('workouts');
   const { user } = useAuth();
   const { data: profile } = useProfileQuery(user?.id);
   const [confettiTriggered, setConfettiTriggered] = useState(false);
 
   // Extract first name from full_name
-  const firstName = profile?.full_name?.split(' ')[0] || profile?.username || 'друг';
+  const firstName = profile?.full_name?.split(' ')[0] || profile?.username || t('planReady.fallbackName');
 
   useEffect(() => {
     if (!confettiTriggered) {
@@ -53,8 +55,8 @@ export default function AIGeneratedPlanReady() {
       
       // Success toast
       toast({
-        title: '🎉 Твой план готов!',
-        description: 'Начни тренировки прямо сейчас',
+        title: t('planReady.toastTitle'),
+        description: t('planReady.toastDescription'),
         duration: 4000,
       });
     }
@@ -102,7 +104,7 @@ export default function AIGeneratedPlanReady() {
             role="status"
             aria-live="polite"
           >
-            ПОЗДРАВЛЯЕМ, {firstName.toUpperCase()}!
+            {t('planReady.congratulations', { name: firstName.toUpperCase() })}
           </motion.h1>
           
           {/* Subtitle */}
@@ -112,7 +114,7 @@ export default function AIGeneratedPlanReady() {
             transition={{ delay: 0.7 }}
             className="text-xl md:text-2xl text-center mb-12 text-muted-foreground"
           >
-            Твой AI-план готов!
+            {t('planReady.subtitle')}
           </motion.p>
           
           {/* CTA Button */}
@@ -136,9 +138,9 @@ export default function AIGeneratedPlanReady() {
                 transition-all duration-300
                 hover:scale-105
               "
-              aria-label="Начать тренировки"
+              aria-label={t('planReady.startAriaLabel')}
             >
-              НАЧАТЬ
+              {t('planReady.startButton')}
             </Button>
           </motion.div>
           
