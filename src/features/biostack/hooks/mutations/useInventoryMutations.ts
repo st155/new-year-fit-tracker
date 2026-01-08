@@ -8,6 +8,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { inventoryService } from '@/services/biostack.service';
 import { biostackQueryKeys } from '../../constants/query-keys';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import type { AddToInventoryInput, UpdateInventoryInput } from '../../types';
 
 /**
@@ -15,17 +16,18 @@ import type { AddToInventoryInput, UpdateInventoryInput } from '../../types';
  */
 export function useAddToInventory() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('biostack');
 
   return useMutation({
     mutationFn: (item: AddToInventoryInput) =>
       inventoryService.addToInventory(item),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: biostackQueryKeys.inventory.all });
-      toast.success('Added to inventory');
+      toast.success(t('toast.addedToInventory'));
     },
     onError: (error) => {
       console.error('Error adding to inventory:', error);
-      toast.error('Failed to add to inventory');
+      toast.error(t('toast.failedAddToInventory'));
     },
   });
 }
@@ -35,17 +37,18 @@ export function useAddToInventory() {
  */
 export function useUpdateInventory() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('biostack');
 
   return useMutation({
     mutationFn: (input: UpdateInventoryInput) =>
       inventoryService.updateInventory(input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: biostackQueryKeys.inventory.all });
-      toast.success('Inventory updated');
+      toast.success(t('toast.inventoryUpdated'));
     },
     onError: (error) => {
       console.error('Error updating inventory:', error);
-      toast.error('Failed to update inventory');
+      toast.error(t('toast.failedUpdateInventory'));
     },
   });
 }
@@ -55,17 +58,18 @@ export function useUpdateInventory() {
  */
 export function useRemoveFromInventory() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('biostack');
 
   return useMutation({
     mutationFn: (id: string) =>
       inventoryService.removeFromInventory(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: biostackQueryKeys.inventory.all });
-      toast.success('Removed from inventory');
+      toast.success(t('toast.removedFromInventory'));
     },
     onError: (error) => {
       console.error('Error removing from inventory:', error);
-      toast.error('Failed to remove from inventory');
+      toast.error(t('toast.failedRemoveFromInventory'));
     },
   });
 }

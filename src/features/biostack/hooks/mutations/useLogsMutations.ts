@@ -8,12 +8,14 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { logsService } from '@/services/biostack.service';
 import { biostackQueryKeys } from '../../constants/query-keys';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Mark supplement log as taken
  */
 export function useMarkAsTaken() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('biostack');
 
   return useMutation({
     mutationFn: (logId: string) =>
@@ -21,11 +23,11 @@ export function useMarkAsTaken() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: biostackQueryKeys.logs.all });
       queryClient.invalidateQueries({ queryKey: biostackQueryKeys.today.all });
-      toast.success('Marked as taken');
+      toast.success(t('toast.markedAsTaken'));
     },
     onError: (error) => {
       console.error('Error marking as taken:', error);
-      toast.error('Failed to mark as taken');
+      toast.error(t('toast.failedMarkAsTaken'));
     },
   });
 }
@@ -35,17 +37,18 @@ export function useMarkAsTaken() {
  */
 export function useAddLogNote() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('biostack');
 
   return useMutation({
     mutationFn: ({ logId, note }: { logId: string; note: string }) =>
       logsService.addNote(logId, note),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: biostackQueryKeys.logs.all });
-      toast.success('Note added');
+      toast.success(t('toast.noteAdded'));
     },
     onError: (error) => {
       console.error('Error adding note:', error);
-      toast.error('Failed to add note');
+      toast.error(t('toast.failedAddNote'));
     },
   });
 }
@@ -55,6 +58,7 @@ export function useAddLogNote() {
  */
 export function useLogIntakeForStackItem() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('biostack');
 
   return useMutation({
     mutationFn: ({
@@ -71,11 +75,11 @@ export function useLogIntakeForStackItem() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: biostackQueryKeys.logs.all });
       queryClient.invalidateQueries({ queryKey: biostackQueryKeys.today.all });
-      toast.success('✅ Intake logged');
+      toast.success(t('toast.intakeLogged'));
     },
     onError: (error) => {
       console.error('Error logging intake:', error);
-      toast.error('Failed to log intake');
+      toast.error(t('toast.failedLogIntake'));
     },
   });
 }
@@ -85,6 +89,7 @@ export function useLogIntakeForStackItem() {
  */
 export function useCancelIntakeLog() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('biostack');
 
   return useMutation({
     mutationFn: (logId: string) =>
@@ -92,11 +97,11 @@ export function useCancelIntakeLog() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: biostackQueryKeys.logs.all });
       queryClient.invalidateQueries({ queryKey: biostackQueryKeys.today.all });
-      toast.success('Intake cancelled');
+      toast.success(t('toast.intakeCancelled'));
     },
     onError: (error) => {
       console.error('Error cancelling intake:', error);
-      toast.error('Failed to cancel intake');
+      toast.error(t('toast.failedCancelIntake'));
     },
   });
 }

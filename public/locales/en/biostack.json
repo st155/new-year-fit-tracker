@@ -33,7 +33,7 @@
     "addToStack": "To stack",
     "dismiss": "Dismiss"
   },
-  "toast": {
+"toast": {
     "productEnriched": "✨ Product enriched with AI data",
     "enrichmentFailed": "Failed to enrich product",
     "addedToLibrary": "✅ Added {{count}} supplements to library",
@@ -71,7 +71,39 @@
     "aiAnalysisComplete": "AI analysis complete",
     "aiAnalysisFailed": "AI analysis failed",
     "labAlertsChecked": "Lab alerts checked",
-    "completedProtocolsChecked": "Completed protocols checked"
+    "completedProtocolsChecked": "Completed protocols checked",
+    
+    "libraryEntryUpdated": "Library entry updated",
+    "removedFromLibrary": "Removed from library",
+    "failedAddToLibrary": "Failed to add to library",
+    "failedUpdateLibrary": "Failed to update library entry",
+    "failedRemoveFromLibrary": "Failed to remove from library",
+    
+    "addedToInventory": "Added to inventory",
+    "inventoryUpdated": "Inventory updated",
+    "removedFromInventory": "Removed from inventory",
+    "failedAddToInventory": "Failed to add to inventory",
+    "failedUpdateInventory": "Failed to update inventory",
+    "failedRemoveFromInventory": "Failed to remove from inventory",
+    
+    "markedAsTaken": "✅ Marked as taken",
+    "noteAdded": "Note added",
+    "intakeLogged": "✅ Intake logged",
+    "intakeCancelled": "Intake cancelled",
+    "failedMarkAsTaken": "Failed to mark as taken",
+    "failedAddNote": "Failed to add note",
+    "failedLogIntake": "Failed to log intake",
+    "failedCancelIntake": "Failed to cancel intake",
+    
+    "protocolCreatedSuccess": "Protocol created successfully",
+    "protocolActivated": "Protocol activated",
+    "protocolDeactivated": "Protocol deactivated",
+    "protocolStatusUpdated": "Protocol status updated",
+    "failedCreateProtocol": "Failed to create protocol",
+    "failedActivateProtocol": "Failed to activate protocol",
+    "failedDeactivateProtocol": "Failed to deactivate protocol",
+    "failedUpdateProtocol": "Failed to update protocol",
+    "failedDeleteProtocol": "Failed to delete protocol"
   },
   "errors": {
     "notAuthenticated": "User not authenticated",

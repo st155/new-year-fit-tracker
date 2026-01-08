@@ -6,10 +6,11 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { protocolsService } from '@/services/biostack.service';
-import { biostackQueryKeys, getBiostackInvalidationKeys } from '../../constants/query-keys';
+import { biostackQueryKeys } from '../../constants/query-keys';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import type { CreateProtocolInput, ProtocolDTO } from '../../types';
+import { useTranslation } from 'react-i18next';
+import type { CreateProtocolInput } from '../../types';
 
 /**
  * Create a new protocol
@@ -17,6 +18,7 @@ import type { CreateProtocolInput, ProtocolDTO } from '../../types';
 export function useCreateProtocol() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { t } = useTranslation('biostack');
 
   return useMutation({
     mutationFn: (protocol: Record<string, unknown>) =>
@@ -25,11 +27,11 @@ export function useCreateProtocol() {
       if (user?.id) {
         queryClient.invalidateQueries({ queryKey: biostackQueryKeys.protocols.all });
       }
-      toast.success('Protocol created successfully');
+      toast.success(t('toast.protocolCreatedSuccess'));
     },
     onError: (error) => {
       console.error('Error creating protocol:', error);
-      toast.error('Failed to create protocol');
+      toast.error(t('toast.failedCreateProtocol'));
     },
   });
 }
@@ -40,6 +42,7 @@ export function useCreateProtocol() {
 export function useCreateProtocolFromParsed() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { t } = useTranslation('biostack');
 
   return useMutation({
     mutationFn: (input: CreateProtocolInput) => {
@@ -52,7 +55,7 @@ export function useCreateProtocolFromParsed() {
     },
     onError: (error) => {
       console.error('Error creating protocol from parsed data:', error);
-      toast.error('Failed to create protocol');
+      toast.error(t('toast.failedCreateProtocol'));
     },
   });
 }
@@ -63,6 +66,7 @@ export function useCreateProtocolFromParsed() {
 export function useActivateProtocol() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { t } = useTranslation('biostack');
 
   return useMutation({
     mutationFn: (protocolId: string) => {
@@ -71,11 +75,11 @@ export function useActivateProtocol() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: biostackQueryKeys.protocols.all });
-      toast.success('Protocol activated');
+      toast.success(t('toast.protocolActivated'));
     },
     onError: (error) => {
       console.error('Error activating protocol:', error);
-      toast.error('Failed to activate protocol');
+      toast.error(t('toast.failedActivateProtocol'));
     },
   });
 }
@@ -85,17 +89,18 @@ export function useActivateProtocol() {
  */
 export function useDeactivateProtocol() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('biostack');
 
   return useMutation({
     mutationFn: (protocolId: string) =>
       protocolsService.deactivateProtocol(protocolId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: biostackQueryKeys.protocols.all });
-      toast.success('Protocol deactivated');
+      toast.success(t('toast.protocolDeactivated'));
     },
     onError: (error) => {
       console.error('Error deactivating protocol:', error);
-      toast.error('Failed to deactivate protocol');
+      toast.error(t('toast.failedDeactivateProtocol'));
     },
   });
 }
@@ -105,17 +110,18 @@ export function useDeactivateProtocol() {
  */
 export function useToggleProtocol() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('biostack');
 
   return useMutation({
     mutationFn: ({ protocolId, currentStatus }: { protocolId: string; currentStatus: boolean }) =>
       protocolsService.toggleProtocol(protocolId, currentStatus),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: biostackQueryKeys.protocols.all });
-      toast.success('Protocol status updated');
+      toast.success(t('toast.protocolStatusUpdated'));
     },
     onError: (error) => {
       console.error('Error toggling protocol:', error);
-      toast.error('Failed to update protocol');
+      toast.error(t('toast.failedUpdateProtocol'));
     },
   });
 }
@@ -125,17 +131,18 @@ export function useToggleProtocol() {
  */
 export function useDeleteProtocol() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('biostack');
 
   return useMutation({
     mutationFn: (protocolId: string) =>
       protocolsService.deleteProtocol(protocolId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: biostackQueryKeys.protocols.all });
-      toast.success('Protocol deleted');
+      toast.success(t('toast.protocolDeleted'));
     },
     onError: (error) => {
       console.error('Error deleting protocol:', error);
-      toast.error('Failed to delete protocol');
+      toast.error(t('toast.failedDeleteProtocol'));
     },
   });
 }

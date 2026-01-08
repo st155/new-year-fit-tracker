@@ -9,6 +9,7 @@ import { libraryService } from '@/services/biostack.service';
 import { biostackQueryKeys } from '../../constants/query-keys';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import type { UpdateLibraryEntryInput } from '../../types';
 
 /**
@@ -17,6 +18,7 @@ import type { UpdateLibraryEntryInput } from '../../types';
 export function useAddToLibrary() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { t } = useTranslation('biostack');
 
   return useMutation({
     mutationFn: (productId: string) => {
@@ -28,7 +30,7 @@ export function useAddToLibrary() {
     },
     onError: (error) => {
       console.error('Error adding to library:', error);
-      toast.error('Failed to add to library');
+      toast.error(t('toast.failedAddToLibrary'));
     },
   });
 }
@@ -39,6 +41,7 @@ export function useAddToLibrary() {
 export function useUpdateLibraryEntry() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { t } = useTranslation('biostack');
 
   return useMutation({
     mutationFn: (input: UpdateLibraryEntryInput) => {
@@ -47,11 +50,11 @@ export function useUpdateLibraryEntry() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: biostackQueryKeys.library.all });
-      toast.success('Library entry updated');
+      toast.success(t('toast.libraryEntryUpdated'));
     },
     onError: (error) => {
       console.error('Error updating library entry:', error);
-      toast.error('Failed to update library entry');
+      toast.error(t('toast.failedUpdateLibrary'));
     },
   });
 }
@@ -62,6 +65,7 @@ export function useUpdateLibraryEntry() {
 export function useRemoveFromLibrary() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { t } = useTranslation('biostack');
 
   return useMutation({
     mutationFn: (productId: string) => {
@@ -70,11 +74,11 @@ export function useRemoveFromLibrary() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: biostackQueryKeys.library.all });
-      toast.success('Removed from library');
+      toast.success(t('toast.removedFromLibrary'));
     },
     onError: (error) => {
       console.error('Error removing from library:', error);
-      toast.error('Failed to remove from library');
+      toast.error(t('toast.failedRemoveFromLibrary'));
     },
   });
 }
