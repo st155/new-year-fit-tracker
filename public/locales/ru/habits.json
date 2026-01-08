@@ -314,9 +314,25 @@
     "habitOfWeek": "Привычка недели",
     "days": "дней"
   },
-  "fastingControl": {
+"fastingControl": {
     "startFasting": "Начать голодание",
     "eatingWindow": "Окно питания",
     "endEating": "Закончить есть"
+  },
+  "toast": {
+    "measurementAdded": "Измерение добавлено",
+    "measurementUpdated": "Измерение обновлено",
+    "measurementDeleted": "Измерение удалено",
+    "failedAddMeasurement": "Не удалось добавить измерение",
+    "failedUpdateMeasurement": "Не удалось обновить измерение",
+    "failedDeleteMeasurement": "Не удалось удалить измерение",
+    "feedRefreshed": "Лента обновлена",
+    "memberLimitReached": "Достигнут лимит участников команды",
+    "memberAdded": "Участник добавлен в команду!",
+    "habitDeleted": "Привычка успешно удалена",
+    "failedDeleteHabit": "Не удалось удалить привычку. Попробуйте архивировать.",
+    "habitArchived": "Привычка архивирована",
+    "failedArchiveHabit": "Не удалось архивировать привычку",
+    "authRequired": "Требуется авторизация"
   }
 }

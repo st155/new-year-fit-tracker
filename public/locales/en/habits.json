@@ -312,9 +312,25 @@
     "habitOfWeek": "Habit of the week",
     "days": "days"
   },
-  "fastingControl": {
+"fastingControl": {
     "startFasting": "Start fasting",
     "eatingWindow": "Eating window",
     "endEating": "End eating"
+  },
+  "toast": {
+    "measurementAdded": "Measurement added",
+    "measurementUpdated": "Measurement updated",
+    "measurementDeleted": "Measurement deleted",
+    "failedAddMeasurement": "Failed to add measurement",
+    "failedUpdateMeasurement": "Failed to update measurement",
+    "failedDeleteMeasurement": "Failed to delete measurement",
+    "feedRefreshed": "Feed refreshed",
+    "memberLimitReached": "Team member limit reached",
+    "memberAdded": "Member added to team!",
+    "habitDeleted": "Habit successfully deleted",
+    "failedDeleteHabit": "Failed to delete habit. Try archiving instead.",
+    "habitArchived": "Habit archived",
+    "failedArchiveHabit": "Failed to archive habit",
+    "authRequired": "Authentication required"
   }
 }

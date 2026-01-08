@@ -33,7 +33,7 @@
     "addToStack": "В стек",
     "dismiss": "Отклонить"
   },
-  "toast": {
+"toast": {
     "productEnriched": "✨ Продукт обогащён данными AI",
     "enrichmentFailed": "Не удалось обогатить продукт",
     "addedToLibrary": "✅ Добавлено {{count}} добавок в библиотеку",
@@ -71,7 +71,39 @@
     "aiAnalysisComplete": "AI-анализ завершён",
     "aiAnalysisFailed": "Ошибка AI-анализа",
     "labAlertsChecked": "Уведомления анализов проверены",
-    "completedProtocolsChecked": "Завершённые протоколы проверены"
+    "completedProtocolsChecked": "Завершённые протоколы проверены",
+    
+    "libraryEntryUpdated": "Запись в библиотеке обновлена",
+    "removedFromLibrary": "Удалено из библиотеки",
+    "failedAddToLibrary": "Не удалось добавить в библиотеку",
+    "failedUpdateLibrary": "Не удалось обновить запись в библиотеке",
+    "failedRemoveFromLibrary": "Не удалось удалить из библиотеки",
+    
+    "addedToInventory": "Добавлено в инвентарь",
+    "inventoryUpdated": "Инвентарь обновлён",
+    "removedFromInventory": "Удалено из инвентаря",
+    "failedAddToInventory": "Не удалось добавить в инвентарь",
+    "failedUpdateInventory": "Не удалось обновить инвентарь",
+    "failedRemoveFromInventory": "Не удалось удалить из инвентаря",
+    
+    "markedAsTaken": "✅ Отмечено как принятое",
+    "noteAdded": "Заметка добавлена",
+    "intakeLogged": "✅ Приём записан",
+    "intakeCancelled": "Приём отменён",
+    "failedMarkAsTaken": "Не удалось отметить как принятое",
+    "failedAddNote": "Не удалось добавить заметку",
+    "failedLogIntake": "Не удалось записать приём",
+    "failedCancelIntake": "Не удалось отменить приём",
+    
+    "protocolCreatedSuccess": "Протокол успешно создан",
+    "protocolActivated": "Протокол активирован",
+    "protocolDeactivated": "Протокол деактивирован",
+    "protocolStatusUpdated": "Статус протокола обновлён",
+    "failedCreateProtocol": "Не удалось создать протокол",
+    "failedActivateProtocol": "Не удалось активировать протокол",
+    "failedDeactivateProtocol": "Не удалось деактивировать протокол",
+    "failedUpdateProtocol": "Не удалось обновить протокол",
+    "failedDeleteProtocol": "Не удалось удалить протокол"
   },
   "errors": {
     "notAuthenticated": "Пользователь не авторизован",
