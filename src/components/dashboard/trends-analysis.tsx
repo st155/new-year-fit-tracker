@@ -5,10 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, TrendingDown, Heart, Activity, Moon, Zap, Target } from 'lucide-react';
 import { format, subDays } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 
 interface TrendData {
   metric_name: string;
+  metric_key: string;
   current_value: number;
   previous_value: number;
   change_percentage: number;
@@ -23,8 +25,10 @@ interface TrendsAnalysisProps {
 
 export const TrendsAnalysis = ({ selectedDate }: TrendsAnalysisProps) => {
   const { user } = useAuth();
+  const { t, i18n } = useTranslation('dashboard');
   const [trendsData, setTrendsData] = useState<TrendData[]>([]);
   const [loading, setLoading] = useState(true);
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
 
   useEffect(() => {
     if (user) {
@@ -68,17 +72,17 @@ export const TrendsAnalysis = ({ selectedDate }: TrendsAnalysisProps) => {
         .order('measurement_date', { ascending: true });
 
       // Группируем и анализируем тренды
-      const metricGroups: { [key: string]: Array<{ value: number; date: string }> } = {};
+      const metricGroups: { [key: string]: { key: string; values: Array<{ value: number; date: string }> } } = {};
       
       data?.forEach((item: any) => {
         const metricName = item.user_metrics.metric_name;
-        const normalizedName = getNormalizedMetricName(metricName);
+        const { key, name } = getNormalizedMetricInfo(metricName);
         
-        if (!metricGroups[normalizedName]) {
-          metricGroups[normalizedName] = [];
+        if (!metricGroups[key]) {
+          metricGroups[key] = { key, values: [] };
         }
         
-        metricGroups[normalizedName].push({
+        metricGroups[key].values.push({
           value: item.value,
           date: item.measurement_date
         });
@@ -86,7 +90,7 @@ export const TrendsAnalysis = ({ selectedDate }: TrendsAnalysisProps) => {
 
       const trends: TrendData[] = [];
 
-      Object.entries(metricGroups).forEach(([metricName, values]) => {
+      Object.entries(metricGroups).forEach(([metricKey, { values }]) => {
         if (values.length < 2) return;
 
         // Сортируем по дате
@@ -110,7 +114,8 @@ export const TrendsAnalysis = ({ selectedDate }: TrendsAnalysisProps) => {
         const average30Days = values.reduce((sum, v) => sum + v.value, 0) / values.length;
 
         trends.push({
-          metric_name: metricName,
+          metric_name: t(`trends.metrics.${metricKey}`),
+          metric_key: metricKey,
           current_value: currentValue,
           previous_value: previousValue,
           change_percentage: changePercentage,
@@ -128,41 +133,41 @@ export const TrendsAnalysis = ({ selectedDate }: TrendsAnalysisProps) => {
     }
   };
 
-  const getNormalizedMetricName = (metricName: string): string => {
+  const getNormalizedMetricInfo = (metricName: string): { key: string; name: string } => {
     switch (metricName) {
       case 'Sleep Efficiency':
       case 'Sleep Performance':
-        return 'Сон';
+        return { key: 'sleep', name: t('trends.metrics.sleep') };
       case 'Количество шагов':
       case 'Steps':
-        return 'Шаги';
+        return { key: 'steps', name: t('trends.metrics.steps') };
       case 'Total Kilocalories':
       case 'Calories':
-        return 'Калории';
+        return { key: 'calories', name: t('trends.metrics.calories') };
       case 'Recovery Score':
-        return 'Восстановление';
+        return { key: 'recovery', name: t('trends.metrics.recovery') };
       case 'Workout Strain':
-        return 'Нагрузка';
+        return { key: 'strain', name: t('trends.metrics.strain') };
       case 'Average Heart Rate':
-        return 'Пульс';
+        return { key: 'heartRate', name: t('trends.metrics.heartRate') };
       default:
-        return metricName;
+        return { key: metricName, name: metricName };
     }
   };
 
-  const getMetricIcon = (metricName: string) => {
-    switch (metricName) {
-      case 'Восстановление':
+  const getMetricIcon = (metricKey: string) => {
+    switch (metricKey) {
+      case 'recovery':
         return <Heart className="h-4 w-4 text-red-500" />;
-      case 'Сон':
+      case 'sleep':
         return <Moon className="h-4 w-4 text-purple-500" />;
-      case 'Нагрузка':
+      case 'strain':
         return <Zap className="h-4 w-4 text-yellow-500" />;
-      case 'Шаги':
+      case 'steps':
         return <Activity className="h-4 w-4 text-blue-500" />;
-      case 'Калории':
+      case 'calories':
         return <Target className="h-4 w-4 text-orange-500" />;
-      case 'Пульс':
+      case 'heartRate':
         return <Heart className="h-4 w-4 text-red-400" />;
       default:
         return <TrendingUp className="h-4 w-4 text-gray-500" />;
@@ -170,9 +175,9 @@ export const TrendsAnalysis = ({ selectedDate }: TrendsAnalysisProps) => {
   };
 
   const getTrendBadge = (trend: TrendData) => {
-    const isPositiveTrend = (metricName: string, direction: string) => {
+    const isPositiveTrend = (metricKey: string, direction: string) => {
       // Для нагрузки и пульса покоя "down" - это хорошо
-      if (['Нагрузка', 'Пульс'].includes(metricName)) {
+      if (['strain', 'heartRate'].includes(metricKey)) {
         return direction === 'down';
       }
       // Для остальных метрик "up" - это хорошо
@@ -180,10 +185,10 @@ export const TrendsAnalysis = ({ selectedDate }: TrendsAnalysisProps) => {
     };
 
     if (trend.trend_direction === 'stable') {
-      return <Badge variant="secondary" className="text-xs">Стабильно</Badge>;
+      return <Badge variant="secondary" className="text-xs">{t('trends.stable')}</Badge>;
     }
 
-    const isPositive = isPositiveTrend(trend.metric_name, trend.trend_direction);
+    const isPositive = isPositiveTrend(trend.metric_key, trend.trend_direction);
     return (
       <Badge variant={isPositive ? "default" : "destructive"} className="text-xs">
         {trend.trend_direction === 'up' ? '↑' : '↓'} {Math.abs(trend.change_percentage).toFixed(1)}%
@@ -192,44 +197,36 @@ export const TrendsAnalysis = ({ selectedDate }: TrendsAnalysisProps) => {
   };
 
   const getInsight = (trend: TrendData): string => {
-    const absChange = Math.abs(trend.change_percentage);
+    const absChange = Math.abs(trend.change_percentage).toFixed(1);
     
     if (trend.trend_direction === 'stable') {
-      return 'Показатель остается стабильным';
+      return t('trends.stableInsight');
     }
 
-    switch (trend.metric_name) {
-      case 'Восстановление':
-        if (trend.trend_direction === 'up') {
-          return `Улучшение восстановления на ${absChange.toFixed(1)}% - отличная работа!`;
-        } else {
-          return `Снижение восстановления на ${absChange.toFixed(1)}% - возможно стоит больше отдыхать`;
-        }
-      case 'Сон':
-        if (trend.trend_direction === 'up') {
-          return `Качество сна улучшилось на ${absChange.toFixed(1)}%`;
-        } else {
-          return `Качество сна снизилось на ${absChange.toFixed(1)}% - проверьте режим сна`;
-        }
-      case 'Нагрузка':
-        if (trend.trend_direction === 'up') {
-          return `Нагрузка увеличилась на ${absChange.toFixed(1)}% - следите за восстановлением`;
-        } else {
-          return `Нагрузка снизилась на ${absChange.toFixed(1)}%`;
-        }
-      case 'Шаги':
-        if (trend.trend_direction === 'up') {
-          return `Активность увеличилась на ${absChange.toFixed(1)}% - продолжайте в том же духе!`;
-        } else {
-          return `Активность снизилась на ${absChange.toFixed(1)}%`;
-        }
+    switch (trend.metric_key) {
+      case 'recovery':
+        return trend.trend_direction === 'up' 
+          ? t('trends.insights.recoveryUp', { change: absChange })
+          : t('trends.insights.recoveryDown', { change: absChange });
+      case 'sleep':
+        return trend.trend_direction === 'up'
+          ? t('trends.insights.sleepUp', { change: absChange })
+          : t('trends.insights.sleepDown', { change: absChange });
+      case 'strain':
+        return trend.trend_direction === 'up'
+          ? t('trends.insights.strainUp', { change: absChange })
+          : t('trends.insights.strainDown', { change: absChange });
+      case 'steps':
+        return trend.trend_direction === 'up'
+          ? t('trends.insights.stepsUp', { change: absChange })
+          : t('trends.insights.stepsDown', { change: absChange });
       default:
-        return `Изменение на ${absChange.toFixed(1)}%`;
+        return t('trends.insights.default', { change: absChange });
     }
   };
 
   if (loading) {
-    return <div className="text-center py-8">Анализ трендов...</div>;
+    return <div className="text-center py-8">{t('trends.loading')}</div>;
   }
 
   return (
@@ -237,11 +234,11 @@ export const TrendsAnalysis = ({ selectedDate }: TrendsAnalysisProps) => {
       {/* Основные тренды */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {trendsData.map((trend) => (
-          <Card key={trend.metric_name}>
+          <Card key={trend.metric_key}>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium">{trend.metric_name}</CardTitle>
-                {getMetricIcon(trend.metric_name)}
+                {getMetricIcon(trend.metric_key)}
               </div>
             </CardHeader>
             <CardContent>
@@ -249,10 +246,10 @@ export const TrendsAnalysis = ({ selectedDate }: TrendsAnalysisProps) => {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-2xl font-bold">
-                      {trend.current_value.toFixed(trend.metric_name === 'Нагрузка' ? 1 : 0)}
+                      {trend.current_value.toFixed(trend.metric_key === 'strain' ? 1 : 0)}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      Было: {trend.previous_value.toFixed(trend.metric_name === 'Нагрузка' ? 1 : 0)}
+                      {t('trends.was')}: {trend.previous_value.toFixed(trend.metric_key === 'strain' ? 1 : 0)}
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
@@ -267,10 +264,10 @@ export const TrendsAnalysis = ({ selectedDate }: TrendsAnalysisProps) => {
                 
                 <div className="space-y-1">
                   <div className="text-xs text-muted-foreground">
-                    7 дней: {trend.average_7_days.toFixed(trend.metric_name === 'Нагрузка' ? 1 : 0)}
+                    {t('trends.days7')}: {trend.average_7_days.toFixed(trend.metric_key === 'strain' ? 1 : 0)}
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    30 дней: {trend.average_30_days.toFixed(trend.metric_name === 'Нагрузка' ? 1 : 0)}
+                    {t('trends.days30')}: {trend.average_30_days.toFixed(trend.metric_key === 'strain' ? 1 : 0)}
                   </div>
                 </div>
               </div>
@@ -282,17 +279,17 @@ export const TrendsAnalysis = ({ selectedDate }: TrendsAnalysisProps) => {
       {/* Инсайты и рекомендации */}
       <Card>
         <CardHeader>
-          <CardTitle>Инсайты и рекомендации</CardTitle>
+          <CardTitle>{t('trends.insightsTitle')}</CardTitle>
           <CardDescription>
-            Анализ ваших трендов за последний месяц
+            {t('trends.insightsDesc')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {trendsData.map((trend) => (
-              <div key={trend.metric_name} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
+              <div key={trend.metric_key} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
                 <div className="mt-1">
-                  {getMetricIcon(trend.metric_name)}
+                  {getMetricIcon(trend.metric_key)}
                 </div>
                 <div className="flex-1">
                   <div className="font-medium text-sm">{trend.metric_name}</div>
