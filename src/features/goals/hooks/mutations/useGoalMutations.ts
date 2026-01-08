@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { GoalsService } from "../../services/goals.service";
 import type { GoalCreateInput, GoalUpdateInput } from "../../types";
 import { toast } from "sonner";
@@ -8,17 +9,18 @@ import { toast } from "sonner";
  */
 export function useGoalMutations() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('goals');
 
   const createGoal = useMutation({
     mutationFn: (input: GoalCreateInput) => GoalsService.createGoal(input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["goals"] });
       queryClient.invalidateQueries({ queryKey: ["challenge-goals"] });
-      toast.success("Цель создана");
+      toast.success(t('toast.goalCreated'));
     },
     onError: (error) => {
       console.error("❌ Error creating goal:", error);
-      toast.error("Ошибка создания цели");
+      toast.error(t('toast.failedCreateGoal'));
     },
   });
 
@@ -28,11 +30,11 @@ export function useGoalMutations() {
       queryClient.invalidateQueries({ queryKey: ["goals"] });
       queryClient.invalidateQueries({ queryKey: ["goals", "detail", variables.id] });
       queryClient.invalidateQueries({ queryKey: ["challenge-goals"] });
-      toast.success("Цель обновлена");
+      toast.success(t('toast.goalUpdated'));
     },
     onError: (error) => {
       console.error("❌ Error updating goal:", error);
-      toast.error("Ошибка обновления цели");
+      toast.error(t('toast.failedUpdateGoal'));
     },
   });
 
@@ -41,11 +43,11 @@ export function useGoalMutations() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["goals"] });
       queryClient.invalidateQueries({ queryKey: ["challenge-goals"] });
-      toast.success("Цель удалена");
+      toast.success(t('toast.goalDeleted'));
     },
     onError: (error) => {
       console.error("❌ Error deleting goal:", error);
-      toast.error("Ошибка удаления цели");
+      toast.error(t('toast.failedDeleteGoal'));
     },
   });
 
