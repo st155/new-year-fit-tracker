@@ -44,8 +44,8 @@ export function ConflictWarningBadge({ metricName, onClick }: ConflictWarningBad
           </TooltipTrigger>
           <TooltipContent className="max-w-xs">
             <div className="space-y-2">
-              <p className="font-semibold">{t('conflicts.detected')}</p>
-              <p className="text-xs text-muted-foreground">{t('conflicts.clickToResolve')}</p>
+              <p className="font-semibold">{t('conflictsDetected')}</p>
+              <p className="text-xs text-muted-foreground">{t('conflictsClickToResolve')}</p>
             </div>
           </TooltipContent>
         </Tooltip>
