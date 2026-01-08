@@ -1,4 +1,33 @@
 {
+  "trends": {
+    "loading": "Analyzing trends...",
+    "insightsTitle": "Insights and Recommendations",
+    "insightsDesc": "Analysis of your trends over the last month",
+    "was": "Was",
+    "days7": "7 days",
+    "days30": "30 days",
+    "stable": "Stable",
+    "stableInsight": "Metric remains stable",
+    "metrics": {
+      "sleep": "Sleep",
+      "steps": "Steps",
+      "calories": "Calories",
+      "recovery": "Recovery",
+      "strain": "Strain",
+      "heartRate": "Heart Rate"
+    },
+    "insights": {
+      "recoveryUp": "Recovery improved by {{change}}% - great job!",
+      "recoveryDown": "Recovery decreased by {{change}}% - consider more rest",
+      "sleepUp": "Sleep quality improved by {{change}}%",
+      "sleepDown": "Sleep quality decreased by {{change}}% - check your sleep schedule",
+      "strainUp": "Strain increased by {{change}}% - monitor your recovery",
+      "strainDown": "Strain decreased by {{change}}%",
+      "stepsUp": "Activity increased by {{change}}% - keep it up!",
+      "stepsDown": "Activity decreased by {{change}}%",
+      "default": "Change of {{change}}%"
+    }
+  },
   "retest": {
     "title": "Time to retest",
     "analysis": "analysis",

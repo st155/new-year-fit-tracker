@@ -1,4 +1,33 @@
 {
+  "logbookHeader": {
+    "title": "Workout Logbook",
+    "filters": {
+      "all": "All ({{count}})",
+      "manual": "My",
+      "tracker": "Import"
+    },
+    "stats": {
+      "days": "{{count}} days",
+      "hours": "{{count}}h"
+    }
+  },
+  "progressChart": {
+    "noDataTitle": "Not enough data to show progress",
+    "noDataHint": "Complete the exercise several times to see the chart",
+    "primaryValue": {
+      "reps": "Reps",
+      "weight": "Weight"
+    },
+    "units": {
+      "reps": "reps",
+      "kg": "kg"
+    },
+    "volume": "Volume",
+    "max": "Max",
+    "personalRecords": "Personal Records",
+    "repsFormat": "{{reps}} reps",
+    "weightFormat": "{{weight}}kg × {{reps}}"
+  },
   "imageDialog": {
     "title": "Add Image",
     "exercise": "Exercise",

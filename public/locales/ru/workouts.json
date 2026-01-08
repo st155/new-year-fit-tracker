@@ -1,4 +1,33 @@
 {
+  "logbookHeader": {
+    "title": "Журнал тренировок",
+    "filters": {
+      "all": "Все ({{count}})",
+      "manual": "Мои",
+      "tracker": "Импорт"
+    },
+    "stats": {
+      "days": "{{count}} дней",
+      "hours": "{{count}}ч"
+    }
+  },
+  "progressChart": {
+    "noDataTitle": "Недостаточно данных для отображения прогресса",
+    "noDataHint": "Выполните упражнение несколько раз, чтобы увидеть график",
+    "primaryValue": {
+      "reps": "Повторы",
+      "weight": "Вес"
+    },
+    "units": {
+      "reps": "повт",
+      "kg": "кг"
+    },
+    "volume": "Объем",
+    "max": "Макс",
+    "personalRecords": "Личные рекорды",
+    "repsFormat": "{{reps}} повт",
+    "weightFormat": "{{weight}}кг × {{reps}}"
+  },
   "imageDialog": {
     "title": "Добавить изображение",
     "exercise": "Упражнение",

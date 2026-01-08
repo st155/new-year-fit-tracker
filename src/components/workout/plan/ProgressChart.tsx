@@ -1,8 +1,9 @@
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import { Trophy, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { OptimizedChart } from '@/components/charts/OptimizedChart';
+import { useTranslation } from 'react-i18next';
 
 interface ProgressData {
   date: string;
@@ -23,27 +24,30 @@ interface ProgressChartProps {
 }
 
 export default function ProgressChart({ data, trend, isBodyweight = false }: ProgressChartProps) {
+  const { t, i18n } = useTranslation('workouts');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
+
   if (data.length === 0) {
     return (
       <div className="glass-card p-6 rounded-lg text-center">
         <p className="text-sm text-muted-foreground">
-          Недостаточно данных для отображения прогресса
+          {t('progressChart.noDataTitle')}
         </p>
         <p className="text-xs text-muted-foreground mt-2">
-          Выполните упражнение несколько раз, чтобы увидеть график
+          {t('progressChart.noDataHint')}
         </p>
       </div>
     );
   }
 
   // For bodyweight: show reps; for weighted: show weight
-  const primaryValue = isBodyweight ? 'Повторы' : 'Вес';
-  const primaryUnit = isBodyweight ? 'повт' : 'кг';
+  const primaryValue = isBodyweight ? t('progressChart.primaryValue.reps') : t('progressChart.primaryValue.weight');
+  const primaryUnit = isBodyweight ? t('progressChart.units.reps') : t('progressChart.units.kg');
   
   const chartData = data.map(entry => ({
-    date: format(new Date(entry.date), 'dd MMM', { locale: ru }),
+    date: format(new Date(entry.date), 'dd MMM', { locale: dateLocale }),
     [primaryValue]: isBodyweight ? entry.reps : entry.weight,
-    Объем: entry.volume,
+    [t('progressChart.volume')]: entry.volume,
   }));
 
   const maxPrimaryValue = Math.max(...data.map(d => isBodyweight ? d.reps : d.weight));
@@ -64,7 +68,7 @@ export default function ProgressChart({ data, trend, isBodyweight = false }: Pro
           {prCount} PR
         </Badge>
         <Badge variant="secondary" className="flex items-center gap-1">
-          Макс: {maxPrimaryValue}{primaryUnit}
+          {t('progressChart.max')}: {maxPrimaryValue}{primaryUnit}
         </Badge>
         {trend.direction !== 'stable' && (
           <Badge variant="outline" className={`flex items-center gap-1 ${trendColor}`}>
@@ -96,7 +100,7 @@ export default function ProgressChart({ data, trend, isBodyweight = false }: Pro
         <div className="glass-card p-4 rounded-lg">
           <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
             <Trophy className="w-4 h-4 text-primary" />
-            Личные рекорды
+            {t('progressChart.personalRecords')}
           </h4>
           <div className="space-y-2">
             {data
@@ -106,12 +110,12 @@ export default function ProgressChart({ data, trend, isBodyweight = false }: Pro
               .map((pr, idx) => (
                 <div key={idx} className="flex justify-between items-center text-sm">
                   <span className="text-muted-foreground">
-                    {format(new Date(pr.date), 'dd MMM yyyy', { locale: ru })}
+                    {format(new Date(pr.date), 'dd MMM yyyy', { locale: dateLocale })}
                   </span>
                   <span className="font-semibold text-primary">
                     {isBodyweight 
-                      ? `${pr.reps} повт` 
-                      : `${pr.weight}кг × ${pr.reps}`}
+                      ? t('progressChart.repsFormat', { reps: pr.reps })
+                      : t('progressChart.weightFormat', { weight: pr.weight, reps: pr.reps })}
                   </span>
                 </div>
               ))}

@@ -1,9 +1,9 @@
-import { Calendar, Flame, Dumbbell, Clock, BarChart3 } from "lucide-react";
+import { Flame, Dumbbell, Clock, BarChart3 } from "lucide-react";
 import { WorkoutSource } from "@/hooks/useWorkoutHistory";
 import { useWorkoutStats } from "@/hooks/useWorkoutStats";
-import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { StatsModal } from "@/components/workout/stats/StatsModal";
+import { useTranslation } from "react-i18next";
 
 interface LogbookHeaderProps {
   activeFilter: WorkoutSource;
@@ -12,13 +12,14 @@ interface LogbookHeaderProps {
 }
 
 export default function LogbookHeader({ activeFilter, onFilterChange, workoutCount }: LogbookHeaderProps) {
+  const { t } = useTranslation('workouts');
   const [showStatsModal, setShowStatsModal] = useState(false);
   const { data: stats } = useWorkoutStats('all');
   
   const filters: { value: WorkoutSource; label: string }[] = [
-    { value: 'all', label: `Все (${workoutCount})` },
-    { value: 'manual', label: 'Мои' },
-    { value: 'tracker', label: 'Импорт' },
+    { value: 'all', label: t('logbookHeader.filters.all', { count: workoutCount }) },
+    { value: 'manual', label: t('logbookHeader.filters.manual') },
+    { value: 'tracker', label: t('logbookHeader.filters.tracker') },
   ];
 
   return (
@@ -27,13 +28,13 @@ export default function LogbookHeader({ activeFilter, onFilterChange, workoutCou
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Журнал тренировок
+              {t('logbookHeader.title')}
             </h2>
             {/* Mini statistics */}
             <div className="flex items-center gap-4 mt-2">
               <div className="flex items-center gap-1.5">
                 <Flame className="w-4 h-4 text-orange-400" />
-                <span className="text-sm font-medium">{stats?.streak || 0} дней</span>
+                <span className="text-sm font-medium">{t('logbookHeader.stats.days', { count: stats?.streak || 0 })}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <Dumbbell className="w-4 h-4 text-purple-400" />
@@ -42,7 +43,7 @@ export default function LogbookHeader({ activeFilter, onFilterChange, workoutCou
               <div className="flex items-center gap-1.5">
                 <Clock className="w-4 h-4 text-cyan-400" />
                 <span className="text-sm font-medium">
-                  {stats ? Math.round(stats.totalMinutes / 60) : 0}ч
+                  {t('logbookHeader.stats.hours', { count: stats ? Math.round(stats.totalMinutes / 60) : 0 })}
                 </span>
               </div>
             </div>
