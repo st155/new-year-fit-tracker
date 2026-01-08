@@ -55,5 +55,35 @@
   },
   "priority": {
     "important": "{{count}} important"
+  },
+  "protocols": {
+    "actionTypes": {
+      "supplement": "Supplements",
+      "exercise": "Exercises",
+      "lifestyle": "Lifestyle",
+      "test": "Tests",
+      "medication": "Medications",
+      "consultation": "Consultations"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "items": "items",
+    "addAll": "Add all ({{count}})",
+    "supplementsAndMeds": "Supplements & Medications ({{count}})",
+    "important": "Important",
+    "moreItems": "+ {{count}} more",
+    "otherRecommendations": "Other recommendations ({{count}})",
+    "extract": {
+      "title": "Extract protocols from documents",
+      "description": "AI will analyze all your medical documents and extract recommendations",
+      "button": "Extract all protocols",
+      "extracting": "Extracting...",
+      "progress": "Processing documents"
+    },
+    "empty": {
+      "title": "No doctor protocols. Upload medical documents with prescriptions and click \"Extract all protocols\" for automatic analysis."
+    }
   }
 }

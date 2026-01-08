@@ -56,5 +56,12 @@
     "saving": "Сохранение...",
     "cancel": "Отмена",
     "uploadAvatar": "Загрузить аватар"
+  },
+  "stats": {
+    "habits": "Привычек",
+    "workouts": "Тренировок",
+    "streakDays": "Дней подряд",
+    "goals": "Целей",
+    "metrics": "Метрик"
   }
 }

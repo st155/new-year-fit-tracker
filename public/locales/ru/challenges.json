@@ -68,7 +68,11 @@
     "inhumanDesc": "+90% к каждой цели",
     "stepsPerDay": "Шаги: {{value}} в день",
     "sleepHours": "Сон: {{value}} часов",
-    "recoveryPercent": "Recovery: {{value}}%"
+    "recoveryPercent": "Recovery: {{value}}%",
+    "multiplier": "множитель",
+    "examples": "Примеры целей:",
+    "selected": "Выбрано",
+    "select": "Выбрать"
   },
   "report": {
     "resultsOf": "Итоги {{name}}",
