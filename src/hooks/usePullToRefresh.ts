@@ -5,6 +5,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 interface UsePullToRefreshOptions {
   onRefresh: () => Promise<void>;
@@ -19,6 +20,7 @@ export function usePullToRefresh({
   resistance = 2.5,
   enabled = true
 }: UsePullToRefreshOptions) {
+  const { t } = useTranslation('common');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   const startY = useRef(0);
@@ -58,13 +60,13 @@ export function usePullToRefresh({
       try {
         await onRefresh();
         toast({
-          title: "Обновлено",
-          description: "Данные успешно обновлены"
+          title: t('pullToRefresh.updated'),
+          description: t('pullToRefresh.updatedDesc')
         });
       } catch (error) {
         toast({
-          title: "Ошибка",
-          description: "Не удалось обновить данные",
+          title: t('pullToRefresh.error'),
+          description: t('pullToRefresh.errorDesc'),
           variant: "destructive"
         });
       } finally {

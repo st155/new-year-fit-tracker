@@ -38,5 +38,14 @@
       "fat": "Fat (%)",
       "visceralFat": "Visceral fat (cm²)"
     }
+  },
+  "insights": {
+    "title": "DID YOU KNOW?",
+    "setGoal": "Set Goal",
+    "bmrMaintenance": "With your BMR of {{bmr}} kcal, you need ~{{maintenance}} kcal daily to maintain weight",
+    "armMuscle": "Arm muscle mass {{avg}}% of norm - excellent results for strength training!",
+    "visceralFatHealthy": "Visceral fat level {{value}} cm² - within healthy range!",
+    "visceralFatHigh": "Visceral fat {{value}} cm² - consider more cardio and nutrition focus",
+    "bodyFatAthletic": "Body fat {{value}}% - excellent indicator for athletic physique"
   }
 }
