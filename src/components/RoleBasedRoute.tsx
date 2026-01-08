@@ -9,7 +9,7 @@ interface RoleBasedRouteProps {
 }
 
 export const RoleBasedRoute = ({ children }: RoleBasedRouteProps) => {
-  const { isTrainer, loading, rolesLoading } = useAuth();
+  const { isTrainer, isAdmin, loading, rolesLoading } = useAuth();
   const [forceReady, setForceReady] = useState(false);
 
   console.log('👤 [RoleBasedRoute] State:', { 
@@ -43,8 +43,9 @@ export const RoleBasedRoute = ({ children }: RoleBasedRouteProps) => {
     return <PageLoader message="Checking role..." />;
   }
 
-  // If trainer/admin, redirect to trainer dashboard
-  if (isTrainer) {
+  // If trainer (but not admin), redirect to trainer dashboard
+  // Admin stays on client pages with access to dev tools
+  if (isTrainer && !isAdmin) {
     console.log('👨‍🏫 [RoleBasedRoute] Trainer detected, redirecting to /trainer-dashboard');
     return <Navigate to="/trainer-dashboard" replace />;
   }
