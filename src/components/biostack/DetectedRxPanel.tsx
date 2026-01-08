@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useDoctorRecommendations } from '@/hooks/biostack/useDoctorRecommendations';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -9,6 +10,7 @@ interface DetectedRxPanelProps {
 }
 
 export function DetectedRxPanel({ documentId }: DetectedRxPanelProps) {
+  const { t } = useTranslation('biostack');
   const {
     recommendations,
     isLoading,
@@ -56,7 +58,7 @@ export function DetectedRxPanel({ documentId }: DetectedRxPanelProps) {
       <div className="p-4 border-b border-neutral-800 flex items-center justify-between">
         <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
           <span>📋</span>
-          <span>Рекомендации врача</span>
+          <span>{t('detectedRx.title')}</span>
           <span className="text-sm text-muted-foreground">({recommendations.length})</span>
         </h3>
         <Button
@@ -67,10 +69,10 @@ export function DetectedRxPanel({ documentId }: DetectedRxPanelProps) {
           {isAddingAll ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              Добавление...
+              {t('detectedRx.adding')}
             </>
           ) : (
-            'Добавить всё в стек'
+            t('detectedRx.addAll')
           )}
         </Button>
       </div>
@@ -153,10 +155,10 @@ export function DetectedRxPanel({ documentId }: DetectedRxPanelProps) {
                   {isAddingToStack ? (
                     <>
                       <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                      Добавление...
+                      {t('detectedRx.adding')}
                     </>
                   ) : (
-                    'В стек'
+                    t('detectedRx.addToStack')
                   )}
                 </Button>
                 <Button
@@ -169,7 +171,7 @@ export function DetectedRxPanel({ documentId }: DetectedRxPanelProps) {
                   {isDismissing ? (
                     <Loader2 className="h-3 w-3 animate-spin" />
                   ) : (
-                    'Отклонить'
+                    t('detectedRx.dismiss')
                   )}
                 </Button>
               </div>

@@ -25,5 +25,12 @@
     "scheduleRetest": "Schedule retest",
     "dismiss": "Dismiss",
     "noNew": "No new notifications"
+  },
+  "detectedRx": {
+    "title": "Doctor's Recommendations",
+    "addAll": "Add all to stack",
+    "adding": "Adding...",
+    "addToStack": "To stack",
+    "dismiss": "Dismiss"
   }
 }

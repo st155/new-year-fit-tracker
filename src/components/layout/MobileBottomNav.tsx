@@ -1,18 +1,20 @@
 import { Home, Sparkles, Dumbbell, User } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-
-const navItems = [
-  { icon: Home, label: 'Главная', path: '/' },
-  { icon: Sparkles, label: 'Советы', path: '/recommendations' },
-  { icon: Dumbbell, label: 'Тренировки', path: '/workouts' },
-  { icon: User, label: 'Профиль', path: '/profile' },
-];
 
 export function MobileBottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation('common');
+
+  const navItems = [
+    { icon: Home, label: t('navigation.home'), path: '/' },
+    { icon: Sparkles, label: t('navigation.tips'), path: '/recommendations' },
+    { icon: Dumbbell, label: t('navigation.workouts'), path: '/workouts' },
+    { icon: User, label: t('navigation.profile'), path: '/profile' },
+  ];
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
