@@ -19,7 +19,17 @@
     "streak": "Streak: {{days}} days - {{title}}",
     "streak_one": "Streak: {{days}} day - {{title}}",
     "allComplete": "All habits completed ({{done}}/{{total}})",
-    "progress": "Habits: {{done}}/{{total}} completed"
+    "progress": "Habits: {{done}}/{{total}} completed",
+    "atRisk": "Streak \"{{title}}\" ({{days}} days) at risk",
+    "atRisk_one": "Streak \"{{title}}\" ({{days}} day) at risk",
+    "qualityDecreasing": "Quality of \"{{title}}\" is declining",
+    "improveConsistency": "Improve consistency of \"{{title}}\" (currently {{percent}}%)",
+    "combine": "Combine \"{{habit1}}\" and \"{{habit2}}\" for better results",
+    "newRecord": "New record: {{days}} days in a row \"{{title}}\"!",
+    "qualityGrade": "\"{{title}}\" - quality grade {{grade}} ({{score}}/100)",
+    "moreSuccessful": "\"{{title}}\" is {{percent}}% more successful {{timeLabel}}",
+    "togetherRate": "\"{{habit1}}\" and \"{{habit2}}\" done together {{percent}}% of the time",
+    "defaultName": "Habit"
   },
   "achievements": {
     "stepsRecord": "New record! {{steps}} steps",
@@ -31,5 +41,37 @@
   },
   "recommendations": {
     "addMetric": "Add metric \"{{name}}\" for a complete picture"
+  },
+  "correlations": {
+    "sleepRecovery": "When sleep >{{hours}}h, Recovery is {{percent}}% higher"
+  },
+  "anomalies": {
+    "lowActivity": "Unusually low activity: -{{percent}}% from average",
+    "lowSleep": "Sleep below usual: {{actual}}h instead of {{average}}h"
+  },
+  "predictions": {
+    "goalReached": "\"{{title}}\" will be reached in {{days}} days",
+    "goalReached_one": "\"{{title}}\" will be reached in {{days}} day",
+    "goodProgress": "Good progress on goal \"{{title}}\""
+  },
+  "social": {
+    "topRank": "You're in {{rank}} place in \"{{title}}\"!"
+  },
+  "trainer": {
+    "unreadMessages": "{{count}} unread messages from trainer",
+    "unreadMessages_one": "{{count}} unread message from trainer",
+    "newRecommendation": "New recommendation from trainer"
+  },
+  "temporal": {
+    "weekendActivity": "Weekend activity {{direction}} by {{percent}}%",
+    "activityPeak": "Activity peak usually {{time}}",
+    "falls": "falls",
+    "rises": "rises"
+  },
+  "timeLabels": {
+    "morning": "in the morning",
+    "afternoon": "in the afternoon",
+    "evening": "in the evening",
+    "night": "at night"
   }
 }

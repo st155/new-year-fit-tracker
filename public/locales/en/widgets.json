@@ -1,0 +1,83 @@
+{
+  "myMetrics": "My Metrics:",
+  "stats": {
+    "metrics": "metrics",
+    "sources": "sources",
+    "goals": "goals",
+    "habits": "habits"
+  },
+  "sources": {
+    "one": "{{count}} source",
+    "other": "{{count}} sources"
+  },
+  "time": {
+    "hours": "{{count}}h",
+    "days": "{{count}}d",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "dataToday": "Data for today",
+    "dataYesterday": "Data for yesterday - today's still processing",
+    "outdated": "Outdated",
+    "notUpdatedDays": "Data not updated for {{count}} days",
+    "lastUpdate": "Last:",
+    "noData": "No data"
+  },
+  "quality": {
+    "criticallyLow": "Critically low",
+    "competitive": "Competitive",
+    "athletic": "Athletic",
+    "excellent": "Excellent",
+    "healthy": "Healthy",
+    "healthyZone": "Healthy zone",
+    "normal": "Normal",
+    "elevated": "Elevated",
+    "high": "High",
+    "veryLow": "Very low",
+    "good": "Good",
+    "lowActivity": "Low activity",
+    "mediumActivity": "Medium activity",
+    "goodActivity": "Good activity",
+    "tooLow": "Too low",
+    "lowRecovery": "Low recovery",
+    "average": "Average",
+    "poorSleep": "Poor sleep",
+    "goodSleep": "Good sleep",
+    "notEnoughSleep": "Not enough sleep",
+    "restDay": "Rest day",
+    "activeDay": "Active day",
+    "intensiveDay": "Intensive day",
+    "tooFewSteps": "Too few steps"
+  },
+  "bodyFat": {
+    "healthyZone": "Healthy zone: 15-25%",
+    "inRange": "Normal",
+    "outOfRange": "Out of range"
+  },
+  "conflicts": {
+    "one": "{{count}} conflict",
+    "other": "{{count}} conflicts",
+    "detected": "Conflicting data detected",
+    "clickToResolve": "Click to resolve"
+  },
+  "tooltips": {
+    "recovery": "Body readiness for exercise. >66 = excellent, 33-66 = average, <33 = low recovery",
+    "sleepEfficiency": "Percentage of time asleep vs time in bed. >85% = excellent, 75-85% = normal, <75% = poor",
+    "sleepDuration": "Sleep duration. 7-9 hours recommended for adults",
+    "hrv": "Heart rate variability. Indicator of recovery and stress adaptation. Higher is better",
+    "strain": "Total daily load. 10-18 = optimal zone",
+    "restingHR": "Resting heart rate. Normal for adults: 40-85 bpm. Athletes: 40-60 bpm",
+    "steps": "Daily step count. Recommended: >10000 steps. Minimum: 8000",
+    "bodyFat": "Body fat percentage. Normal for men: 15-20%, women: 20-28%. Athletes: 10-15% (m), 18-22% (f)",
+    "activeCalories": "Calories burned through physical activity. Recommended: >500 kcal. Minimum: 200 kcal",
+    "weight": "Body weight. Interpretation depends on your goals (weight loss/gain)",
+    "maxHR": "Maximum heart rate for the day. Reflects workout intensity. Normal depends on age (formula: 220 - age)"
+  },
+  "modes": {
+    "multi": "Multi-mode",
+    "noData": "No data",
+    "clickToConnect": "Click to connect"
+  },
+  "refresh": "Refresh Health Score"
+}
