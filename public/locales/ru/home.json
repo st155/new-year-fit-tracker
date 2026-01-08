@@ -15,7 +15,7 @@
     "logWorkout": "Записать тренировку"
   },
   "errors": {
-    "habitsLoadFailed": "Habits section failed to load",
-    "leaderboardLoadFailed": "Leaderboard failed to load"
+    "habitsLoadFailed": "Не удалось загрузить раздел привычек",
+    "leaderboardLoadFailed": "Не удалось загрузить рейтинг"
   }
 }
