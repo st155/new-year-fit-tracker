@@ -1,0 +1,19 @@
+{
+  "title": "Health Score",
+  "noData": "No data to display Health Score",
+  "status": {
+    "excellent": "Excellent condition",
+    "good": "Good condition",
+    "average": "Average condition",
+    "attention": "Needs attention"
+  },
+  "zones": {
+    "excellent": "Excellent",
+    "good": "Good",
+    "fair": "Fair",
+    "poor": "Poor",
+    "all": "All"
+  },
+  "clickForDetails": "Click for detailed statistics",
+  "refresh": "Refresh data"
+}

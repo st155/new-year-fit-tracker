@@ -1,0 +1,12 @@
+{
+  "application": "Loading application...",
+  "protocol": "Loading protocol...",
+  "checkingRole": "Checking role...",
+  "trainerAccess": "Checking trainer access...",
+  "recovering": "Recovering...",
+  "loading": "Loading...",
+  "model3D": "Loading 3D model...",
+  "inventory": "Loading inventory...",
+  "analyzing": "Analyzing localizations...",
+  "fitnessDataError": "Error loading Fitness Data page"
+}

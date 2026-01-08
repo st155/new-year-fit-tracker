@@ -1,4 +1,5 @@
 import { Navigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { PageLoader } from '@/components/ui/page-loader';
 
@@ -7,6 +8,7 @@ interface TrainerOnlyRouteProps {
 }
 
 export const TrainerOnlyRoute = ({ children }: TrainerOnlyRouteProps) => {
+  const { t } = useTranslation('loader');
   const { isTrainer, loading, rolesLoading } = useAuth();
   const location = useLocation();
 
@@ -20,7 +22,7 @@ export const TrainerOnlyRoute = ({ children }: TrainerOnlyRouteProps) => {
   // Wait for both auth and roles to load
   if (loading || rolesLoading) {
     console.log('⏳ [TrainerOnlyRoute] Loading...');
-    return <PageLoader message="Checking trainer access..." />;
+    return <PageLoader message={t('trainerAccess')} />;
   }
 
   if (!isTrainer) {

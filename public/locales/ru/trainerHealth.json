@@ -1,0 +1,19 @@
+{
+  "metrics": {
+    "weight": "Вес",
+    "bodyFat": "Процент жира",
+    "muscleMass": "Мышечная масса",
+    "musclePercent": "Процент мышц",
+    "hrv": "ВСР",
+    "restingHR": "ЧСС покоя",
+    "vo2max": "VO2max"
+  },
+  "stats": {
+    "activeClients": "Активных клиентов",
+    "workoutsPerWeek": "Тренировок в неделю",
+    "planAssigned": "План назначен",
+    "inSchedule": "По расписанию"
+  },
+  "noData": "Нет данных",
+  "lastUpdated": "Обновлено: {{date}}"
+}

@@ -1,4 +1,5 @@
 import { Navigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { PageLoader } from '@/components/ui/page-loader';
 import { FORCE_CLIENT_ROLE } from '@/lib/safe-flags';
@@ -9,6 +10,7 @@ interface RoleBasedRouteProps {
 }
 
 export const RoleBasedRoute = ({ children }: RoleBasedRouteProps) => {
+  const { t } = useTranslation('loader');
   const { isTrainer, isAdmin, loading, rolesLoading } = useAuth();
   const [forceReady, setForceReady] = useState(false);
 
@@ -40,7 +42,7 @@ export const RoleBasedRoute = ({ children }: RoleBasedRouteProps) => {
   // Wait for both auth and roles to load (with timeout override)
   if ((loading || rolesLoading) && !forceReady) {
     console.log('⏳ [RoleBasedRoute] Loading roles...');
-    return <PageLoader message="Checking role..." />;
+    return <PageLoader message={t('checkingRole')} />;
   }
 
   // If trainer (but not admin), redirect to trainer dashboard

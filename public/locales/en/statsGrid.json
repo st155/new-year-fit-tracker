@@ -1,0 +1,21 @@
+{
+  "trainer": {
+    "activeParticipants": "Active Participants",
+    "averageProgress": "Average Progress",
+    "goalsCompleted": "Goals Completed",
+    "todayUpdates": "Today's Updates"
+  },
+  "participant": {
+    "bodyFat": "Body Fat",
+    "weight": "Body Weight",
+    "recovery": "Recovery Score",
+    "steps": "Steps",
+    "pullUps": "Pull-ups"
+  },
+  "units": {
+    "kg": "kg",
+    "percent": "%",
+    "times": "reps"
+  },
+  "goal": "Goal: {{target}}{{unit}}"
+}

@@ -1,6 +1,7 @@
 import { Suspense, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
+import { useTranslation } from "react-i18next";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { PageLoader } from "@/components/ui/page-loader";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
@@ -39,6 +40,7 @@ initPrefetcher(queryClient);
 
 // Internal component that renders inside QueryClientProvider
 const AppContent = () => {
+  const { t } = useTranslation('loader');
   console.log('🚀 [AppContent] Rendering...');
   
   // Initialize invalidation, web vitals, sentry (deferred to not block render)
@@ -88,7 +90,7 @@ const AppContent = () => {
       <SafeRouter>
         <AuthProvider>
           <Echo11SyncProvider />
-          <Suspense fallback={<PageLoader message="Loading application..." />}>
+          <Suspense fallback={<PageLoader message={t('application')} />}>
             <AppRoutes />
           </Suspense>
         </AuthProvider>

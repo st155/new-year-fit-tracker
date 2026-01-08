@@ -1,0 +1,19 @@
+{
+  "title": "Health Score",
+  "noData": "Нет данных для отображения Health Score",
+  "status": {
+    "excellent": "Отличное состояние",
+    "good": "Хорошее состояние",
+    "average": "Среднее состояние",
+    "attention": "Требует внимания"
+  },
+  "zones": {
+    "excellent": "Отлично",
+    "good": "Хорошо",
+    "fair": "Средне",
+    "poor": "Плохо",
+    "all": "Все"
+  },
+  "clickForDetails": "Клик для детальной статистики",
+  "refresh": "Обновить данные"
+}

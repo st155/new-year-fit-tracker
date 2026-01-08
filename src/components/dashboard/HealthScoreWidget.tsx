@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Activity, RefreshCw, AlertCircle, BarChart3 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useDataQuality } from '@/hooks/useDataQuality';
 import { useConfidenceRecalculation } from '@/hooks/useConfidenceRecalculation';
 import { useAuth } from '@/hooks/useAuth';
@@ -28,6 +29,7 @@ interface QualitySummaryMetric {
 }
 
 const HealthScoreWidgetComponent = ({ userId }: HealthScoreWidgetProps) => {
+  const { t } = useTranslation('healthScore');
   const { user } = useAuth();
   const { averageConfidence, metricsByQuality, qualitySummary, isLoading } = useDataQuality();
   const { recalculate, isRecalculating } = useConfidenceRecalculation();
@@ -46,7 +48,7 @@ const HealthScoreWidgetComponent = ({ userId }: HealthScoreWidgetProps) => {
     return (
       <Card className="p-4">
         <div className="text-sm text-muted-foreground">
-          Нет данных для отображения Health Score
+          {t('noData')}
         </div>
       </Card>
     );
@@ -70,10 +72,10 @@ const HealthScoreWidgetComponent = ({ userId }: HealthScoreWidgetProps) => {
 
   // Helper: Получить текстовый статус здоровья
   const getHealthStatusLabel = (score: number): string => {
-    if (score >= 80) return 'Отличное состояние';
-    if (score >= 60) return 'Хорошее состояние';
-    if (score >= 40) return 'Среднее состояние';
-    return 'Требует внимания';
+    if (score >= 80) return t('status.excellent');
+    if (score >= 60) return t('status.good');
+    if (score >= 40) return t('status.average');
+    return t('status.attention');
   };
 
   // Helper: Получить иконку статуса
@@ -94,19 +96,19 @@ const HealthScoreWidgetComponent = ({ userId }: HealthScoreWidgetProps) => {
     let metrics: QualitySummaryMetric[] = [];
     
     switch (zoneLabel) {
-      case 'Отлично':
+      case t('zones.excellent'):
         metrics = metricsByQuality.excellent;
         break;
-      case 'Хорошо':
+      case t('zones.good'):
         metrics = metricsByQuality.good;
         break;
-      case 'Средне':
+      case t('zones.fair'):
         metrics = metricsByQuality.fair;
         break;
-      case 'Плохо':
+      case t('zones.poor'):
         metrics = metricsByQuality.poor;
         break;
-      case 'Все':
+      case t('zones.all'):
         metrics = [
           ...metricsByQuality.excellent,
           ...metricsByQuality.good,
@@ -130,7 +132,7 @@ const HealthScoreWidgetComponent = ({ userId }: HealthScoreWidgetProps) => {
       <div className="flex items-center gap-2">
         {/* Icon + Title */}
         <Activity className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-        <span className="text-xs font-semibold whitespace-nowrap">Health Score:</span>
+        <span className="text-xs font-semibold whitespace-nowrap">{t('title')}:</span>
         
         {/* Score with color */}
         <span 
@@ -154,48 +156,48 @@ const HealthScoreWidgetComponent = ({ userId }: HealthScoreWidgetProps) => {
         {/* Segmented bar */}
         <div 
           className="flex-1 flex h-2 rounded-full overflow-hidden bg-muted/30 gap-[0.5px] cursor-pointer min-w-[100px]"
-          onClick={() => handleZoneClick('Все')}
-          title="Клик для детальной статистики"
+          onClick={() => handleZoneClick(t('zones.all'))}
+          title={t('clickForDetails')}
         >
           {metricsByQuality.excellent.length > 0 && (
             <div 
               className="bg-success transition-all duration-500 hover:opacity-80"
               style={{ width: `${excellentPercent}%` }}
-              title={`Отлично: ${metricsByQuality.excellent.length} (${Math.round(excellentPercent)}%)`}
+              title={`${t('zones.excellent')}: ${metricsByQuality.excellent.length} (${Math.round(excellentPercent)}%)`}
             />
           )}
           {metricsByQuality.good.length > 0 && (
             <div 
               className="bg-primary transition-all duration-500 hover:opacity-80"
               style={{ width: `${goodPercent}%` }}
-              title={`Хорошо: ${metricsByQuality.good.length} (${Math.round(goodPercent)}%)`}
+              title={`${t('zones.good')}: ${metricsByQuality.good.length} (${Math.round(goodPercent)}%)`}
             />
           )}
           {metricsByQuality.fair.length > 0 && (
             <div 
               className="bg-warning transition-all duration-500 hover:opacity-80"
               style={{ width: `${fairPercent}%` }}
-              title={`Средне: ${metricsByQuality.fair.length} (${Math.round(fairPercent)}%)`}
+              title={`${t('zones.fair')}: ${metricsByQuality.fair.length} (${Math.round(fairPercent)}%)`}
             />
           )}
           {metricsByQuality.poor.length > 0 && (
             <div 
               className="bg-destructive transition-all duration-500 hover:opacity-80"
               style={{ width: `${poorPercent}%` }}
-              title={`Плохо: ${metricsByQuality.poor.length} (${Math.round(poorPercent)}%)`}
+              title={`${t('zones.poor')}: ${metricsByQuality.poor.length} (${Math.round(poorPercent)}%)`}
             />
           )}
         </div>
         
         {/* Inline legend - numbers only */}
         <div className="flex items-center gap-1 text-[9px] text-muted-foreground font-mono whitespace-nowrap">
-          <span title="Отлично">{metricsByQuality.excellent.length}</span>
+          <span title={t('zones.excellent')}>{metricsByQuality.excellent.length}</span>
           <span>·</span>
-          <span title="Хорошо">{metricsByQuality.good.length}</span>
+          <span title={t('zones.good')}>{metricsByQuality.good.length}</span>
           <span>·</span>
-          <span title="Средне">{metricsByQuality.fair.length}</span>
+          <span title={t('zones.fair')}>{metricsByQuality.fair.length}</span>
           <span>·</span>
-          <span title="Плохо">{metricsByQuality.poor.length}</span>
+          <span title={t('zones.poor')}>{metricsByQuality.poor.length}</span>
         </div>
         
         {/* Refresh button */}
@@ -205,7 +207,7 @@ const HealthScoreWidgetComponent = ({ userId }: HealthScoreWidgetProps) => {
           className="h-5 w-5 flex-shrink-0"
           onClick={handleRefresh}
           disabled={isRecalculating}
-          title="Обновить данные"
+          title={t('refresh')}
         >
           <RefreshCw className={`h-2.5 w-2.5 ${isRecalculating ? 'animate-spin' : ''}`} />
         </Button>

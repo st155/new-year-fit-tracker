@@ -370,5 +370,39 @@
     "fitnessData": "Fitness Data",
     "more": "More",
     "profile": "Profile"
+  },
+  "toast": {
+    "loginRequired": "Please log in",
+    "processingError": "Processing error",
+    "backgroundProcessing": "Processing continues in background",
+    "syncStarted": "Sync started",
+    "connected": "Connected",
+    "notConnected": "Not connected",
+    "dataRefreshed": "Data refreshed",
+    "copiedToClipboard": "Copied to clipboard",
+    "featureNotAvailable": "Feature not available"
+  },
+  "empty": {
+    "noGoals": "No Goals Yet",
+    "noGoalsDesc": "Start your fitness journey by setting your first goal",
+    "noChallenges": "No Active Challenges",
+    "noChallengesDesc": "Join a challenge to compete with others",
+    "noActivity": "No Activity Today",
+    "noActivityDesc": "Get moving! Log your first workout",
+    "noPosts": "No posts yet",
+    "noPostsDesc": "Be the first to share your progress",
+    "noData": "No data",
+    "noDataDesc": "Data will appear after adding"
+  },
+  "filters": {
+    "category": "Category",
+    "type": "Type",
+    "sort": "Sort by",
+    "group": "Group by",
+    "search": "Search...",
+    "filterBySource": "Filter by source",
+    "all": "All",
+    "active": "Active",
+    "completed": "Completed"
   }
 }
