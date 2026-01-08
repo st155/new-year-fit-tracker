@@ -97,5 +97,28 @@
       "min": "{{value}} min",
       "hours": "{{value}} h"
     }
+  },
+  "modern": {
+    "title": "Progress Tracking",
+    "subtitle": "Monitor your fitness journey and celebrate your achievements",
+    "period": "Period:",
+    "noMetrics": "No metrics to display",
+    "addMeasurement": "Add Measurement",
+    "coreGoals": {
+      "pullups": "Pull-ups",
+      "benchPress": "Bench Press",
+      "lunges": "Back Lunges with Barbell",
+      "plank": "Plank",
+      "pushups": "Push-ups",
+      "vo2max": "VO₂max",
+      "run1km": "1 km Run",
+      "bodyFat": "Body Fat Percentage"
+    },
+    "summaryMetrics": {
+      "steps": "Steps",
+      "activeCalories": "Active Calories",
+      "avgHR": "Avg HR",
+      "sleep": "Sleep"
+    }
   }
 }

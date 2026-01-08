@@ -1,0 +1,38 @@
+{
+  "backToDocs": "Back to documents",
+  "noData": "No data to display",
+  "aiSummary": "AI Summary",
+  "metrics": "Metrics",
+  "documents": "Documents",
+  "emptyCategory": "No data to display in this category",
+  
+  "categories": {
+    "blood_test": "Blood Tests",
+    "lab_urine": "Urine Tests",
+    "imaging_report": "MRI/Ultrasound",
+    "clinical_note": "Clinical Notes",
+    "prescription": "Prescriptions",
+    "fitness_report": "Fitness Reports",
+    "inbody": "Body Composition",
+    "progress_photo": "Progress Photos",
+    "other": "Other"
+  },
+  
+  "documentCount_one": "{{count}} document",
+  "documentCount_few": "{{count}} documents",
+  "documentCount_many": "{{count}} documents",
+  
+  "metricCount_one": "{{count}} metric",
+  "metricCount_few": "{{count}} metrics",
+  "metricCount_many": "{{count}} metrics",
+  
+  "processingStatus": {
+    "completed": "✅ Processed",
+    "processing": "⏳ Processing",
+    "error": "⚠️ Needs attention",
+    "pending": "⏸️ Pending"
+  },
+  
+  "dateNotSpecified": "Date not specified",
+  "noDescription": "No description"
+}

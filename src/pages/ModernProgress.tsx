@@ -9,6 +9,7 @@ import { PullUpsProgressDetail } from "@/components/detail/PullUpsProgressDetail
 import { BodyFatProgressDetail } from "@/components/detail/BodyFatProgressDetail";
 import { VO2MaxProgressDetail } from "@/components/detail/VO2MaxProgressDetail";
 import GoalProgressDetail from "@/components/detail/GoalProgressDetail";
+import { useTranslation } from "react-i18next";
 
 interface MetricCard {
   id: string;
@@ -26,6 +27,7 @@ interface MetricCard {
 }
 
 export default function ModernProgress() {
+  const { t } = useTranslation('progress');
   const { user } = useAuth();
   const navigate = useNavigate();
   const [selectedPeriod, setSelectedPeriod] = useState("3M");
@@ -115,14 +117,14 @@ export default function ModernProgress() {
 
       // Add core goals as placeholders
       const coreGoals = [
-        { name: 'Подтягивания', value: 17, unit: 'раз' },
-        { name: 'Жим лёжа', value: 90, unit: 'кг' },
-        { name: 'Выпады назад со штангой', value: 50, unit: 'кг×8' },
-        { name: 'Планка', value: 4, unit: 'мин' },
-        { name: 'Отжимания', value: 60, unit: 'раз' },
-        { name: 'VO₂max', value: 50, unit: 'мл/кг/мин' },
-        { name: 'Бег 1 км', value: 4.0, unit: 'мин' },
-        { name: 'Процент жира', value: 11, unit: '%' },
+        { name: t('modern.coreGoals.pullups'), value: 17, unit: 'раз' },
+        { name: t('modern.coreGoals.benchPress'), value: 90, unit: 'кг' },
+        { name: t('modern.coreGoals.lunges'), value: 50, unit: 'кг×8' },
+        { name: t('modern.coreGoals.plank'), value: 4, unit: 'мин' },
+        { name: t('modern.coreGoals.pushups'), value: 60, unit: 'раз' },
+        { name: t('modern.coreGoals.vo2max'), value: 50, unit: 'мл/кг/мин' },
+        { name: t('modern.coreGoals.run1km'), value: 4.0, unit: 'мин' },
+        { name: t('modern.coreGoals.bodyFat'), value: 11, unit: '%' },
       ];
 
       const existing = new Set(uniqueGoals.map((g: any) => (g.goal_name || '').toLowerCase()));
@@ -258,7 +260,7 @@ export default function ModernProgress() {
       if (summary?.steps != null) {
         metricsArray.push({
           id: 'steps',
-          title: 'Steps',
+          title: t('modern.summaryMetrics.steps'),
           value: Number(summary.steps) || 0,
           unit: '',
           target: 10000,
@@ -272,7 +274,7 @@ export default function ModernProgress() {
       if (summary?.active_calories != null) {
         metricsArray.push({
           id: 'calories',
-          title: 'Active Calories',
+          title: t('modern.summaryMetrics.activeCalories'),
           value: Number(summary.active_calories) || 0,
           unit: 'kcal',
           target: 500,
@@ -286,7 +288,7 @@ export default function ModernProgress() {
       if (summary?.heart_rate_avg != null) {
         metricsArray.push({
           id: 'hr_avg',
-          title: 'Avg HR',
+          title: t('modern.summaryMetrics.avgHR'),
           value: Number(summary.heart_rate_avg) || 0,
           unit: 'bpm',
           target: 60,
@@ -300,7 +302,7 @@ export default function ModernProgress() {
       if (summary?.sleep_hours != null) {
         metricsArray.push({
           id: 'sleep',
-          title: 'Sleep',
+          title: t('modern.summaryMetrics.sleep'),
           value: Number(summary.sleep_hours) || 0,
           unit: 'h',
           target: 8,
@@ -420,16 +422,16 @@ export default function ModernProgress() {
       {/* Header */}
       <div className="mb-4">
         <h1 className="text-2xl font-bold text-foreground mb-1">
-          Progress Tracking
+          {t('modern.title')}
         </h1>
         <p className="text-muted-foreground text-sm">
-          Monitor your fitness journey and celebrate your achievements
+          {t('modern.subtitle')}
         </p>
       </div>
 
       {/* Period Filter */}
       <div className="mb-4 flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">Period:</span>
+        <span className="text-sm text-muted-foreground">{t('modern.period')}</span>
         {["1M", "3M", "6M", "1Y"].map((period) => (
           <button
             key={period}

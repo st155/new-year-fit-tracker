@@ -1,5 +1,6 @@
 {
   "invalidId": "Invalid biomarker ID",
+  "defaultName": "Biomarker",
   "backToDocs": "Back to documents",
   "measurementHistory": "Measurement History",
   "lastValue": "Latest Value",

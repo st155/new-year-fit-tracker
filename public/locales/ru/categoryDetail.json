@@ -1,0 +1,38 @@
+{
+  "backToDocs": "Вернуться к документам",
+  "noData": "Нет данных для отображения",
+  "aiSummary": "AI Саммари",
+  "metrics": "Показатели",
+  "documents": "Документы",
+  "emptyCategory": "Нет данных для отображения в этой категории",
+  
+  "categories": {
+    "blood_test": "Анализы крови",
+    "lab_urine": "Анализы мочи",
+    "imaging_report": "МРТ/УЗИ",
+    "clinical_note": "Заключения",
+    "prescription": "Рецепты",
+    "fitness_report": "Фитнес-отчёты",
+    "inbody": "Состав тела",
+    "progress_photo": "Прогресс-фото",
+    "other": "Другие"
+  },
+  
+  "documentCount_one": "{{count}} документ",
+  "documentCount_few": "{{count}} документа",
+  "documentCount_many": "{{count}} документов",
+  
+  "metricCount_one": "{{count}} показатель",
+  "metricCount_few": "{{count}} показателя",
+  "metricCount_many": "{{count}} показателей",
+  
+  "processingStatus": {
+    "completed": "✅ Обработан",
+    "processing": "⏳ Обработка",
+    "error": "⚠️ Требует внимания",
+    "pending": "⏸️ Ожидает"
+  },
+  
+  "dateNotSpecified": "Дата не указана",
+  "noDescription": "Нет описания"
+}
