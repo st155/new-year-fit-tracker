@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FitnessCard } from "@/components/ui/fitness-card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, TrendingDown, Target, Zap, Award, Heart, Activity, Footprints } from "lucide-react";
@@ -47,7 +48,7 @@ function StatCard({ title, value, unit, change, target, variant = "default", ico
             {hasTarget && (
               <div className="flex items-center gap-1 text-xs opacity-70 mb-1">
                 <Target className="w-3 h-3" />
-                <span>Цель: {target}{unit}</span>
+                <span>{target}{unit}</span>
               </div>
             )}
             {change !== undefined && (
@@ -91,7 +92,7 @@ function StatCard({ title, value, unit, change, target, variant = "default", ico
             {hasTarget && (
               <div className="flex items-center gap-2 text-xs opacity-70">
                 <Target className="w-3 h-3" />
-                <span>Цель: {target}{unit}</span>
+                <span>{target}{unit}</span>
               </div>
             )}
           </div>
@@ -120,6 +121,7 @@ interface StatsGridProps {
 }
 
 export function StatsGrid({ userRole }: StatsGridProps) {
+  const { t } = useTranslation('statsGrid');
   const { user } = useAuth();
   
   // Состояние для участников
@@ -441,29 +443,29 @@ export function StatsGrid({ userRole }: StatsGridProps) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
-          title="Активных участников"
+          title={t('trainer.activeParticipants')}
           value={trainerStats.activeParticipants}
           variant="gradient"
           change={14}
           icon={<Award className="w-4 h-4" />}
         />
         <StatCard
-          title="Средний прогресс"
+          title={t('trainer.averageProgress')}
           value={trainerStats.averageProgress}
-          unit="%"
+          unit={t('units.percent')}
           variant="success"
           change={8}
           icon={<TrendingUp className="w-4 h-4" />}
         />
         <StatCard
-          title="Целей достигнуто"
+          title={t('trainer.goalsCompleted')}
           value={trainerStats.goalsCompleted}
           unit={`/${trainerStats.totalGoals}`}
           change={12}
           icon={<Target className="w-4 h-4" />}
         />
         <StatCard
-          title="Обновлений сегодня"
+          title={t('trainer.todayUpdates')}
           value={trainerStats.todayUpdates}
           variant="default"
           icon={<Zap className="w-4 h-4" />}
@@ -500,9 +502,9 @@ export function StatsGrid({ userRole }: StatsGridProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <StatCard
-        title="Процент жира"
+        title={t('participant.bodyFat')}
         value={stats.bodyFat?.current ? stats.bodyFat.current.toFixed(1) : "—"}
-        unit="%"
+        unit={t('units.percent')}
         target={stats.bodyFat?.target}
         variant="default"
         change={stats.bodyFat?.change}
@@ -511,18 +513,18 @@ export function StatsGrid({ userRole }: StatsGridProps) {
         compact
       />
       <StatCard
-        title="Вес тела"
+        title={t('participant.weight')}
         value={stats.weight?.current ? stats.weight.current.toFixed(1) : "—"}
-        unit="кг"
+        unit={t('units.kg')}
         change={stats.weight?.change}
         icon={<TrendingDown className="w-4 h-4" />}
         onClick={() => setActiveDetail('weight')}
         compact
       />
       <StatCard
-        title="Recovery Score"
+        title={t('participant.recovery')}
         value={stats.recovery?.current ? Math.round(stats.recovery.current) : "—"}
-        unit="%"
+        unit={t('units.percent')}
         variant={stats.recovery?.current && stats.recovery.current >= 70 ? "success" : 
                 stats.recovery?.current && stats.recovery.current >= 50 ? "default" : "default"}
         change={stats.recovery?.change}
@@ -530,7 +532,7 @@ export function StatsGrid({ userRole }: StatsGridProps) {
         compact
       />
       <StatCard
-        title="Steps"
+        title={t('participant.steps')}
         value={stats.steps?.current ? stats.steps.current.toLocaleString() : "—"}
         unit=""
         target={stats.steps?.target?.toLocaleString()}
@@ -540,9 +542,9 @@ export function StatsGrid({ userRole }: StatsGridProps) {
         compact
       />
       <StatCard
-        title="Подтягивания"
+        title={t('participant.pullUps')}
         value={stats.pullUps?.current || "—"}
-        unit="раз"
+        unit={t('units.times')}
         target={stats.pullUps?.target}
         variant={stats.pullUps?.current ? "success" : "default"}
         change={stats.pullUps?.change}

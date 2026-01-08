@@ -1,0 +1,21 @@
+{
+  "trainer": {
+    "activeParticipants": "Активных участников",
+    "averageProgress": "Средний прогресс",
+    "goalsCompleted": "Целей достигнуто",
+    "todayUpdates": "Обновлений сегодня"
+  },
+  "participant": {
+    "bodyFat": "Процент жира",
+    "weight": "Вес тела",
+    "recovery": "Recovery Score",
+    "steps": "Шаги",
+    "pullUps": "Подтягивания"
+  },
+  "units": {
+    "kg": "кг",
+    "percent": "%",
+    "times": "раз"
+  },
+  "goal": "Цель: {{target}}{{unit}}"
+}

@@ -1,0 +1,19 @@
+{
+  "metrics": {
+    "weight": "Weight",
+    "bodyFat": "Body Fat %",
+    "muscleMass": "Muscle Mass",
+    "musclePercent": "Muscle %",
+    "hrv": "HRV",
+    "restingHR": "Resting HR",
+    "vo2max": "VO2max"
+  },
+  "stats": {
+    "activeClients": "Active clients",
+    "workoutsPerWeek": "Workouts per week",
+    "planAssigned": "Plan assigned",
+    "inSchedule": "In schedule"
+  },
+  "noData": "No data",
+  "lastUpdated": "Updated: {{date}}"
+}
