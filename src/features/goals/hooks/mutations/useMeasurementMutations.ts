@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { GoalsService } from "../../services/goals.service";
 import type { MeasurementCreateInput } from "../../types";
 import { toast } from "sonner";
@@ -8,6 +9,7 @@ import { toast } from "sonner";
  */
 export function useMeasurementMutations() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('goals');
 
   const createMeasurement = useMutation({
     mutationFn: (input: MeasurementCreateInput) => GoalsService.createMeasurement(input),
@@ -15,11 +17,11 @@ export function useMeasurementMutations() {
       queryClient.invalidateQueries({ queryKey: ["measurements", variables.goal_id] });
       queryClient.invalidateQueries({ queryKey: ["goals"] });
       queryClient.invalidateQueries({ queryKey: ["challenge-goals"] });
-      toast.success("Измерение добавлено");
+      toast.success(t('toast.measurementAdded'));
     },
     onError: (error) => {
       console.error("❌ Error creating measurement:", error);
-      toast.error("Ошибка добавления измерения");
+      toast.error(t('toast.failedAddMeasurement'));
     },
   });
 
@@ -30,11 +32,11 @@ export function useMeasurementMutations() {
       queryClient.invalidateQueries({ queryKey: ["measurements"] });
       queryClient.invalidateQueries({ queryKey: ["goals"] });
       queryClient.invalidateQueries({ queryKey: ["challenge-goals"] });
-      toast.success("Измерения добавлены");
+      toast.success(t('toast.measurementsAdded'));
     },
     onError: (error) => {
       console.error("❌ Error creating measurements batch:", error);
-      toast.error("Ошибка добавления измерений");
+      toast.error(t('toast.failedAddMeasurements'));
     },
   });
 
@@ -44,11 +46,11 @@ export function useMeasurementMutations() {
       queryClient.invalidateQueries({ queryKey: ["measurements"] });
       queryClient.invalidateQueries({ queryKey: ["goals"] });
       queryClient.invalidateQueries({ queryKey: ["challenge-goals"] });
-      toast.success("Измерение удалено");
+      toast.success(t('toast.measurementDeleted'));
     },
     onError: (error) => {
       console.error("❌ Error deleting measurement:", error);
-      toast.error("Ошибка удаления измерения");
+      toast.error(t('toast.failedDeleteMeasurement'));
     },
   });
 

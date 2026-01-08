@@ -200,5 +200,19 @@
       "75": "Almost there! 🔥",
       "100": "Goal achieved! 🎉"
     }
+  },
+  "toast": {
+    "goalCreated": "Goal created",
+    "goalUpdated": "Goal updated",
+    "goalDeleted": "Goal deleted",
+    "measurementAdded": "Measurement added",
+    "measurementsAdded": "Measurements added",
+    "measurementDeleted": "Measurement deleted",
+    "failedCreateGoal": "Error creating goal",
+    "failedUpdateGoal": "Error updating goal",
+    "failedDeleteGoal": "Error deleting goal",
+    "failedAddMeasurement": "Error adding measurement",
+    "failedAddMeasurements": "Error adding measurements",
+    "failedDeleteMeasurement": "Error deleting measurement"
   }
 }
