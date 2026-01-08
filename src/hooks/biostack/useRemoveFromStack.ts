@@ -1,9 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 export function useRemoveFromStack() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('biostack');
 
   return useMutation({
     mutationFn: async (stackItemId: string) => {
@@ -21,16 +23,11 @@ export function useRemoveFromStack() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-stack'] });
       queryClient.invalidateQueries({ queryKey: ['supplement-library'] });
-      toast({
-        title: 'Removed from Stack',
-        description: 'Supplement has been removed and end date recorded',
-      });
+      toast.success(t('toast.removedFromStack'));
     },
     onError: (error: Error) => {
-      toast({
-        title: 'Error',
+      toast.error(t('toast.removeFromStackFailed'), {
         description: error.message,
-        variant: 'destructive',
       });
     },
   });

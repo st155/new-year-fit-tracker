@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { supplementsApi } from '@/lib/api';
+import { useTranslation } from 'react-i18next';
 
 export interface BiomarkerComparison {
   biomarker: string;
@@ -33,7 +34,7 @@ export function useAIEffectivenessAnalysis() {
   const [data, setData] = useState<AIAnalysisResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
+  const { t } = useTranslation('biostack');
 
   const analyze = async (stackItemId: string, userId: string) => {
     setIsAnalyzing(true);
@@ -55,12 +56,10 @@ export function useAIEffectivenessAnalysis() {
       setData(typedResult);
       return typedResult;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Ошибка анализа';
+      const message = err instanceof Error ? err.message : t('toast.aiAnalysisFailed');
       setError(message);
-      toast({
-        title: 'Ошибка анализа',
+      toast.error(t('toast.aiAnalysisFailed'), {
         description: message,
-        variant: 'destructive'
       });
       return null;
     } finally {

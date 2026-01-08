@@ -1,9 +1,10 @@
 import { useMutation } from '@tanstack/react-query';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { supplementsApi } from '@/lib/api';
+import { useTranslation } from 'react-i18next';
 
 export function useProcessSupplementPhoto() {
-  const { toast } = useToast();
+  const { t } = useTranslation('biostack');
 
   return useMutation({
     mutationFn: async (imageBase64: string) => {
@@ -25,11 +26,7 @@ export function useProcessSupplementPhoto() {
     },
     onError: (error) => {
       console.error('[PHOTO-PROCESSING] Mutation error:', error);
-      toast({
-        title: 'Processing failed',
-        description: 'Could not enhance photo. Using original.',
-        variant: 'destructive',
-      });
+      toast.error(t('toast.photoUploadFailed'));
     },
   });
 }

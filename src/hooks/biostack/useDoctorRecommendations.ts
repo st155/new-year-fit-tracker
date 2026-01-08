@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface DoctorRecommendation {
   id: string;
@@ -74,6 +75,7 @@ function parseDosage(dosage?: string): { amount: number; unit: string } {
 
 export function useDoctorRecommendations(documentId?: string) {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('biostack');
 
   const recommendationsQuery = useQuery({
     queryKey: ['doctor-recommendations', documentId],
@@ -139,7 +141,7 @@ export function useDoctorRecommendations(documentId?: string) {
       const endAction = plannedEndDate ? 'prompt_retest' : 'none';
 
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+      if (!user) throw new Error(t('errors.notAuthenticated'));
 
       // Step 3: Create user_stack entry with time-bound protocol support
       const stackEntry = {
@@ -180,11 +182,11 @@ export function useDoctorRecommendations(documentId?: string) {
     onSuccess: (recommendation) => {
       queryClient.invalidateQueries({ queryKey: ['user-stack'] });
       queryClient.invalidateQueries({ queryKey: ['doctor-recommendations', recommendation.document_id] });
-      toast.success(`${recommendation.supplement_name} added to stack`);
+      toast.success(t('toast.addedToStack', { name: recommendation.supplement_name }));
     },
     onError: (error) => {
       console.error('Failed to add to stack:', error);
-      toast.error('Failed to add to stack');
+      toast.error(t('toast.addToStackFailed'));
     },
   });
 
@@ -203,11 +205,11 @@ export function useDoctorRecommendations(documentId?: string) {
       if (recommendation) {
         queryClient.invalidateQueries({ queryKey: ['doctor-recommendations', recommendation.document_id] });
       }
-      toast.success('Recommendation dismissed');
+      toast.success(t('toast.recommendationDismissed'));
     },
     onError: (error) => {
       console.error('Failed to dismiss:', error);
-      toast.error('Failed to dismiss recommendation');
+      toast.error(t('errors.genericError'));
     },
   });
 
@@ -227,11 +229,11 @@ export function useDoctorRecommendations(documentId?: string) {
     onSuccess: (results) => {
       const successCount = results.filter(r => r.success).length;
       if (successCount > 0) {
-        toast.success(`${successCount} recommendation${successCount > 1 ? 's' : ''} added to stack`);
+        toast.success(t('toast.addedToLibrary', { count: successCount }));
       }
       const failCount = results.filter(r => !r.success).length;
       if (failCount > 0) {
-        toast.error(`${failCount} recommendation${failCount > 1 ? 's' : ''} failed to add`);
+        toast.error(t('errors.genericError'));
       }
     },
   });
