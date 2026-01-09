@@ -5,9 +5,11 @@ export const METRIC_ALIASES: Record<string, string[]> = {
   'Resting Heart Rate': ['Resting HR'],
   'Workout Calories': ['Active Calories'],
   'Active Calories': ['Workout Calories'],
-  // Day Strain and Workout Strain are DIFFERENT metrics, not aliases!
-  'Day Strain': ['Strain'],
-  'Strain': ['Day Strain'],
+  // Day Strain and Activity Score are related activity metrics from different providers
+  // Day Strain (WHOOP) ↔ Activity Score (Oura/Ultrahuman)
+  'Day Strain': ['Strain', 'Activity Score'],
+  'Strain': ['Day Strain', 'Activity Score'],
+  'Activity Score': ['Day Strain', 'Strain'],
   'Recovery Score': ['Recovery', 'RecoveryScore'],
   'Recovery': ['Recovery Score', 'RecoveryScore'],
   'RecoveryScore': ['Recovery Score', 'Recovery'],
