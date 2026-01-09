@@ -126,5 +126,41 @@
     "challengeDeleted": "Challenge deleted",
     "deleteFailed": "Failed to delete challenge: {{error}}",
     "extendFailed": "Failed to extend challenge: {{error}}"
+  },
+  "pointsBreakdown": {
+    "title": "Points Breakdown",
+    "totalPoints": "Total Points / 1000",
+    "sections": {
+      "activity": "Activity",
+      "recovery": "Recovery",
+      "progress": "Progress",
+      "balance": "Balance"
+    },
+    "metrics": {
+      "strain": "Strain",
+      "steps": "Steps",
+      "calories": "Calories",
+      "workouts": "Workouts",
+      "recoveryQuality": "Recovery Quality",
+      "sleepDuration": "Sleep Duration",
+      "sleepEfficiency": "Sleep Efficiency",
+      "hrv": "HRV",
+      "restingHr": "Resting HR",
+      "activeDays": "Active Days",
+      "consistency": "Consistency",
+      "streakDays": "Streak Days",
+      "goals": "Goals",
+      "loadRecoveryHarmony": "Load-Recovery Harmony",
+      "synergy": "Synergy",
+      "performance": "Performance"
+    },
+    "tips": {
+      "title": "💡 Tips for Improvement",
+      "activity": "Increase daily activity: more steps, workouts, and active calories",
+      "recovery": "Focus on quality sleep: aim for 7-8 hours and high HRV",
+      "progress": "Maintain consistency: log progress every day",
+      "balance": "Balance load and recovery for optimal synergy"
+    },
+    "noData": "No data available"
   }
 }

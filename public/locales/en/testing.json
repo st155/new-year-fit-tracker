@@ -1,0 +1,84 @@
+{
+  "title": "Application Tests",
+  "runAll": "Run All Tests",
+  "running": "Running tests...",
+  "completed": "Testing completed",
+  "completedDesc": "Check results above",
+  "status": {
+    "waiting": "Waiting...",
+    "running": "Running...",
+    "success": "Successfully completed",
+    "error": "Error"
+  },
+  "categories": {
+    "auth": "Authentication",
+    "database": "Database",
+    "functionality": "Functionality",
+    "storage": "Storage",
+    "integrations": "Integrations",
+    "logging": "Logging",
+    "security": "Security"
+  },
+  "tests": {
+    "authCheck": {
+      "name": "Authentication check",
+      "success": "User authenticated",
+      "error": "Not authenticated"
+    },
+    "dbConnection": {
+      "name": "Database connection",
+      "success": "Connection successful",
+      "error": "Connection error"
+    },
+    "profileRead": {
+      "name": "Read user profile",
+      "success": "Profile loaded",
+      "error": "Profile not found"
+    },
+    "goalsLoad": {
+      "name": "Load goals",
+      "success": "{{count}} goals loaded",
+      "error": "Failed to load goals"
+    },
+    "goalCreate": {
+      "name": "Create test goal",
+      "success": "Goal created and deleted",
+      "error": "Failed to create goal"
+    },
+    "measurementsLoad": {
+      "name": "Load measurements",
+      "success": "{{count}} measurements loaded",
+      "error": "Failed to load measurements"
+    },
+    "measurementCreate": {
+      "name": "Create test measurement",
+      "success": "Measurement created and deleted",
+      "error": "Failed to create measurement"
+    },
+    "storageTest": {
+      "name": "File storage test",
+      "success": "Bucket accessible",
+      "error": "Storage error"
+    },
+    "appleHealth": {
+      "name": "Apple Health processing",
+      "success": "Function available",
+      "error": "Function unavailable"
+    },
+    "aiAnalysis": {
+      "name": "AI screenshot analysis",
+      "success": "Function available",
+      "error": "Function unavailable"
+    },
+    "errorLogging": {
+      "name": "Error logging system",
+      "success": "Logging works",
+      "error": "Logging error"
+    },
+    "rlsPolicies": {
+      "name": "RLS security policies",
+      "success": "Policies active",
+      "error": "Policies check failed"
+    }
+  }
+}
