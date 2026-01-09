@@ -163,8 +163,8 @@ export function TerraIntegration() {
         // Очищаем URL параметры
         window.history.replaceState({}, '', window.location.pathname);
         toast({
-          title: 'Устройство подключено',
-          description: 'Ваше устройство успешно подключено. Данные начнут синхронизироваться автоматически.',
+          title: t("terra.deviceConnected"),
+          description: t("terra.successConnected", { provider: '' }),
         });
       }
       
@@ -227,8 +227,8 @@ export function TerraIntegration() {
     sessionStorage.setItem('terra_last_provider', provider);
     
     toast({
-      title: 'Переходим на страницу авторизации...',
-      description: 'Вы будете перенаправлены на Terra для подключения устройства',
+      title: t("terra.redirectingToAuth"),
+      description: t("terra.connectingProvider", { provider: PROVIDER_NAMES[provider] || provider }),
     });
     
     try {
@@ -243,7 +243,7 @@ export function TerraIntegration() {
       }, 1000);
     } catch (error: any) {
       toast({
-        title: 'Ошибка',
+        title: t("common:errors.generic"),
         description: error.message,
         variant: 'destructive',
       });
@@ -340,8 +340,8 @@ export function TerraIntegration() {
       console.log('🧹 Auto-deauthenticating before reconnect:', provider);
       
       toast({
-        title: 'Подготовка к переподключению...',
-        description: 'Удаляем старый токен авторизации',
+        title: t("terra.preparingReconnect"),
+        description: t("terra.removingOldToken"),
       });
       
       const { error: deauthError } = await terraApi.deauthenticate(provider);
@@ -355,8 +355,8 @@ export function TerraIntegration() {
       console.log('⏳ Waiting 5s for provider OAuth cache to clear...');
       
       toast({
-        title: 'Очистка сессии...',
-        description: 'Подождите 5 секунд для синхронизации с провайдером',
+        title: t("terra.clearingSession"),
+        description: t("terra.waitForProvider"),
       });
       
       await new Promise(resolve => setTimeout(resolve, 5000));
@@ -372,7 +372,7 @@ export function TerraIntegration() {
     } catch (error: any) {
       console.error('Reactivate error:', error);
       toast({
-        title: 'Ошибка переподключения',
+        title: t("common:errors.generic"),
         description: error.message,
         variant: 'destructive',
       });
@@ -466,7 +466,7 @@ export function TerraIntegration() {
 
     // Подтверждение от пользователя
     const confirmed = window.confirm(
-      `Вы уверены, что хотите отключить ${PROVIDER_NAMES[provider]}?\n\nЭто полностью удалит подключение и отзовёт OAuth-токен. Для повторного использования потребуется новая авторизация.`
+      t("terra.confirmDisconnect", { provider: PROVIDER_NAMES[provider] })
     );
     
     if (!confirmed) return;

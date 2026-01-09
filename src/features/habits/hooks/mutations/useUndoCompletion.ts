@@ -6,10 +6,12 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { habitKeys } from '../keys';
+import { useTranslation } from 'react-i18next';
 
 export function useUndoCompletion() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useTranslation('habits');
 
   const undoMutation = useMutation<boolean, Error, string>({
     mutationFn: async (habitId: string) => {
@@ -43,8 +45,8 @@ export function useUndoCompletion() {
     onSuccess: (success) => {
       if (success) {
         toast({
-          title: 'Отменено',
-          description: 'Выполнение привычки отменено',
+          title: t('toast.undone'),
+          description: t('toast.undoneDesc'),
         });
         queryClient.invalidateQueries({ queryKey: habitKeys.all });
       }
@@ -52,8 +54,8 @@ export function useUndoCompletion() {
     onError: (error) => {
       console.error('[useUndoCompletion] Error:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось отменить выполнение',
+        title: t('toast.undoFailed'),
+        description: t('toast.undoFailedDesc'),
         variant: 'destructive',
       });
     },

@@ -3,19 +3,31 @@
  * Defines rewards and milestones for habit streaks
  */
 
+import i18n from '@/i18n';
+
 export interface StreakMilestone {
   days: number;
-  title: string;
+  titleKey: string;
   reward: string;
   xp: number;
   badge: string;
   color: string;
 }
 
+const MILESTONE_KEYS = {
+  3: 'started',
+  7: 'week',
+  14: 'twoWeeks',
+  30: 'month',
+  50: 'champion',
+  100: 'legend',
+  365: 'year',
+} as const;
+
 export const STREAK_MILESTONES: StreakMilestone[] = [
   {
     days: 3,
-    title: 'Начало пути',
+    titleKey: 'started',
     reward: 'streak_started',
     xp: 20,
     badge: '🔥',
@@ -23,7 +35,7 @@ export const STREAK_MILESTONES: StreakMilestone[] = [
   },
   {
     days: 7,
-    title: 'Неделя силы',
+    titleKey: 'week',
     reward: 'streak_week',
     xp: 50,
     badge: '⚡',
@@ -31,7 +43,7 @@ export const STREAK_MILESTONES: StreakMilestone[] = [
   },
   {
     days: 14,
-    title: 'Две недели',
+    titleKey: 'twoWeeks',
     reward: 'streak_two_weeks',
     xp: 100,
     badge: '💪',
@@ -39,7 +51,7 @@ export const STREAK_MILESTONES: StreakMilestone[] = [
   },
   {
     days: 30,
-    title: 'Месячный чемпион',
+    titleKey: 'month',
     reward: 'streak_month',
     xp: 250,
     badge: '🏆',
@@ -47,7 +59,7 @@ export const STREAK_MILESTONES: StreakMilestone[] = [
   },
   {
     days: 50,
-    title: 'Мастер постоянства',
+    titleKey: 'champion',
     reward: 'streak_champion',
     xp: 500,
     badge: '👑',
@@ -55,7 +67,7 @@ export const STREAK_MILESTONES: StreakMilestone[] = [
   },
   {
     days: 100,
-    title: 'Легенда привычек',
+    titleKey: 'legend',
     reward: 'streak_legend',
     xp: 1000,
     badge: '🌟',
@@ -63,13 +75,20 @@ export const STREAK_MILESTONES: StreakMilestone[] = [
   },
   {
     days: 365,
-    title: 'Годовой воин',
+    titleKey: 'year',
     reward: 'streak_year',
     xp: 5000,
     badge: '💎',
     color: 'from-cyan-400 to-blue-600',
   },
 ];
+
+/**
+ * Get translated title for a milestone
+ */
+export function getMilestoneTitle(milestone: StreakMilestone): string {
+  return i18n.t(`gamification:streaks.milestones.${milestone.titleKey}`);
+}
 
 /**
  * Get rewards earned for a specific streak
@@ -117,16 +136,17 @@ export function getStreakStatusMessage(streak: number): string {
   const next = getNextMilestone(streak);
   
   if (!next) {
-    return 'Максимальный уровень достигнут! 🌟';
+    return i18n.t('gamification:streaks.messages.maxLevel');
   }
   
   const daysToNext = next.days - streak;
+  const nextTitle = getMilestoneTitle(next);
   
   if (daysToNext === 1) {
-    return `Еще 1 день до "${next.title}"!`;
+    return i18n.t('gamification:streaks.messages.oneDayTo', { title: nextTitle });
   }
   
-  return `Еще ${daysToNext} дней до "${next.title}"`;
+  return i18n.t('gamification:streaks.messages.daysTo', { days: daysToNext, title: nextTitle });
 }
 
 /**

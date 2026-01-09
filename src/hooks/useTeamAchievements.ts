@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import i18n from '@/i18n';
 
 export interface TeamAchievement {
   id: string;
@@ -32,8 +33,8 @@ export function useTeamAchievements(teamId?: string) {
         achievements.push({
           id: 'member_5',
           type: 'member_count',
-          title: 'Первые 5 участников',
-          description: 'В команде 5 активных участников',
+          title: i18n.t('habitTeams:achievements.first5.title'),
+          description: i18n.t('habitTeams:achievements.first5.description'),
           icon: '👥',
           achieved_at: new Date().toISOString(),
           metadata: { count: members.length },
@@ -45,8 +46,8 @@ export function useTeamAchievements(teamId?: string) {
         achievements.push({
           id: 'member_10',
           type: 'member_count',
-          title: 'Команда мечты',
-          description: 'В команде 10 активных участников',
+          title: i18n.t('habitTeams:achievements.dreamTeam.title'),
+          description: i18n.t('habitTeams:achievements.dreamTeam.description'),
           icon: '🏆',
           achieved_at: new Date().toISOString(),
           metadata: { count: members.length },
@@ -67,8 +68,8 @@ export function useTeamAchievements(teamId?: string) {
         achievements.push({
           id: 'collective_today',
           type: 'collective_goal',
-          title: 'Все вместе!',
-          description: 'Все участники команды выполнили привычки сегодня',
+          title: i18n.t('habitTeams:achievements.allTogether.title'),
+          description: i18n.t('habitTeams:achievements.allTogether.description'),
           icon: '🎯',
           achieved_at: new Date().toISOString(),
           metadata: { date: today, count: members.length },

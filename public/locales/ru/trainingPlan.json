@@ -64,5 +64,16 @@
     "weeklyDistribution": "Распределение по дням недели",
     "exShort": "упр.",
     "rest": "Отдых"
+  },
+  "toast": {
+    "planNotFound": "План не найден",
+    "planNotFoundOrDeleted": "План не найден или был удален",
+    "loadFailed": "Не удалось загрузить план тренировок",
+    "success": "Успешно",
+    "error": "Ошибка",
+    "deleted": "План удален",
+    "deleteFailed": "Не удалось удалить план",
+    "copied": "План скопирован",
+    "copyFailed": "Не удалось скопировать план"
   }
 }

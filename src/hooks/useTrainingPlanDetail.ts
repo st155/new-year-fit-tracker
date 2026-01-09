@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import i18n from '@/i18n';
 
 interface WorkoutExercise {
   exercise_id: string;
@@ -76,7 +77,7 @@ export const useTrainingPlanDetail = (planId: string | null) => {
         .single();
       
       if (planError) throw planError;
-      if (!planData) throw new Error('План не найден');
+      if (!planData) throw new Error(i18n.t('trainingPlan:toast.planNotFound'));
       
       console.log('✅ Plan base data loaded:', planData.name);
       
@@ -146,10 +147,10 @@ export const useTrainingPlanDetail = (planId: string | null) => {
       });
       
       toast({
-        title: 'Ошибка',
-        description: error?.message?.includes('не найден') 
-          ? 'План не найден или был удален'
-          : 'Не удалось загрузить план тренировок',
+        title: i18n.t('trainingPlan:toast.error'),
+        description: error?.message?.includes('не найден') || error?.message?.includes('not found')
+          ? i18n.t('trainingPlan:toast.planNotFoundOrDeleted')
+          : i18n.t('trainingPlan:toast.loadFailed'),
         variant: 'destructive'
       });
     } finally {
@@ -169,15 +170,15 @@ export const useTrainingPlanDetail = (planId: string | null) => {
       if (error) throw error;
 
       toast({
-        title: 'Успешно',
-        description: 'План удален'
+        title: i18n.t('trainingPlan:toast.success'),
+        description: i18n.t('trainingPlan:toast.deleted')
       });
       return true;
     } catch (error) {
       console.error('Error deleting plan:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось удалить план',
+        title: i18n.t('trainingPlan:toast.error'),
+        description: i18n.t('trainingPlan:toast.deleteFailed'),
         variant: 'destructive'
       });
       return false;
@@ -221,16 +222,16 @@ export const useTrainingPlanDetail = (planId: string | null) => {
       if (workoutsError) throw workoutsError;
 
       toast({
-        title: 'Успешно',
-        description: 'План скопирован'
+        title: i18n.t('trainingPlan:toast.success'),
+        description: i18n.t('trainingPlan:toast.copied')
       });
 
       return newPlan.id;
     } catch (error) {
       console.error('Error duplicating plan:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось скопировать план',
+        title: i18n.t('trainingPlan:toast.error'),
+        description: i18n.t('trainingPlan:toast.copyFailed'),
         variant: 'destructive'
       });
       return null;

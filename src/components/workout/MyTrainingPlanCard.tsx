@@ -4,13 +4,14 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, Target, Dumbbell, Sparkles, Edit, Pause } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { ru } from "date-fns/locale";
+import { ru, enUS } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { switchActivePlan } from "@/lib/training-plan-utils";
 import { toast } from "sonner";
 import { useState } from "react";
 import { EditPlanPreferencesDialog } from "./EditPlanPreferencesDialog";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 interface MyTrainingPlanCardProps {
   plan: {
@@ -35,6 +36,8 @@ export function MyTrainingPlanCard({ plan, onUpdate }: MyTrainingPlanCardProps) 
   const [isActivating, setIsActivating] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation('workouts');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
   const isActive = plan.status === 'active';
 
   const handleActivate = async () => {
@@ -46,13 +49,13 @@ export function MyTrainingPlanCard({ plan, onUpdate }: MyTrainingPlanCardProps) 
       const result = await switchActivePlan(user.id, plan.id);
       
       if (result.success) {
-        toast.success('План успешно активирован!');
+        toast.success(t('trainingPlan.activated'));
         onUpdate();
       } else {
-        toast.error(result.error || 'Не удалось активировать план');
+        toast.error(result.error || t('trainingPlan.activateFailed'));
       }
     } catch (error: any) {
-      toast.error(error.message || 'Ошибка при активации плана');
+      toast.error(error.message || t('trainingPlan.activateError'));
     } finally {
       setIsActivating(false);
     }
@@ -67,10 +70,10 @@ export function MyTrainingPlanCard({ plan, onUpdate }: MyTrainingPlanCardProps) 
         .eq('id', plan.id);
       
       if (error) throw error;
-      toast.success('План деактивирован');
+      toast.success(t('trainingPlan.deactivated'));
       onUpdate();
     } catch (error: any) {
-      toast.error('Не удалось деактивировать план');
+      toast.error(t('trainingPlan.deactivateFailed'));
     } finally {
       setIsActivating(false);
     }
@@ -103,7 +106,7 @@ export function MyTrainingPlanCard({ plan, onUpdate }: MyTrainingPlanCardProps) 
             <Badge variant={isActive ? "default" : "secondary"} className={cn(
               isActive && "bg-gradient-to-r from-cyan-500 to-primary text-white"
             )}>
-              {isActive ? "АКТИВНЫЙ" : "НЕАКТИВНЫЙ"}
+              {isActive ? t('trainingPlan.active') : t('trainingPlan.inactive')}
             </Badge>
           </div>
         </CardHeader>
@@ -112,12 +115,12 @@ export function MyTrainingPlanCard({ plan, onUpdate }: MyTrainingPlanCardProps) 
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div className="flex items-center gap-2 text-muted-foreground">
               <Calendar className="w-4 h-4" />
-              <span>{plan.training_plans.duration_weeks} недель</span>
+              <span>{plan.training_plans.duration_weeks} {t('trainingPlan.weeks')}</span>
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <Target className="w-4 h-4" />
               <span>
-                {format(new Date(plan.start_date), 'd MMM yyyy', { locale: ru })}
+                {format(new Date(plan.start_date), 'd MMM yyyy', { locale: dateLocale })}
               </span>
             </div>
           </div>
@@ -125,7 +128,7 @@ export function MyTrainingPlanCard({ plan, onUpdate }: MyTrainingPlanCardProps) 
           {plan.training_plans.is_ai_generated && (
             <div className="flex items-center gap-2 text-xs text-cyan-500 bg-cyan-500/10 rounded-lg px-3 py-2">
               <Sparkles className="w-3 h-3" />
-              <span>Создан AI ассистентом</span>
+              <span>{t('trainingPlan.createdByAI')}</span>
             </div>
           )}
 
@@ -138,7 +141,7 @@ export function MyTrainingPlanCard({ plan, onUpdate }: MyTrainingPlanCardProps) 
                 className="flex-1"
                 size="sm"
               >
-                Активировать
+                {t('trainingPlan.activate')}
               </Button>
             )}
             
@@ -148,7 +151,7 @@ export function MyTrainingPlanCard({ plan, onUpdate }: MyTrainingPlanCardProps) 
               className="flex-1"
               size="sm"
             >
-              Просмотр
+              {t('trainingPlan.view')}
             </Button>
 
             {plan.training_plans.is_ai_generated && (
@@ -168,7 +171,7 @@ export function MyTrainingPlanCard({ plan, onUpdate }: MyTrainingPlanCardProps) 
                 variant="ghost"
                 size="sm"
                 className="text-muted-foreground"
-                title="Деактивировать план"
+                title={t('trainingPlan.deactivate')}
               >
                 <Pause className="w-4 h-4" />
               </Button>

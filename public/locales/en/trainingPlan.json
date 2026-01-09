@@ -64,5 +64,16 @@
     "weeklyDistribution": "Weekly distribution",
     "exShort": "ex.",
     "rest": "Rest"
+  },
+  "toast": {
+    "planNotFound": "Plan not found",
+    "planNotFoundOrDeleted": "Plan not found or was deleted",
+    "loadFailed": "Failed to load training plan",
+    "success": "Success",
+    "error": "Error",
+    "deleted": "Plan deleted",
+    "deleteFailed": "Failed to delete plan",
+    "copied": "Plan copied",
+    "copyFailed": "Failed to copy plan"
   }
 }

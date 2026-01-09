@@ -361,5 +361,19 @@
   "completion": {
     "saving": "Saving...",
     "toMain": "TO MAIN SCREEN"
+  },
+  "trainingPlan": {
+    "activated": "Plan successfully activated!",
+    "activateFailed": "Failed to activate plan",
+    "activateError": "Error activating plan",
+    "deactivated": "Plan deactivated",
+    "deactivateFailed": "Failed to deactivate plan",
+    "active": "ACTIVE",
+    "inactive": "INACTIVE",
+    "weeks": "weeks",
+    "createdByAI": "Created by AI assistant",
+    "activate": "Activate",
+    "view": "View",
+    "deactivate": "Deactivate plan"
   }
 }

@@ -1,0 +1,18 @@
+{
+  "streaks": {
+    "milestones": {
+      "started": "Journey Begins",
+      "week": "Week of Strength",
+      "twoWeeks": "Two Weeks",
+      "month": "Monthly Champion",
+      "champion": "Master of Consistency",
+      "legend": "Habit Legend",
+      "year": "Year Warrior"
+    },
+    "messages": {
+      "maxLevel": "Maximum level reached! 🌟",
+      "oneDayTo": "1 more day to \"{{title}}\"!",
+      "daysTo": "{{days}} more days to \"{{title}}\""
+    }
+  }
+}

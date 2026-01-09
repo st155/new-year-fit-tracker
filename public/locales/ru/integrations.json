@@ -411,5 +411,10 @@
     "syncWithErrors": "Синхронизация завершена с ошибками",
     "syncStats": "Успешно: {{success}}, Ошибок: {{fail}}",
     "syncError": "Ошибка синхронизации"
+  },
+  "withings": {
+    "dataLoaded": "Данные Withings загружены",
+    "metricsLoaded": "Загружено {{count}} метрик за последние {{days}} дней",
+    "loadError": "Ошибка загрузки данных"
   }
 }
