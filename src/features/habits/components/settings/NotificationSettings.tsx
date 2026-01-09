@@ -226,8 +226,6 @@ export function NotificationSettings() {
             {saving ? t('notifications.settings.saving') : t('notifications.settings.saveSettings')}
           </Button>
         </div>
-          </Button>
-        </div>
       </div>
     </Card>
   );

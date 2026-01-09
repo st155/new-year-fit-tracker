@@ -1153,7 +1153,6 @@ export const AIChatWindow = ({
                   ? t('aiChat.mentionPlaceholder')
                   : t('aiInput.placeholder')
               }
-              }
               value={input}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
