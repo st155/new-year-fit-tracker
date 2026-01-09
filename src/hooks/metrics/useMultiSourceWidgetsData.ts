@@ -27,6 +27,7 @@ export interface SourceData {
   source: string;
   confidence?: number;
   age_hours: number;
+  metric_name?: string; // Original metric name from DB (e.g., 'Activity Score' when shown in Day Strain widget)
 }
 
 export interface MultiSourceWidgetData {
@@ -147,6 +148,7 @@ export function useMultiSourceWidgetsData(
               source: row.source,
               confidence: typeof row.confidence_score === 'number' ? row.confidence_score : undefined,
               age_hours: hours,
+              metric_name: row.metric_name, // Include original metric name for normalization
             };
           });
 

@@ -146,6 +146,25 @@ const formatValue = (value: number | string, metricName: string, unit: string): 
   return value % 1 === 0 ? value.toString() : value.toFixed(1);
 };
 
+// Normalize Activity Score (0-100%) to Day Strain scale (0-21)
+// Used when displaying Activity Score alongside Day Strain in multi-mode
+const normalizeActivityToStrain = (value: number, sourceMetricName: string, widgetMetricName: string): { value: number; unit: string; isNormalized: boolean; originalValue?: number } => {
+  const isActivityScore = sourceMetricName.toLowerCase().includes('activity score');
+  const isStrainWidget = widgetMetricName.toLowerCase().includes('strain');
+  
+  // Normalize Activity Score to Strain scale when shown in Day Strain widget
+  if (isActivityScore && isStrainWidget) {
+    return {
+      value: Math.min(21, (value / 100) * 21),
+      unit: 'strain',
+      isNormalized: true,
+      originalValue: value
+    };
+  }
+  
+  return { value, unit: '', isNormalized: false };
+};
+
 const getSourceDisplayName = (source: string): string => {
   const nameMap: Record<string, string> = {
     whoop: 'Whoop',
@@ -496,7 +515,13 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
               const isStale = daysDiff >= 3;
               const isWarning = daysDiff === 2;
               
-              const qualityResult = getQualityColorWithPersonalization(metricName, src.value);
+              // Normalize Activity Score to Strain scale when in Day Strain widget
+              const sourceMetricName = src.metric_name || metricName;
+              const normalized = normalizeActivityToStrain(src.value, sourceMetricName, metricName);
+              const displayValue = normalized.isNormalized ? normalized.value : src.value;
+              const displayUnit = normalized.isNormalized ? normalized.unit : src.unit;
+              
+              const qualityResult = getQualityColorWithPersonalization(metricName, displayValue);
               const qualityColor = qualityResult.color;
               
               return (
@@ -509,9 +534,15 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
                 >
                   <div className="flex items-center gap-2 flex-1">
                     <span className="text-xl font-bold" style={{ color }}>
-                      {formatValue(src.value, metricName, src.unit)}
+                      {formatValue(displayValue, metricName, displayUnit)}
                     </span>
-                    <span className="text-sm text-muted-foreground">{src.unit}</span>
+                    <span className="text-sm text-muted-foreground">{displayUnit}</span>
+                    {/* Show original Activity Score as subtitle when normalized */}
+                    {normalized.isNormalized && normalized.originalValue && (
+                      <span className="text-xs text-muted-foreground/60">
+                        ({normalized.originalValue.toFixed(0)}%)
+                      </span>
+                    )}
                   </div>
                   
                   <div className="flex items-center gap-2">
