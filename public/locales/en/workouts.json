@@ -394,11 +394,101 @@
     "exercises": "exercises",
     "sets": "sets"
   },
-  "aiOnboarding": {
+"aiOnboarding": {
     "planCreated": "Done! Your plan \"{{name}}\" is created. Let's start training!",
     "errorMessage": "Error: {{message}}. Try again later.",
     "planCreatedToast": "Plan created!",
     "planCreatedDesc": "Your personal training plan is ready",
-    "error": "Error"
+    "error": "Error",
+    "welcome": "Hi! I'm your AI trainer 🤖 Let's create the perfect training plan. What's your main goal?",
+    "experience": "Great! What's your training experience?",
+    "trainingDays": "How many days per week can you train? Select days:",
+    "equipment": "What equipment do you have?",
+    "stress": "How stressful is your work? This affects recovery.",
+    "sleepHours": "How many hours do you usually sleep?",
+    "focusAreas": "Which body parts do you want to focus on?",
+    "liftingStyles": "What exercise styles do you prefer?",
+    "oneRepMax": "Know your max weights? This is optional but helps create an accurate plan.",
+    "injuries": "Do you have any injuries or limitations?",
+    "generating": "Great! Generating your personal plan... 🚀",
+    "goals": {
+      "strength": "Strength",
+      "hypertrophy": "Mass",
+      "fatLoss": "Fat Loss",
+      "endurance": "Endurance"
+    },
+    "experienceLevels": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced"
+    },
+    "days": {
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat",
+      "sun": "Sun"
+    },
+    "equipmentOptions": {
+      "fullGym": "Full Gym",
+      "dumbbells": "Dumbbells Only",
+      "bodyweight": "Bodyweight"
+    },
+    "stressLabels": {
+      "min": "Low stress",
+      "max": "High stress"
+    },
+    "stressLevels": {
+      "1": "Low",
+      "2": "Below avg",
+      "3": "Average",
+      "4": "Above avg",
+      "5": "High"
+    },
+    "bodyParts": {
+      "chest": "Chest",
+      "back": "Back",
+      "shoulders": "Shoulders",
+      "arms": "Arms",
+      "legs": "Legs",
+      "core": "Core"
+    },
+    "squatStyles": {
+      "highBar": "High Bar",
+      "lowBar": "Low Bar",
+      "front": "Front",
+      "unknown": "Don't know"
+    },
+    "deadliftStyles": {
+      "conventional": "Conventional",
+      "sumo": "Sumo",
+      "trapBar": "Trap Bar",
+      "unknown": "Don't know"
+    },
+    "benchStyles": {
+      "flat": "Flat",
+      "incline": "Incline",
+      "closeGrip": "Close Grip",
+      "unknown": "Don't know"
+    },
+    "labels": {
+      "squat": "Squat",
+      "deadlift": "Deadlift",
+      "bench": "Bench Press",
+      "squatWeight": "Squat (kg)",
+      "benchWeight": "Bench Press (kg)",
+      "deadliftWeight": "Deadlift (kg)"
+    },
+    "buttons": {
+      "continue": "Continue",
+      "skip": "Skip",
+      "noLimitations": "No limitations"
+    },
+    "placeholders": {
+      "sleepExample": "e.g.: 7",
+      "injuries": "e.g.: lower back pain..."
+    }
   }
 }

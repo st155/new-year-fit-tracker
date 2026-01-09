@@ -3,6 +3,7 @@
  * Supports i18n via options parameter
  */
 
+import i18n from '@/i18n';
 import type { SmartInsight, InsightGeneratorContext } from './types';
 
 /**
@@ -39,48 +40,49 @@ export interface InsightTextOptions {
   };
 }
 
-// Default Russian texts for backward compatibility
-const defaultOptions: InsightTextOptions = {
+// Create default options using i18n
+const createDefaultOptions = (): InsightTextOptions => ({
   quality: {
-    poor: (count) => `${count} ${count === 1 ? 'метрика требует' : 'метрик требуют'} внимания`,
-    fair: (count) => `${count} ${count === 1 ? 'метрика' : 'метрик'} с низким качеством`,
+    poor: (count) => i18n.t('insights:quality.poor', { count }),
+    fair: (count) => i18n.t('insights:quality.fair', { count }),
   },
   trends: {
-    weeklyChange: (metric, change, isPositive) => `${metric}: ${isPositive ? '+' : ''}${change}% за неделю`,
+    weeklyChange: (metric, change, isPositive) => i18n.t('insights:trends.weeklyChange', { metric, change: isPositive ? `+${change}` : change }),
   },
   goals: {
-    defaultTitle: 'Цель',
-    stale: (title, days) => `Цель "${title}" не обновлялась ${days} ${days === 1 ? 'день' : 'дней'}`,
-    nearCompletion: (title, progress) => `Цель "${title}" на ${progress}%!`,
-    completed: (title) => `Цель "${title}" достигнута!`,
+    defaultTitle: i18n.t('insights:goals.defaultTitle'),
+    stale: (title, days) => i18n.t('insights:goals.stale', { title, days }),
+    nearCompletion: (title, progress) => i18n.t('insights:goals.nearCompletion', { title, progress }),
+    completed: (title) => i18n.t('insights:goals.completed', { title }),
   },
   habits: {
-    streak: (days, title) => `Стрейк: ${days} ${days === 1 ? 'день' : 'дней'} - ${title}`,
-    allComplete: (done, total) => `Все привычки выполнены (${done}/${total})`,
-    progress: (done, total) => `Привычки: ${done}/${total} выполнено`,
+    streak: (days, title) => i18n.t('insights:habits.streak', { days, title }),
+    allComplete: (done, total) => i18n.t('insights:habits.allComplete', { done, total }),
+    progress: (done, total) => i18n.t('insights:habits.progress', { done, total }),
   },
   achievements: {
-    stepsRecord: (steps) => `Новый рекорд! ${steps} шагов`,
-    highRecovery: (recovery) => `Отличное восстановление: ${recovery}%`,
+    stepsRecord: (steps) => i18n.t('insights:achievements.stepsRecord', { steps }),
+    highRecovery: (recovery) => i18n.t('insights:achievements.highRecovery', { recovery }),
   },
   info: {
-    syncedToday: (count) => `Сегодня синхронизировано ${count} ${count === 1 ? 'метрика' : 'метрик'}`,
+    syncedToday: (count) => i18n.t('insights:info.syncedToday', { count }),
   },
   recommendations: {
-    addMetric: (name) => `Добавьте метрику "${name}" для полной картины`,
+    addMetric: (name) => i18n.t('insights:recommendations.addMetric', { name }),
   },
-};
+});
 
 /**
  * Generate quality-related insights
  */
 export function generateQualityInsights(
   context: InsightGeneratorContext,
-  options: InsightTextOptions = defaultOptions
+  options?: InsightTextOptions
 ): SmartInsight[] {
   const insights: SmartInsight[] = [];
   const { qualityData } = context;
-  const texts = { ...defaultOptions.quality, ...options.quality };
+  const defaultOpts = createDefaultOptions();
+  const texts = { ...defaultOpts.quality, ...options?.quality };
 
   if (!qualityData) return insights;
 
@@ -122,11 +124,12 @@ export function generateQualityInsights(
  */
 export function generateTrendInsights(
   context: InsightGeneratorContext,
-  options: InsightTextOptions = defaultOptions
+  options?: InsightTextOptions
 ): SmartInsight[] {
   const insights: SmartInsight[] = [];
   const { metricsData } = context;
-  const texts = { ...defaultOptions.trends, ...options.trends };
+  const defaultOpts = createDefaultOptions();
+  const texts = { ...defaultOpts.trends, ...options?.trends };
 
   if (!metricsData?.history) return insights;
 
@@ -165,11 +168,12 @@ export function generateTrendInsights(
  */
 export function generateGoalInsights(
   context: InsightGeneratorContext,
-  options: InsightTextOptions = defaultOptions
+  options?: InsightTextOptions
 ): SmartInsight[] {
   const insights: SmartInsight[] = [];
   const { goalsData } = context;
-  const texts = { ...defaultOptions.goals, ...options.goals };
+  const defaultOpts = createDefaultOptions();
+  const texts = { ...defaultOpts.goals, ...options?.goals };
 
   if (!goalsData) return insights;
 
@@ -246,11 +250,12 @@ export function generateGoalInsights(
  */
 export function generateHabitInsights(
   context: InsightGeneratorContext,
-  options: InsightTextOptions = defaultOptions
+  options?: InsightTextOptions
 ): SmartInsight[] {
   const insights: SmartInsight[] = [];
   const { habitsData } = context;
-  const texts = { ...defaultOptions.habits, ...options.habits };
+  const defaultOpts = createDefaultOptions();
+  const texts = { ...defaultOpts.habits, ...options?.habits };
 
   if (!habitsData || habitsData.length === 0) return insights;
 
@@ -316,11 +321,12 @@ export function generateHabitInsights(
  */
 export function generateAchievementInsights(
   context: InsightGeneratorContext,
-  options: InsightTextOptions = defaultOptions
+  options?: InsightTextOptions
 ): SmartInsight[] {
   const insights: SmartInsight[] = [];
   const { todayMetrics, metricsData } = context;
-  const texts = { ...defaultOptions.achievements, ...options.achievements };
+  const defaultOpts = createDefaultOptions();
+  const texts = { ...defaultOpts.achievements, ...options?.achievements };
 
   if (!todayMetrics) return insights;
 
@@ -360,11 +366,12 @@ export function generateAchievementInsights(
  */
 export function generateInfoInsights(
   context: InsightGeneratorContext,
-  options: InsightTextOptions = defaultOptions
+  options?: InsightTextOptions
 ): SmartInsight[] {
   const insights: SmartInsight[] = [];
   const { metricsData } = context;
-  const texts = { ...defaultOptions.info, ...options.info };
+  const defaultOpts = createDefaultOptions();
+  const texts = { ...defaultOpts.info, ...options?.info };
 
   if (!metricsData?.latest) return insights;
 
@@ -395,11 +402,12 @@ export function generateInfoInsights(
  */
 export function generateRecommendationInsights(
   context: InsightGeneratorContext,
-  options: InsightTextOptions = defaultOptions
+  options?: InsightTextOptions
 ): SmartInsight[] {
   const insights: SmartInsight[] = [];
   const { metricsData } = context;
-  const texts = { ...defaultOptions.recommendations, ...options.recommendations };
+  const defaultOpts = createDefaultOptions();
+  const texts = { ...defaultOpts.recommendations, ...options?.recommendations };
 
   if (!metricsData?.latest) return insights;
 
