@@ -363,5 +363,19 @@
   "completion": {
     "saving": "Сохранение...",
     "toMain": "К ГЛАВНОМУ ЭКРАНУ"
+  },
+  "trainingPlan": {
+    "activated": "План успешно активирован!",
+    "activateFailed": "Не удалось активировать план",
+    "activateError": "Ошибка при активации плана",
+    "deactivated": "План деактивирован",
+    "deactivateFailed": "Не удалось деактивировать план",
+    "active": "АКТИВНЫЙ",
+    "inactive": "НЕАКТИВНЫЙ",
+    "weeks": "недель",
+    "createdByAI": "Создан AI ассистентом",
+    "activate": "Активировать",
+    "view": "Просмотр",
+    "deactivate": "Деактивировать план"
   }
 }

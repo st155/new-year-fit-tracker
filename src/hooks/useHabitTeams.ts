@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import i18n from '@/i18n';
 
 export interface HabitTeam {
   id: string;
@@ -124,11 +125,11 @@ export function useCreateTeam() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['habit-teams'] });
-      toast.success('Команда создана');
+      toast.success(i18n.t('habitTeams:toast.teamCreated'));
     },
     onError: (error) => {
       console.error('Error creating team:', error);
-      toast.error('Не удалось создать команду');
+      toast.error(i18n.t('habitTeams:toast.createFailed'));
     },
   });
 }
@@ -154,11 +155,11 @@ export function useJoinTeam() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['habit-teams'] });
       queryClient.invalidateQueries({ queryKey: ['team-members'] });
-      toast.success('Вы присоединились к команде');
+      toast.success(i18n.t('habitTeams:toast.joinedTeam'));
     },
     onError: (error) => {
       console.error('Error joining team:', error);
-      toast.error('Не удалось присоединиться к команде');
+      toast.error(i18n.t('habitTeams:toast.joinFailed'));
     },
   });
 }
@@ -182,11 +183,11 @@ export function useLeaveTeam() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['habit-teams'] });
       queryClient.invalidateQueries({ queryKey: ['team-members'] });
-      toast.success('Вы покинули команду');
+      toast.success(i18n.t('habitTeams:toast.leftTeam'));
     },
     onError: (error) => {
       console.error('Error leaving team:', error);
-      toast.error('Не удалось покинуть команду');
+      toast.error(i18n.t('habitTeams:toast.leaveFailed'));
     },
   });
 }

@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { terraApi } from '@/lib/api/client';
 import { toast } from 'sonner';
+import i18n from '@/i18n';
 
 interface BackfillParams {
   daysBack?: number;
@@ -17,8 +18,8 @@ export function useWithingsBackfill() {
       return data;
     },
     onSuccess: (data, { daysBack = 30 }) => {
-      toast.success('Данные Withings загружены', {
-        description: `Загружено ${data?.metricsInserted || 0} метрик за последние ${daysBack} дней`,
+      toast.success(i18n.t('integrations:withings.dataLoaded'), {
+        description: i18n.t('integrations:withings.metricsLoaded', { count: data?.metricsInserted || 0, days: daysBack }),
       });
       
       // Invalidate all relevant queries
@@ -44,7 +45,7 @@ export function useWithingsBackfill() {
       }, 1000);
     },
     onError: (error: Error) => {
-      toast.error('Ошибка загрузки данных', {
+      toast.error(i18n.t('integrations:withings.loadError'), {
         description: error.message,
       });
     },

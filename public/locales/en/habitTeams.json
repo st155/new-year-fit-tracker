@@ -27,6 +27,26 @@
   },
   "toast": {
     "joinSuccess": "You successfully joined the team!",
-    "joinError": "Failed to join team"
+    "joinError": "Failed to join team",
+    "teamCreated": "Team created",
+    "createFailed": "Failed to create team",
+    "joinedTeam": "You joined the team",
+    "joinFailed": "Failed to join team",
+    "leftTeam": "You left the team",
+    "leaveFailed": "Failed to leave team"
+  },
+  "achievements": {
+    "first5": {
+      "title": "First 5 Members",
+      "description": "Team has 5 active members"
+    },
+    "dreamTeam": {
+      "title": "Dream Team",
+      "description": "Team has 10 active members"
+    },
+    "allTogether": {
+      "title": "All Together!",
+      "description": "All team members completed habits today"
+    }
   }
 }

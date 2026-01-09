@@ -332,7 +332,11 @@
     "habitArchived": "Habit archived",
     "failedArchiveHabit": "Failed to archive habit",
     "authRequired": "Authentication required",
-    "failedAddMember": "Failed to add member"
+    "failedAddMember": "Failed to add member",
+    "undone": "Undone",
+    "undoneDesc": "Habit completion undone",
+    "undoFailed": "Error",
+    "undoFailedDesc": "Failed to undo completion"
   },
   "notifications": {
     "friendCompletion": "🎉 Friend completed a habit!",

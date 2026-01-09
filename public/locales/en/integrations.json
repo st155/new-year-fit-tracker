@@ -411,5 +411,10 @@
     "syncWithErrors": "Sync completed with errors",
     "syncStats": "Success: {{success}}, Errors: {{fail}}",
     "syncError": "Sync error"
+  },
+  "withings": {
+    "dataLoaded": "Withings data loaded",
+    "metricsLoaded": "Loaded {{count}} metrics for last {{days}} days",
+    "loadError": "Data loading error"
   }
 }
