@@ -1,5 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
+import { useTranslation } from "react-i18next";
 import { Activity, Heart, Zap, TrendingUp, Footprints, Target, Moon, HeartPulse, Flame, Award } from "lucide-react";
 import type { PointsBreakdown } from "@/features/challenges/types";
 
@@ -16,6 +17,8 @@ export function PointsBreakdownDialog({
   breakdown,
   totalPoints,
 }: PointsBreakdownDialogProps) {
+  const { t } = useTranslation('challenges');
+  
   // Safe access with defaults
   const activity = breakdown?.activity || { calories: 0, steps: 0, strain: 0, workouts: 0, total: 0 };
   const recovery = breakdown?.recovery || { hrv: 0, recovery_quality: 0, resting_hr: 0, sleep_duration: 0, sleep_efficiency: 0, total: 0 };
@@ -28,7 +31,7 @@ export function PointsBreakdownDialog({
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold flex items-center gap-2">
             <Zap className="h-6 w-6 text-primary" />
-            Детали баллов
+            {t('pointsBreakdown.title')}
           </DialogTitle>
         </DialogHeader>
 
@@ -39,7 +42,7 @@ export function PointsBreakdownDialog({
               <div className="text-5xl font-bold text-primary mb-2">
                 {totalPoints}
               </div>
-              <div className="text-sm text-muted-foreground">Всего баллов / 1000</div>
+              <div className="text-sm text-muted-foreground">{t('pointsBreakdown.totalPoints')}</div>
               <Progress value={(totalPoints / 1000) * 100} className="mt-4 h-3" />
             </div>
           </div>
@@ -49,7 +52,7 @@ export function PointsBreakdownDialog({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Activity className="h-5 w-5 text-orange-500" />
-                <h3 className="text-lg font-semibold">Активность</h3>
+                <h3 className="text-lg font-semibold">{t('pointsBreakdown.sections.activity')}</h3>
               </div>
               <span className="text-xl font-bold text-orange-500">
                 {activity.total} / 300
@@ -60,7 +63,7 @@ export function PointsBreakdownDialog({
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <TrendingUp className="h-4 w-4" />
-                  <span>Нагрузка (strain)</span>
+                  <span>{t('pointsBreakdown.metrics.strain')}</span>
                 </div>
                 <span className="font-medium">{activity.strain} / 100</span>
               </div>
@@ -68,7 +71,7 @@ export function PointsBreakdownDialog({
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <Footprints className="h-4 w-4" />
-                  <span>Шаги</span>
+                  <span>{t('pointsBreakdown.metrics.steps')}</span>
                 </div>
                 <span className="font-medium">{activity.steps} / 75</span>
               </div>
@@ -76,7 +79,7 @@ export function PointsBreakdownDialog({
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <Flame className="h-4 w-4" />
-                  <span>Калории</span>
+                  <span>{t('pointsBreakdown.metrics.calories')}</span>
                 </div>
                 <span className="font-medium">{activity.calories} / 75</span>
               </div>
@@ -84,7 +87,7 @@ export function PointsBreakdownDialog({
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <Activity className="h-4 w-4" />
-                  <span>Тренировки</span>
+                  <span>{t('pointsBreakdown.metrics.workouts')}</span>
                 </div>
                 <span className="font-medium">{activity.workouts} / 50</span>
               </div>
@@ -96,7 +99,7 @@ export function PointsBreakdownDialog({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Heart className="h-5 w-5 text-green-500" />
-                <h3 className="text-lg font-semibold">Восстановление</h3>
+                <h3 className="text-lg font-semibold">{t('pointsBreakdown.sections.recovery')}</h3>
               </div>
               <span className="text-xl font-bold text-green-500">
                 {recovery.total} / 300
@@ -107,7 +110,7 @@ export function PointsBreakdownDialog({
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <Heart className="h-4 w-4" />
-                  <span>Качество восстановления</span>
+                  <span>{t('pointsBreakdown.metrics.recoveryQuality')}</span>
                 </div>
                 <span className="font-medium">{recovery.recovery_quality} / 100</span>
               </div>
@@ -115,7 +118,7 @@ export function PointsBreakdownDialog({
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <Moon className="h-4 w-4" />
-                  <span>Продолжительность сна</span>
+                  <span>{t('pointsBreakdown.metrics.sleepDuration')}</span>
                 </div>
                 <span className="font-medium">{recovery.sleep_duration} / 75</span>
               </div>
@@ -123,7 +126,7 @@ export function PointsBreakdownDialog({
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <Target className="h-4 w-4" />
-                  <span>Эффективность сна</span>
+                  <span>{t('pointsBreakdown.metrics.sleepEfficiency')}</span>
                 </div>
                 <span className="font-medium">{recovery.sleep_efficiency} / 50</span>
               </div>
@@ -131,7 +134,7 @@ export function PointsBreakdownDialog({
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <HeartPulse className="h-4 w-4" />
-                  <span>ВСР (HRV)</span>
+                  <span>{t('pointsBreakdown.metrics.hrv')}</span>
                 </div>
                 <span className="font-medium">{recovery.hrv} / 50</span>
               </div>
@@ -139,7 +142,7 @@ export function PointsBreakdownDialog({
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <HeartPulse className="h-4 w-4" />
-                  <span>ЧСС покоя</span>
+                  <span>{t('pointsBreakdown.metrics.restingHr')}</span>
                 </div>
                 <span className="font-medium">{recovery.resting_hr} / 25</span>
               </div>
@@ -151,7 +154,7 @@ export function PointsBreakdownDialog({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-blue-500" />
-                <h3 className="text-lg font-semibold">Прогресс</h3>
+                <h3 className="text-lg font-semibold">{t('pointsBreakdown.sections.progress')}</h3>
               </div>
               <span className="text-xl font-bold text-blue-500">
                 {progress.total} / 200
@@ -162,7 +165,7 @@ export function PointsBreakdownDialog({
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <Activity className="h-4 w-4" />
-                  <span>Активные дни</span>
+                  <span>{t('pointsBreakdown.metrics.activeDays')}</span>
                 </div>
                 <span className="font-medium">{progress.active_days} / 75</span>
               </div>
@@ -170,7 +173,7 @@ export function PointsBreakdownDialog({
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <Target className="h-4 w-4" />
-                  <span>Постоянство</span>
+                  <span>{t('pointsBreakdown.metrics.consistency')}</span>
                 </div>
                 <span className="font-medium">{progress.consistency} / 50</span>
               </div>
@@ -178,7 +181,7 @@ export function PointsBreakdownDialog({
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <Flame className="h-4 w-4" />
-                  <span>Серия дней</span>
+                  <span>{t('pointsBreakdown.metrics.streak')}</span>
                 </div>
                 <span className="font-medium">{progress.streak} / 50</span>
               </div>
@@ -186,7 +189,7 @@ export function PointsBreakdownDialog({
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <Award className="h-4 w-4" />
-                  <span>Цели</span>
+                  <span>{t('pointsBreakdown.metrics.goals')}</span>
                 </div>
                 <span className="font-medium">{progress.goals} / 25</span>
               </div>
@@ -198,7 +201,7 @@ export function PointsBreakdownDialog({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Zap className="h-5 w-5 text-purple-500" />
-                <h3 className="text-lg font-semibold">Баланс</h3>
+                <h3 className="text-lg font-semibold">{t('pointsBreakdown.sections.balance')}</h3>
               </div>
               <span className="text-xl font-bold text-purple-500">
                 {balance.total} / 200
@@ -209,7 +212,7 @@ export function PointsBreakdownDialog({
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <Zap className="h-4 w-4" />
-                  <span>Гармония нагрузки-восстановления</span>
+                  <span>{t('pointsBreakdown.metrics.harmony')}</span>
                 </div>
                 <span className="font-medium">{balance.harmony} / 50</span>
               </div>
@@ -217,7 +220,7 @@ export function PointsBreakdownDialog({
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <Activity className="h-4 w-4" />
-                  <span>Синергия</span>
+                  <span>{t('pointsBreakdown.metrics.synergy')}</span>
                 </div>
                 <span className="font-medium">{balance.synergy} / 50</span>
               </div>
@@ -225,7 +228,7 @@ export function PointsBreakdownDialog({
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <TrendingUp className="h-4 w-4" />
-                  <span>Производительность</span>
+                  <span>{t('pointsBreakdown.metrics.performance')}</span>
                 </div>
                 <span className="font-medium">{balance.performance} / 50</span>
               </div>
@@ -233,7 +236,7 @@ export function PointsBreakdownDialog({
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <Heart className="h-4 w-4" />
-                  <span>Восстановление</span>
+                  <span>{t('pointsBreakdown.metrics.recoveryBalance')}</span>
                 </div>
                 <span className="font-medium">{balance.recovery} / 50</span>
               </div>
@@ -242,19 +245,19 @@ export function PointsBreakdownDialog({
 
           {/* Tips */}
           <div className="p-4 bg-muted rounded-lg">
-            <h4 className="font-semibold mb-2 text-sm">💡 Советы по улучшению</h4>
+            <h4 className="font-semibold mb-2 text-sm">{t('pointsBreakdown.tips.title')}</h4>
             <ul className="text-xs space-y-1 text-muted-foreground">
               {activity.total < 200 && (
-                <li>• Увеличьте объём активности для получения большего количества баллов</li>
+                <li>• {t('pointsBreakdown.tips.activity')}</li>
               )}
               {recovery.total < 200 && (
-                <li>• Уделите внимание качеству сна и восстановлению</li>
+                <li>• {t('pointsBreakdown.tips.recovery')}</li>
               )}
               {balance.harmony < 40 && (
-                <li>• Сбалансируйте интенсивность тренировок с достаточным восстановлением</li>
+                <li>• {t('pointsBreakdown.tips.balance')}</li>
               )}
               {progress.streak < 30 && (
-                <li>• Поддерживайте ежедневную активность для увеличения серии дней</li>
+                <li>• {t('pointsBreakdown.tips.streak')}</li>
               )}
             </ul>
           </div>

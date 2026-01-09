@@ -410,5 +410,9 @@
     "updatedDesc": "Data successfully refreshed",
     "error": "Error",
     "errorDesc": "Failed to refresh data"
+  },
+  "dev": {
+    "analyzingLocalizations": "Analyzing localizations...",
+    "analysisError": "Analysis error"
   }
 }

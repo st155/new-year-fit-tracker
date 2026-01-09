@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { PageLoader } from '@/components/ui/page-loader';
 import { FORCE_CLIENT_ROLE } from '@/lib/safe-flags';
 import {
@@ -15,6 +16,8 @@ import {
 const IS_DEV_ENVIRONMENT = import.meta.env.DEV || FORCE_CLIENT_ROLE;
 
 export default function I18nAnalyzer() {
+  const { t } = useTranslation('common');
+  
   // Only accessible in DEV mode or preview
   if (!IS_DEV_ENVIRONMENT) {
     return <Navigate to="/" replace />;
@@ -28,14 +31,14 @@ export default function I18nAnalyzer() {
   });
 
   if (loading) {
-    return <PageLoader message="Анализ локализаций..." />;
+    return <PageLoader message={t('dev.analyzingLocalizations')} />;
   }
 
   if (error) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center text-destructive">
-          <p className="text-lg font-medium">Ошибка анализа</p>
+          <p className="text-lg font-medium">{t('dev.analysisError')}</p>
           <p className="text-sm text-muted-foreground">{error}</p>
         </div>
       </div>

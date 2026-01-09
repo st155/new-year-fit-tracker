@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Lock, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 import {
   getRarityColor,
   getRarityBorderColor,
@@ -25,6 +26,7 @@ export function AchievementBadge({
   progress = 0,
   onClick,
 }: AchievementBadgeProps) {
+  const { t, i18n } = useTranslation('habits');
   const progressPercent = Math.min(100, (progress / (achievement.requirement.value || 1)) * 100);
   
   return (
@@ -77,7 +79,7 @@ export function AchievementBadge({
           <div className="space-y-1">
             <Progress value={progressPercent} className="h-2" />
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>Прогресс</span>
+              <span>{t('achievements.progress')}</span>
               <span>{Math.round(progressPercent)}%</span>
             </div>
           </div>
@@ -88,7 +90,7 @@ export function AchievementBadge({
           <div className="flex items-center justify-between pt-2 border-t border-border">
             <div className="flex items-center gap-2 text-sm text-primary">
               <Check className="h-4 w-4" />
-              <span className="font-medium">Разблокировано</span>
+              <span className="font-medium">{t('achievements.unlocked')}</span>
             </div>
             <div className="text-xs font-medium text-amber-600 dark:text-amber-400">
               +{achievement.xp_reward} XP
@@ -99,7 +101,7 @@ export function AchievementBadge({
         {/* Unlock date */}
         {unlocked && unlockedAt && (
           <div className="text-xs text-muted-foreground text-center">
-            {new Date(unlockedAt).toLocaleDateString('ru-RU', {
+            {new Date(unlockedAt).toLocaleDateString(i18n.language === 'ru' ? 'ru-RU' : 'en-US', {
               day: 'numeric',
               month: 'short',
               year: 'numeric'
