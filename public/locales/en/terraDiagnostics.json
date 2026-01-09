@@ -1,0 +1,55 @@
+{
+  "title": "Terra API Diagnostics",
+  "checkButton": "Check data in Terra API",
+  "compareDescription": "Compares Terra API data with your database",
+  "cancelRequest": "Cancel request",
+  "requestCancelled": "Request cancelled",
+  "cancelledByUser": "Diagnostics interrupted by user",
+  "stages": {
+    "requesting": "🔍 Requesting data from Terra API...",
+    "processing": "📊 Processing data...",
+    "waiting": "⏳ Waiting for Terra API response...",
+    "finishing": "✅ Finishing..."
+  },
+  "timeout": {
+    "error": "Terra API temporarily unavailable (timeout). Data updates automatically via webhook.",
+    "title": "Terra API unavailable",
+    "description": "Data updates automatically via webhook"
+  },
+  "completed": {
+    "title": "Diagnostics completed",
+    "description": "Checked data from {{start}} - {{end}}"
+  },
+  "error": {
+    "title": "Diagnostics error",
+    "description": "Failed to get data"
+  },
+  "copied": {
+    "title": "Copied",
+    "description": "Diagnostics copied to clipboard"
+  },
+  "elapsed": "Time elapsed",
+  "results": "Diagnostics results",
+  "copy": "Copy",
+  "availableInTerra": "Available in Terra API",
+  "recentData": "Recent data",
+  "savedInDb": "Saved in database",
+  "datesWithData": "Dates with data",
+  "notSynced": "Not synchronized",
+  "dailyForDates": "Daily for dates",
+  "sleepForDates": "Sleep for dates",
+  "records": "records",
+  "howDataWorks": "How device data works:",
+  "dataExplanations": {
+    "daily": "Daily metrics (Recovery, Strain): Sent the next day after closing the day in the app (usually 6:00-10:00)",
+    "sleep": "Sleep data: Sent after sleep ends and syncs with the app (30-90 min after waking)",
+    "activity": "Activity data: Sent immediately after workout ends and syncs (5-30 minutes)"
+  },
+  "requestSync": "🔄 Request synchronization",
+  "webhookHistory": "Webhook event history",
+  "refresh": "🔄 Refresh diagnostics",
+  "terraApiSlowWarning": "Terra API responding slowly. This is normal for first request. Data updates automatically via webhook.",
+  "terraApiTempUnavailable": "Terra API temporarily unavailable",
+  "webhookDataUpdateNote": "Data updates automatically via webhook within an hour after device sync.",
+  "lastWebhook": "Last webhook"
+}

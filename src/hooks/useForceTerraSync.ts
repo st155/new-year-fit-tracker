@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { terraApi } from '@/lib/api';
+import i18n from '@/i18n';
 
 interface ForceSyncParams {
   provider: string;
@@ -17,9 +18,13 @@ export function useForceTerraSync() {
       return data;
     },
     onSuccess: (_, { provider, dataType = 'body' }) => {
-      const dataTypeLabel = dataType === 'daily' ? 'дневных метрик' : dataType === 'activity' ? 'тренировок' : 'данных тела';
-      toast.success(`Синхронизация ${provider} (${dataTypeLabel}) запущена`, {
-        description: dataType === 'activity' ? 'Тренировки за последние 14 дней обновятся в течение минуты' : 'Данные обновятся в течение нескольких минут',
+      const dataTypeLabel = i18n.t(`integrations:forceSync.dataTypes.${dataType}`);
+      const description = dataType === 'activity' 
+        ? i18n.t('integrations:forceSync.activityDescription')
+        : i18n.t('integrations:forceSync.defaultDescription');
+      
+      toast.success(i18n.t('integrations:forceSync.started', { provider, dataType: dataTypeLabel }), {
+        description,
       });
       
       // Invalidate ALL relevant queries
@@ -50,7 +55,7 @@ export function useForceTerraSync() {
       }, 2000); // 2 секунды для обработки вебхука
     },
     onError: (error: Error) => {
-      toast.error('Ошибка синхронизации', {
+      toast.error(i18n.t('integrations:forceSync.error'), {
         description: error.message,
       });
     },

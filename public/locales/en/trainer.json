@@ -137,6 +137,13 @@
     "preparingPlan": "⚡ Preparing plan",
     "preparingPlanDesc": "AI is preparing a structured action plan..."
   },
+  "aiChat": {
+    "executing": "Executing...",
+    "executingDesc": "Plan is being executed, please wait",
+    "planReady": "Plan ready for execution",
+    "loadingClients": "Loading clients...",
+    "mentionPlaceholder": "Type @name to mention a client or ask a question..."
+  },
   "trainingPlans": {
     "title": "Training Plans",
     "createPlan": "Create Training Plan",

@@ -377,5 +377,30 @@
     "activate": "Активировать",
     "view": "Просмотр",
     "deactivate": "Деактивировать план"
+  },
+  "history": {
+    "workoutRepeated": "Тренировка повторена",
+    "startWorkout": "Начните тренировку \"{{name}}\"",
+    "lastWorkout": "Последняя тренировка",
+    "intensive": "Интенсивная",
+    "whoopManual": "WHOOP + Вручную",
+    "time": "Время",
+    "min": "мин",
+    "calories": "Калории",
+    "kcal": "ккал",
+    "volume": "Объем",
+    "kg": "кг",
+    "strain": "Strain",
+    "distance": "Дистанция",
+    "km": "км",
+    "exercises": "упражнений",
+    "sets": "подходов"
+  },
+  "aiOnboarding": {
+    "planCreated": "✅ Готово! Твой план \"{{name}}\" создан. Переходим к тренировкам!",
+    "errorMessage": "❌ Ошибка: {{message}}. Попробуй еще раз позже.",
+    "planCreatedToast": "План создан!",
+    "planCreatedDesc": "Твой персональный план тренировок готов",
+    "error": "Ошибка"
   }
 }

@@ -416,5 +416,52 @@
     "dataLoaded": "Withings data loaded",
     "metricsLoaded": "Loaded {{count}} metrics for last {{days}} days",
     "loadError": "Data loading error"
+  },
+  "forceSync": {
+    "dataTypes": {
+      "daily": "daily metrics",
+      "activity": "workouts",
+      "body": "body data"
+    },
+    "started": "{{provider}} ({{dataType}}) sync started",
+    "activityDescription": "Workouts for the last 14 days will update within a minute",
+    "defaultDescription": "Data will update in a few minutes",
+    "error": "Sync error"
+  },
+  "withingsDebug": {
+    "title": "Withings Debug Panel",
+    "description": "Withings data sync debugging",
+    "notConnected": "Withings not connected",
+    "notConnectedDesc": "Connect Withings device in Integrations section",
+    "connected": "Withings connected",
+    "connectionStatus": "Connection Status",
+    "connectedLabel": "Connected",
+    "notConnectedLabel": "Not connected",
+    "actions": "Actions",
+    "syncWithings": "Sync Withings",
+    "syncAllDevices": "Sync All Devices",
+    "loadData30": "Load data (30 days)",
+    "loadData90": "Load data (90 days)",
+    "refreshData": "Refresh data",
+    "dataRefreshed": "Data refreshed",
+    "syncStarted": "Withings sync started",
+    "syncAllStarted": "All devices sync started",
+    "syncWaitDesc": "Wait 30-60 seconds and refresh data",
+    "metricsCount": "Metrics in unified_metrics",
+    "noData": "No data",
+    "measurementDate": "Measurement date",
+    "created": "Created",
+    "webhooks": "Recent webhooks",
+    "noWebhooks": "No webhooks",
+    "lastSync": "Last sync",
+    "howToUse": "How to use:",
+    "instructions": {
+      "step1": "\"Check Connection Status\" - checks Withings connection status",
+      "step2": "\"Sync Withings\" - requests last 7 days of data via Terra API",
+      "step3": "\"Load data\" - loads historical data for specified period directly",
+      "step4": "\"Sync All Devices\" - syncs all connected devices",
+      "step5": "After sync wait 30-60 seconds for data processing",
+      "step6": "If no data - try Load data or reconnect Withings"
+    }
   }
 }
