@@ -33,5 +33,9 @@
     "created": "Schedule created!",
     "createdDesc": "{{count}} activities for {{weeks}} weeks",
     "createError": "Error creating plan"
+  },
+  "errors": {
+    "loginRequired": "Please log in to react",
+    "reactionFailed": "Failed to update reaction"
   }
 }

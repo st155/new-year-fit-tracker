@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -23,6 +24,7 @@ export function useActivityReactions(activityId: string, userId?: string) {
   const [userReactions, setUserReactions] = useState<Set<ReactionType>>(new Set());
   const [loading, setLoading] = useState(true);
   const queryClient = useQueryClient();
+  const { t } = useTranslation('activity');
 
   const fetchReactions = async () => {
     try {
@@ -83,7 +85,7 @@ export function useActivityReactions(activityId: string, userId?: string) {
 
   const toggleReaction = async (reactionType: ReactionType) => {
     if (!userId) {
-      toast.error("Please log in to react");
+      toast.error(t('errors.loginRequired'));
       return;
     }
 
@@ -134,7 +136,7 @@ export function useActivityReactions(activityId: string, userId?: string) {
       }
     } catch (error: any) {
       console.error('Error toggling reaction:', error);
-      toast.error("Failed to update reaction");
+      toast.error(t('errors.reactionFailed'));
       // Revert optimistic update
       fetchReactions();
     }

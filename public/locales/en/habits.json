@@ -333,5 +333,14 @@
     "failedArchiveHabit": "Failed to archive habit",
     "authRequired": "Authentication required",
     "failedAddMember": "Failed to add member"
+  },
+  "notifications": {
+    "friendCompletion": "🎉 Friend completed a habit!",
+    "newReaction": "❤️ New reaction!",
+    "teamInvite": "👥 Team invitation!",
+    "view": "View",
+    "newAchievement": "🏆 New achievement!",
+    "milestone": "⭐ Important milestone!",
+    "newStreak": "🔥 New streak!"
   }
 }

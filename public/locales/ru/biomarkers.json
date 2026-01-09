@@ -53,5 +53,13 @@
   "common": {
     "cancel": "Отмена",
     "saving": "Сохранение..."
+  },
+  "toast": {
+    "documentProcessed": "Документ обработан",
+    "biomarkersExtracted": "Извлечено {{count}} биомаркеров",
+    "processingError": "Ошибка обработки",
+    "rematchComplete": "Пересопоставление завершено",
+    "rematchedCount": "Сопоставлено {{matched}} из {{total}} биомаркеров",
+    "rematchError": "Ошибка пересопоставления"
   }
 }

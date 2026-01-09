@@ -1,7 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { subDays, format } from 'date-fns';
+import i18n from '@/i18n';
 import type { UnifiedRecommendation } from './useAllRecommendations';
+
+// Helper to ensure string return from i18n.t
+const t = (key: string, params?: Record<string, any>): string => 
+  String(i18n.t(`recommendations:metrics.${key}`, params));
 
 interface MetricData {
   date: string;
@@ -75,8 +80,8 @@ function generateRecommendationsFromMetrics(metrics: {
       id: 'recovery-low-today',
       category: 'exercise',
       source: 'device',
-      title: 'Низкое восстановление сегодня',
-      description: `Recovery ${Math.round(latestRecovery.value)}% — рекомендуем лёгкую активность или отдых вместо интенсивной тренировки.`,
+      title: t('recoveryLowToday.title'),
+      description: t('recoveryLowToday.description', { value: Math.round(latestRecovery.value) }),
       priority: 'high',
       status: 'pending',
       actionable: false,
@@ -91,8 +96,8 @@ function generateRecommendationsFromMetrics(metrics: {
       id: 'recovery-low-week',
       category: 'sleep',
       source: 'device',
-      title: 'Восстановление ниже нормы',
-      description: `Среднее recovery за неделю ${Math.round(avgRecovery)}%. Уделите внимание качеству сна и управлению стрессом.`,
+      title: t('recoveryLowWeek.title'),
+      description: t('recoveryLowWeek.description', { value: Math.round(avgRecovery) }),
       priority: 'medium',
       status: 'pending',
       actionable: false,
@@ -108,8 +113,8 @@ function generateRecommendationsFromMetrics(metrics: {
       id: 'recovery-declining',
       category: 'lifestyle',
       source: 'ai',
-      title: 'Recovery снижается',
-      description: 'Тренд recovery направлен вниз 3+ дня. Возможна перетренированность или накопленный стресс.',
+      title: t('recoveryDeclining.title'),
+      description: t('recoveryDeclining.description'),
       priority: 'high',
       status: 'pending',
       actionable: false,
@@ -132,8 +137,8 @@ function generateRecommendationsFromMetrics(metrics: {
         id: 'hrv-declining',
         category: 'lifestyle',
         source: 'device',
-        title: 'HRV снижается',
-        description: `HRV упало на ${Math.round(drop)} ms за последние дни. Это может указывать на стресс, недосып или начало болезни.`,
+        title: t('hrvDeclining.title'),
+        description: t('hrvDeclining.description', { drop: Math.round(drop) }),
         priority: 'high',
         status: 'pending',
         actionable: false,
@@ -155,8 +160,8 @@ function generateRecommendationsFromMetrics(metrics: {
       id: 'sleep-duration-low',
       category: 'sleep',
       source: 'device',
-      title: 'Недостаточно сна',
-      description: `Среднее время сна ${avgSleepDuration.toFixed(1)} ч за неделю. Цель — 7-8 часов для оптимального восстановления.`,
+      title: t('sleepDurationLow.title'),
+      description: t('sleepDurationLow.description', { hours: avgSleepDuration.toFixed(1) }),
       priority: avgSleepDuration < 6 ? 'high' : 'medium',
       status: 'pending',
       actionable: false,
@@ -177,8 +182,8 @@ function generateRecommendationsFromMetrics(metrics: {
       id: 'sleep-efficiency-low',
       category: 'sleep',
       source: 'ai',
-      title: 'Качество сна можно улучшить',
-      description: `Эффективность сна ${Math.round(avgEfficiency)}%. Попробуйте: затемнение, прохладу 18-19°C, отказ от экранов за час до сна.`,
+      title: t('sleepEfficiencyLow.title'),
+      description: t('sleepEfficiencyLow.description', { value: Math.round(avgEfficiency) }),
       priority: avgEfficiency < 75 ? 'high' : 'medium',
       status: 'pending',
       actionable: false,
@@ -201,8 +206,11 @@ function generateRecommendationsFromMetrics(metrics: {
         id: 'strain-recovery-mismatch',
         category: 'exercise',
         source: 'ai',
-        title: 'Высокая нагрузка при низком recovery',
-        description: `Strain ${latestStrain.value.toFixed(1)} при recovery ${Math.round(latestRecovery.value)}%. Риск перетренированности — снизьте интенсивность.`,
+        title: t('strainRecoveryMismatch.title'),
+        description: t('strainRecoveryMismatch.description', { 
+          strain: latestStrain.value.toFixed(1), 
+          recovery: Math.round(latestRecovery.value) 
+        }),
         priority: 'high',
         status: 'pending',
         actionable: false,
@@ -225,8 +233,8 @@ function generateRecommendationsFromMetrics(metrics: {
         id: 'rhr-rising',
         category: 'lifestyle',
         source: 'device',
-        title: 'Пульс покоя растёт',
-        description: `RHR вырос на ${Math.round(rise)} bpm за последние дни. Это может указывать на стресс, недосып или начало заболевания.`,
+        title: t('rhrRising.title'),
+        description: t('rhrRising.description', { rise: Math.round(rise) }),
         priority: rise > 10 ? 'high' : 'medium',
         status: 'pending',
         actionable: false,
@@ -245,8 +253,8 @@ function generateRecommendationsFromMetrics(metrics: {
       id: 'recovery-high-today',
       category: 'exercise',
       source: 'device',
-      title: 'Отличное восстановление!',
-      description: `Recovery ${Math.round(latestRecovery.value)}% — идеальный день для интенсивной тренировки или PR.`,
+      title: t('recoveryHighToday.title'),
+      description: t('recoveryHighToday.description', { value: Math.round(latestRecovery.value) }),
       priority: 'low',
       status: 'pending',
       actionable: false,

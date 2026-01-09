@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -37,6 +38,7 @@ export const useTrainerChat = (userId: string | undefined) => {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { t } = useTranslation('trainer');
 
   const loadConversations = async () => {
     if (!userId) return;
@@ -102,7 +104,7 @@ export const useTrainerChat = (userId: string | undefined) => {
           username: client.profiles.username,
           full_name: client.profiles.full_name,
           avatar_url: client.profiles.avatar_url,
-          last_message: lastMsg?.text || 'Нет сообщений',
+          last_message: lastMsg?.text || t('chat.noMessages'),
           last_message_time: lastMsg?.time || '',
           unread_count: unreadMap.get(clientId) || 0
         };
@@ -114,8 +116,8 @@ export const useTrainerChat = (userId: string | undefined) => {
     } catch (error) {
       console.error('Error loading conversations:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось загрузить диалоги',
+        title: t('chat.error'),
+        description: t('chat.errorLoadConversations'),
         variant: 'destructive'
       });
     } finally {
@@ -164,8 +166,8 @@ export const useTrainerChat = (userId: string | undefined) => {
     } catch (error) {
       console.error('Error loading messages:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось загрузить сообщения',
+        title: t('chat.error'),
+        description: t('chat.errorLoadMessages'),
         variant: 'destructive'
       });
     }
@@ -188,14 +190,14 @@ export const useTrainerChat = (userId: string | undefined) => {
       if (error) throw error;
 
       toast({
-        title: 'Отправлено',
-        description: 'Сообщение успешно отправлено'
+        title: t('chat.messageSent'),
+        description: t('chat.messageSentDesc')
       });
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось отправить сообщение',
+        title: t('chat.error'),
+        description: t('chat.errorSendMessage'),
         variant: 'destructive'
       });
     }

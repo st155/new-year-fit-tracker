@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import i18n from '@/i18n';
 import { useAuth } from '@/hooks/useAuth';
 import { useHabitNotificationsRealtime } from '@/hooks/composite/realtime';
 import { supabase } from '@/integrations/supabase/client';
@@ -82,7 +83,7 @@ export function useSocialNotifications(enabled = true) {
           switch (notification.notification_type) {
             case 'friend_completion':
               if (!preferences.friend_completions) return;
-              toast.success('🎉 Друг выполнил привычку!', {
+              toast.success(i18n.t('habits:notifications.friendCompletion'), {
                 description: notification.message,
                 duration: 4000,
               });
@@ -90,7 +91,7 @@ export function useSocialNotifications(enabled = true) {
               
             case 'reaction':
               if (!preferences.reactions) return;
-              toast('❤️ Новая реакция!', {
+              toast(i18n.t('habits:notifications.newReaction'), {
                 description: notification.message,
                 duration: 3000,
               });
@@ -98,11 +99,11 @@ export function useSocialNotifications(enabled = true) {
               
             case 'team_invite':
               if (!preferences.team_invites) return;
-              toast.success('👥 Приглашение в команду!', {
+              toast.success(i18n.t('habits:notifications.teamInvite'), {
                 description: notification.message,
                 duration: 5000,
                 action: {
-                  label: 'Просмотреть',
+                  label: i18n.t('habits:notifications.view'),
                   onClick: () => {
                     // Navigate to teams page
                     window.location.href = '/habits-v3?tab=social';
@@ -113,7 +114,7 @@ export function useSocialNotifications(enabled = true) {
               
             case 'achievement':
               if (!preferences.achievements) return;
-              toast.success('🏆 Новое достижение!', {
+              toast.success(i18n.t('habits:notifications.newAchievement'), {
                 description: notification.message,
                 duration: 5000,
               });
@@ -121,7 +122,7 @@ export function useSocialNotifications(enabled = true) {
               
             case 'milestone':
               if (!preferences.achievements) return;
-              toast('⭐ Важная веха!', {
+              toast(i18n.t('habits:notifications.milestone'), {
                 description: notification.message,
                 duration: 4000,
               });
@@ -129,7 +130,7 @@ export function useSocialNotifications(enabled = true) {
               
             case 'streak':
               if (!preferences.achievements) return;
-              toast.success('🔥 Новая серия!', {
+              toast.success(i18n.t('habits:notifications.newStreak'), {
                 description: notification.message,
                 duration: 4000,
               });
