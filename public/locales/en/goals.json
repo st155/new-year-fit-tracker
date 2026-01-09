@@ -214,5 +214,13 @@
     "failedAddMeasurement": "Error adding measurement",
     "failedAddMeasurements": "Error adding measurements",
     "failedDeleteMeasurement": "Error deleting measurement"
+  },
+  "baseline": {
+    "title": "Comparison with Baseline",
+    "noData": "No baseline data",
+    "start": "Start",
+    "current": "Current",
+    "target": "Target",
+    "forecastDate": "📅 Estimated completion:"
   }
 }
