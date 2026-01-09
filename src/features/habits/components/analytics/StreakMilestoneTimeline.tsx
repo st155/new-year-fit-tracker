@@ -7,6 +7,7 @@ import {
   getCurrentMilestone,
   getNextMilestone,
   getProgressToNextMilestone,
+  getMilestoneTitle,
 } from '@/lib/gamification/streak-rewards';
 
 interface StreakMilestoneTimelineProps {
@@ -37,7 +38,7 @@ export function StreakMilestoneTimeline({ currentStreak }: StreakMilestoneTimeli
               Current: <span className="font-semibold text-foreground">{currentStreak} days</span>
             </span>
             <span className="text-muted-foreground">
-              Next: <span className="font-semibold text-foreground">{nextMilestone.title}</span> ({nextMilestone.days} days)
+              Next: <span className="font-semibold text-foreground">{getMilestoneTitle(nextMilestone)}</span> ({nextMilestone.days} days)
             </span>
           </div>
           <Progress value={progress} className="h-2" />
@@ -102,7 +103,7 @@ export function StreakMilestoneTimeline({ currentStreak }: StreakMilestoneTimeli
       {currentMilestone && (
         <div className="text-center p-3 rounded-lg bg-primary/5 border border-primary/10">
           <div className="text-sm font-semibold text-primary">
-            {currentMilestone.badge} {currentMilestone.title}
+            {currentMilestone.badge} {getMilestoneTitle(currentMilestone)}
           </div>
           <div className="text-xs text-muted-foreground mt-1">
             +{currentMilestone.xp} XP earned
