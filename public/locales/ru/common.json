@@ -410,5 +410,9 @@
     "updatedDesc": "Данные успешно обновлены",
     "error": "Ошибка",
     "errorDesc": "Не удалось обновить данные"
+  },
+  "dev": {
+    "analyzingLocalizations": "Анализ локализаций...",
+    "analysisError": "Ошибка анализа"
   }
 }

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -36,6 +37,7 @@ interface TestResult {
 }
 
 export function AppTestSuite() {
+  const { t } = useTranslation('testing');
   const { user } = useAuth();
   const { toast } = useToast();
   const [isRunning, setIsRunning] = useState(false);
@@ -46,98 +48,98 @@ export function AppTestSuite() {
   const initializeTests = (): TestResult[] => [
     {
       id: 'auth-check',
-      name: 'Проверка аутентификации',
-      category: 'Аутентификация',
+      name: t('tests.authCheck.name'),
+      category: t('categories.auth'),
       status: 'pending',
-      message: 'Ожидание...',
+      message: t('status.waiting'),
       icon: <Settings className="w-4 h-4" />
     },
     {
       id: 'database-connection',
-      name: 'Подключение к базе данных',
-      category: 'База данных',
+      name: t('tests.dbConnection.name'),
+      category: t('categories.database'),
       status: 'pending',
-      message: 'Ожидание...',
+      message: t('status.waiting'),
       icon: <Database className="w-4 h-4" />
     },
     {
       id: 'profiles-read',
-      name: 'Чтение профиля пользователя',
-      category: 'База данных',
+      name: t('tests.profileRead.name'),
+      category: t('categories.database'),
       status: 'pending',
-      message: 'Ожидание...',
+      message: t('status.waiting'),
       icon: <Database className="w-4 h-4" />
     },
     {
       id: 'goals-read',
-      name: 'Загрузка целей',
-      category: 'База данных',
+      name: t('tests.goalsLoad.name'),
+      category: t('categories.database'),
       status: 'pending',
-      message: 'Ожидание...',
+      message: t('status.waiting'),
       icon: <Target className="w-4 h-4" />
     },
     {
       id: 'goals-create',
-      name: 'Создание тестовой цели',
-      category: 'Функциональность',
+      name: t('tests.goalCreate.name'),
+      category: t('categories.functionality'),
       status: 'pending',
-      message: 'Ожидание...',
+      message: t('status.waiting'),
       icon: <Target className="w-4 h-4" />
     },
     {
       id: 'measurements-read',
-      name: 'Загрузка измерений',
-      category: 'База данных',
+      name: t('tests.measurementsLoad.name'),
+      category: t('categories.database'),
       status: 'pending',
-      message: 'Ожидание...',
+      message: t('status.waiting'),
       icon: <Database className="w-4 h-4" />
     },
     {
       id: 'measurements-create',
-      name: 'Создание тестового измерения',
-      category: 'Функциональность',
+      name: t('tests.measurementCreate.name'),
+      category: t('categories.functionality'),
       status: 'pending',
-      message: 'Ожидание...',
+      message: t('status.waiting'),
       icon: <Database className="w-4 h-4" />
     },
     {
       id: 'storage-test',
-      name: 'Тест файлового хранилища',
-      category: 'Storage',
+      name: t('tests.storageTest.name'),
+      category: t('categories.storage'),
       status: 'pending',
-      message: 'Ожидание...',
+      message: t('status.waiting'),
       icon: <Upload className="w-4 h-4" />
     },
     {
       id: 'apple-health-function',
-      name: 'Apple Health обработка',
-      category: 'Интеграции',
+      name: t('tests.appleHealth.name'),
+      category: t('categories.integrations'),
       status: 'pending',
-      message: 'Ожидание...',
+      message: t('status.waiting'),
       icon: <Wifi className="w-4 h-4" />
     },
     {
       id: 'ai-analysis-function',
-      name: 'AI анализ скриншотов',
-      category: 'Интеграции',
+      name: t('tests.aiAnalysis.name'),
+      category: t('categories.integrations'),
       status: 'pending',
-      message: 'Ожидание...',
+      message: t('status.waiting'),
       icon: <Camera className="w-4 h-4" />
     },
     {
       id: 'error-logging',
-      name: 'Система логирования ошибок',
-      category: 'Логирование',
+      name: t('tests.errorLogging.name'),
+      category: t('categories.logging'),
       status: 'pending',
-      message: 'Ожидание...',
+      message: t('status.waiting'),
       icon: <AlertTriangle className="w-4 h-4" />
     },
     {
       id: 'rls-policies',
-      name: 'RLS политики безопасности',
-      category: 'Безопасность',
+      name: t('tests.rlsPolicies.name'),
+      category: t('categories.security'),
       status: 'pending',
-      message: 'Ожидание...',
+      message: t('status.waiting'),
       icon: <Database className="w-4 h-4" />
     }
   ];
@@ -150,7 +152,7 @@ export function AppTestSuite() {
 
   const runTest = async (test: TestResult): Promise<void> => {
     const startTime = Date.now();
-    updateTestResult(test.id, { status: 'running', message: 'Выполняется...' });
+    updateTestResult(test.id, { status: 'running', message: t('status.running') });
 
     try {
       switch (test.id) {
@@ -191,20 +193,20 @@ export function AppTestSuite() {
           await testRLSPolicies();
           break;
         default:
-          throw new Error('Неизвестный тест');
+          throw new Error('Unknown test');
       }
 
       const duration = Date.now() - startTime;
       updateTestResult(test.id, {
         status: 'success',
-        message: 'Успешно выполнено',
+        message: t('status.success'),
         duration
       });
 
     } catch (error: any) {
       const duration = Date.now() - startTime;
       
-      // Логируем ошибку теста
+      // Log test error
       await ErrorLogger.logError({
         errorType: 'test_failure',
         errorMessage: `Test failed: ${test.name}`,
@@ -226,22 +228,22 @@ export function AppTestSuite() {
     }
   };
 
-  // Тестовые функции
+  // Test functions
   const testAuthentication = async () => {
     if (!user) {
-      throw new Error('Пользователь не аутентифицирован');
+      throw new Error(t('tests.authCheck.error'));
     }
     
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-      throw new Error('Нет активной сессии');
+      throw new Error('No active session');
     }
   };
 
   const testDatabaseConnection = async () => {
     const { error } = await supabase.from('profiles').select('id').limit(1);
     if (error) {
-      throw new Error(`Ошибка подключения к БД: ${error.message}`);
+      throw new Error(`${t('tests.dbConnection.error')}: ${error.message}`);
     }
   };
 
@@ -253,10 +255,10 @@ export function AppTestSuite() {
       .single();
 
     if (error) {
-      throw new Error(`Ошибка чтения профиля: ${error.message}`);
+      throw new Error(`${t('tests.profileRead.error')}: ${error.message}`);
     }
     if (!data) {
-      throw new Error('Профиль не найден');
+      throw new Error(t('tests.profileRead.error'));
     }
   };
 
@@ -268,7 +270,7 @@ export function AppTestSuite() {
       .limit(10);
 
     if (error) {
-      throw new Error(`Ошибка загрузки целей: ${error.message}`);
+      throw new Error(`${t('tests.goalsLoad.error')}: ${error.message}`);
     }
   };
 
@@ -290,10 +292,10 @@ export function AppTestSuite() {
       .single();
 
     if (error) {
-      throw new Error(`Ошибка создания цели: ${error.message}`);
+      throw new Error(`${t('tests.goalCreate.error')}: ${error.message}`);
     }
 
-    // Удаляем тестовую цель
+    // Delete test goal
     await supabase.from('goals').delete().eq('id', data.id);
   };
 
@@ -305,12 +307,12 @@ export function AppTestSuite() {
       .limit(10);
 
     if (error) {
-      throw new Error(`Ошибка загрузки измерений: ${error.message}`);
+      throw new Error(`${t('tests.measurementsLoad.error')}: ${error.message}`);
     }
   };
 
   const testMeasurementsCreate = async () => {
-    // Сначала создаем тестовую цель
+    // First create a test goal
     const { data: goalData, error: goalError } = await supabase
       .from('goals')
       .insert({
@@ -326,7 +328,7 @@ export function AppTestSuite() {
       .single();
 
     if (goalError) {
-      throw new Error(`Ошибка создания тестовой цели: ${goalError.message}`);
+      throw new Error(`${t('tests.measurementCreate.error')}: ${goalError.message}`);
     }
 
     try {
@@ -347,19 +349,19 @@ export function AppTestSuite() {
         .single();
 
       if (error) {
-        throw new Error(`Ошибка создания измерения: ${error.message}`);
+        throw new Error(`${t('tests.measurementCreate.error')}: ${error.message}`);
       }
 
-      // Удаляем тестовые данные
+      // Delete test data
       await supabase.from('measurements').delete().eq('id', data.id);
     } finally {
-      // Удаляем тестовую цель
+      // Delete test goal
       await supabase.from('goals').delete().eq('id', goalData.id);
     }
   };
 
   const testStorage = async () => {
-    // Создаем тестовый файл
+    // Create test file
     const testFile = new Blob(['test content'], { type: 'text/plain' });
     const fileName = `test-${Date.now()}.txt`;
     const filePath = `${user?.id}/${fileName}`;
@@ -369,10 +371,10 @@ export function AppTestSuite() {
       .upload(filePath, testFile);
 
     if (error) {
-      throw new Error(`Ошибка загрузки файла: ${error.message}`);
+      throw new Error(`${t('tests.storageTest.error')}: ${error.message}`);
     }
 
-    // Удаляем тестовый файл
+    // Delete test file
     await supabase.storage
       .from('progress-photos')
       .remove([data.path]);
@@ -384,11 +386,11 @@ export function AppTestSuite() {
       const { data, error } = await healthApi.importAppleHealth(user!.id, 'test/path');
 
       if (error) {
-        throw new Error(`Apple Health функция недоступна: ${error.message}`);
+        throw new Error(`${t('tests.appleHealth.error')}: ${error.message}`);
       }
     } catch (error: any) {
       if (error.message.includes('Missing userId or filePath')) {
-        // Это ожидаемая ошибка для теста без реального файла
+        // This is expected error for test without real file
         return;
       }
       throw error;
@@ -400,13 +402,13 @@ export function AppTestSuite() {
       const { data, error } = await aiApi.analyzeFitnessData('test-url', user!.id);
 
       if (error && !error.message.includes('Missing imageUrl')) {
-        throw new Error(`AI анализ недоступен: ${error.message}`);
+        throw new Error(`${t('tests.aiAnalysis.error')}: ${error.message}`);
       }
     } catch (error: any) {
       if (error.message.includes('OPENAI_API_KEY')) {
         updateTestResult('ai-analysis-function', {
           status: 'warning',
-          message: 'Требуется настройка OpenAI API ключа'
+          message: 'OpenAI API key required'
         });
         return;
       }
@@ -415,7 +417,7 @@ export function AppTestSuite() {
   };
 
   const testErrorLogging = async () => {
-    // Тестируем запись ошибки
+    // Test error logging
     await ErrorLogger.logError({
       errorType: 'test_error',
       errorMessage: 'Test error for logging system verification',
@@ -423,7 +425,7 @@ export function AppTestSuite() {
       source: 'ui'
     }, user?.id);
 
-    // Проверяем что ошибка записалась
+    // Check that error was logged
     const { data, error } = await supabase
       .from('error_logs')
       .select('*')
@@ -433,26 +435,26 @@ export function AppTestSuite() {
       .limit(1);
 
     if (error) {
-      throw new Error(`Ошибка проверки логирования: ${error.message}`);
+      throw new Error(`${t('tests.errorLogging.error')}: ${error.message}`);
     }
 
     if (!data || data.length === 0) {
-      throw new Error('Тестовая ошибка не была записана в лог');
+      throw new Error(t('tests.errorLogging.error'));
     }
   };
 
   const testRLSPolicies = async () => {
-    // Тестируем что пользователь может видеть только свои данные
+    // Test that user can only see their own data
     const { count, error } = await supabase
       .from('goals')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user?.id);
 
     if (error) {
-      throw new Error(`Ошибка проверки RLS: ${error.message}`);
+      throw new Error(`${t('tests.rlsPolicies.error')}: ${error.message}`);
     }
 
-    // Пытаемся получить данные другого пользователя (должно вернуть 0)
+    // Try to get another user's data (should return 0)
     const { count: otherUserCount, error: otherError } = await supabase
       .from('goals')
       .select('*', { count: 'exact', head: true })
@@ -461,7 +463,7 @@ export function AppTestSuite() {
     if (otherError && !otherError.message.includes('row-level security')) {
       updateTestResult('rls-policies', {
         status: 'warning',
-        message: 'RLS может быть настроен некорректно'
+        message: t('tests.rlsPolicies.error')
       });
       return;
     }
@@ -481,24 +483,24 @@ export function AppTestSuite() {
       const test = tests[i];
       await runTest(test);
       
-      // Обновляем прогресс
+      // Update progress
       const currentProgress = ((i + 1) / tests.length) * 100;
       setProgress(currentProgress);
 
-      // Подсчитываем результаты
+      // Count results
       const result = testResults.find(t => t.id === test.id);
       if (result?.status === 'success') passed++;
       else if (result?.status === 'warning') warnings++;
       else if (result?.status === 'error') failed++;
 
-      // Небольшая задержка между тестами
+      // Small delay between tests
       await new Promise(resolve => setTimeout(resolve, 500));
     }
 
     setSummary({ total: tests.length, passed, failed, warnings });
     setIsRunning(false);
 
-    // Логируем результаты тестирования
+    // Log test suite completion
     await ErrorLogger.logError({
       errorType: 'test_suite_completed',
       errorMessage: 'App testing suite completed',
@@ -513,8 +515,8 @@ export function AppTestSuite() {
     }, user?.id);
 
     toast({
-      title: 'Тестирование завершено',
-      description: `Успешно: ${passed}, Ошибки: ${failed}, Предупреждения: ${warnings}`
+      title: t('completed'),
+      description: t('completedDesc')
     });
   };
 
@@ -543,10 +545,10 @@ export function AppTestSuite() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Play className="h-5 w-5" />
-          Тестирование приложения
+          {t('title')}
         </CardTitle>
         <CardDescription>
-          Комплексная проверка всех функций приложения и запись ошибок в систему логирования
+          {t('completedDesc')}
         </CardDescription>
         <div className="flex items-center gap-4">
           <Button 
@@ -557,12 +559,12 @@ export function AppTestSuite() {
             {isRunning ? (
               <>
                 <Clock className="h-4 w-4 mr-2 animate-spin" />
-                Тестирование...
+                {t('running')}
               </>
             ) : (
               <>
                 <Play className="h-4 w-4 mr-2" />
-                Запустить все тесты
+                {t('runAll')}
               </>
             )}
           </Button>
@@ -570,13 +572,13 @@ export function AppTestSuite() {
           {summary.total > 0 && (
             <div className="flex gap-2">
               <Badge variant="secondary" className="bg-green-100 text-green-800">
-                Успешно: {summary.passed}
+                ✓ {summary.passed}
               </Badge>
               <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-                Предупреждения: {summary.warnings}
+                ⚠ {summary.warnings}
               </Badge>
               <Badge variant="secondary" className="bg-red-100 text-red-800">
-                Ошибки: {summary.failed}
+                ✕ {summary.failed}
               </Badge>
             </div>
           )}
@@ -586,7 +588,7 @@ export function AppTestSuite() {
         {isRunning && (
           <div className="mb-6">
             <div className="flex justify-between text-sm mb-2">
-              <span>Прогресс тестирования</span>
+              <span>{t('running')}</span>
               <span>{progress.toFixed(0)}%</span>
             </div>
             <Progress value={progress} />
@@ -622,7 +624,7 @@ export function AppTestSuite() {
                   {test.details && test.status === 'error' && (
                     <details className="mt-2">
                       <summary className="text-xs cursor-pointer text-red-600">
-                        Детали ошибки
+                        Error details
                       </summary>
                       <pre className="text-xs bg-red-100 p-2 rounded mt-1 overflow-x-auto">
                         {JSON.stringify(test.details, null, 2)}
@@ -639,8 +641,7 @@ export function AppTestSuite() {
           <Alert>
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              Нажмите "Запустить все тесты" для начала комплексной проверки всех функций приложения.
-              Все ошибки будут автоматически записаны в систему логирования для дальнейшего анализа.
+              {t('completedDesc')}
             </AlertDescription>
           </Alert>
         )}

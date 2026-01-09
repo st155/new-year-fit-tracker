@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useForceTerraSync } from '@/hooks/useForceTerraSync';
 import { useSyncAllDevices } from '@/hooks/useSyncAllDevices';
@@ -10,6 +11,7 @@ import { RefreshCw, Database, Webhook, Activity, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function WithingsDebugPanel() {
+  const { t, i18n } = useTranslation('integrations');
   const [isSyncing, setIsSyncing] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<any>(null);
   
@@ -78,8 +80,8 @@ export function WithingsDebugPanel() {
 
     if (error || !token) {
       setConnectionStatus({ connected: false, error: 'Token not found', checking: false });
-      toast.error('Withings не подключен', {
-        description: 'Подключите устройство Withings в разделе Интеграции',
+      toast.error(t('withingsDebug.notConnected'), {
+        description: t('withingsDebug.notConnectedDesc'),
       });
       return;
     }
@@ -92,7 +94,7 @@ export function WithingsDebugPanel() {
       checking: false,
     });
     
-    toast.success('Withings подключен', {
+    toast.success(t('withingsDebug.connected'), {
       description: `Terra User ID: ${token.terra_user_id}`,
     });
   };
@@ -105,8 +107,8 @@ export function WithingsDebugPanel() {
     setIsSyncing(true);
     try {
       await forceSyncMutation.mutateAsync({ provider: 'withings', dataType: 'body' });
-      toast.success('Синхронизация Withings запущена', {
-        description: 'Подождите 30-60 секунд и обновите данные',
+      toast.success(t('withingsDebug.syncStarted'), {
+        description: t('withingsDebug.syncWaitDesc'),
       });
       
       // Wait a bit for Terra to process and send webhook
@@ -126,8 +128,8 @@ export function WithingsDebugPanel() {
     setIsSyncing(true);
     try {
       await syncAllMutation.mutateAsync();
-      toast.success('Синхронизация всех устройств запущена', {
-        description: 'Подождите 30-60 секунд и обновите данные',
+      toast.success(t('withingsDebug.syncAllStarted'), {
+        description: t('withingsDebug.syncWaitDesc'),
       });
       
       // Wait a bit for Terra to process and send webhooks
@@ -161,8 +163,10 @@ export function WithingsDebugPanel() {
     refetchMetrics();
     refetchWebhooks();
     checkConnectionStatus();
-    toast.info('Данные обновлены');
+    toast.info(t('withingsDebug.dataRefreshed'));
   };
+
+  const dateLocale = i18n.language === 'ru' ? 'ru-RU' : 'en-US';
 
   return (
     <div className="space-y-4">
@@ -170,21 +174,21 @@ export function WithingsDebugPanel() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Database className="h-5 w-5" />
-            Withings Debug Panel
+            {t('withingsDebug.title')}
           </CardTitle>
           <CardDescription>
-            Отладка синхронизации данных от Withings
+            {t('withingsDebug.description')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Connection Status */}
           <div>
-            <h3 className="text-sm font-semibold mb-2">Статус подключения</h3>
+            <h3 className="text-sm font-semibold mb-2">{t('withingsDebug.connectionStatus')}</h3>
             {connectionStatus ? (
               <div className="p-3 bg-muted rounded-lg space-y-2">
                 <div className="flex items-center gap-2">
                   <span className={connectionStatus.connected ? 'text-green-500' : 'text-red-500'}>●</span>
-                  <span className="text-sm">{connectionStatus.connected ? 'Подключено' : 'Не подключено'}</span>
+                  <span className="text-sm">{connectionStatus.connected ? t('withingsDebug.connectedLabel') : t('withingsDebug.notConnectedLabel')}</span>
                 </div>
                 {connectionStatus.connected && (
                   <>
@@ -194,7 +198,7 @@ export function WithingsDebugPanel() {
                     </div>
                     {connectionStatus.lastSync && (
                       <div className="text-xs text-muted-foreground">
-                        Последняя синхронизация: {new Date(connectionStatus.lastSync).toLocaleString('ru-RU')}
+                        {t('withingsDebug.lastSync')} {new Date(connectionStatus.lastSync).toLocaleString(dateLocale)}
                       </div>
                     )}
                   </>
@@ -212,7 +216,7 @@ export function WithingsDebugPanel() {
 
           {/* Action Buttons */}
           <div>
-            <h3 className="text-sm font-semibold mb-2">Действия</h3>
+            <h3 className="text-sm font-semibold mb-2">{t('withingsDebug.actions')}</h3>
             <div className="flex gap-2 flex-wrap">
               <Button 
                 onClick={checkConnectionStatus} 
@@ -239,7 +243,7 @@ export function WithingsDebugPanel() {
                 ) : (
                   <Activity className="h-4 w-4" />
                 )}
-                Sync Withings
+                {t('withingsDebug.syncWithings')}
               </Button>
               
               <Button 
@@ -253,7 +257,7 @@ export function WithingsDebugPanel() {
                 ) : (
                   <Activity className="h-4 w-4" />
                 )}
-                Sync All Devices
+                {t('withingsDebug.syncAllDevices')}
               </Button>
 
               <Button 
@@ -267,7 +271,7 @@ export function WithingsDebugPanel() {
                 ) : (
                   <Database className="h-4 w-4" />
                 )}
-                Загрузить данные (30 дней)
+                {t('withingsDebug.loadData30')}
               </Button>
 
               <Button 
@@ -281,7 +285,7 @@ export function WithingsDebugPanel() {
                 ) : (
                   <Database className="h-4 w-4" />
                 )}
-                Загрузить данные (90 дней)
+                {t('withingsDebug.loadData90')}
               </Button>
               
               <Button 
@@ -290,7 +294,7 @@ export function WithingsDebugPanel() {
                 className="gap-2"
               >
                 <RefreshCw className="h-4 w-4" />
-                Обновить данные
+                {t('withingsDebug.refreshData')}
               </Button>
             </div>
           </div>
@@ -300,7 +304,7 @@ export function WithingsDebugPanel() {
             <div>
               <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
                 <Database className="h-4 w-4" />
-                Метрики в unified_metrics ({metrics?.length || 0})
+                {t('withingsDebug.metricsCount')} ({metrics?.length || 0})
               </h3>
               {metrics && metrics.length > 0 ? (
                 <div className="space-y-2">
@@ -310,17 +314,17 @@ export function WithingsDebugPanel() {
                         {metric.metric_name}: {metric.value} {metric.unit}
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        Дата измерения: {metric.measurement_date}
+                        {t('withingsDebug.measurementDate')} {metric.measurement_date}
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        Создано: {new Date(metric.created_at).toLocaleString('ru-RU')}
+                        {t('withingsDebug.created')} {new Date(metric.created_at).toLocaleString(dateLocale)}
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground p-3 bg-muted rounded-lg text-center">
-                  Нет данных
+                  {t('withingsDebug.noData')}
                 </p>
               )}
             </div>
@@ -329,7 +333,7 @@ export function WithingsDebugPanel() {
             <div>
               <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
                 <Webhook className="h-4 w-4" />
-                Последние webhook'и ({webhooks?.length || 0})
+                {t('withingsDebug.webhooks')} ({webhooks?.length || 0})
               </h3>
               {webhooks && webhooks.length > 0 ? (
                 <div className="space-y-2">
@@ -345,7 +349,7 @@ export function WithingsDebugPanel() {
                           </div>
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {new Date(webhook.created_at).toLocaleString('ru-RU')}
+                          {new Date(webhook.created_at).toLocaleString(dateLocale)}
                         </div>
                       </div>
                     </div>
@@ -353,23 +357,23 @@ export function WithingsDebugPanel() {
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground p-3 bg-muted rounded-lg text-center">
-                  Нет webhook'ов
+                  {t('withingsDebug.noWebhooks')}
                 </p>
               )}
             </div>
           </div>
 
           <div className="text-xs text-muted-foreground border-t pt-4 space-y-2">
-            <p>💡 <strong>Как использовать:</strong></p>
+            <p>💡 <strong>{t('withingsDebug.howToUse')}</strong></p>
             <ol className="list-decimal list-inside space-y-1 ml-2">
-              <li>"Check Connection Status" - проверяет статус подключения Withings</li>
-              <li>"Sync Withings" - запрашивает последние 7 дней данных через Terra API</li>
-              <li>"Загрузить данные" - загружает исторические данные за указанный период напрямую</li>
-              <li>"Sync All Devices" - синхронизирует все подключенные устройства</li>
-              <li>После синхронизации подождите 30-60 секунд для обработки данных</li>
-              <li>Если данных нет - попробуйте использовать "Загрузить данные" или переподключить Withings</li>
+              <li>{t('withingsDebug.instructions.step1')}</li>
+              <li>{t('withingsDebug.instructions.step2')}</li>
+              <li>{t('withingsDebug.instructions.step3')}</li>
+              <li>{t('withingsDebug.instructions.step4')}</li>
+              <li>{t('withingsDebug.instructions.step5')}</li>
+              <li>{t('withingsDebug.instructions.step6')}</li>
             </ol>
-            <p className="mt-2">🔗 <strong>Полезные ссылки:</strong></p>
+            <p className="mt-2">🔗 <strong>{t('withingsDebug.usefulLinks')}</strong></p>
             <ul className="list-disc list-inside space-y-1 ml-2">
               <li>
                 <a 
@@ -378,7 +382,7 @@ export function WithingsDebugPanel() {
                   rel="noopener noreferrer"
                   className="text-primary hover:underline"
                 >
-                  Логи Withings Backfill
+                  {t('withingsDebug.withingsBackfillLogs')}
                 </a>
               </li>
               <li>
@@ -388,7 +392,7 @@ export function WithingsDebugPanel() {
                   rel="noopener noreferrer"
                   className="text-primary hover:underline"
                 >
-                  Логи Force Terra Sync
+                  {t('withingsDebug.forceTerraLogs')}
                 </a>
               </li>
             </ul>

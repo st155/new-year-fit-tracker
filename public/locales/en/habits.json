@@ -366,5 +366,9 @@
     "newAchievement": "🏆 New achievement!",
     "milestone": "⭐ Important milestone!",
     "newStreak": "🔥 New streak!"
+  },
+  "achievements": {
+    "progress": "Progress",
+    "unlocked": "Unlocked"
   }
 }
