@@ -38,6 +38,22 @@ export const UNIFIED_METRICS: Record<string, MetricMapping> = {
     category: 'workout'
   },
   
+  // Activity Score (Oura, Ultrahuman, Garmin)
+  activity_score: {
+    terraField: [
+      'activity_score',
+      'daily_activity_score',
+      'score.activity',
+      'activity.score',
+      'scores.activity',
+      'movement_index',
+      'movement_score'
+    ],
+    unifiedName: 'Activity Score',
+    unit: '%',
+    category: 'activity'
+  },
+  
   // Heart Rate
   resting_hr: {
     terraField: ['resting_hr_bpm', 'resting_heart_rate_bpm', 'resting_hr', 'resting_heart_rate'],
