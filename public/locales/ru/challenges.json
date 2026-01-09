@@ -113,5 +113,18 @@
     "ctaDescription": "Присоединяйтесь к челленджу и начните отслеживать свой прогресс",
     "joining": "Присоединение...",
     "joinChallenge": "Участвовать в челлендже"
+  },
+  "toast": {
+    "joinedSuccess": "Вы присоединились к челленджу!",
+    "joinFailed": "Ошибка при присоединении: {{error}}",
+    "leftChallenge": "Вы покинули челлендж",
+    "leaveFailed": "Ошибка при выходе из челленджа: {{error}}",
+    "challengeCreated": "Челлендж создан!",
+    "createFailed": "Ошибка создания челленджа: {{error}}",
+    "challengeUpdated": "Челлендж обновлён",
+    "updateFailed": "Ошибка обновления челленджа: {{error}}",
+    "challengeDeleted": "Челлендж удалён",
+    "deleteFailed": "Ошибка удаления челленджа: {{error}}",
+    "extendFailed": "Ошибка продления челленджа: {{error}}"
   }
 }

@@ -35,5 +35,9 @@
     "created": "Расписание создано!",
     "createdDesc": "{{count}} активностей на {{weeks}} недель",
     "createError": "Ошибка создания плана"
+  },
+  "errors": {
+    "loginRequired": "Войдите, чтобы реагировать",
+    "reactionFailed": "Не удалось обновить реакцию"
   }
 }

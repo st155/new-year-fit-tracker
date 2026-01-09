@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { documentsApi, healthApi } from '@/lib/api';
@@ -66,6 +67,7 @@ export function useBiomarkers() {
 
 export function useLabTestResults(documentId?: string) {
   const { toast } = useToast();
+  const { t } = useTranslation('biomarkers');
   const queryClient = useQueryClient();
 
   const { data: results, isLoading, error } = useQuery({
@@ -100,13 +102,13 @@ export function useLabTestResults(documentId?: string) {
       queryClient.invalidateQueries({ queryKey: ['lab-test-results'] });
       queryClient.invalidateQueries({ queryKey: ['medical-documents'] });
       toast({
-        title: 'Документ обработан',
-        description: `Извлечено ${data.biomarkers_extracted} биомаркеров`,
+        title: t('toast.documentProcessed'),
+        description: t('toast.biomarkersExtracted', { count: data.biomarkers_extracted }),
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Ошибка обработки',
+        title: t('toast.processingError'),
         description: error.message,
         variant: 'destructive',
       });
@@ -122,13 +124,13 @@ export function useLabTestResults(documentId?: string) {
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['lab-test-results'] });
       toast({
-        title: 'Пересопоставление завершено',
-        description: `Сопоставлено ${data.rematchedCount} из ${data.totalUnmatched} биомаркеров`,
+        title: t('toast.rematchComplete'),
+        description: t('toast.rematchedCount', { matched: data.rematchedCount, total: data.totalUnmatched }),
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Ошибка пересопоставления',
+        title: t('toast.rematchError'),
         description: error.message,
         variant: 'destructive',
       });

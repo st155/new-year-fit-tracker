@@ -85,5 +85,43 @@
     "empty": {
       "title": "No doctor protocols. Upload medical documents with prescriptions and click \"Extract all protocols\" for automatic analysis."
     }
+  },
+  "metrics": {
+    "recoveryLowToday": {
+      "title": "Low recovery today",
+      "description": "Recovery {{value}}% — we recommend light activity or rest instead of intense training."
+    },
+    "recoveryLowWeek": {
+      "title": "Recovery below normal",
+      "description": "Average weekly recovery {{value}}%. Focus on sleep quality and stress management."
+    },
+    "recoveryDeclining": {
+      "title": "Recovery declining",
+      "description": "Recovery trend is downward 3+ days. Possible overtraining or accumulated stress."
+    },
+    "hrvDeclining": {
+      "title": "HRV declining",
+      "description": "HRV dropped by {{drop}} ms in recent days. This may indicate stress, sleep deprivation, or illness."
+    },
+    "sleepDurationLow": {
+      "title": "Insufficient sleep",
+      "description": "Average sleep {{hours}} hours per week. Target 7-8 hours for optimal recovery."
+    },
+    "sleepEfficiencyLow": {
+      "title": "Sleep quality can be improved",
+      "description": "Sleep efficiency {{value}}%. Try: darkening, cool 18-19°C, no screens 1 hour before bed."
+    },
+    "strainRecoveryMismatch": {
+      "title": "High strain with low recovery",
+      "description": "Strain {{strain}} with recovery {{recovery}}%. Risk of overtraining — reduce intensity."
+    },
+    "rhrRising": {
+      "title": "Resting heart rate rising",
+      "description": "RHR increased by {{rise}} bpm in recent days. This may indicate stress, sleep deprivation, or illness."
+    },
+    "recoveryHighToday": {
+      "title": "Excellent recovery!",
+      "description": "Recovery {{value}}% — perfect day for intense training or PR."
+    }
   }
 }

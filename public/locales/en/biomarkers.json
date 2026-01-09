@@ -53,5 +53,13 @@
   "common": {
     "cancel": "Cancel",
     "saving": "Saving..."
+  },
+  "toast": {
+    "documentProcessed": "Document processed",
+    "biomarkersExtracted": "Extracted {{count}} biomarkers",
+    "processingError": "Processing error",
+    "rematchComplete": "Rematching complete",
+    "rematchedCount": "Matched {{matched}} of {{total}} biomarkers",
+    "rematchError": "Rematching error"
   }
 }

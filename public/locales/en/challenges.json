@@ -113,5 +113,18 @@
     "ctaDescription": "Join the challenge and start tracking your progress",
     "joining": "Joining...",
     "joinChallenge": "Join Challenge"
+  },
+  "toast": {
+    "joinedSuccess": "Successfully joined challenge!",
+    "joinFailed": "Failed to join challenge: {{error}}",
+    "leftChallenge": "Left challenge",
+    "leaveFailed": "Failed to leave challenge: {{error}}",
+    "challengeCreated": "Challenge created!",
+    "createFailed": "Failed to create challenge: {{error}}",
+    "challengeUpdated": "Challenge updated",
+    "updateFailed": "Failed to update challenge: {{error}}",
+    "challengeDeleted": "Challenge deleted",
+    "deleteFailed": "Failed to delete challenge: {{error}}",
+    "extendFailed": "Failed to extend challenge: {{error}}"
   }
 }
