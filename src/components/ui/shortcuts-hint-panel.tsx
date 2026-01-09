@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Keyboard } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface ShortcutHintPanelProps {
   open: boolean;
@@ -15,29 +16,29 @@ interface ShortcutHintPanelProps {
 
 interface Shortcut {
   keys: string[];
-  description: string;
+  descriptionKey: string;
   category: string;
 }
 
 const SHORTCUTS: Shortcut[] = [
   // Navigation
-  { keys: ['⌘', 'K'], description: 'Открыть палитру команд', category: 'Навигация' },
-  { keys: ['G', 'H'], description: 'Перейти к Привычкам', category: 'Навигация' },
-  { keys: ['G', 'G'], description: 'Перейти к Целям', category: 'Навигация' },
-  { keys: ['G', 'D'], description: 'Перейти к Dashboard', category: 'Навигация' },
-  { keys: ['G', 'C'], description: 'Перейти к Челленджам', category: 'Навигация' },
+  { keys: ['⌘', 'K'], descriptionKey: 'openCommandPalette', category: 'navigation' },
+  { keys: ['G', 'H'], descriptionKey: 'goToHabits', category: 'navigation' },
+  { keys: ['G', 'G'], descriptionKey: 'goToGoals', category: 'navigation' },
+  { keys: ['G', 'D'], descriptionKey: 'goToDashboard', category: 'navigation' },
+  { keys: ['G', 'C'], descriptionKey: 'goToChallenges', category: 'navigation' },
   
   // Actions
-  { keys: ['N'], description: 'Создать новую привычку/цель', category: 'Действия' },
-  { keys: ['Enter'], description: 'Завершить привычку (в фокусе)', category: 'Действия' },
-  { keys: ['E'], description: 'Редактировать (в фокусе)', category: 'Действия' },
-  { keys: ['→'], description: 'Свайп вправо (завершить)', category: 'Действия' },
-  { keys: ['←'], description: 'Свайп влево (опции)', category: 'Действия' },
+  { keys: ['N'], descriptionKey: 'createNew', category: 'actions' },
+  { keys: ['Enter'], descriptionKey: 'completeHabit', category: 'actions' },
+  { keys: ['E'], descriptionKey: 'edit', category: 'actions' },
+  { keys: ['→'], descriptionKey: 'swipeRight', category: 'actions' },
+  { keys: ['←'], descriptionKey: 'swipeLeft', category: 'actions' },
   
   // General
-  { keys: ['Esc'], description: 'Закрыть модальное окно', category: 'Общие' },
-  { keys: ['?'], description: 'Показать подсказки', category: 'Общие' },
-  { keys: ['⌘', 'S'], description: 'Сохранить', category: 'Общие' },
+  { keys: ['Esc'], descriptionKey: 'closeModal', category: 'general' },
+  { keys: ['?'], descriptionKey: 'showHints', category: 'general' },
+  { keys: ['⌘', 'S'], descriptionKey: 'save', category: 'general' },
 ];
 
 const KeyBadge = ({ keyLabel }: { keyLabel: string }) => (
@@ -50,7 +51,8 @@ const KeyBadge = ({ keyLabel }: { keyLabel: string }) => (
 );
 
 export function ShortcutsHintPanel({ open, onOpenChange }: ShortcutHintPanelProps) {
-  const categories = Array.from(new Set(SHORTCUTS.map(s => s.category)));
+  const { t } = useTranslation('shortcuts');
+  const categories = ['navigation', 'actions', 'general'];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -58,10 +60,10 @@ export function ShortcutsHintPanel({ open, onOpenChange }: ShortcutHintPanelProp
         <DialogHeader>
           <div className="flex items-center gap-2">
             <Keyboard className="h-5 w-5 text-primary" />
-            <DialogTitle>Клавиатурные сокращения</DialogTitle>
+            <DialogTitle>{t('title')}</DialogTitle>
           </div>
           <DialogDescription>
-            Используйте эти сочетания клавиш для быстрого доступа к функциям
+            {t('description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -70,7 +72,7 @@ export function ShortcutsHintPanel({ open, onOpenChange }: ShortcutHintPanelProp
             {categories.map(category => (
               <div key={category}>
                 <h3 className="text-sm font-semibold mb-3 text-muted-foreground">
-                  {category}
+                  {t(`categories.${category}`)}
                 </h3>
                 <div className="space-y-2">
                   {SHORTCUTS.filter(s => s.category === category).map((shortcut, index) => (
@@ -78,7 +80,7 @@ export function ShortcutsHintPanel({ open, onOpenChange }: ShortcutHintPanelProp
                       key={index}
                       className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
                     >
-                      <span className="text-sm">{shortcut.description}</span>
+                      <span className="text-sm">{t(`shortcuts.${shortcut.descriptionKey}`)}</span>
                       <div className="flex items-center gap-1">
                         {shortcut.keys.map((key, keyIndex) => (
                           <KeyBadge key={keyIndex} keyLabel={key} />
@@ -94,24 +96,24 @@ export function ShortcutsHintPanel({ open, onOpenChange }: ShortcutHintPanelProp
           {/* Legend */}
           <div className="mt-6 pt-6 border-t border-border">
             <h3 className="text-sm font-semibold mb-3 text-muted-foreground">
-              Обозначения
+              {t('legend')}
             </h3>
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className="flex items-center gap-2">
                 <KeyBadge keyLabel="⌘" />
-                <span>Command (Mac) / Ctrl (Windows)</span>
+                <span>{t('keys.command')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <KeyBadge keyLabel="⇧" />
-                <span>Shift</span>
+                <span>{t('keys.shift')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <KeyBadge keyLabel="⌥" />
-                <span>Option (Mac) / Alt (Windows)</span>
+                <span>{t('keys.option')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <KeyBadge keyLabel="Esc" />
-                <span>Escape</span>
+                <span>{t('keys.escape')}</span>
               </div>
             </div>
           </div>

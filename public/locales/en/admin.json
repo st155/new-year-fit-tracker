@@ -173,5 +173,20 @@
       "enqueuedJobs": "Enqueued {{count}} confidence calculations",
       "enqueueError": "Failed to enqueue calculations"
     }
+  },
+  "terraToken": {
+    "tokenCreated": "Token created successfully",
+    "tokenCreateError": "Token creation error: {{error}}",
+    "tokenUpdated": "Token updated successfully",
+    "tokenUpdateError": "Update error: {{error}}",
+    "tokenDeleted": "Token deleted",
+    "tokenDeleteError": "Delete error: {{error}}",
+    "historicalDataRequested": "Historical data request sent: {{message}}",
+    "historicalDataError": "Data request error: {{error}}",
+    "getUsersError": "Error getting Terra users: {{error}}",
+    "userDeauthenticated": "Terra user deauthenticated",
+    "deauthError": "Deauthentication error: {{error}}",
+    "connectionsReset": "Reset {{count}} connections of {{total}}",
+    "resetError": "Connection reset error: {{error}}"
   }
 }

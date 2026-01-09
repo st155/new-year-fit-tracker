@@ -403,5 +403,13 @@
     "save": "Save",
     "aggregationMethod": "Aggregation method:",
     "priorityOrder": "Source priority (top to bottom):"
+  },
+  "sync": {
+    "noActiveDevices": "No active devices found",
+    "allSynced": "All devices synchronized",
+    "syncedCount": "Updated {{count}} data sources",
+    "syncWithErrors": "Sync completed with errors",
+    "syncStats": "Success: {{success}}, Errors: {{fail}}",
+    "syncError": "Sync error"
   }
 }

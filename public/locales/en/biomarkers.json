@@ -60,6 +60,8 @@
     "processingError": "Processing error",
     "rematchComplete": "Rematching complete",
     "rematchedCount": "Matched {{matched}} of {{total}} biomarkers",
-    "rematchError": "Rematching error"
+    "rematchError": "Rematching error",
+    "optimalRangeSaved": "Optimal range saved successfully",
+    "optimalRangeSaveFailed": "Failed to save optimal range"
   }
 }

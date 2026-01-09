@@ -121,6 +121,16 @@
     "largeFileWarning": "Large file ({{size}}MB). Processing may be slow.",
     "processingHeic": "Processing {{name}} as HEIC (iPhone format)"
   },
+  "scanner": {
+    "frontReady": "📸 Front side ready",
+    "frontReadyDesc": "Now photograph the back side with barcode",
+    "frontUploaded": "📸 Front side uploaded",
+    "frontUploadedDesc": "Now upload the back side with barcode",
+    "backSkipped": "ℹ️ Back side skipped",
+    "backSkippedDesc": "Barcode won't be extracted, but AI will still analyze the supplement",
+    "manualBarcodeApplied": "📋 Manual barcode applied",
+    "manualBarcodeAppliedDesc": "Using barcode: {{barcode}}"
+  },
   "errors": {
     "notAuthenticated": "User not authenticated",
     "productNotFound": "Product not found",

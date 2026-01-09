@@ -537,5 +537,60 @@
       "elevated": "Повышенный",
       "high": "Высокий"
     }
+  },
+  "export": {
+    "title": "Экспорт данных",
+    "description": "Выберите тип данных и формат для экспорта",
+    "buttonLabel": "Экспорт данных",
+    "selectFormat": "Формат экспорта",
+    "selectData": "Данные для экспорта",
+    "validation": {
+      "selectData": "Выберите данные для экспорта"
+    },
+    "success": "Данные экспортированы в формате {{format}}",
+    "error": "Ошибка при экспорте данных",
+    "submit": "Экспортировать",
+    "exporting": "Экспорт...",
+    "cancel": "Отмена",
+    "dataTypes": {
+      "goals": "Цели и прогресс",
+      "measurements": "Измерения",
+      "workouts": "Тренировки",
+      "bodyComposition": "Состав тела"
+    },
+    "formats": {
+      "csv": "CSV (Excel, Google Sheets)",
+      "pdf": "PDF (печать в PDF)"
+    },
+    "categories": {
+      "personal": "Личная",
+      "challenge": "Челлендж"
+    },
+    "headers": {
+      "goal": "Цель",
+      "type": "Тип",
+      "current": "Текущее",
+      "target": "Целевое",
+      "unit": "Единица",
+      "progress": "Прогресс",
+      "category": "Категория",
+      "created": "Создана",
+      "date": "Дата",
+      "metric": "Метрика",
+      "value": "Значение",
+      "source": "Источник",
+      "verified": "Проверено",
+      "yes": "Да",
+      "no": "Нет",
+      "durationMin": "Длительность (мин)",
+      "calories": "Калории",
+      "distanceKm": "Дистанция (км)",
+      "avgHr": "Ср. пульс",
+      "maxHr": "Макс. пульс",
+      "weightKg": "Вес (кг)",
+      "fatPercent": "Жир (%)",
+      "muscleKg": "Мышцы (кг)",
+      "method": "Метод"
+    }
   }
 }

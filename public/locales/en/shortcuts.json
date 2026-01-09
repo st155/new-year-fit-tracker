@@ -1,0 +1,31 @@
+{
+  "title": "Keyboard Shortcuts",
+  "description": "Use these keyboard shortcuts for quick access to features",
+  "legend": "Legend",
+  "categories": {
+    "navigation": "Navigation",
+    "actions": "Actions",
+    "general": "General"
+  },
+  "shortcuts": {
+    "openCommandPalette": "Open command palette",
+    "goToHabits": "Go to Habits",
+    "goToGoals": "Go to Goals",
+    "goToDashboard": "Go to Dashboard",
+    "goToChallenges": "Go to Challenges",
+    "createNew": "Create new habit/goal",
+    "completeHabit": "Complete habit (focused)",
+    "edit": "Edit (focused)",
+    "swipeRight": "Swipe right (complete)",
+    "swipeLeft": "Swipe left (options)",
+    "closeModal": "Close modal",
+    "showHints": "Show hints",
+    "save": "Save"
+  },
+  "keys": {
+    "command": "Command (Mac) / Ctrl (Windows)",
+    "shift": "Shift",
+    "option": "Option (Mac) / Alt (Windows)",
+    "escape": "Escape"
+  }
+}

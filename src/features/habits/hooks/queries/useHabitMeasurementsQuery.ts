@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { habitKeys } from '../keys';
+import { useTranslation } from 'react-i18next';
 
 export interface HabitMeasurement {
   id: string;
@@ -26,6 +27,7 @@ export interface MeasurementStats {
 
 export function useHabitMeasurementsQuery(habitId: string, userId?: string) {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('habits');
 
   const { data: measurements, isLoading } = useQuery({
     queryKey: habitKeys.measurements(habitId),
@@ -66,11 +68,11 @@ export function useHabitMeasurementsQuery(habitId: string, userId?: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: habitKeys.measurements(habitId) });
       queryClient.invalidateQueries({ queryKey: habitKeys.all });
-      toast.success('Measurement added');
+      toast.success(t('toast.measurementAdded'));
     },
     onError: (error) => {
       console.error('Error adding measurement:', error);
-      toast.error('Failed to add measurement');
+      toast.error(t('toast.failedAddMeasurement'));
     },
   });
 
@@ -88,11 +90,11 @@ export function useHabitMeasurementsQuery(habitId: string, userId?: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: habitKeys.measurements(habitId) });
-      toast.success('Measurement updated');
+      toast.success(t('toast.measurementUpdated'));
     },
     onError: (error) => {
       console.error('Error updating measurement:', error);
-      toast.error('Failed to update measurement');
+      toast.error(t('toast.failedUpdateMeasurement'));
     },
   });
 
@@ -108,11 +110,11 @@ export function useHabitMeasurementsQuery(habitId: string, userId?: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: habitKeys.measurements(habitId) });
       queryClient.invalidateQueries({ queryKey: habitKeys.all });
-      toast.success('Measurement deleted');
+      toast.success(t('toast.measurementDeleted'));
     },
     onError: (error) => {
       console.error('Error deleting measurement:', error);
-      toast.error('Failed to delete measurement');
+      toast.error(t('toast.failedDeleteMeasurement'));
     },
   });
 

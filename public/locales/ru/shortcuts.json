@@ -1,0 +1,31 @@
+{
+  "title": "Клавиатурные сокращения",
+  "description": "Используйте эти сочетания клавиш для быстрого доступа к функциям",
+  "legend": "Обозначения",
+  "categories": {
+    "navigation": "Навигация",
+    "actions": "Действия",
+    "general": "Общие"
+  },
+  "shortcuts": {
+    "openCommandPalette": "Открыть палитру команд",
+    "goToHabits": "Перейти к Привычкам",
+    "goToGoals": "Перейти к Целям",
+    "goToDashboard": "Перейти к Dashboard",
+    "goToChallenges": "Перейти к Челленджам",
+    "createNew": "Создать новую привычку/цель",
+    "completeHabit": "Завершить привычку (в фокусе)",
+    "edit": "Редактировать (в фокусе)",
+    "swipeRight": "Свайп вправо (завершить)",
+    "swipeLeft": "Свайп влево (опции)",
+    "closeModal": "Закрыть модальное окно",
+    "showHints": "Показать подсказки",
+    "save": "Сохранить"
+  },
+  "keys": {
+    "command": "Command (Mac) / Ctrl (Windows)",
+    "shift": "Shift",
+    "option": "Option (Mac) / Alt (Windows)",
+    "escape": "Escape"
+  }
+}

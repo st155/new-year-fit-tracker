@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { SupplementInfoCard } from "./SupplementInfoCard";
 import { supplementsApi } from "@/lib/api";
+import { useTranslation } from 'react-i18next';
 
 interface BottleScannerProps {
   isOpen: boolean;
@@ -66,6 +67,7 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useTranslation('biostack');
 
   // Reset state when modal closes
   const handleClose = useCallback(() => {
@@ -182,8 +184,8 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
         setCapturedImage(compressed); // Set legacy for backward compatibility
         setStep('camera-back');
         toast({
-          title: "📸 Лицевая сторона готова",
-          description: "Теперь сфотографируйте заднюю сторону с баркодом",
+          title: t('scanner.frontReady'),
+          description: t('scanner.frontReadyDesc'),
         });
       } else if (step === 'camera-back') {
         setBackImage(compressed);
@@ -207,8 +209,8 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
         setCapturedImage(compressed);
         setStep('camera-back');
         toast({
-          title: "📸 Лицевая сторона загружена",
-          description: "Теперь загрузите заднюю сторону с баркодом",
+          title: t('scanner.frontUploaded'),
+          description: t('scanner.frontUploadedDesc'),
         });
       } else if (step === 'camera-back') {
         setBackImage(compressed);
@@ -234,10 +236,10 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
   const handleSkipBackSide = useCallback(() => {
     setStep('preview');
     toast({
-      title: "ℹ️ Задняя сторона пропущена",
-      description: "Баркод не будет извлечен, но AI все равно проанализирует добавку",
+      title: t('scanner.backSkipped'),
+      description: t('scanner.backSkippedDesc'),
     });
-  }, [toast]);
+  }, [toast, t]);
 
 
   // Create product and enrich
@@ -455,8 +457,8 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
       if (manualBarcode) {
         console.log('[BOTTLE-SCANNER] ✍️ Using manual barcode:', manualBarcode);
         toast({
-          title: "📋 Ручной баркод применён",
-          description: `Использован баркод: ${manualBarcode}`,
+          title: t('scanner.manualBarcodeApplied'),
+          description: t('scanner.manualBarcodeAppliedDesc', { barcode: manualBarcode }),
         });
       } else if (data.extracted.barcode) {
         console.log('[BOTTLE-SCANNER] 🤖 AI extracted barcode:', data.extracted.barcode);

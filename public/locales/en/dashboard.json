@@ -536,5 +536,60 @@
       "elevated": "Elevated",
       "high": "High"
     }
+  },
+  "export": {
+    "title": "Export Data",
+    "description": "Select data type and format for export",
+    "buttonLabel": "Export Data",
+    "selectFormat": "Export format",
+    "selectData": "Data to export",
+    "validation": {
+      "selectData": "Select data to export"
+    },
+    "success": "Data exported in {{format}} format",
+    "error": "Error exporting data",
+    "submit": "Export",
+    "exporting": "Exporting...",
+    "cancel": "Cancel",
+    "dataTypes": {
+      "goals": "Goals and progress",
+      "measurements": "Measurements",
+      "workouts": "Workouts",
+      "bodyComposition": "Body composition"
+    },
+    "formats": {
+      "csv": "CSV (Excel, Google Sheets)",
+      "pdf": "PDF (print to PDF)"
+    },
+    "categories": {
+      "personal": "Personal",
+      "challenge": "Challenge"
+    },
+    "headers": {
+      "goal": "Goal",
+      "type": "Type",
+      "current": "Current",
+      "target": "Target",
+      "unit": "Unit",
+      "progress": "Progress",
+      "category": "Category",
+      "created": "Created",
+      "date": "Date",
+      "metric": "Metric",
+      "value": "Value",
+      "source": "Source",
+      "verified": "Verified",
+      "yes": "Yes",
+      "no": "No",
+      "durationMin": "Duration (min)",
+      "calories": "Calories",
+      "distanceKm": "Distance (km)",
+      "avgHr": "Avg HR",
+      "maxHr": "Max HR",
+      "weightKg": "Weight (kg)",
+      "fatPercent": "Fat (%)",
+      "muscleKg": "Muscle (kg)",
+      "method": "Method"
+    }
   }
 }
