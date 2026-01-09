@@ -60,6 +60,8 @@
     "processingError": "Ошибка обработки",
     "rematchComplete": "Пересопоставление завершено",
     "rematchedCount": "Сопоставлено {{matched}} из {{total}} биомаркеров",
-    "rematchError": "Ошибка пересопоставления"
+    "rematchError": "Ошибка пересопоставления",
+    "optimalRangeSaved": "Оптимальный диапазон сохранён",
+    "optimalRangeSaveFailed": "Не удалось сохранить оптимальный диапазон"
   }
 }

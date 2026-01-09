@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminApi, terraApi } from '@/lib/api/client';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface TerraToken {
   id: string;
@@ -60,6 +61,7 @@ export function useUsersList() {
 
 export function useCreateTerraToken() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('admin');
 
   return useMutation({
     mutationFn: async (params: { user_id: string; terra_user_id: string; provider: string }) => {
@@ -72,16 +74,17 @@ export function useCreateTerraToken() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-terra-tokens'] });
-      toast.success('Токен успешно создан');
+      toast.success(t('terraToken.tokenCreated'));
     },
     onError: (error: Error) => {
-      toast.error(`Ошибка создания токена: ${error.message}`);
+      toast.error(t('terraToken.tokenCreateError', { error: error.message }));
     }
   });
 }
 
 export function useUpdateTerraToken() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('admin');
 
   return useMutation({
     mutationFn: async (params: { 
@@ -99,16 +102,17 @@ export function useUpdateTerraToken() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-terra-tokens'] });
-      toast.success('Токен успешно обновлён');
+      toast.success(t('terraToken.tokenUpdated'));
     },
     onError: (error: Error) => {
-      toast.error(`Ошибка обновления: ${error.message}`);
+      toast.error(t('terraToken.tokenUpdateError', { error: error.message }));
     }
   });
 }
 
 export function useDeleteTerraToken() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('admin');
 
   return useMutation({
     mutationFn: async (id: string) => {
@@ -121,16 +125,17 @@ export function useDeleteTerraToken() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-terra-tokens'] });
-      toast.success('Токен удалён');
+      toast.success(t('terraToken.tokenDeleted'));
     },
     onError: (error: Error) => {
-      toast.error(`Ошибка удаления: ${error.message}`);
+      toast.error(t('terraToken.tokenDeleteError', { error: error.message }));
     }
   });
 }
 
 export function useRequestHistoricalData() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('admin');
 
   return useMutation({
     mutationFn: async (params: { terra_user_id: string; days?: number }) => {
@@ -143,10 +148,10 @@ export function useRequestHistoricalData() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['admin-terra-tokens'] });
-      toast.success(`Запрос исторических данных отправлен: ${(data as any)?.message}`);
+      toast.success(t('terraToken.historicalDataRequested', { message: (data as any)?.message }));
     },
     onError: (error: Error) => {
-      toast.error(`Ошибка запроса данных: ${error.message}`);
+      toast.error(t('terraToken.historicalDataError', { error: error.message }));
     }
   });
 }
@@ -162,6 +167,7 @@ export interface TerraApiUser {
 
 export function useGetTerraUsers() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('admin');
 
   return useMutation({
     mutationFn: async (targetUserId: string) => {
@@ -174,7 +180,7 @@ export function useGetTerraUsers() {
       return data as unknown as { success: boolean; users: TerraApiUser[]; reference_id: string };
     },
     onError: (error: Error) => {
-      toast.error(`Ошибка получения Terra users: ${error.message}`);
+      toast.error(t('terraToken.getUsersError', { error: error.message }));
     }
   });
 }
@@ -182,6 +188,7 @@ export function useGetTerraUsers() {
 // Deauthenticate a single Terra user
 export function useDeauthTerraUser() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('admin');
 
   return useMutation({
     mutationFn: async (params: { terraUserId: string; provider?: string }) => {
@@ -194,10 +201,10 @@ export function useDeauthTerraUser() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-terra-tokens'] });
-      toast.success('Terra пользователь деавторизован');
+      toast.success(t('terraToken.userDeauthenticated'));
     },
     onError: (error: Error) => {
-      toast.error(`Ошибка деавторизации: ${error.message}`);
+      toast.error(t('terraToken.deauthError', { error: error.message }));
     }
   });
 }
@@ -205,6 +212,7 @@ export function useDeauthTerraUser() {
 // Deauthenticate all Terra connections for a user by reference_id
 export function useDeauthAllTerraUsers() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('admin');
 
   return useMutation({
     mutationFn: async (params: { targetUserId: string; providerFilter?: string }) => {
@@ -223,10 +231,10 @@ export function useDeauthAllTerraUsers() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['admin-terra-tokens'] });
-      toast.success(`Сброшено ${data.deauthenticated} подключений из ${data.total}`);
+      toast.success(t('terraToken.connectionsReset', { count: data.deauthenticated, total: data.total }));
     },
     onError: (error: Error) => {
-      toast.error(`Ошибка сброса подключений: ${error.message}`);
+      toast.error(t('terraToken.resetError', { error: error.message }));
     }
   });
 }

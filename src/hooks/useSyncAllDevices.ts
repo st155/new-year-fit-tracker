@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { terraApi } from '@/lib/api/client';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface SyncResult {
   provider: string;
@@ -11,6 +12,7 @@ interface SyncResult {
 
 export function useSyncAllDevices() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('integrations');
 
   return useMutation({
     mutationFn: async () => {
@@ -22,7 +24,7 @@ export function useSyncAllDevices() {
 
       if (tokensError) throw tokensError;
       if (!tokens || tokens.length === 0) {
-        throw new Error('No active devices found');
+        throw new Error(t('sync.noActiveDevices'));
       }
 
       const results: SyncResult[] = [];
@@ -78,12 +80,12 @@ export function useSyncAllDevices() {
       const failCount = results.filter(r => !r.success).length;
 
       if (failCount === 0) {
-        toast.success('Все устройства синхронизированы', {
-          description: `Обновлено ${successCount} источников данных`,
+        toast.success(t('sync.allSynced'), {
+          description: t('sync.syncedCount', { count: successCount }),
         });
       } else {
-        toast.warning('Синхронизация завершена с ошибками', {
-          description: `Успешно: ${successCount}, Ошибок: ${failCount}`,
+        toast.warning(t('sync.syncWithErrors'), {
+          description: t('sync.syncStats', { success: successCount, fail: failCount }),
         });
       }
       
@@ -95,7 +97,7 @@ export function useSyncAllDevices() {
       queryClient.invalidateQueries({ queryKey: ['body-metrics-withings'] });
     },
     onError: (error: Error) => {
-      toast.error('Ошибка синхронизации', {
+      toast.error(t('sync.syncError'), {
         description: error.message,
       });
     },

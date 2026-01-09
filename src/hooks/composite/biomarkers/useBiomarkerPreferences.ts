@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface BiomarkerPreference {
   id: string;
@@ -17,6 +18,7 @@ interface BiomarkerPreference {
 export function useBiomarkerPreferences(biomarkerId: string | undefined) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { t } = useTranslation('biomarkers');
 
   const { data: preferences, isLoading } = useQuery({
     queryKey: ['biomarker-preferences', user?.id, biomarkerId],
@@ -66,11 +68,11 @@ export function useBiomarkerPreferences(biomarkerId: string | undefined) {
       queryClient.invalidateQueries({
         queryKey: ['biomarker-preferences', user?.id, biomarkerId],
       });
-      toast.success('Optimal range saved successfully');
+      toast.success(t('toast.optimalRangeSaved'));
     },
     onError: (error) => {
       console.error('Failed to save preferences:', error);
-      toast.error('Failed to save optimal range');
+      toast.error(t('toast.optimalRangeSaveFailed'));
     },
   });
 

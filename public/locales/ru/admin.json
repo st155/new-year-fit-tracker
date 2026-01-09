@@ -173,5 +173,20 @@
       "enqueuedJobs": "Добавлено {{count}} расчётов уверенности",
       "enqueueError": "Не удалось добавить расчёты"
     }
+  },
+  "terraToken": {
+    "tokenCreated": "Токен успешно создан",
+    "tokenCreateError": "Ошибка создания токена: {{error}}",
+    "tokenUpdated": "Токен успешно обновлён",
+    "tokenUpdateError": "Ошибка обновления: {{error}}",
+    "tokenDeleted": "Токен удалён",
+    "tokenDeleteError": "Ошибка удаления: {{error}}",
+    "historicalDataRequested": "Запрос исторических данных отправлен: {{message}}",
+    "historicalDataError": "Ошибка запроса данных: {{error}}",
+    "getUsersError": "Ошибка получения Terra users: {{error}}",
+    "userDeauthenticated": "Terra пользователь деавторизован",
+    "deauthError": "Ошибка деавторизации: {{error}}",
+    "connectionsReset": "Сброшено {{count}} подключений из {{total}}",
+    "resetError": "Ошибка сброса подключений: {{error}}"
   }
 }
