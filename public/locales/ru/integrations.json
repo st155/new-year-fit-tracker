@@ -416,5 +416,52 @@
     "dataLoaded": "Данные Withings загружены",
     "metricsLoaded": "Загружено {{count}} метрик за последние {{days}} дней",
     "loadError": "Ошибка загрузки данных"
+  },
+  "forceSync": {
+    "dataTypes": {
+      "daily": "дневных метрик",
+      "activity": "тренировок",
+      "body": "данных тела"
+    },
+    "started": "Синхронизация {{provider}} ({{dataType}}) запущена",
+    "activityDescription": "Тренировки за последние 14 дней обновятся в течение минуты",
+    "defaultDescription": "Данные обновятся в течение нескольких минут",
+    "error": "Ошибка синхронизации"
+  },
+  "withingsDebug": {
+    "title": "Withings Debug Panel",
+    "description": "Отладка синхронизации данных от Withings",
+    "notConnected": "Withings не подключен",
+    "notConnectedDesc": "Подключите устройство Withings в разделе Интеграции",
+    "connected": "Withings подключен",
+    "connectionStatus": "Статус подключения",
+    "connectedLabel": "Подключено",
+    "notConnectedLabel": "Не подключено",
+    "actions": "Действия",
+    "syncWithings": "Sync Withings",
+    "syncAllDevices": "Sync All Devices",
+    "loadData30": "Загрузить данные (30 дней)",
+    "loadData90": "Загрузить данные (90 дней)",
+    "refreshData": "Обновить данные",
+    "dataRefreshed": "Данные обновлены",
+    "syncStarted": "Синхронизация Withings запущена",
+    "syncAllStarted": "Синхронизация всех устройств запущена",
+    "syncWaitDesc": "Подождите 30-60 секунд и обновите данные",
+    "metricsCount": "Метрики в unified_metrics",
+    "noData": "Нет данных",
+    "measurementDate": "Дата измерения",
+    "created": "Создано",
+    "webhooks": "Последние webhook'и",
+    "noWebhooks": "Нет webhook'ов",
+    "lastSync": "Последняя синхронизация",
+    "howToUse": "Как использовать:",
+    "instructions": {
+      "step1": "\"Check Connection Status\" - проверяет статус подключения Withings",
+      "step2": "\"Sync Withings\" - запрашивает последние 7 дней данных через Terra API",
+      "step3": "\"Загрузить данные\" - загружает исторические данные за указанный период напрямую",
+      "step4": "\"Sync All Devices\" - синхронизирует все подключенные устройства",
+      "step5": "После синхронизации подождите 30-60 секунд для обработки данных",
+      "step6": "Если данных нет - попробуйте использовать \"Загрузить данные\" или переподключить Withings"
+    }
   }
 }

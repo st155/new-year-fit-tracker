@@ -111,7 +111,7 @@ export function NotificationSettings() {
         ) : (
           <Bell className="h-5 w-5 text-primary" />
         )}
-        <h3 className="text-lg font-semibold">Настройки уведомлений</h3>
+        <h3 className="text-lg font-semibold">{t('notifications.settings.title')}</h3>
       </div>
 
       <div className="space-y-6">
@@ -119,10 +119,10 @@ export function NotificationSettings() {
         <div className="flex items-start justify-between gap-4 pb-4 border-b">
           <div className="flex-1">
             <Label htmlFor="quiet_mode" className="text-base font-medium cursor-pointer">
-              Тихий режим
+              {t('notifications.settings.quietMode')}
             </Label>
             <p className="text-sm text-muted-foreground mt-1">
-              Отключить все уведомления (заменяет все остальные настройки)
+              {t('notifications.settings.quietModeDesc')}
             </p>
           </div>
           <Switch
@@ -137,10 +137,10 @@ export function NotificationSettings() {
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
               <Label htmlFor="friend_completions" className="font-medium cursor-pointer">
-                Друзья выполнили привычку
+                {t('notifications.settings.friendCompletions')}
               </Label>
               <p className="text-sm text-muted-foreground mt-1">
-                Получать уведомления, когда друзья выполняют те же привычки
+                {t('notifications.settings.friendCompletionsDesc')}
               </p>
             </div>
             <Switch
@@ -154,10 +154,10 @@ export function NotificationSettings() {
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
               <Label htmlFor="reactions" className="font-medium cursor-pointer">
-                Реакции на мои события
+                {t('notifications.settings.reactions')}
               </Label>
               <p className="text-sm text-muted-foreground mt-1">
-                Уведомления когда кто-то ставит реакцию на ваши достижения
+                {t('notifications.settings.reactionsDesc')}
               </p>
             </div>
             <Switch
@@ -171,10 +171,10 @@ export function NotificationSettings() {
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
               <Label htmlFor="team_invites" className="font-medium cursor-pointer">
-                Приглашения в команды
+                {t('notifications.settings.teamInvites')}
               </Label>
               <p className="text-sm text-muted-foreground mt-1">
-                Уведомления о приглашениях присоединиться к команде
+                {t('notifications.settings.teamInvitesDesc')}
               </p>
             </div>
             <Switch
@@ -188,10 +188,10 @@ export function NotificationSettings() {
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
               <Label htmlFor="achievements" className="font-medium cursor-pointer">
-                Достижения и награды
+                {t('notifications.settings.achievements')}
               </Label>
               <p className="text-sm text-muted-foreground mt-1">
-                Уведомления о новых достижениях, milestone'ах и наградах
+                {t('notifications.settings.achievementsDesc')}
               </p>
             </div>
             <Switch
@@ -205,10 +205,10 @@ export function NotificationSettings() {
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
               <Label htmlFor="reminders" className="font-medium cursor-pointer">
-                Напоминания о привычках
+                {t('notifications.settings.reminders')}
               </Label>
               <p className="text-sm text-muted-foreground mt-1">
-                Уведомления-напоминания о невыполненных привычках
+                {t('notifications.settings.remindersDesc')}
               </p>
             </div>
             <Switch
@@ -223,7 +223,9 @@ export function NotificationSettings() {
         {/* Save Button */}
         <div className="pt-4 border-t">
           <Button onClick={handleSave} disabled={saving} className="w-full">
-            {saving ? 'Сохранение...' : 'Сохранить настройки'}
+            {saving ? t('notifications.settings.saving') : t('notifications.settings.saveSettings')}
+          </Button>
+        </div>
           </Button>
         </div>
       </div>

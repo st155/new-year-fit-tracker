@@ -840,8 +840,8 @@ export const AIChatWindow = ({
     executing: boolean;
   }) => {
     const handleExecute = () => {
-      toast.loading("Выполняется...", {
-        description: "План выполняется, подождите",
+      toast.loading(t('aiChat.executing'), {
+        description: t('aiChat.executingDesc'),
         duration: 2000
       });
       onExecute();
@@ -854,7 +854,7 @@ export const AIChatWindow = ({
             <Sparkles className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
             <div className="flex-1 min-w-0">
               <h4 className="font-medium text-amber-900 dark:text-amber-100 text-sm md:text-base">
-                План готов к выполнению
+                {t('aiChat.planReady')}
               </h4>
               <p className="text-xs md:text-sm text-amber-700 dark:text-amber-300 mt-1 whitespace-pre-wrap break-words">
                 {action.action_plan}
@@ -1148,10 +1148,11 @@ export const AIChatWindow = ({
               aria-expanded={showMentionSuggestions}
               aria-controls="mention-suggestions"
               placeholder={loadingClients 
-                ? "Загрузка клиентов..." 
+                ? t('aiChat.loadingClients')
                 : clients.length > 0 
-                  ? "Напишите @имя для упоминания клиента или задайте вопрос..." 
-                  : "Задайте вопрос или опишите задачу..."
+                  ? t('aiChat.mentionPlaceholder')
+                  : t('aiInput.placeholder')
+              }
               }
               value={input}
               onChange={handleInputChange}

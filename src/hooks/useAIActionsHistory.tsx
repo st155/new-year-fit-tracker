@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 export interface AIActionLog {
   id: string;
@@ -19,6 +20,7 @@ export const useAIActionsHistory = (userId: string | undefined, limit: number = 
   const [actions, setActions] = useState<AIActionLog[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { t } = useTranslation('trainer');
 
   const loadActions = async () => {
     if (!userId) return;
@@ -53,8 +55,8 @@ export const useAIActionsHistory = (userId: string | undefined, limit: number = 
     } catch (error) {
       console.error('Error loading action history:', error);
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось загрузить историю действий',
+        title: t('aiToast.error'),
+        description: t('aiToast.errorLoadConversations'),
         variant: 'destructive'
       });
     } finally {

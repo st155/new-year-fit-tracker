@@ -1,6 +1,6 @@
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { format } from "date-fns";
-import { ru } from "date-fns/locale";
+import { ru, enUS } from "date-fns/locale";
 import { ChevronRight, Clock, Flame, Dumbbell, Activity, Sparkles, PenTool, Watch, Share2, Repeat, Trash2, ChevronDown, Trophy, Link } from "lucide-react";
 import { WorkoutHistoryItem } from "@/hooks/useWorkoutHistory";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { useDeleteWorkout } from "@/hooks/useDeleteWorkout";
 import DeleteWorkoutDialog from "./DeleteWorkoutDialog";
+import { useTranslation } from "react-i18next";
 
 interface WorkoutHistoryCardProps {
   workout: WorkoutHistoryItem;
@@ -20,6 +21,7 @@ interface WorkoutHistoryCardProps {
 
 export default function WorkoutHistoryCard({ workout, index }: WorkoutHistoryCardProps) {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation('workouts');
   const [isExpanded, setIsExpanded] = useState(false);
   const [showActions, setShowActions] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -28,6 +30,8 @@ export default function WorkoutHistoryCard({ workout, index }: WorkoutHistoryCar
   const colors = workout.source === 'linked' 
     ? { accent: 'border-l-gradient-to-r from-pink-500 to-purple-500', badge: 'bg-gradient-to-r from-pink-500/20 to-purple-500/20 text-pink-300 border-pink-500/30' }
     : getWorkoutColors(workout.source);
+  
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
   
   // Swipe gesture state
   const x = useMotionValue(0);
@@ -44,8 +48,8 @@ export default function WorkoutHistoryCard({ workout, index }: WorkoutHistoryCar
       // Swipe right - Repeat
       if ('vibrate' in navigator) navigator.vibrate(10);
       toast({
-        title: "Тренировка повторена",
-        description: `Начните тренировку "${workout.name}"`,
+        title: t('history.workoutRepeated'),
+        description: t('history.startWorkout', { name: workout.name }),
       });
       x.set(0);
     } else if (info.offset.x < -threshold) {
@@ -60,9 +64,9 @@ export default function WorkoutHistoryCard({ workout, index }: WorkoutHistoryCar
   
   // Check for achievements (mock data - можно расширить)
   const achievements = [];
-  if (index === 0) achievements.push({ icon: '🔥', label: 'Последняя тренировка' });
+  if (index === 0) achievements.push({ icon: '🔥', label: t('history.lastWorkout') });
   if (workout.exercises && Array.isArray(workout.exercises) && workout.exercises.length >= 8) {
-    achievements.push({ icon: '🏆', label: 'Интенсивная' });
+    achievements.push({ icon: '🏆', label: t('history.intensive') });
   }
   
   const getSourceIcon = () => {
@@ -153,12 +157,12 @@ export default function WorkoutHistoryCard({ workout, index }: WorkoutHistoryCar
               <h3 className="text-xl font-bold text-white">{workout.name}</h3>
               {workout.source === 'linked' && (
                 <Badge className="bg-gradient-to-r from-pink-500/20 to-purple-500/20 text-pink-300 border-pink-500/30 text-xs">
-                  WHOOP + Вручную
+                  {t('history.whoopManual')}
                 </Badge>
               )}
             </div>
             <p className="text-sm text-gray-400">
-              {format(new Date(workout.date), "EEEE, d MMMM yyyy", { locale: ru })}
+              {format(new Date(workout.date), "EEEE, d MMMM yyyy", { locale: dateLocale })}
             </p>
           </div>
         </div>
@@ -169,8 +173,8 @@ export default function WorkoutHistoryCard({ workout, index }: WorkoutHistoryCar
             <div className="flex items-center gap-2 text-gray-300">
               <Clock className="w-4 h-4 text-cyan-400" />
               <div>
-                <p className="text-xs text-gray-400">Время</p>
-                <p className="text-sm font-semibold">{workout.duration} мин</p>
+                <p className="text-xs text-gray-400">{t('history.time')}</p>
+                <p className="text-sm font-semibold">{workout.duration} {t('history.min')}</p>
               </div>
             </div>
           )}
@@ -179,8 +183,8 @@ export default function WorkoutHistoryCard({ workout, index }: WorkoutHistoryCar
             <div className="flex items-center gap-2 text-gray-300">
               <Flame className="w-4 h-4 text-orange-400" />
               <div>
-                <p className="text-xs text-gray-400">Калории</p>
-                <p className="text-sm font-semibold">{workout.calories} ккал</p>
+                <p className="text-xs text-gray-400">{t('history.calories')}</p>
+                <p className="text-sm font-semibold">{workout.calories} {t('history.kcal')}</p>
               </div>
             </div>
           )}
@@ -189,8 +193,8 @@ export default function WorkoutHistoryCard({ workout, index }: WorkoutHistoryCar
             <div className="flex items-center gap-2 text-gray-300">
               <Dumbbell className="w-4 h-4 text-purple-400" />
               <div>
-                <p className="text-xs text-gray-400">Объем</p>
-                <p className="text-sm font-semibold">{Math.round(workout.volume)} кг</p>
+                <p className="text-xs text-gray-400">{t('history.volume')}</p>
+                <p className="text-sm font-semibold">{Math.round(workout.volume)} {t('history.kg')}</p>
               </div>
             </div>
           )}
@@ -199,7 +203,7 @@ export default function WorkoutHistoryCard({ workout, index }: WorkoutHistoryCar
             <div className="flex items-center gap-2 text-gray-300">
               <Activity className="w-4 h-4 text-red-400" />
               <div>
-                <p className="text-xs text-gray-400">Strain</p>
+                <p className="text-xs text-gray-400">{t('history.strain')}</p>
                 <p className="text-sm font-semibold">{workout.strain.toFixed(1)}</p>
               </div>
             </div>
@@ -209,8 +213,8 @@ export default function WorkoutHistoryCard({ workout, index }: WorkoutHistoryCar
             <div className="flex items-center gap-2 text-gray-300">
               <Activity className="w-4 h-4 text-green-400" />
               <div>
-                <p className="text-xs text-gray-400">Дистанция</p>
-                <p className="text-sm font-semibold">{workout.distance.toFixed(1)} км</p>
+                <p className="text-xs text-gray-400">{t('history.distance')}</p>
+                <p className="text-sm font-semibold">{workout.distance.toFixed(1)} {t('history.km')}</p>
               </div>
             </div>
           )}
@@ -227,7 +231,7 @@ export default function WorkoutHistoryCard({ workout, index }: WorkoutHistoryCar
               className="flex items-center gap-2 text-sm text-gray-400 hover:text-gray-200 transition-colors w-full"
             >
               <ChevronDown className={cn("w-4 h-4 transition-transform", isExpanded && "rotate-180")} />
-              <span>{workout.exercises} упражнений {workout.sets && `• ${workout.sets} подходов`}</span>
+              <span>{workout.exercises} {t('history.exercises')} {workout.sets && `• ${workout.sets} ${t('history.sets')}`}</span>
             </button>
           </div>
         )}

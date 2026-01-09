@@ -339,6 +339,26 @@
     "undoFailedDesc": "Failed to undo completion"
   },
   "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all read",
+    "empty": "No notifications",
+    "settings": {
+      "title": "Notification Settings",
+      "quietMode": "Quiet mode",
+      "quietModeDesc": "Disables all notifications (overrides all other settings)",
+      "friendCompletions": "Friend habit completions",
+      "friendCompletionsDesc": "Get notified when friends complete the same habits",
+      "reactions": "Reactions on my events",
+      "reactionsDesc": "Notifications when someone reacts to your achievements",
+      "teamInvites": "Team invitations",
+      "teamInvitesDesc": "Notifications about team join invitations",
+      "achievements": "Achievements and rewards",
+      "achievementsDesc": "Notifications about new achievements, milestones and rewards",
+      "reminders": "Habit reminders",
+      "remindersDesc": "Reminder notifications for incomplete habits",
+      "saving": "Saving...",
+      "saveSettings": "Save settings"
+    },
     "friendCompletion": "🎉 Friend completed a habit!",
     "newReaction": "❤️ New reaction!",
     "teamInvite": "👥 Team invitation!",

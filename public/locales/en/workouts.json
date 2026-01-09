@@ -375,5 +375,30 @@
     "activate": "Activate",
     "view": "View",
     "deactivate": "Deactivate plan"
+  },
+  "history": {
+    "workoutRepeated": "Workout repeated",
+    "startWorkout": "Start workout \"{{name}}\"",
+    "lastWorkout": "Last workout",
+    "intensive": "Intensive",
+    "whoopManual": "WHOOP + Manual",
+    "time": "Time",
+    "min": "min",
+    "calories": "Calories",
+    "kcal": "kcal",
+    "volume": "Volume",
+    "kg": "kg",
+    "strain": "Strain",
+    "distance": "Distance",
+    "km": "km",
+    "exercises": "exercises",
+    "sets": "sets"
+  },
+  "aiOnboarding": {
+    "planCreated": "Done! Your plan \"{{name}}\" is created. Let's start training!",
+    "errorMessage": "Error: {{message}}. Try again later.",
+    "planCreatedToast": "Plan created!",
+    "planCreatedDesc": "Your personal training plan is ready",
+    "error": "Error"
   }
 }
