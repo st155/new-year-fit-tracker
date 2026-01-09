@@ -54,7 +54,25 @@ export function useUserWeeklyStrain(userId: string | undefined) {
         })) as StrainDataPoint[];
       }
 
-      // Priority 3: Active Calories (Garmin) → normalized to 0-21 strain scale
+      // Priority 3: Activity Score (Oura, Ultrahuman) → normalized to 0-21 strain scale
+      const { data: activityScoreData } = await supabase
+        .from('unified_metrics')
+        .select('measurement_date, value')
+        .eq('user_id', userId)
+        .eq('metric_name', 'Activity Score')
+        .gte('measurement_date', dateRange.start)
+        .lt('measurement_date', dateRange.end)
+        .order('measurement_date', { ascending: true });
+
+      if (activityScoreData && activityScoreData.length > 0) {
+        return activityScoreData.map(item => ({
+          date: item.measurement_date,
+          // Normalize 0-100 to 0-21 scale (like WHOOP strain)
+          value: Math.min(21, (item.value / 100) * 21)
+        })) as StrainDataPoint[];
+      }
+
+      // Priority 4: Active Calories (Garmin) → normalized to 0-21 strain scale
       const { data: caloriesData } = await supabase
         .from('unified_metrics')
         .select('measurement_date, value')
@@ -71,7 +89,7 @@ export function useUserWeeklyStrain(userId: string | undefined) {
         })) as StrainDataPoint[];
       }
 
-      // Priority 4: Workout Time (minutes) → normalized to 0-21 strain scale
+      // Priority 5: Workout Time (minutes) → normalized to 0-21 strain scale
       const { data: workoutTimeData } = await supabase
         .from('unified_metrics')
         .select('measurement_date, value')
