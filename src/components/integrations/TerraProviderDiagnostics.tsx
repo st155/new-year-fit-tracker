@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -22,6 +23,7 @@ export function TerraProviderDiagnostics({
   lastSync,
   onSyncRequest 
 }: TerraProviderDiagnosticsProps) {
+  const { t } = useTranslation('terraDiagnostics');
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [diagnostics, setDiagnostics] = useState<any>(null);
@@ -40,8 +42,8 @@ export function TerraProviderDiagnostics({
     setLoadingStage('');
     setElapsedTime(0);
     toast({
-      title: 'Запрос отменён',
-      description: 'Диагностика прервана пользователем',
+      title: t('requestCancelled'),
+      description: t('cancelledByUser'),
     });
   };
 
@@ -49,7 +51,7 @@ export function TerraProviderDiagnostics({
     setLoading(true);
     setTerraApiStatus('ok');
     setElapsedTime(0);
-    setLoadingStage('🔍 Запрос данных из Terra API...');
+    setLoadingStage(t('stages.requesting'));
     
     // Start timer
     const startTime = Date.now();
@@ -59,11 +61,11 @@ export function TerraProviderDiagnostics({
       
       // Update stage based on elapsed time
       if (elapsed < 10) {
-        setLoadingStage('🔍 Запрос данных из Terra API...');
+        setLoadingStage(t('stages.requesting'));
       } else if (elapsed < 60) {
-        setLoadingStage('📊 Обработка данных...');
+        setLoadingStage(t('stages.processing'));
       } else {
-        setLoadingStage('⏳ Ожидание ответа Terra API...');
+        setLoadingStage(t('stages.waiting'));
       }
     }, 1000);
     
@@ -75,32 +77,32 @@ export function TerraProviderDiagnostics({
       if (error) {
         if (error.message?.includes('timeout') || error.message?.includes('504')) {
           setTerraApiStatus('timeout');
-          throw new Error('Terra API временно недоступен (timeout). Данные обновляются автоматически через webhook.');
+          throw new Error(t('timeout.error'));
         }
         throw error;
       }
 
-      setLoadingStage('✅ Завершение...');
+      setLoadingStage(t('stages.finishing'));
       console.log('✅ Diagnostics received:', data);
       setDiagnostics(data);
       
       toast({
-        title: 'Диагностика завершена',
-        description: `Проверено данных за ${data.date_range?.start} - ${data.date_range?.end}`,
+        title: t('completed.title'),
+        description: t('completed.description', { start: data.date_range?.start, end: data.date_range?.end }),
       });
     } catch (error: any) {
       console.error('❌ Diagnostics error:', error);
       
       if (terraApiStatus === 'timeout') {
         toast({
-          title: 'Terra API недоступен',
-          description: 'Данные обновляются автоматически через webhook',
+          title: t('timeout.title'),
+          description: t('timeout.description'),
           variant: 'default',
         });
       } else {
         toast({
-          title: 'Ошибка диагностики',
-          description: error.message || 'Не удалось получить данные',
+          title: t('error.title'),
+          description: error.message || t('error.description'),
           variant: 'destructive',
         });
       }
@@ -128,31 +130,31 @@ export function TerraProviderDiagnostics({
     if (!diagnostics) return;
     
     const text = `
-📊 Диагностика Terra API - ${provider}
+📊 ${t('title')} - ${provider}
 Terra User ID: ${diagnostics.terra_user_id}
-Период: ${diagnostics.date_range?.start} - ${diagnostics.date_range?.end}
-Последняя синхронизация: ${lastSync || 'N/A'}
+Period: ${diagnostics.date_range?.start} - ${diagnostics.date_range?.end}
+Last sync: ${lastSync || 'N/A'}
 
-✅ Доступно в Terra API:
-• Daily: ${diagnostics.available_in_terra?.daily?.length || 0} записей
-• Sleep: ${diagnostics.available_in_terra?.sleep?.length || 0} записей
-• Activity: ${diagnostics.available_in_terra?.activity?.length || 0} записей
-• Body: ${diagnostics.available_in_terra?.body?.length || 0} записей
+✅ ${t('availableInTerra')}:
+• Daily: ${diagnostics.available_in_terra?.daily?.length || 0} ${t('records')}
+• Sleep: ${diagnostics.available_in_terra?.sleep?.length || 0} ${t('records')}
+• Activity: ${diagnostics.available_in_terra?.activity?.length || 0} ${t('records')}
+• Body: ${diagnostics.available_in_terra?.body?.length || 0} ${t('records')}
 
-💾 Сохранено в БД:
-• Дат с данными: ${diagnostics.in_database?.dates_with_data?.length || 0}
+💾 ${t('savedInDb')}:
+• ${t('datesWithData')}: ${diagnostics.in_database?.dates_with_data?.length || 0}
 
-⚠️ Не синхронизировано:
-• Daily: ${diagnostics.missing_in_db?.daily?.length || 0} дат
-• Sleep: ${diagnostics.missing_in_db?.sleep?.length || 0} дат
-• Activity: ${diagnostics.missing_in_db?.activity?.length || 0} дат
-• Body: ${diagnostics.missing_in_db?.body?.length || 0} дат
+⚠️ ${t('notSynced')}:
+• Daily: ${diagnostics.missing_in_db?.daily?.length || 0} dates
+• Sleep: ${diagnostics.missing_in_db?.sleep?.length || 0} dates
+• Activity: ${diagnostics.missing_in_db?.activity?.length || 0} dates
+• Body: ${diagnostics.missing_in_db?.body?.length || 0} dates
     `.trim();
 
     navigator.clipboard.writeText(text);
     toast({
-      title: 'Скопировано',
-      description: 'Диагностика скопирована в буфер обмена',
+      title: t('copied.title'),
+      description: t('copied.description'),
     });
   };
 
@@ -162,7 +164,7 @@ Terra User ID: ${diagnostics.terra_user_id}
         <Button variant="ghost" size="sm" className="w-full justify-between">
           <span className="flex items-center gap-2">
             <AlertCircle className="h-4 w-4" />
-            Диагностика Terra API
+            {t('title')}
           </span>
           <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </Button>
@@ -173,10 +175,10 @@ Terra User ID: ${diagnostics.terra_user_id}
           <div className="text-center py-4">
             <Button onClick={fetchDiagnostics} disabled={loading}>
               <Search className="h-4 w-4 mr-2" />
-              Проверить данные в Terra API
+              {t('checkButton')}
             </Button>
             <p className="text-xs text-muted-foreground mt-2">
-              Сравнит данные из Terra API с вашей базой данных
+              {t('compareDescription')}
             </p>
           </div>
         )}
@@ -189,7 +191,7 @@ Terra User ID: ${diagnostics.terra_user_id}
               <div className="text-sm">
                 <p className="font-medium">{loadingStage}</p>
                 <p className="text-xs text-muted-foreground">
-                  Прошло времени: {Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')}
+                  {t('elapsed')}: {Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')}
                 </p>
               </div>
             </div>
@@ -207,8 +209,7 @@ Terra User ID: ${diagnostics.terra_user_id}
               <Alert>
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Terra API отвечает медленно. Это нормально для первого запроса.
-                  Данные обновляются автоматически через webhook.
+                  {t('terraApiSlowWarning')}
                 </AlertDescription>
               </Alert>
             )}
@@ -222,7 +223,7 @@ Terra User ID: ${diagnostics.terra_user_id}
                 className="w-full"
               >
                 <X className="h-4 w-4 mr-2" />
-                Отменить запрос
+                {t('cancelRequest')}
               </Button>
             )}
             
@@ -243,10 +244,10 @@ Terra User ID: ${diagnostics.terra_user_id}
                 <div className="flex items-start gap-2">
                   <AlertCircle className="h-4 w-4 text-warning mt-0.5" />
                   <div className="flex-1 text-sm">
-                    <p className="font-medium mb-1">Terra API временно недоступен</p>
+                    <p className="font-medium mb-1">{t('terraApiTempUnavailable')}</p>
                     <p className="text-xs text-muted-foreground">
-                      Данные обновляются автоматически через webhook в течение часа после синхронизации устройства.
-                      Последний webhook: {lastSync ? new Date(lastSync).toLocaleString('ru-RU') : 'Н/Д'}
+                      {t('webhookDataUpdateNote')}
+                      {t('lastWebhook')}: {lastSync ? new Date(lastSync).toLocaleString() : 'N/A'}
                     </p>
                   </div>
                 </div>
@@ -256,14 +257,14 @@ Terra User ID: ${diagnostics.terra_user_id}
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="font-semibold">Результаты диагностики</h4>
+                <h4 className="font-semibold">{t('results')}</h4>
                 <p className="text-xs text-muted-foreground">
                   {diagnostics.date_range?.start} → {diagnostics.date_range?.end}
                 </p>
               </div>
               <Button variant="outline" size="sm" onClick={copyToClipboard}>
                 <Copy className="h-3 w-3 mr-1" />
-                Копировать
+                {t('copy')}
               </Button>
             </div>
 
@@ -271,31 +272,31 @@ Terra User ID: ${diagnostics.terra_user_id}
             <div className="rounded-lg border p-4 bg-success/5 border-success/20">
               <div className="flex items-center gap-2 mb-3">
                 <CheckCircle className="h-4 w-4 text-success" />
-                <h5 className="font-medium">Доступно в Terra API</h5>
+                <h5 className="font-medium">{t('availableInTerra')}</h5>
               </div>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div>
                   <span className="text-muted-foreground">Daily:</span>
-                  <span className="ml-2 font-semibold">{diagnostics.available_in_terra?.daily?.length || 0} записей</span>
+                  <span className="ml-2 font-semibold">{diagnostics.available_in_terra?.daily?.length || 0} {t('records')}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Sleep:</span>
-                  <span className="ml-2 font-semibold">{diagnostics.available_in_terra?.sleep?.length || 0} записей</span>
+                  <span className="ml-2 font-semibold">{diagnostics.available_in_terra?.sleep?.length || 0} {t('records')}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Activity:</span>
-                  <span className="ml-2 font-semibold">{diagnostics.available_in_terra?.activity?.length || 0} записей</span>
+                  <span className="ml-2 font-semibold">{diagnostics.available_in_terra?.activity?.length || 0} {t('records')}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Body:</span>
-                  <span className="ml-2 font-semibold">{diagnostics.available_in_terra?.body?.length || 0} записей</span>
+                  <span className="ml-2 font-semibold">{diagnostics.available_in_terra?.body?.length || 0} {t('records')}</span>
                 </div>
               </div>
 
               {/* Recent Terra Data */}
               {diagnostics.available_in_terra?.daily?.length > 0 && (
                 <div className="mt-3 pt-3 border-t border-success/20">
-                  <p className="text-xs font-medium mb-2">Последние данные:</p>
+                  <p className="text-xs font-medium mb-2">{t('recentData')}:</p>
                   <div className="space-y-1">
                     {diagnostics.available_in_terra.daily.slice(0, 3).map((item: any, idx: number) => (
                       <div key={idx} className="text-xs flex items-center justify-between">
@@ -312,10 +313,10 @@ Terra User ID: ${diagnostics.terra_user_id}
             <div className="rounded-lg border p-4 bg-info/5 border-info/20">
               <div className="flex items-center gap-2 mb-3">
                 <CheckCircle className="h-4 w-4 text-info" />
-                <h5 className="font-medium">Сохранено в базе данных</h5>
+                <h5 className="font-medium">{t('savedInDb')}</h5>
               </div>
               <div className="text-sm">
-                <span className="text-muted-foreground">Дат с данными:</span>
+                <span className="text-muted-foreground">{t('datesWithData')}:</span>
                 <span className="ml-2 font-semibold">{diagnostics.in_database?.dates_with_data?.length || 0}</span>
               </div>
               {diagnostics.in_database?.dates_with_data?.length > 0 && (
@@ -335,12 +336,12 @@ Terra User ID: ${diagnostics.terra_user_id}
               <div className="rounded-lg border p-4 bg-warning/5 border-warning/20">
                 <div className="flex items-center gap-2 mb-3">
                   <AlertCircle className="h-4 w-4 text-warning" />
-                  <h5 className="font-medium">Не синхронизировано</h5>
+                  <h5 className="font-medium">{t('notSynced')}</h5>
                 </div>
                 
                 {diagnostics.missing_in_db.daily?.length > 0 && (
                   <div className="mb-2">
-                    <span className="text-sm text-muted-foreground">Daily за даты:</span>
+                    <span className="text-sm text-muted-foreground">{t('dailyForDates')}:</span>
                     <div className="mt-1 flex flex-wrap gap-1">
                       {diagnostics.missing_in_db.daily.map((date: string) => (
                         <Badge key={date} variant="outline" className="text-xs font-mono bg-warning/10">
@@ -353,7 +354,7 @@ Terra User ID: ${diagnostics.terra_user_id}
                 
                 {diagnostics.missing_in_db.sleep?.length > 0 && (
                   <div>
-                    <span className="text-sm text-muted-foreground">Sleep за даты:</span>
+                    <span className="text-sm text-muted-foreground">{t('sleepForDates')}:</span>
                     <div className="mt-1 flex flex-wrap gap-1">
                       {diagnostics.missing_in_db.sleep.map((date: string) => (
                         <Badge key={date} variant="outline" className="text-xs font-mono bg-warning/10">
@@ -366,16 +367,16 @@ Terra User ID: ${diagnostics.terra_user_id}
 
                 <div className="mt-3 pt-3 border-t border-warning/20">
                   <div className="text-xs space-y-2 mb-3">
-                    <p className="font-medium">💡 Как работают данные от устройств:</p>
+                    <p className="font-medium">💡 {t('howDataWorks')}</p>
                     <div className="space-y-1 text-muted-foreground">
-                      <p><strong>📊 Daily метрики (Recovery, Strain):</strong> Отправляются на следующий день после закрытия дня в приложении (обычно 6:00-10:00)</p>
-                      <p><strong>😴 Sleep данные:</strong> Отправляются после завершения сна и синхронизации с приложением (через 30-90 мин после пробуждения)</p>
-                      <p><strong>🏃 Activity данные:</strong> Отправляются сразу после завершения и синхронизации тренировки (5-30 минут)</p>
+                      <p><strong>📊 {t('dataExplanations.daily')}</strong></p>
+                      <p><strong>😴 {t('dataExplanations.sleep')}</strong></p>
+                      <p><strong>🏃 {t('dataExplanations.activity')}</strong></p>
                     </div>
                   </div>
                   {onSyncRequest && terraApiStatus !== 'timeout' && (
                     <Button size="sm" variant="outline" onClick={onSyncRequest} className="mt-2">
-                      🔄 Запросить синхронизацию
+                      {t('requestSync')}
                     </Button>
                   )}
                 </div>
@@ -387,7 +388,7 @@ Terra User ID: ${diagnostics.terra_user_id}
               <div className="rounded-lg border p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Clock className="h-4 w-4" />
-                  <h5 className="font-medium">История webhook событий</h5>
+                  <h5 className="font-medium">{t('webhookHistory')}</h5>
                 </div>
                 <div className="space-y-2">
                   {diagnostics.webhook_logs.slice(0, 5).map((log: any) => (
@@ -398,7 +399,7 @@ Terra User ID: ${diagnostics.terra_user_id}
                         ) : (
                           <AlertCircle className="h-3 w-3 text-destructive" />
                         )}
-                        <span className="font-mono">{new Date(log.created_at).toLocaleString('ru-RU')}</span>
+                        <span className="font-mono">{new Date(log.created_at).toLocaleString()}</span>
                       </div>
                       <span className="text-muted-foreground">{log.event_type || 'unknown'}</span>
                     </div>
@@ -415,7 +416,7 @@ Terra User ID: ${diagnostics.terra_user_id}
               disabled={loading}
               className="w-full"
             >
-              🔄 Обновить диагностику
+              {t('refresh')}
             </Button>
           </div>
         )}

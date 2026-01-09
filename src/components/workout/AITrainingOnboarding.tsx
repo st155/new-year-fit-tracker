@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,32 +49,40 @@ interface ConversationData {
   injuries_limitations?: string;
 }
 
-const dayMapping: Record<string, number> = {
-  'Пн': 1, 'Вт': 2, 'Ср': 3, 'Чт': 4, 'Пт': 5, 'Сб': 6, 'Вс': 0
-};
-
-const focusAreaMapping: Record<string, { group: 'upper_body' | 'lower_body', value: string }> = {
-  'Грудь': { group: 'upper_body', value: 'chest' },
-  'Спина': { group: 'upper_body', value: 'back' },
-  'Плечи': { group: 'upper_body', value: 'shoulders' },
-  'Руки': { group: 'upper_body', value: 'arms' },
-  'Ноги': { group: 'lower_body', value: 'quads' },
-  'Пресс': { group: 'lower_body', value: 'core' }
-};
-
 export default function AITrainingOnboarding({ open, onOpenChange, onSuccess }: AITrainingOnboardingProps) {
+  const { t } = useTranslation('workouts');
   const { toast } = useToast();
+  
+  const dayMapping: Record<string, number> = {
+    [t('aiOnboarding.days.mon')]: 1, 
+    [t('aiOnboarding.days.tue')]: 2, 
+    [t('aiOnboarding.days.wed')]: 3, 
+    [t('aiOnboarding.days.thu')]: 4, 
+    [t('aiOnboarding.days.fri')]: 5, 
+    [t('aiOnboarding.days.sat')]: 6, 
+    [t('aiOnboarding.days.sun')]: 0
+  };
+
+  const focusAreaMapping: Record<string, { group: 'upper_body' | 'lower_body', value: string }> = {
+    [t('aiOnboarding.bodyParts.chest')]: { group: 'upper_body', value: 'chest' },
+    [t('aiOnboarding.bodyParts.back')]: { group: 'upper_body', value: 'back' },
+    [t('aiOnboarding.bodyParts.shoulders')]: { group: 'upper_body', value: 'shoulders' },
+    [t('aiOnboarding.bodyParts.arms')]: { group: 'upper_body', value: 'arms' },
+    [t('aiOnboarding.bodyParts.legs')]: { group: 'lower_body', value: 'quads' },
+    [t('aiOnboarding.bodyParts.core')]: { group: 'lower_body', value: 'core' }
+  };
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       role: 'ai',
-      content: 'Привет! Я твой AI тренер 🤖 Давай создадим идеальный план тренировок. Какая твоя главная цель?',
+      content: t('aiOnboarding.welcome'),
       type: 'buttons',
       options: [
-        { value: 'strength', label: 'Сила' },
-        { value: 'hypertrophy', label: 'Масса' },
-        { value: 'fat_loss', label: 'Похудение' },
-        { value: 'endurance', label: 'Выносливость' }
+        { value: 'strength', label: t('aiOnboarding.goals.strength') },
+        { value: 'hypertrophy', label: t('aiOnboarding.goals.hypertrophy') },
+        { value: 'fat_loss', label: t('aiOnboarding.goals.fatLoss') },
+        { value: 'endurance', label: t('aiOnboarding.goals.endurance') }
       ],
       awaitingInput: true
     }
@@ -95,16 +104,16 @@ export default function AITrainingOnboarding({ open, onOpenChange, onSuccess }: 
   const formatUserResponse = (value: any, type: string): string => {
     if (type === 'buttons') {
       const labels: Record<string, string> = {
-        'strength': 'Сила',
-        'hypertrophy': 'Масса',
-        'fat_loss': 'Похудение',
-        'endurance': 'Выносливость',
-        'beginner': 'Новичок',
-        'intermediate': 'Средний',
-        'advanced': 'Продвинутый',
-        'full_gym': 'Полный зал',
-        'dumbbells': 'Только гантели',
-        'bodyweight': 'Свой вес'
+        'strength': t('aiOnboarding.goals.strength'),
+        'hypertrophy': t('aiOnboarding.goals.hypertrophy'),
+        'fat_loss': t('aiOnboarding.goals.fatLoss'),
+        'endurance': t('aiOnboarding.goals.endurance'),
+        'beginner': t('aiOnboarding.experienceLevels.beginner'),
+        'intermediate': t('aiOnboarding.experienceLevels.intermediate'),
+        'advanced': t('aiOnboarding.experienceLevels.advanced'),
+        'full_gym': t('aiOnboarding.equipmentOptions.fullGym'),
+        'dumbbells': t('aiOnboarding.equipmentOptions.dumbbells'),
+        'bodyweight': t('aiOnboarding.equipmentOptions.bodyweight')
       };
       return labels[value] || value;
     }
@@ -112,8 +121,14 @@ export default function AITrainingOnboarding({ open, onOpenChange, onSuccess }: 
       return value.join(', ');
     }
     if (type === 'slider') {
-      const labels = ['Низкий', 'Ниже среднего', 'Средний', 'Выше среднего', 'Высокий'];
-      return labels[value - 1] || value.toString();
+      const stressLevels: Record<number, string> = {
+        1: t('aiOnboarding.stressLevels.1'),
+        2: t('aiOnboarding.stressLevels.2'),
+        3: t('aiOnboarding.stressLevels.3'),
+        4: t('aiOnboarding.stressLevels.4'),
+        5: t('aiOnboarding.stressLevels.5')
+      };
+      return stressLevels[value] || value.toString();
     }
     return value?.toString() || '';
   };
@@ -124,12 +139,12 @@ export default function AITrainingOnboarding({ open, onOpenChange, onSuccess }: 
         return {
           id: Date.now().toString(),
           role: 'ai',
-          content: 'Отлично! Какой у тебя опыт тренировок?',
+          content: t('aiOnboarding.experience'),
           type: 'buttons',
           options: [
-            { value: 'beginner', label: 'Новичок' },
-            { value: 'intermediate', label: 'Средний' },
-            { value: 'advanced', label: 'Продвинутый' }
+            { value: 'beginner', label: t('aiOnboarding.experienceLevels.beginner') },
+            { value: 'intermediate', label: t('aiOnboarding.experienceLevels.intermediate') },
+            { value: 'advanced', label: t('aiOnboarding.experienceLevels.advanced') }
           ],
           awaitingInput: true
         };
@@ -137,16 +152,16 @@ export default function AITrainingOnboarding({ open, onOpenChange, onSuccess }: 
         return {
           id: Date.now().toString(),
           role: 'ai',
-          content: 'Сколько дней в неделю ты можешь тренироваться? Выбери дни:',
+          content: t('aiOnboarding.trainingDays'),
           type: 'multiselect',
           options: [
-            { value: 'Пн', label: 'Пн' },
-            { value: 'Вт', label: 'Вт' },
-            { value: 'Ср', label: 'Ср' },
-            { value: 'Чт', label: 'Чт' },
-            { value: 'Пт', label: 'Пт' },
-            { value: 'Сб', label: 'Сб' },
-            { value: 'Вс', label: 'Вс' }
+            { value: t('aiOnboarding.days.mon'), label: t('aiOnboarding.days.mon') },
+            { value: t('aiOnboarding.days.tue'), label: t('aiOnboarding.days.tue') },
+            { value: t('aiOnboarding.days.wed'), label: t('aiOnboarding.days.wed') },
+            { value: t('aiOnboarding.days.thu'), label: t('aiOnboarding.days.thu') },
+            { value: t('aiOnboarding.days.fri'), label: t('aiOnboarding.days.fri') },
+            { value: t('aiOnboarding.days.sat'), label: t('aiOnboarding.days.sat') },
+            { value: t('aiOnboarding.days.sun'), label: t('aiOnboarding.days.sun') }
           ],
           awaitingInput: true
         };
@@ -154,12 +169,12 @@ export default function AITrainingOnboarding({ open, onOpenChange, onSuccess }: 
         return {
           id: Date.now().toString(),
           role: 'ai',
-          content: 'Какое оборудование у тебя есть?',
+          content: t('aiOnboarding.equipment'),
           type: 'buttons',
           options: [
-            { value: 'full_gym', label: 'Полный зал' },
-            { value: 'dumbbells', label: 'Только гантели' },
-            { value: 'bodyweight', label: 'Свой вес' }
+            { value: 'full_gym', label: t('aiOnboarding.equipmentOptions.fullGym') },
+            { value: 'dumbbells', label: t('aiOnboarding.equipmentOptions.dumbbells') },
+            { value: 'bodyweight', label: t('aiOnboarding.equipmentOptions.bodyweight') }
           ],
           awaitingInput: true
         };
@@ -167,13 +182,13 @@ export default function AITrainingOnboarding({ open, onOpenChange, onSuccess }: 
         return {
           id: Date.now().toString(),
           role: 'ai',
-          content: 'Насколько стрессовая у тебя работа? Это влияет на восстановление.',
+          content: t('aiOnboarding.stress'),
           type: 'slider',
           options: {
             min: 1,
             max: 5,
-            minLabel: 'Низкий стресс',
-            maxLabel: 'Высокий стресс'
+            minLabel: t('aiOnboarding.stressLabels.min'),
+            maxLabel: t('aiOnboarding.stressLabels.max')
           },
           awaitingInput: true
         };
@@ -181,10 +196,10 @@ export default function AITrainingOnboarding({ open, onOpenChange, onSuccess }: 
         return {
           id: Date.now().toString(),
           role: 'ai',
-          content: 'Сколько часов ты обычно спишь?',
+          content: t('aiOnboarding.sleepHours'),
           type: 'number',
           options: {
-            placeholder: 'Например: 7',
+            placeholder: t('aiOnboarding.placeholders.sleepExample'),
             min: 4,
             max: 12
           },
@@ -194,15 +209,15 @@ export default function AITrainingOnboarding({ open, onOpenChange, onSuccess }: 
         return {
           id: Date.now().toString(),
           role: 'ai',
-          content: 'Какие части тела хочешь прокачать особенно?',
+          content: t('aiOnboarding.focusAreas'),
           type: 'multiselect',
           options: [
-            { value: 'Грудь', label: 'Грудь' },
-            { value: 'Спина', label: 'Спина' },
-            { value: 'Плечи', label: 'Плечи' },
-            { value: 'Руки', label: 'Руки' },
-            { value: 'Ноги', label: 'Ноги' },
-            { value: 'Пресс', label: 'Пресс' }
+            { value: t('aiOnboarding.bodyParts.chest'), label: t('aiOnboarding.bodyParts.chest') },
+            { value: t('aiOnboarding.bodyParts.back'), label: t('aiOnboarding.bodyParts.back') },
+            { value: t('aiOnboarding.bodyParts.shoulders'), label: t('aiOnboarding.bodyParts.shoulders') },
+            { value: t('aiOnboarding.bodyParts.arms'), label: t('aiOnboarding.bodyParts.arms') },
+            { value: t('aiOnboarding.bodyParts.legs'), label: t('aiOnboarding.bodyParts.legs') },
+            { value: t('aiOnboarding.bodyParts.core'), label: t('aiOnboarding.bodyParts.core') }
           ],
           awaitingInput: true
         };
@@ -210,7 +225,7 @@ export default function AITrainingOnboarding({ open, onOpenChange, onSuccess }: 
         return {
           id: Date.now().toString(),
           role: 'ai',
-          content: 'Какие стили упражнений ты предпочитаешь?',
+          content: t('aiOnboarding.liftingStyles'),
           type: 'lifting-styles',
           awaitingInput: true
         };
@@ -218,13 +233,13 @@ export default function AITrainingOnboarding({ open, onOpenChange, onSuccess }: 
         return {
           id: Date.now().toString(),
           role: 'ai',
-          content: 'Знаешь свои максимальные веса? Это необязательно, но поможет создать точный план.',
+          content: t('aiOnboarding.oneRepMax'),
           type: 'number',
           options: {
-            placeholder: 'Присед / Жим / Тяга (кг)',
+            placeholder: '',
             allowSkip: true,
             fields: ['squat', 'bench', 'deadlift'],
-            labels: ['Присед (кг)', 'Жим лёжа (кг)', 'Становая (кг)']
+            labels: [t('aiOnboarding.labels.squatWeight'), t('aiOnboarding.labels.benchWeight'), t('aiOnboarding.labels.deadliftWeight')]
           },
           awaitingInput: true
         };
@@ -232,10 +247,10 @@ export default function AITrainingOnboarding({ open, onOpenChange, onSuccess }: 
         return {
           id: Date.now().toString(),
           role: 'ai',
-          content: 'Есть ли у тебя травмы или ограничения?',
+          content: t('aiOnboarding.injuries'),
           type: 'textinput',
           options: {
-            placeholder: 'Например: боль в нижней части спины...',
+            placeholder: t('aiOnboarding.placeholders.injuries'),
             allowSkip: true
           },
           awaitingInput: true
@@ -319,7 +334,7 @@ export default function AITrainingOnboarding({ open, onOpenChange, onSuccess }: 
     const finalMessage: Message = {
       id: Date.now().toString(),
       role: 'ai',
-      content: 'Отлично! Генерирую твой персональный план... 🚀'
+      content: t('aiOnboarding.generating')
     };
     addMessage(finalMessage);
     
@@ -372,13 +387,13 @@ export default function AITrainingOnboarding({ open, onOpenChange, onSuccess }: 
       const successMessage: Message = {
         id: Date.now().toString(),
         role: 'ai',
-        content: `✅ Готово! Твой план "${planData.program_data.program_name}" создан. Переходим к тренировкам!`
+        content: t('aiOnboarding.planCreated', { name: planData.program_data.program_name })
       };
       addMessage(successMessage);
       
       toast({
-        title: "План создан!",
-        description: "Твой персональный план тренировок готов"
+        title: t('aiOnboarding.planCreatedToast'),
+        description: t('aiOnboarding.planCreatedDesc')
       });
       
       setTimeout(() => {
@@ -390,12 +405,12 @@ export default function AITrainingOnboarding({ open, onOpenChange, onSuccess }: 
       const errorMessage: Message = {
         id: Date.now().toString(),
         role: 'ai',
-        content: `❌ Ошибка: ${error.message}. Попробуй еще раз позже.`
+        content: t('aiOnboarding.errorMessage', { message: error.message })
       };
       addMessage(errorMessage);
       
       toast({
-        title: "Ошибка",
+        title: t('aiOnboarding.error'),
         description: error.message,
         variant: "destructive"
       });
@@ -451,7 +466,7 @@ export default function AITrainingOnboarding({ open, onOpenChange, onSuccess }: 
               onClick={() => handleUserResponse(selectedValues, 'multiselect')}
               disabled={selectedValues.length === 0}
             >
-              Продолжить
+              {t('aiOnboarding.buttons.continue')}
             </Button>
           </div>
         );
@@ -474,7 +489,7 @@ export default function AITrainingOnboarding({ open, onOpenChange, onSuccess }: 
               <span>{message.options.maxLabel}</span>
             </div>
             <Button size="sm" onClick={() => handleUserResponse(sliderValue, 'slider')}>
-              Продолжить
+              {t('aiOnboarding.buttons.continue')}
             </Button>
           </div>
         );
@@ -509,11 +524,11 @@ export default function AITrainingOnboarding({ open, onOpenChange, onSuccess }: 
                     handleUserResponse(values, 'number');
                   }}
                 >
-                  Продолжить
+                  {t('aiOnboarding.buttons.continue')}
                 </Button>
                 {message.options.allowSkip && (
                   <Button size="sm" variant="outline" onClick={() => handleUserResponse({}, 'number')}>
-                    Пропустить
+                    {t('aiOnboarding.buttons.skip')}
                   </Button>
                 )}
               </div>
@@ -536,7 +551,7 @@ export default function AITrainingOnboarding({ open, onOpenChange, onSuccess }: 
               onClick={() => handleUserResponse(tempInput.numberValue, 'number')}
               disabled={!tempInput.numberValue}
             >
-              Продолжить
+              {t('aiOnboarding.buttons.continue')}
             </Button>
           </div>
         );
@@ -546,7 +561,7 @@ export default function AITrainingOnboarding({ open, onOpenChange, onSuccess }: 
         return (
           <div className="space-y-4 mt-3">
             <div>
-              <label className="text-sm font-medium mb-2 block">Присед</label>
+              <label className="text-sm font-medium mb-2 block">{t('aiOnboarding.labels.squat')}</label>
               <div className="flex flex-wrap gap-2">
                 {['high_bar', 'low_bar', 'front', 'unknown'].map(style => (
                   <Button
@@ -555,15 +570,15 @@ export default function AITrainingOnboarding({ open, onOpenChange, onSuccess }: 
                     variant={styles.squat === style ? "default" : "outline"}
                     onClick={() => setTempInput({ ...tempInput, styles: { ...styles, squat: style } })}
                   >
-                    {style === 'high_bar' ? 'Высокий гриф' : 
-                     style === 'low_bar' ? 'Низкий гриф' : 
-                     style === 'front' ? 'Фронтальный' : 'Не знаю'}
+                    {style === 'high_bar' ? t('aiOnboarding.squatStyles.highBar') : 
+                     style === 'low_bar' ? t('aiOnboarding.squatStyles.lowBar') : 
+                     style === 'front' ? t('aiOnboarding.squatStyles.front') : t('aiOnboarding.squatStyles.unknown')}
                   </Button>
                 ))}
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium mb-2 block">Становая</label>
+              <label className="text-sm font-medium mb-2 block">{t('aiOnboarding.labels.deadlift')}</label>
               <div className="flex flex-wrap gap-2">
                 {['conventional', 'sumo', 'trap_bar', 'unknown'].map(style => (
                   <Button
@@ -572,15 +587,15 @@ export default function AITrainingOnboarding({ open, onOpenChange, onSuccess }: 
                     variant={styles.deadlift === style ? "default" : "outline"}
                     onClick={() => setTempInput({ ...tempInput, styles: { ...styles, deadlift: style } })}
                   >
-                    {style === 'conventional' ? 'Классика' : 
-                     style === 'sumo' ? 'Сумо' : 
-                     style === 'trap_bar' ? 'Трэп-гриф' : 'Не знаю'}
+                    {style === 'conventional' ? t('aiOnboarding.deadliftStyles.conventional') : 
+                     style === 'sumo' ? t('aiOnboarding.deadliftStyles.sumo') : 
+                     style === 'trap_bar' ? t('aiOnboarding.deadliftStyles.trapBar') : t('aiOnboarding.deadliftStyles.unknown')}
                   </Button>
                 ))}
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium mb-2 block">Жим лёжа</label>
+              <label className="text-sm font-medium mb-2 block">{t('aiOnboarding.labels.bench')}</label>
               <div className="flex flex-wrap gap-2">
                 {['flat', 'incline', 'close_grip', 'unknown'].map(style => (
                   <Button
@@ -589,9 +604,9 @@ export default function AITrainingOnboarding({ open, onOpenChange, onSuccess }: 
                     variant={styles.bench === style ? "default" : "outline"}
                     onClick={() => setTempInput({ ...tempInput, styles: { ...styles, bench: style } })}
                   >
-                    {style === 'flat' ? 'Горизонтальный' : 
-                     style === 'incline' ? 'Наклонный' : 
-                     style === 'close_grip' ? 'Узкий хват' : 'Не знаю'}
+                    {style === 'flat' ? t('aiOnboarding.benchStyles.flat') : 
+                     style === 'incline' ? t('aiOnboarding.benchStyles.incline') : 
+                     style === 'close_grip' ? t('aiOnboarding.benchStyles.closeGrip') : t('aiOnboarding.benchStyles.unknown')}
                   </Button>
                 ))}
               </div>
@@ -601,7 +616,7 @@ export default function AITrainingOnboarding({ open, onOpenChange, onSuccess }: 
               onClick={() => handleUserResponse(styles, 'lifting-styles')}
               disabled={!styles.squat || !styles.deadlift || !styles.bench}
             >
-              Продолжить
+              {t('aiOnboarding.buttons.continue')}
             </Button>
           </div>
         );
@@ -618,11 +633,11 @@ export default function AITrainingOnboarding({ open, onOpenChange, onSuccess }: 
             />
             <div className="flex gap-2">
               <Button size="sm" onClick={() => handleUserResponse(tempInput.textValue || '', 'textinput')}>
-                Продолжить
+                {t('aiOnboarding.buttons.continue')}
               </Button>
               {message.options.allowSkip && (
                 <Button size="sm" variant="outline" onClick={() => handleUserResponse('', 'textinput')}>
-                  Нет ограничений
+                  {t('aiOnboarding.buttons.noLimitations')}
                 </Button>
               )}
             </div>
