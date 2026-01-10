@@ -130,6 +130,22 @@ async function processTerraWebhookData(
 
   logger.info('Processing Terra webhook', { webhookId, type, userId: user?.user_id });
 
+  // Handle healthcheck webhooks - skip processing
+  if (type === 'healthcheck' || !user?.user_id) {
+    logger.info('Healthcheck or no-user webhook received, skipping processing', { type, webhookId });
+    
+    // Update webhook status as skipped
+    await supabase
+      .from('terra_webhooks_raw')
+      .update({
+        status: 'skipped',
+        processed_at: new Date().toISOString(),
+      })
+      .eq('webhook_id', webhookId);
+    
+    return { success: true, type, skipped: true, reason: 'healthcheck or no user' };
+  }
+
   // Get user mapping (only active tokens)
   const { data: tokenData, error: tokenError } = await supabase
     .from('terra_tokens')
@@ -986,38 +1002,97 @@ async function processTerraWebhookData(
   });
 
   // Sync to Echo11 after processing metrics
-  if (processedCount > 0 && user_id) {
+  // Trigger for sleep, daily, body types OR if we processed metrics
+  const shouldSyncEcho11 = user_id && (
+    processedCount > 0 || 
+    type === 'daily' || 
+    type === 'sleep' || 
+    type === 'body'
+  );
+
+  logger.info('Echo11 sync check', { 
+    shouldSyncEcho11, 
+    processedCount, 
+    type, 
+    userId: user_id 
+  });
+
+  if (shouldSyncEcho11) {
     try {
       const today = new Date().toISOString().split('T')[0];
       
-      const { data: todayMetrics } = await supabase
+      logger.info('Fetching today metrics for Echo11', { userId: user_id, today });
+      
+      const { data: todayMetrics, error: metricsError } = await supabase
         .from('unified_metrics')
         .select('metric_name, value')
         .eq('user_id', user_id)
         .eq('measurement_date', today);
+
+      if (metricsError) {
+        logger.warn('Failed to fetch today metrics for Echo11', { error: metricsError.message });
+      }
+
+      logger.info('Today metrics for Echo11', { 
+        userId: user_id, 
+        metricsCount: todayMetrics?.length || 0,
+        metrics: todayMetrics?.map(m => m.metric_name) || []
+      });
 
       if (todayMetrics && todayMetrics.length > 0) {
         const sleepQuality = todayMetrics.find(m => 
           m.metric_name === 'Sleep Efficiency')?.value || null;
         const recoveryScore = todayMetrics.find(m => 
           m.metric_name === 'Recovery Score')?.value || null;
+        const workoutType = todayMetrics.find(m => 
+          m.metric_name === 'Workout Type')?.value || null;
+        const dayStrain = todayMetrics.find(m => 
+          m.metric_name === 'Day Strain')?.value || null;
 
-        await supabase.functions.invoke('echo11-sync', {
+        // Map Day Strain to workout intensity
+        let workoutIntensity: 'Low' | 'Medium' | 'High' | 'Extreme' | null = null;
+        if (dayStrain !== null) {
+          if (dayStrain < 10) workoutIntensity = 'Low';
+          else if (dayStrain < 14) workoutIntensity = 'Medium';
+          else if (dayStrain < 18) workoutIntensity = 'High';
+          else workoutIntensity = 'Extreme';
+        }
+
+        logger.info('Calling echo11-sync', { 
+          userId: user_id,
+          today,
+          sleepQuality, 
+          recoveryScore,
+          workoutType,
+          dayStrain,
+          workoutIntensity
+        });
+
+        const { data: syncResult, error: syncError } = await supabase.functions.invoke('echo11-sync', {
           body: {
             days: [{
               date: today,
               sleep_quality: sleepQuality,
               recovery_score: recoveryScore,
-              workout_type: null,
-              workout_intensity: null,
+              workout_type: workoutType,
+              workout_intensity: workoutIntensity,
             }]
           }
         });
         
-        logger.info('Echo11 sync triggered after Terra webhook', { userId: user_id });
+        if (syncError) {
+          logger.warn('Echo11 sync invoke error', { error: syncError.message });
+        } else {
+          logger.info('Echo11 sync completed', { userId: user_id, result: syncResult });
+        }
+      } else {
+        logger.info('No today metrics found for Echo11 sync', { userId: user_id, today });
       }
     } catch (syncError: any) {
-      logger.warn('Echo11 sync failed (non-critical)', { error: syncError.message });
+      logger.warn('Echo11 sync failed (non-critical)', { 
+        error: syncError.message,
+        stack: syncError.stack 
+      });
     }
   }
 
