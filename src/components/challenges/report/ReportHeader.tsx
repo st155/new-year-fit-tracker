@@ -3,7 +3,8 @@ import { Trophy, Calendar, Users, Medal } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { ru } from "date-fns/locale";
+import { ru, enUS } from "date-fns/locale";
+import { useTranslation } from "react-i18next";
 import { getRankDisplay } from "@/features/challenges/utils";
 import type { ChallengeReport } from "@/features/challenges/types";
 
@@ -12,8 +13,10 @@ interface ReportHeaderProps {
 }
 
 export function ReportHeader({ report }: ReportHeaderProps) {
+  const { t, i18n } = useTranslation('challenges');
   const rankDisplay = getRankDisplay(report.finalRank);
   const isTopThree = report.finalRank <= 3;
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
 
   const getRankGradient = (rank: number) => {
     if (rank === 1) return "from-yellow-400 via-yellow-500 to-yellow-600";
@@ -40,7 +43,7 @@ export function ReportHeader({ report }: ReportHeaderProps) {
           <div className="flex items-center justify-center gap-2">
             <Trophy className="h-6 w-6 text-primary" />
             <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-              Итоги челленджа
+              {t('report.challengeResults')}
             </span>
           </div>
           <h1 className="text-2xl md:text-3xl font-bold">{report.title}</h1>
@@ -48,12 +51,12 @@ export function ReportHeader({ report }: ReportHeaderProps) {
             <div className="flex items-center gap-1.5">
               <Calendar className="h-4 w-4" />
               <span>
-                {format(new Date(report.startDate), "d MMM", { locale: ru })} — {format(new Date(report.endDate), "d MMM yyyy", { locale: ru })}
+                {format(new Date(report.startDate), "d MMM", { locale: dateLocale })} — {format(new Date(report.endDate), "d MMM yyyy", { locale: dateLocale })}
               </span>
             </div>
             <div className="flex items-center gap-1.5">
               <Users className="h-4 w-4" />
-              <span>{report.totalParticipants} участников</span>
+              <span>{t('report.participants', { count: report.totalParticipants })}</span>
             </div>
           </div>
         </div>
@@ -86,7 +89,7 @@ export function ReportHeader({ report }: ReportHeaderProps) {
             {!isTopThree && (
               <Badge variant="outline" className="text-muted-foreground">
                 <Medal className="h-3 w-3 mr-1" />
-                {report.finalRank} место
+                {t('report.place', { rank: report.finalRank })}
               </Badge>
             )}
           </div>
@@ -101,12 +104,12 @@ export function ReportHeader({ report }: ReportHeaderProps) {
         >
           <div className={`inline-flex flex-col items-center gap-1 px-8 py-4 rounded-2xl bg-gradient-to-br ${getRankGradient(report.finalRank)} shadow-lg`}>
             <span className="text-sm font-medium text-white/80 uppercase tracking-wider">
-              Итоговый счёт
+              {t('report.finalScore')}
             </span>
             <span className="text-4xl md:text-5xl font-black text-white">
               {report.totalPoints.toLocaleString()}
             </span>
-            <span className="text-sm text-white/70">очков</span>
+            <span className="text-sm text-white/70">{t('report.points')}</span>
           </div>
         </motion.div>
 
@@ -114,15 +117,15 @@ export function ReportHeader({ report }: ReportHeaderProps) {
         <div className="grid grid-cols-3 gap-4 max-w-md mx-auto">
           <div className="text-center p-3 rounded-lg bg-muted/50">
             <div className="text-lg font-bold text-primary">{report.performancePoints}</div>
-            <div className="text-xs text-muted-foreground">Активность</div>
+            <div className="text-xs text-muted-foreground">{t('report.activity')}</div>
           </div>
           <div className="text-center p-3 rounded-lg bg-muted/50">
             <div className="text-lg font-bold text-secondary">{report.recoveryPoints}</div>
-            <div className="text-xs text-muted-foreground">Восстановление</div>
+            <div className="text-xs text-muted-foreground">{t('report.recovery')}</div>
           </div>
           <div className="text-center p-3 rounded-lg bg-muted/50">
             <div className="text-lg font-bold text-accent-foreground">{report.synergyPoints}</div>
-            <div className="text-xs text-muted-foreground">Синергия</div>
+            <div className="text-xs text-muted-foreground">{t('report.synergy')}</div>
           </div>
         </div>
       </div>

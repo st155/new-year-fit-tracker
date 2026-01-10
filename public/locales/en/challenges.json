@@ -100,7 +100,15 @@
     "start": "Start",
     "current": "Current",
     "target": "Target",
-    "progress": "Progress"
+    "progress": "Progress",
+    "challengeResults": "Challenge Results",
+    "participants": "{{count}} participants",
+    "place": "{{rank}} place",
+    "finalScore": "Final Score",
+    "points": "points",
+    "activity": "Activity",
+    "recovery": "Recovery",
+    "synergy": "Synergy"
   },
   "info": {
     "notFound": "Challenge information not found",

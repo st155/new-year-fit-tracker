@@ -445,9 +445,10 @@
     "streakLabel": "streak",
     "created": "Created"
   },
-  "widget": {
+"widget": {
     "days": "days",
-    "hours": "hours",
+    "hours": "h",
+    "minutes": "m",
     "fastingActive": "🔥 Fasting active",
     "goalDays": "Goal: {{days}}d",
     "goalValue": "Goal: {{target}}{{unit}}",
@@ -455,7 +456,11 @@
     "streakLabel": "Streak: {{days}}",
     "window": "Window: {{hours}}h",
     "progress": "Progress: {{percent}}%",
-    "untilGoal": "Until goal: {{days}}d"
+    "untilGoal": "Until goal: {{days}}d",
+    "bestResult": "Best result:",
+    "daysCount": "{{count}} days",
+    "saved": "💰 Saved:",
+    "progressToMilestone": "{{percent}}% to next milestone"
   },
   "socialView": {
     "signInToView": "Sign in to see activity",

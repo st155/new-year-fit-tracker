@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dumbbell, Clock } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface WorkoutExercise {
   exercise_name: string;
@@ -22,6 +23,7 @@ interface WorkoutCardProps {
 }
 
 export const WorkoutCard = ({ workout, compact = false }: WorkoutCardProps) => {
+  const { t } = useTranslation('trainingPlan');
   const totalExercises = workout.exercises.length;
   const estimatedTime = workout.exercises.reduce((acc, ex) => {
     // Rough estimate: 3 min per set + rest
@@ -39,7 +41,7 @@ export const WorkoutCard = ({ workout, compact = false }: WorkoutCardProps) => {
             </CardTitle>
           </div>
           <Badge variant="secondary" className="flex-shrink-0 text-xs">
-            {totalExercises} упр.
+            {totalExercises} {t('workouts.exercisesCount')}
           </Badge>
         </div>
         {workout.description && !compact && (
@@ -66,7 +68,7 @@ export const WorkoutCard = ({ workout, compact = false }: WorkoutCardProps) => {
         </div>
         <div className="flex items-center gap-1 text-xs text-muted-foreground pt-2 border-t border-primary/10">
           <Clock className="h-3 w-3" />
-          <span>~{Math.round(estimatedTime)} мин</span>
+          <span>~{Math.round(estimatedTime)} {t('workouts.duration')}</span>
         </div>
       </CardContent>
     </Card>

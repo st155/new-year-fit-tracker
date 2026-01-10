@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Progress } from '@/components/ui/progress';
 import { NeuralNetworkIcon } from '@/components/workout/NeuralNetworkIcon';
 import { DynamicProgressText } from '@/components/workout/DynamicProgressText';
@@ -10,6 +11,7 @@ import { AIRationaleCard } from '@/components/workout/AIRationaleCard';
 
 export default function GeneratingPlanScreen() {
   const navigate = useNavigate();
+  const { t } = useTranslation('workouts');
   const [progress, setProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
 
@@ -59,7 +61,7 @@ export default function GeneratingPlanScreen() {
             transition={{ delay: 0.2 }}
             className="text-3xl md:text-4xl font-bold text-center mb-12 bg-gradient-to-r from-cyan-400 via-green-400 to-cyan-400 bg-clip-text text-transparent"
           >
-            Генерация твоего плана AI
+            {t('generating.title')}
           </motion.h1>
           
           {/* Central Neural Network Icon */}
@@ -110,7 +112,7 @@ export default function GeneratingPlanScreen() {
             transition={{ delay: 1.2 }}
             className="text-center text-sm text-gray-400 mt-8 tracking-wider"
           >
-            ГЕНЕРИРУЮ ТВОЮ НОВУЮ ПРОГРАММУ...
+            {t('generating.status')}
           </motion.p>
         </motion.div>
       </div>
