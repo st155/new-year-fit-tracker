@@ -11,8 +11,10 @@
   "stats": {
     "activeClients": "Активных клиентов",
     "workoutsPerWeek": "Тренировок в неделю",
-    "planAssigned": "План назначен",
-    "inSchedule": "По расписанию"
+    "planAssigned": "Назначен план",
+    "inSchedule": "В расписании",
+    "completion": "Выполнение",
+    "averageRate": "Средний показатель"
   },
   "noData": "Нет данных",
   "lastUpdated": "Обновлено: {{date}}"

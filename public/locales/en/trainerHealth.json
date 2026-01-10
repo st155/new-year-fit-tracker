@@ -9,10 +9,12 @@
     "vo2max": "VO2max"
   },
   "stats": {
-    "activeClients": "Active clients",
-    "workoutsPerWeek": "Workouts per week",
+    "activeClients": "Active Clients",
+    "workoutsPerWeek": "Workouts per Week",
     "planAssigned": "Plan assigned",
-    "inSchedule": "In schedule"
+    "inSchedule": "In schedule",
+    "completion": "Completion",
+    "averageRate": "Average rate"
   },
   "noData": "No data",
   "lastUpdated": "Updated: {{date}}"

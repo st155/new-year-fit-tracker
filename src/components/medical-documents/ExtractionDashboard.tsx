@@ -9,6 +9,7 @@ import { BiomarkerMappingDialog } from '@/components/biomarkers/BiomarkerMapping
 import { Loader2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface ExtractionDashboardProps {
   documentId: string;
@@ -16,6 +17,7 @@ interface ExtractionDashboardProps {
 }
 
 export const ExtractionDashboard = ({ documentId, category }: ExtractionDashboardProps) => {
+  const { t } = useTranslation('medicalDocs');
   const [showMappingDialog, setShowMappingDialog] = useState(false);
   const queryClient = useQueryClient();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -78,11 +80,11 @@ export const ExtractionDashboard = ({ documentId, category }: ExtractionDashboar
       queryClient.invalidateQueries({ queryKey: ['lab-results', documentId] });
       queryClient.invalidateQueries({ queryKey: ['medical-findings', documentId] });
       queryClient.invalidateQueries({ queryKey: ['document-summary', documentId] });
-      toast.success('Document reprocessed successfully');
+      toast.success(t('extraction.reprocessSuccess'));
       setIsProcessing(false);
     },
     onError: (error: any) => {
-      toast.error('Failed to reprocess document: ' + error.message);
+      toast.error(t('extraction.reprocessFailed', { error: error.message }));
       setIsProcessing(false);
     },
   });

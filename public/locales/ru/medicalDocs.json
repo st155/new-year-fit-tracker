@@ -60,6 +60,10 @@
     "retryProcessing": "Повторить обработку",
     "reprocessDocument": "Переобработать документ"
   },
+  "extraction": {
+    "reprocessSuccess": "Документ успешно переобработан",
+    "reprocessFailed": "Ошибка переобработки документа: {{error}}"
+  },
   "dialog": {
     "deleteTitle": "Удалить документ?",
     "deleteDescription": "Это действие необратимо. Документ будет удалён навсегда.",

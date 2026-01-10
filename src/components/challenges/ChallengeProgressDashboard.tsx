@@ -8,6 +8,7 @@ import { Trophy, Target, TrendingUp, Calendar, Flame } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 interface ChallengeProgressDashboardProps {
   challengeId: string;
@@ -15,16 +16,17 @@ interface ChallengeProgressDashboardProps {
 }
 
 export function ChallengeProgressDashboard({ challengeId, onRefresh }: ChallengeProgressDashboardProps) {
+  const { t } = useTranslation('challenges');
   const { user } = useAuth();
   const { data: goals, isLoading, refetch } = useChallengeGoals(user?.id);
   const { data: difficultyLevel = 0 } = useDifficultyLevel(challengeId, user?.id);
   const navigate = useNavigate();
 
   const difficultyConfig = {
-    0: { label: "Базовый", multiplier: "1.0x", color: "text-blue-500" },
-    1: { label: "Повышенный", multiplier: "1.3x", color: "text-orange-500" },
-    2: { label: "Экстремальный", multiplier: "1.6x", color: "text-purple-500" },
-    3: { label: "Нечеловеческий", multiplier: "1.9x", color: "text-red-600" },
+    0: { label: t('difficulty.basic'), multiplier: "1.0x", color: "text-blue-500" },
+    1: { label: t('difficulty.advanced'), multiplier: "1.3x", color: "text-orange-500" },
+    2: { label: t('difficulty.extreme'), multiplier: "1.6x", color: "text-purple-500" },
+    3: { label: t('difficulty.inhuman'), multiplier: "1.9x", color: "text-red-600" },
   };
 
   // Filter goals for this specific challenge AND current user AND with target_value set

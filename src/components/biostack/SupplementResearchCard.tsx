@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { SupplementCorrelation, useAutoLinkBiomarkers } from '@/hooks/biostack/useAutoLinkBiomarkers';
+import { useTranslation } from 'react-i18next';
 
 interface SupplementResearchCardProps {
   stackItemId: string;
@@ -34,6 +35,7 @@ export function SupplementResearchCard({
   confidence,
   onLinkComplete,
 }: SupplementResearchCardProps) {
+  const { t } = useTranslation('biostack');
   const [isExpanded, setIsExpanded] = useState(false);
   const { mutate: autoLink, isPending } = useAutoLinkBiomarkers();
 
@@ -183,7 +185,7 @@ export function SupplementResearchCard({
       {!hasLinkedBiomarkers && !isPending && (
         <div className="p-4 text-center text-muted-foreground">
           <Beaker className="h-8 w-8 mx-auto mb-2 opacity-50" />
-          <p className="text-sm">Нажмите "Привязать биомаркеры" для поиска научных данных</p>
+          <p className="text-sm">{t('research.linkBiomarkersHint')}</p>
         </div>
       )}
     </Card>

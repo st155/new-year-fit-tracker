@@ -1,5 +1,6 @@
 import { Users, Dumbbell, TrendingUp } from 'lucide-react';
 import { TrainerStatCard } from '@/components/trainer/ui';
+import { useTranslation } from 'react-i18next';
 
 interface TrainingPlanStatsProps {
   activeClients: number;
@@ -12,28 +13,30 @@ export function TrainingPlanStats({
   totalWorkouts,
   completionRate,
 }: TrainingPlanStatsProps) {
+  const { t } = useTranslation('trainerHealth');
+  
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <TrainerStatCard
-        title="Активных клиентов"
+        title={t('stats.activeClients')}
         value={activeClients}
         icon={<Users />}
         color="blue"
-        subtitle="Назначен план"
+        subtitle={t('stats.planAssigned')}
       />
       <TrainerStatCard
-        title="Тренировок в неделю"
+        title={t('stats.workoutsPerWeek')}
         value={totalWorkouts}
         icon={<Dumbbell />}
         color="orange"
-        subtitle="В расписании"
+        subtitle={t('stats.inSchedule')}
       />
       <TrainerStatCard
-        title="Выполнение"
+        title={t('stats.completion')}
         value={`${completionRate}%`}
         icon={<TrendingUp />}
         color="green"
-        subtitle="Средний показатель"
+        subtitle={t('stats.averageRate')}
       />
     </div>
   );
