@@ -148,7 +148,45 @@
     "minutes": "min",
     "kcal": "kcal",
     "km": "km",
-    "prVolume": "PR: Volume {{value}} kg"
+    "prVolume": "PR: Volume {{value}} kg",
+    "empty": {
+      "manual": {
+        "title": "No logged workouts",
+        "description": "Start logging your workouts to track progress"
+      },
+      "tracker": {
+        "title": "No imported workouts",
+        "description": "Connect an activity tracker to auto-sync workouts"
+      },
+      "all": {
+        "title": "Logbook is empty",
+        "description": "Start training or connect an activity tracker"
+      }
+    }
+  },
+  "fallback": {
+    "workout": "Workout"
+  },
+  "source": {
+    "manual": "Manual",
+    "manualTrainer": "From trainer",
+    "whoop": "Whoop",
+    "withings": "Withings",
+    "terra": "Terra",
+    "appleHealth": "Apple Health",
+    "garmin": "Garmin",
+    "ultrahuman": "Ultrahuman",
+    "linked": "WHOOP + Manual"
+  },
+  "plan": {
+    "weekOf": "Week {{current}} of {{total}}",
+    "completed": "{{percent}}% completed",
+    "status": {
+      "completed": "Done",
+      "today": "Today",
+      "upcoming": "Pending",
+      "rest": "Rest"
+    }
   },
   "categories": {
     "strength": "Strength",

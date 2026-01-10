@@ -1,30 +1,33 @@
 import { Activity, PenTool, Watch } from "lucide-react";
 import { WorkoutSource } from "@/hooks/useWorkoutHistory";
+import { useTranslation } from "react-i18next";
 
 interface EmptyStateProps {
   filter: WorkoutSource;
 }
 
 export default function EmptyState({ filter }: EmptyStateProps) {
+  const { t } = useTranslation('workouts');
+  
   const getContent = () => {
     switch (filter) {
       case 'manual':
         return {
           icon: <PenTool className="w-16 h-16 text-purple-400/50" />,
-          title: 'Нет записанных тренировок',
-          description: 'Начните записывать свои тренировки, чтобы отслеживать прогресс',
+          title: t('logbook.empty.manual.title'),
+          description: t('logbook.empty.manual.description'),
         };
       case 'tracker':
         return {
           icon: <Watch className="w-16 h-16 text-pink-400/50" />,
-          title: 'Нет импортированных тренировок',
-          description: 'Подключите трекер активности, чтобы автоматически синхронизировать тренировки',
+          title: t('logbook.empty.tracker.title'),
+          description: t('logbook.empty.tracker.description'),
         };
       default:
         return {
           icon: <Activity className="w-16 h-16 text-cyan-400/50" />,
-          title: 'Журнал пуст',
-          description: 'Начните тренироваться или подключите трекер активности',
+          title: t('logbook.empty.all.title'),
+          description: t('logbook.empty.all.description'),
         };
     }
   };

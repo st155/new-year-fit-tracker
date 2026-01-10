@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { CheckCircle2, Flame, Circle, Moon } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface DayStatus {
   day: number;
@@ -43,6 +44,8 @@ export function WeekCalendarView({
   days,
   completionPercentage,
 }: WeekCalendarViewProps) {
+  const { t } = useTranslation('workouts');
+  
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -53,9 +56,9 @@ export function WeekCalendarView({
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="font-semibold">Неделя {currentWeek} из {totalWeeks}</h3>
+          <h3 className="font-semibold">{t('plan.weekOf', { current: currentWeek, total: totalWeeks })}</h3>
           <p className="text-xs text-muted-foreground mt-1">
-            {Math.round(completionPercentage)}% выполнено
+            {t('plan.completed', { percent: Math.round(completionPercentage) })}
           </p>
         </div>
         
@@ -97,10 +100,10 @@ export function WeekCalendarView({
               </span>
               <Icon className={cn("w-6 h-6", dayColors[day.status])} />
               <span className="text-[10px] text-muted-foreground">
-                {day.status === 'completed' && 'Готово'}
-                {day.status === 'today' && 'Сегодня'}
-                {day.status === 'upcoming' && day.hasWorkout ? 'Ожидает' : ''}
-                {day.status === 'rest' && 'Отдых'}
+                {day.status === 'completed' && t('plan.status.completed')}
+                {day.status === 'today' && t('plan.status.today')}
+                {day.status === 'upcoming' && day.hasWorkout ? t('plan.status.upcoming') : ''}
+                {day.status === 'rest' && t('plan.status.rest')}
               </span>
             </motion.div>
           );

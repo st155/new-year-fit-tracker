@@ -398,5 +398,16 @@
     "teamsCreateError": "Error creating demo teams",
     "eventsCreated": "✅ Demo events created!",
     "eventsCreateError": "Error creating demo events"
+  },
+  "pdf": {
+    "statistics": "Statistics",
+    "currentStreak": "Current streak",
+    "bestStreak": "Best streak",
+    "totalCompletions": "Total completions",
+    "completionRate": "Completion rate",
+    "days": "days",
+    "historyTitle": "Completion History (last 30 days)",
+    "streakLabel": "streak",
+    "created": "Created"
   }
 }

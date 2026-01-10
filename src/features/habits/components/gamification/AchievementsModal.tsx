@@ -12,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { getUserAchievements, getAchievementProgress, type AchievementCheckParams } from '@/lib/gamification/achievement-checker';
 import { ACHIEVEMENT_DEFINITIONS } from '@/lib/gamification/achievement-definitions';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useTranslation } from 'react-i18next';
 
 interface AchievementsModalProps {
   open: boolean;
@@ -20,6 +21,7 @@ interface AchievementsModalProps {
 }
 
 export function AchievementsModal({ open, onOpenChange, checkParams }: AchievementsModalProps) {
+  const { t } = useTranslation('gamification');
   const { user } = useAuth();
   const [achievements, setAchievements] = useState<any[]>([]);
   const [progress, setProgress] = useState<Record<string, number>>({});
@@ -80,22 +82,22 @@ export function AchievementsModal({ open, onOpenChange, checkParams }: Achieveme
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl">Достижения</DialogTitle>
+          <DialogTitle className="text-2xl">{t('achievements.title')}</DialogTitle>
           <DialogDescription>
-            Разблокировано {unlockedCount} из {totalCount} достижений
+            {t('achievements.unlocked', { count: unlockedCount, total: totalCount })}
           </DialogDescription>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="all">
-              Все ({totalCount})
+              {t('achievements.tabs.all', { count: totalCount })}
             </TabsTrigger>
             <TabsTrigger value="unlocked">
-              Разблокированные ({unlockedCount})
+              {t('achievements.tabs.unlocked', { count: unlockedCount })}
             </TabsTrigger>
             <TabsTrigger value="locked">
-              Заблокированные ({totalCount - unlockedCount})
+              {t('achievements.tabs.locked', { count: totalCount - unlockedCount })}
             </TabsTrigger>
           </TabsList>
 
@@ -112,10 +114,10 @@ export function AchievementsModal({ open, onOpenChange, checkParams }: Achieveme
                   <div className="text-center py-12 text-muted-foreground">
                     <p>
                       {activeTab === 'unlocked'
-                        ? 'Пока нет разблокированных достижений'
+                        ? t('achievements.empty.unlocked')
                         : activeTab === 'locked'
-                        ? 'Все достижения разблокированы! 🎉'
-                        : 'Нет достижений'}
+                        ? t('achievements.empty.locked')
+                        : t('achievements.empty.all')}
                     </p>
                   </div>
                 ) : (

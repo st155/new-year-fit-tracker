@@ -8,6 +8,7 @@ import { useConfidenceRecalculation } from '@/hooks/useConfidenceRecalculation';
 import { useAuth } from '@/hooks/useAuth';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import type { LucideIcon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface QualityZone {
   label: string;
@@ -94,6 +95,7 @@ interface EnhancedDataQualityProps {
 }
 
 export function EnhancedDataQuality({ userId }: EnhancedDataQualityProps) {
+  const { t } = useTranslation('dashboard');
   const { user } = useAuth();
   const { 
     averageConfidence, 
@@ -114,28 +116,28 @@ export function EnhancedDataQuality({ userId }: EnhancedDataQualityProps) {
 
   const zones: QualityZone[] = [
     {
-      label: 'Отлично',
+      label: t('dataQuality.excellent'),
       count: metricsByQuality.excellent.length,
       percentage: totalMetrics > 0 ? Math.round((metricsByQuality.excellent.length / totalMetrics) * 100) : 0,
       color: 'hsl(var(--success))',
       icon: CheckCircle2,
     },
     {
-      label: 'Хорошо',
+      label: t('dataQuality.good'),
       count: metricsByQuality.good.length,
       percentage: totalMetrics > 0 ? Math.round((metricsByQuality.good.length / totalMetrics) * 100) : 0,
       color: 'hsl(var(--chart-2))',
       icon: CheckCircle2,
     },
     {
-      label: 'Средне',
+      label: t('dataQuality.fair'),
       count: metricsByQuality.fair.length,
       percentage: totalMetrics > 0 ? Math.round((metricsByQuality.fair.length / totalMetrics) * 100) : 0,
       color: 'hsl(var(--warning))',
       icon: AlertTriangle,
     },
     {
-      label: 'Плохо',
+      label: t('dataQuality.poor'),
       count: metricsByQuality.poor.length,
       percentage: totalMetrics > 0 ? Math.round((metricsByQuality.poor.length / totalMetrics) * 100) : 0,
       color: 'hsl(var(--destructive))',
@@ -155,7 +157,7 @@ export function EnhancedDataQuality({ userId }: EnhancedDataQualityProps) {
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5" />
-            Качество данных
+            {t('dataQuality.title')}
           </CardTitle>
           <Button 
             variant="outline" 

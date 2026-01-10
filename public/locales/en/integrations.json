@@ -35,6 +35,22 @@
   },
   "noConnections": "No connections",
   "configure": "Configure →",
+  "profile": {
+    "title": "Integrations",
+    "noDevices": "No connected devices",
+    "connect": "Connect",
+    "attentionNeeded": "Some connections need attention",
+    "activeOf": "{{count}}/{{total}} active",
+    "status": {
+      "active": "Active",
+      "stale": "Stale",
+      "expired": "Expired"
+    },
+    "lastSync": {
+      "never": "Never",
+      "unknown": "Unknown"
+    }
+  },
   "terra": {
     "deviceConnected": "Device connected!",
     "successConnected": "{{provider}} successfully connected.",
