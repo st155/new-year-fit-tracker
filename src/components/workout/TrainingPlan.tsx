@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,6 +20,7 @@ import LogWorkout from "./LogWorkout";
 import ExerciseIcon from "./ExerciseIcon";
 
 export default function TrainingPlan() {
+  const { t } = useTranslation('workouts');
   const navigate = useNavigate();
   const [activeExercise, setActiveExercise] = useState<any>(null);
   const [selectedExercise, setSelectedExercise] = useState<any>(null);
@@ -360,7 +362,7 @@ export default function TrainingPlan() {
                 onComplete={() => {
                   setActiveExercise(null);
                   refetchLogs();
-                  toast.success("Exercise completed!");
+                  toast.success(t('logging.exerciseCompleted'));
                 }}
               />
             </div>

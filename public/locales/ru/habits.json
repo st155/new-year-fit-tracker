@@ -314,6 +314,16 @@
     "habitOfWeek": "Привычка недели",
     "days": "дней"
   },
+  "card": {
+    "swipeAgainToDelete": "Свайпните ещё раз для удаления",
+    "moneySaved": "Сэкономлено",
+    "resetCounter": "Сбросить счётчик?",
+    "resetDescription": "Ваш прогресс ({{days}} дней) сохранится в истории. Счётчик начнётся заново.",
+    "whatHappened": "Что произошло? (опционально)",
+    "resetting": "Сброс...",
+    "startFresh": "Начать заново",
+    "swipeRightHint": "Свайпните вправо для отметки выполнения"
+  },
 "fastingControl": {
     "startFasting": "Начать голодание",
     "eatingWindow": "Окно питания",

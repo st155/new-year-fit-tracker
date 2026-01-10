@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
@@ -10,7 +11,7 @@ import { useProfile } from "@/contexts/ProfileContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
-import { enUS } from "date-fns/locale";
+import { enUS, ru } from "date-fns/locale";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ChatMessage {
@@ -30,6 +31,7 @@ interface ChallengeChatProps {
 }
 
 export const ChallengeChat = ({ challengeId }: ChallengeChatProps) => {
+  const { t, i18n } = useTranslation('challenges');
   const { user } = useAuth();
   const { profile } = useProfile();
   const { toast } = useToast();
@@ -138,8 +140,8 @@ export const ChallengeChat = ({ challengeId }: ChallengeChatProps) => {
     } catch (error) {
       console.error('Error fetching messages:', error);
       toast({
-        title: "Error",
-        description: "Failed to load messages",
+        title: t('common:error'),
+        description: t('chat.loadFailed'),
         variant: "destructive"
       });
     } finally {
@@ -196,8 +198,8 @@ export const ChallengeChat = ({ challengeId }: ChallengeChatProps) => {
       setNewMessage(messageText); // Восстанавливаем текст
       
       toast({
-        title: "Error",
-        description: "Failed to send message",
+        title: t('common:error'),
+        description: t('chat.sendFailed'),
         variant: "destructive"
       });
     } finally {
@@ -220,8 +222,8 @@ export const ChallengeChat = ({ challengeId }: ChallengeChatProps) => {
             <MessageCircle className="h-5 w-5 text-white" />
           </div>
           <div>
-            <CardTitle className="text-xl">Challenge Chat</CardTitle>
-            <CardDescription>Communicate with participants in real-time</CardDescription>
+            <CardTitle className="text-xl">{t('chat.title')}</CardTitle>
+            <CardDescription>{t('chat.description')}</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -236,8 +238,8 @@ export const ChallengeChat = ({ challengeId }: ChallengeChatProps) => {
             ) : messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                 <MessageCircle className="h-12 w-12 mb-3 opacity-50" />
-                <p>No messages yet</p>
-                <p className="text-sm">Be the first to start the conversation!</p>
+                <p>{t('chat.noMessages')}</p>
+                <p className="text-sm">{t('chat.beFirst')}</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -267,7 +269,7 @@ export const ChallengeChat = ({ challengeId }: ChallengeChatProps) => {
                             </Badge>
                           )}
                           <span className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(new Date(message.created_at), { addSuffix: true, locale: enUS })}
+                            {formatDistanceToNow(new Date(message.created_at), { addSuffix: true, locale: i18n.language === 'ru' ? ru : enUS })}
                           </span>
                         </div>
                         
@@ -292,7 +294,7 @@ export const ChallengeChat = ({ challengeId }: ChallengeChatProps) => {
           {/* Форма отправки */}
           <div className="flex gap-2">
             <Input
-              placeholder="Type a message..."
+              placeholder={t('chat.placeholder')}
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={handleKeyPress}

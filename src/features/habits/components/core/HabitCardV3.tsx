@@ -4,6 +4,7 @@ import {
   ANIMATION_DURATION 
 } from '@/lib/animations-v3';
 import { useState, useCallback, memo, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -60,6 +61,7 @@ export function HabitCardV3({
   compact = false,
   className
 }: HabitCardV3Props) {
+  const { t } = useTranslation('habits');
   const { state, expanded, showCelebration, celebrate, toggle } = useHabitCardState(habit);
   const [dragX, setDragX] = useState(0);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
@@ -128,7 +130,7 @@ export function HabitCardV3({
         onDelete?.();
       } else {
         setSwipeLeftCount(1);
-        toast('Свайпните еще раз для удаления', { duration: 2000 });
+        toast(t('card.swipeAgainToDelete'), { duration: 2000 });
         
         // Reset after 3 seconds
         if (swipeResetTimer.current) clearTimeout(swipeResetTimer.current);
@@ -407,7 +409,7 @@ export function HabitCardV3({
                 {moneySaved !== null && moneySaved > 0 && (
                   <div className="flex items-center gap-2 text-sm">
                     <Coins className="w-4 h-4 text-amber-500" />
-                    <span className="text-muted-foreground">Сэкономлено:</span>
+                    <span className="text-muted-foreground">{t('card.moneySaved')}:</span>
                     <span className="font-semibold text-amber-500">{moneySaved.toLocaleString()}₽</span>
                   </div>
                 )}
@@ -427,7 +429,7 @@ export function HabitCardV3({
                   size="sm"
                 >
                   <Check className="h-4 w-4 mr-2" />
-                  Отметить выполнено
+                  {t('actions.markComplete')}
                 </Button>
               </div>
             )}
@@ -464,10 +466,10 @@ export function HabitCardV3({
             {/* Duration Counter Badge (compact) */}
             {habit.habit_type === 'duration_counter' && elapsedTime && (
               <div className="flex items-center gap-2 mt-2 flex-wrap">
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  {elapsedTime.days} {elapsedTime.days === 1 ? 'день' : 'дней'}
-                </Badge>
+                  <Badge variant="secondary" className="flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {t('progress.days', { count: elapsedTime.days })}
+                  </Badge>
                 {moneySaved !== null && moneySaved > 0 && (
                   <Badge variant="outline" className="flex items-center gap-1">
                     <Coins className="w-3 h-3 text-amber-500" />
@@ -481,14 +483,14 @@ export function HabitCardV3({
                   onClick={(e) => {
                     e.stopPropagation();
                     if (!user?.id) {
-                      toast.error("Необходимо авторизоваться");
+                      toast.error(t('toast.authRequired'));
                       return;
                     }
                     console.log('Opening reset dialog for habit:', habit.id);
                     setShowResetDialog(true);
                   }}
                 >
-                  🔄 Сбросить
+                  🔄 {t('progress.reset')}
                 </Button>
               </div>
             )}
@@ -496,12 +498,12 @@ export function HabitCardV3({
             {/* State indicator */}
             {state === 'completed' && (
               <div className="mt-2 text-sm text-green-500 font-medium">
-                ✓ Выполнено
+                ✓ {t('progress.completed')}
               </div>
             )}
             {state === 'at_risk' && (
               <div className="mt-2 text-sm text-orange-500 font-medium">
-                ⚠️ Требует внимания
+                {t('smartView.atRiskTitle')}
               </div>
             )}
 
@@ -530,7 +532,7 @@ export function HabitCardV3({
                     )}
                     {(!habit.habit_type || habit.habit_type === 'checkbox') && (
                       <div className="text-sm text-muted-foreground text-center py-3 px-4 bg-muted/20 rounded-lg border border-muted-foreground/20">
-                        💡 Свайпните вправо для отметки выполнения →
+                        💡 {t('card.swipeRightHint')} →
                       </div>
                     )}
                   </div>
@@ -551,19 +553,19 @@ export function HabitCardV3({
       <AlertDialog open={showResetDialog} onOpenChange={setShowResetDialog}>
         <AlertDialogContent onClick={(e) => e.stopPropagation()}>
           <AlertDialogHeader>
-            <AlertDialogTitle>Сбросить счетчик?</AlertDialogTitle>
+            <AlertDialogTitle>{t('card.resetCounter')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Ваш прогресс ({elapsedTime?.days || 0} дней) сохранится в истории. Счетчик начнется заново.
+              {t('card.resetDescription', { days: elapsedTime?.days || 0 })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <Textarea
-            placeholder="Что произошло? (опционально)"
+            placeholder={t('card.whatHappened')}
             value={resetReason}
             onChange={(e) => setResetReason(e.target.value)}
             className="min-h-[80px]"
           />
           <AlertDialogFooter>
-            <AlertDialogCancel>Отмена</AlertDialogCancel>
+            <AlertDialogCancel>{t('delete.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => {
                 e.stopPropagation();
@@ -582,7 +584,7 @@ export function HabitCardV3({
               disabled={isResetting}
               className="bg-red-500 hover:bg-red-600"
             >
-              {isResetting ? "Сброс..." : "Начать заново"}
+              {isResetting ? t('card.resetting') : t('card.startFresh')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
