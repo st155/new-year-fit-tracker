@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { getHabitTheme } from '@/lib/habit-widget-themes';
 import { CircularProgress } from './CircularProgress';
 import { HabitSparklineWidget } from './HabitSparklineWidget';
+import { useTranslation } from 'react-i18next';
 
 interface HabitWidgetCardProps {
   habit: any;
@@ -13,6 +14,7 @@ interface HabitWidgetCardProps {
 }
 
 export function HabitWidgetCard({ habit, onClick }: HabitWidgetCardProps) {
+  const { t } = useTranslation('habits');
   const [elapsedTime, setElapsedTime] = useState<number>(0);
   const theme = getHabitTheme(habit.habit_type);
 
@@ -45,9 +47,9 @@ export function HabitWidgetCard({ habit, onClick }: HabitWidgetCardProps) {
         value: days,
         max: milestone,
         progress,
-        label: 'дней',
-        subtitle: moneySaved ? `💰 ${moneySaved}₽` : `Цель: ${milestone}д`,
-        detail: `Серия: ${habit.streak || 0} дней`,
+        label: t('widget.days'),
+        subtitle: moneySaved ? `💰 ${moneySaved}₽` : t('widget.goalDays', { days: milestone }),
+        detail: t('widget.streak', { days: habit.streak || 0 }),
       };
     }
 
@@ -60,9 +62,9 @@ export function HabitWidgetCard({ habit, onClick }: HabitWidgetCardProps) {
         value: Math.floor(fastingHours),
         max: targetHours,
         progress,
-        label: 'часов',
-        subtitle: '🔥 Пост активен',
-        detail: `Окно: ${targetHours}ч`,
+        label: t('widget.hours'),
+        subtitle: t('widget.fastingActive'),
+        detail: t('widget.window', { hours: targetHours }),
       };
     }
 
@@ -76,8 +78,8 @@ export function HabitWidgetCard({ habit, onClick }: HabitWidgetCardProps) {
         max: target,
         progress,
         label: habit.unit || '',
-        subtitle: `Цель: ${target}${habit.unit || ''}`,
-        detail: `Прогресс: ${Math.round(progress)}%`,
+        subtitle: t('widget.goalValue', { target, unit: habit.unit || '' }),
+        detail: t('widget.progress', { percent: Math.round(progress) }),
       };
     }
 
@@ -90,11 +92,11 @@ export function HabitWidgetCard({ habit, onClick }: HabitWidgetCardProps) {
       value: streak,
       max: target,
       progress,
-      label: 'дней',
-      subtitle: `Серия: ${streak}`,
-      detail: `До цели: ${target - streak}д`,
+      label: t('widget.days'),
+      subtitle: t('widget.streakLabel', { days: streak }),
+      detail: t('widget.untilGoal', { days: target - streak }),
     };
-  }, [habit, elapsedTime]);
+  }, [habit, elapsedTime, t]);
 
   return (
     <motion.div

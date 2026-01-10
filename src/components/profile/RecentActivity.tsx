@@ -2,9 +2,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Activity, CheckCircle2, Dumbbell, Trophy, Heart, Flame } from 'lucide-react';
 import { format, parseISO, isToday, isYesterday } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import { motion } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useTranslation } from 'react-i18next';
 import type { ActivityItem } from '@/hooks/profile/useProfileSummary';
 
 interface RecentActivityProps {
@@ -12,81 +13,83 @@ interface RecentActivityProps {
   isLoading?: boolean;
 }
 
-const activityConfig: Record<string, { icon: React.ReactNode; color: string; label: string }> = {
+const getActivityConfig = (t: (key: string) => string): Record<string, { icon: React.ReactNode; color: string; label: string }> => ({
   'habit_completion': {
     icon: <CheckCircle2 className="h-4 w-4" />,
     color: 'from-green-500 to-emerald-500',
-    label: 'Привычка'
+    label: t('recentActivity.types.habit_completion')
   },
   'workout': {
     icon: <Dumbbell className="h-4 w-4" />,
     color: 'from-blue-500 to-cyan-500',
-    label: 'Тренировка'
+    label: t('recentActivity.types.workout')
   },
   'milestone': {
     icon: <Trophy className="h-4 w-4" />,
     color: 'from-yellow-500 to-orange-500',
-    label: 'Достижение'
+    label: t('recentActivity.types.milestone')
   },
   'health_metric': {
     icon: <Heart className="h-4 w-4" />,
     color: 'from-red-500 to-pink-500',
-    label: 'Здоровье'
+    label: t('recentActivity.types.health_metric')
   }
-};
-
-function formatActivityDate(dateStr: string): string {
-  const date = parseISO(dateStr);
-  if (isToday(date)) return `Сегодня, ${format(date, 'HH:mm')}`;
-  if (isYesterday(date)) return `Вчера, ${format(date, 'HH:mm')}`;
-  return format(date, 'd MMM, HH:mm', { locale: ru });
-}
-
-function getActivityTitle(activity: ActivityItem): string {
-  // Try to extract meaningful title from action_text or metadata
-  if (activity.title) {
-    // Clean up common prefixes
-    const cleaned = activity.title
-      .replace(/^Выполнена привычка:?\s*/i, '')
-      .replace(/^Completed habit:?\s*/i, '')
-      .replace(/^Тренировка:?\s*/i, '')
-      .replace(/^Workout:?\s*/i, '');
-    return cleaned || activity.title;
-  }
-  return activityConfig[activity.type]?.label || 'Активность';
-}
-
-function getActivityDescription(activity: ActivityItem): string | null {
-  // Extract additional info from metadata if available
-  const meta = activity.metadata;
-  if (!meta) return null;
-  
-  const parts: string[] = [];
-  
-  if (meta.duration_minutes) {
-    parts.push(`${Math.round(meta.duration_minutes)} мин`);
-  }
-  if (meta.calories) {
-    parts.push(`${Math.round(meta.calories)} kcal`);
-  }
-  if (meta.distance_km) {
-    parts.push(`${meta.distance_km.toFixed(1)} км`);
-  }
-  if (meta.streak) {
-    parts.push(`🔥 ${meta.streak} дней подряд`);
-  }
-  
-  return parts.length > 0 ? parts.join(' · ') : null;
-}
+});
 
 export function RecentActivity({ activities, isLoading }: RecentActivityProps) {
+  const { t, i18n } = useTranslation('profile');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
+  const activityConfig = getActivityConfig(t);
+
+  const formatActivityDate = (dateStr: string): string => {
+    const date = parseISO(dateStr);
+    const time = format(date, 'HH:mm');
+    if (isToday(date)) return t('recentActivity.today', { time });
+    if (isYesterday(date)) return t('recentActivity.yesterday', { time });
+    return format(date, 'd MMM, HH:mm', { locale: dateLocale });
+  };
+
+  const getActivityTitle = (activity: ActivityItem): string => {
+    if (activity.title) {
+      const cleaned = activity.title
+        .replace(/^Выполнена привычка:?\s*/i, '')
+        .replace(/^Completed habit:?\s*/i, '')
+        .replace(/^Тренировка:?\s*/i, '')
+        .replace(/^Workout:?\s*/i, '');
+      return cleaned || activity.title;
+    }
+    return activityConfig[activity.type]?.label || t('recentActivity.activity');
+  };
+
+  const getActivityDescription = (activity: ActivityItem): string | null => {
+    const meta = activity.metadata;
+    if (!meta) return null;
+    
+    const parts: string[] = [];
+    
+    if (meta.duration_minutes) {
+      parts.push(t('recentActivity.units.min', { value: Math.round(meta.duration_minutes) }));
+    }
+    if (meta.calories) {
+      parts.push(`${Math.round(meta.calories)} kcal`);
+    }
+    if (meta.distance_km) {
+      parts.push(`${meta.distance_km.toFixed(1)} ${i18n.language === 'ru' ? 'км' : 'km'}`);
+    }
+    if (meta.streak) {
+      parts.push(t('recentActivity.units.streak', { days: meta.streak }));
+    }
+    
+    return parts.length > 0 ? parts.join(' · ') : null;
+  };
+
   if (isLoading) {
     return (
       <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-purple-500/5">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Activity className="h-5 w-5 text-primary" />
-            Последняя активность
+            {t('recentActivity.title')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -104,14 +107,14 @@ export function RecentActivity({ activities, isLoading }: RecentActivityProps) {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Activity className="h-5 w-5 text-primary" />
-            Последняя активность
+            {t('recentActivity.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-6 text-muted-foreground">
             <Activity className="h-10 w-10 mx-auto mb-2 opacity-30" />
-            <p className="text-sm">Пока нет активности</p>
-            <p className="text-xs mt-1">Начните выполнять привычки или тренировки!</p>
+            <p className="text-sm">{t('recentActivity.noActivity')}</p>
+            <p className="text-xs mt-1">{t('recentActivity.startTip')}</p>
           </div>
         </CardContent>
       </Card>
@@ -124,10 +127,10 @@ export function RecentActivity({ activities, isLoading }: RecentActivityProps) {
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Activity className="h-5 w-5 text-primary" />
-            Последняя активность
+            {t('recentActivity.title')}
           </CardTitle>
           <Badge variant="outline" className="text-xs">
-            {activities.length} событий
+            {t('recentActivity.events', { count: activities.length })}
           </Badge>
         </div>
       </CardHeader>

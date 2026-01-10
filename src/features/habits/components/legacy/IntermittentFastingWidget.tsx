@@ -24,18 +24,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { formatDistanceToNow, format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-
-const FASTING_MODES = [
-  { value: '16:8', label: '16:8 (Интервальное)', hours: 16 },
-  { value: '18:6', label: '18:6 (Воин)', hours: 18 },
-  { value: '20:4', label: '20:4', hours: 20 },
-  { value: '23:1', label: '23:1 (OMAD)', hours: 23 },
-  { value: '36h-dry', label: '36ч Сухое', hours: 36 },
-  { value: '48h', label: '48ч Расширенное', hours: 48 },
-  { value: 'custom', label: 'Кастомное', hours: 0 },
-];
+import { useTranslation } from 'react-i18next';
 
 interface FastingPhase {
   name: string;
@@ -46,62 +37,10 @@ interface FastingPhase {
   benefits: string[];
 }
 
-const FASTING_PHASES: FastingPhase[] = [
-  {
-    name: 'Пищеварение',
-    minHours: 0,
-    maxHours: 4,
-    icon: <Droplets className="h-4 w-4" />,
-    color: 'hsl(var(--primary))',
-    benefits: ['Переваривание пищи', 'Уровень глюкозы стабилизируется'],
-  },
-  {
-    name: 'Переход',
-    minHours: 4,
-    maxHours: 12,
-    icon: <TrendingUp className="h-4 w-4" />,
-    color: 'hsl(var(--warning))',
-    benefits: ['Запасы гликогена истощаются', 'Начало жиросжигания'],
-  },
-  {
-    name: 'Жиросжигание',
-    minHours: 12,
-    maxHours: 16,
-    icon: <Flame className="h-4 w-4" />,
-    color: 'hsl(210, 100%, 55%)',
-    benefits: ['Активное жиросжигание', 'Повышение энергии'],
-  },
-  {
-    name: 'Кетоз',
-    minHours: 16,
-    maxHours: 24,
-    icon: <Zap className="h-4 w-4" />,
-    color: 'hsl(45, 100%, 51%)',
-    benefits: ['Производство кетонов', 'Ментальная ясность'],
-  },
-  {
-    name: 'Глубокий кетоз',
-    minHours: 24,
-    maxHours: 36,
-    icon: <Sparkles className="h-4 w-4" />,
-    color: 'hsl(280, 100%, 60%)',
-    benefits: ['Максимальное жиросжигание', 'Повышение HGH'],
-  },
-  {
-    name: 'Аутофагия',
-    minHours: 36,
-    maxHours: Infinity,
-    icon: <Brain className="h-4 w-4" />,
-    color: 'hsl(340, 82%, 52%)',
-    benefits: ['Клеточная регенерация', 'Антивозрастной эффект', 'Иммунитет ↑'],
-  },
-];
-
-function getCurrentPhase(hours: number): FastingPhase {
-  return FASTING_PHASES.find(phase => hours >= phase.minHours && hours < phase.maxHours) || FASTING_PHASES[FASTING_PHASES.length - 1];
-}
-
 export function IntermittentFastingWidget() {
+  const { t, i18n } = useTranslation('habits');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
+  
   const { user } = useAuth();
   const [selectedMode, setSelectedMode] = useState('16:8');
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -111,6 +50,90 @@ export function IntermittentFastingWidget() {
   const stats = useFastingStats(user?.id);
   const startFasting = useStartFasting();
   const endFasting = useEndFasting();
+
+  const FASTING_MODES = useMemo(() => [
+    { value: '16:8', label: t('intermittentFasting.modes.16:8'), hours: 16 },
+    { value: '18:6', label: t('intermittentFasting.modes.18:6'), hours: 18 },
+    { value: '20:4', label: t('intermittentFasting.modes.20:4'), hours: 20 },
+    { value: '23:1', label: t('intermittentFasting.modes.23:1'), hours: 23 },
+    { value: '36h-dry', label: t('intermittentFasting.modes.36h-dry'), hours: 36 },
+    { value: '48h', label: t('intermittentFasting.modes.48h'), hours: 48 },
+    { value: 'custom', label: t('intermittentFasting.modes.custom'), hours: 0 },
+  ], [t]);
+
+  const FASTING_PHASES: FastingPhase[] = useMemo(() => [
+    {
+      name: t('intermittentFasting.phases.digestion.name'),
+      minHours: 0,
+      maxHours: 4,
+      icon: <Droplets className="h-4 w-4" />,
+      color: 'hsl(var(--primary))',
+      benefits: [
+        t('intermittentFasting.phases.digestion.benefits.0'),
+        t('intermittentFasting.phases.digestion.benefits.1'),
+      ],
+    },
+    {
+      name: t('intermittentFasting.phases.transition.name'),
+      minHours: 4,
+      maxHours: 12,
+      icon: <TrendingUp className="h-4 w-4" />,
+      color: 'hsl(var(--warning))',
+      benefits: [
+        t('intermittentFasting.phases.transition.benefits.0'),
+        t('intermittentFasting.phases.transition.benefits.1'),
+      ],
+    },
+    {
+      name: t('intermittentFasting.phases.fatBurning.name'),
+      minHours: 12,
+      maxHours: 16,
+      icon: <Flame className="h-4 w-4" />,
+      color: 'hsl(210, 100%, 55%)',
+      benefits: [
+        t('intermittentFasting.phases.fatBurning.benefits.0'),
+        t('intermittentFasting.phases.fatBurning.benefits.1'),
+      ],
+    },
+    {
+      name: t('intermittentFasting.phases.ketosis.name'),
+      minHours: 16,
+      maxHours: 24,
+      icon: <Zap className="h-4 w-4" />,
+      color: 'hsl(45, 100%, 51%)',
+      benefits: [
+        t('intermittentFasting.phases.ketosis.benefits.0'),
+        t('intermittentFasting.phases.ketosis.benefits.1'),
+      ],
+    },
+    {
+      name: t('intermittentFasting.phases.deepKetosis.name'),
+      minHours: 24,
+      maxHours: 36,
+      icon: <Sparkles className="h-4 w-4" />,
+      color: 'hsl(280, 100%, 60%)',
+      benefits: [
+        t('intermittentFasting.phases.deepKetosis.benefits.0'),
+        t('intermittentFasting.phases.deepKetosis.benefits.1'),
+      ],
+    },
+    {
+      name: t('intermittentFasting.phases.autophagy.name'),
+      minHours: 36,
+      maxHours: Infinity,
+      icon: <Brain className="h-4 w-4" />,
+      color: 'hsl(340, 82%, 52%)',
+      benefits: [
+        t('intermittentFasting.phases.autophagy.benefits.0'),
+        t('intermittentFasting.phases.autophagy.benefits.1'),
+        t('intermittentFasting.phases.autophagy.benefits.2'),
+      ],
+    },
+  ], [t]);
+
+  function getCurrentPhase(hours: number): FastingPhase {
+    return FASTING_PHASES.find(phase => hours >= phase.minHours && hours < phase.maxHours) || FASTING_PHASES[FASTING_PHASES.length - 1];
+  }
 
   // Update time every minute
   useEffect(() => {
@@ -138,11 +161,11 @@ export function IntermittentFastingWidget() {
       const duration = (end - start) / (1000 * 60 * 60);
       
       return {
-        date: format(new Date(session.start_time), 'dd MMM', { locale: ru }),
+        date: format(new Date(session.start_time), 'dd MMM', { locale: dateLocale }),
         duration: Math.round(duration),
       };
     });
-  }, [history]);
+  }, [history, dateLocale]);
 
   const handleStart = () => {
     if (!user?.id) return;
@@ -175,17 +198,17 @@ export function IntermittentFastingWidget() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-primary" />
-              <CardTitle className="text-lg">Интермиттентное голодание</CardTitle>
+              <CardTitle className="text-lg">{t('intermittentFasting.title')}</CardTitle>
             </div>
             {isInKetosis && (
               <Badge variant="outline" className="bg-yellow-500/20 text-yellow-400 border-yellow-500/50 animate-pulse">
                 <Flame className="h-3 w-3 mr-1" />
-                Кетоз
+                {t('intermittentFasting.ketosis')}
               </Badge>
             )}
           </div>
           <CardDescription>
-            {activeSession ? 'Голодание активно' : 'Выберите режим и начните'}
+            {activeSession ? t('intermittentFasting.active') : t('intermittentFasting.selectMode')}
           </CardDescription>
         </CardHeader>
 
@@ -200,7 +223,7 @@ export function IntermittentFastingWidget() {
                 <SelectContent>
                   {FASTING_MODES.map(mode => (
                     <SelectItem key={mode.value} value={mode.value}>
-                      {mode.label} {mode.hours > 0 && `(${mode.hours}ч)`}
+                      {mode.label} {mode.hours > 0 && `(${mode.hours}${t('intermittentFasting.hoursShort')})`}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -208,7 +231,7 @@ export function IntermittentFastingWidget() {
 
               <Button onClick={handleStart} className="w-full" size="lg">
                 <Play className="h-4 w-4 mr-2" />
-                Начать голодание
+                {t('intermittentFasting.start')}
               </Button>
 
               {/* Quick Stats */}
@@ -216,15 +239,15 @@ export function IntermittentFastingWidget() {
                 <div className="grid grid-cols-3 gap-2 pt-2 border-t">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-primary">{stats.currentStreak}</div>
-                    <div className="text-xs text-muted-foreground">Streak</div>
+                    <div className="text-xs text-muted-foreground">{t('intermittentFasting.stats.streak')}</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-primary">{stats.averageDuration}ч</div>
-                    <div className="text-xs text-muted-foreground">Средняя</div>
+                    <div className="text-2xl font-bold text-primary">{stats.averageDuration}{t('intermittentFasting.hoursShort')}</div>
+                    <div className="text-xs text-muted-foreground">{t('intermittentFasting.stats.average')}</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-primary">{stats.longestFast}ч</div>
-                    <div className="text-xs text-muted-foreground">Рекорд</div>
+                    <div className="text-2xl font-bold text-primary">{stats.longestFast}{t('intermittentFasting.hoursShort')}</div>
+                    <div className="text-xs text-muted-foreground">{t('intermittentFasting.stats.record')}</div>
                   </div>
                 </div>
               )}
@@ -260,10 +283,10 @@ export function IntermittentFastingWidget() {
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <div className="text-4xl font-bold metric-glow" style={{ color: currentPhase.color }}>
-                      {Math.floor(fastingDuration)}ч {Math.round((fastingDuration % 1) * 60)}м
+                      {Math.floor(fastingDuration)}{t('intermittentFasting.hoursShort')} {Math.round((fastingDuration % 1) * 60)}{t('intermittentFasting.minutesShort')}
                     </div>
                     <div className="text-sm text-muted-foreground mt-1">
-                      из {targetHours}ч
+                      {t('intermittentFasting.outOf', { hours: targetHours })}
                     </div>
                   </div>
                 </div>
@@ -293,10 +316,10 @@ export function IntermittentFastingWidget() {
                   <div className="flex items-start gap-2">
                     <Sparkles className="h-4 w-4 text-purple-400 mt-0.5" />
                     <div className="text-sm">
-                      <span className="font-semibold text-purple-400">Глубокий кетоз! </span>
+                      <span className="font-semibold text-purple-400">{t('intermittentFasting.insights.deepKetosis')} </span>
                       <span className="text-muted-foreground">
-                        Ваше тело активно использует жир как источник энергии. 
-                        {fastingDuration >= 30 && ' Не забудьте о гидратации и электролитах.'}
+                        {t('intermittentFasting.insights.deepKetosisDesc')}
+                        {fastingDuration >= 30 && ` ${t('intermittentFasting.insights.hydrationReminder')}`}
                       </span>
                     </div>
                   </div>
@@ -308,9 +331,9 @@ export function IntermittentFastingWidget() {
                   <div className="flex items-start gap-2">
                     <Shield className="h-4 w-4 text-pink-400 mt-0.5" />
                     <div className="text-sm">
-                      <span className="font-semibold text-pink-400">Аутофагия активна! </span>
+                      <span className="font-semibold text-pink-400">{t('intermittentFasting.insights.autophagy')} </span>
                       <span className="text-muted-foreground">
-                        Клеточная регенерация в самом разгаре. Антивозрастной эффект максимален.
+                        {t('intermittentFasting.insights.autophagyDesc')}
                       </span>
                     </div>
                   </div>
@@ -325,7 +348,7 @@ export function IntermittentFastingWidget() {
                   className="bg-success hover:bg-success/90"
                 >
                   <Square className="h-4 w-4 mr-2" />
-                  Завершить
+                  {t('intermittentFasting.complete')}
                 </Button>
                 <Button 
                   onClick={() => handleEnd(false)} 
@@ -333,13 +356,13 @@ export function IntermittentFastingWidget() {
                   className="border-destructive/50 text-destructive hover:bg-destructive/10"
                 >
                   <AlertCircle className="h-4 w-4 mr-2" />
-                  Прервать
+                  {t('intermittentFasting.cancel')}
                 </Button>
               </div>
 
               {/* Start Info */}
               <div className="text-xs text-muted-foreground text-center pt-2 border-t">
-                Начато: {format(new Date(activeSession.start_time), 'HH:mm, dd MMM', { locale: ru })}
+                {t('intermittentFasting.startedAt')}: {format(new Date(activeSession.start_time), 'HH:mm, dd MMM', { locale: dateLocale })}
               </div>
             </div>
           )}
@@ -352,7 +375,7 @@ export function IntermittentFastingWidget() {
           <CardHeader className="pb-3">
             <CardTitle className="text-sm flex items-center gap-2">
               <Calendar className="h-4 w-4" />
-              История (последние 14 дней)
+              {t('intermittentFasting.history')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -372,7 +395,7 @@ export function IntermittentFastingWidget() {
                           <div className="bg-background border rounded px-2 py-1 text-xs shadow-lg">
                             <div>{payload[0].payload.date}</div>
                             <div className="font-semibold text-primary">
-                              {payload[0].value}ч голодания
+                              {t('intermittentFasting.hoursOfFasting', { hours: payload[0].value })}
                             </div>
                           </div>
                         );
@@ -397,22 +420,22 @@ export function IntermittentFastingWidget() {
               <div className="text-center">
                 <Award className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
                 <div className="text-lg font-bold">{stats.totalSessions}</div>
-                <div className="text-[10px] text-muted-foreground">Всего</div>
+                <div className="text-[10px] text-muted-foreground">{t('intermittentFasting.stats.total')}</div>
               </div>
               <div className="text-center">
                 <Flame className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
                 <div className="text-lg font-bold">{stats.currentStreak}</div>
-                <div className="text-[10px] text-muted-foreground">Streak</div>
+                <div className="text-[10px] text-muted-foreground">{t('intermittentFasting.stats.streak')}</div>
               </div>
               <div className="text-center">
                 <TrendingUp className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
-                <div className="text-lg font-bold">{stats.averageDuration}ч</div>
-                <div className="text-[10px] text-muted-foreground">Средняя</div>
+                <div className="text-lg font-bold">{stats.averageDuration}{t('intermittentFasting.hoursShort')}</div>
+                <div className="text-[10px] text-muted-foreground">{t('intermittentFasting.stats.average')}</div>
               </div>
               <div className="text-center">
                 <Zap className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
-                <div className="text-lg font-bold">{stats.totalHoursFasted}ч</div>
-                <div className="text-[10px] text-muted-foreground">Всего</div>
+                <div className="text-lg font-bold">{stats.totalHoursFasted}{t('intermittentFasting.hoursShort')}</div>
+                <div className="text-[10px] text-muted-foreground">{t('intermittentFasting.stats.totalHours')}</div>
               </div>
             </div>
           </CardContent>

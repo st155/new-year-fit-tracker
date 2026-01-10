@@ -63,5 +63,24 @@
     "streakDays": "Days streak",
     "goals": "Goals",
     "metrics": "Metrics"
+  },
+  "recentActivity": {
+    "title": "Recent Activity",
+    "noActivity": "No activity yet",
+    "startTip": "Start completing habits or workouts!",
+    "events": "{{count}} events",
+    "today": "Today, {{time}}",
+    "yesterday": "Yesterday, {{time}}",
+    "activity": "Activity",
+    "types": {
+      "habit_completion": "Habit",
+      "workout": "Workout",
+      "milestone": "Achievement",
+      "health_metric": "Health"
+    },
+    "units": {
+      "min": "{{value}} min",
+      "streak": "🔥 {{days}} days in a row"
+    }
   }
 }
