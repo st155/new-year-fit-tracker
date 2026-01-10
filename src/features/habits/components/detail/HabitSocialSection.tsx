@@ -8,16 +8,18 @@ import { FriendHabitCard } from './FriendHabitCard';
 import { TeamHabitCard } from './TeamHabitCard';
 import { EmptyState } from '@/components/ui/empty-state';
 import { formatDistanceToNow } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import { useHabitFeedRealtime } from '@/hooks/composite/realtime';
-
+import { useTranslation } from 'react-i18next';
 interface HabitSocialSectionProps {
   habitId: string;
   habitName: string;
 }
 
 export function HabitSocialSection({ habitId, habitName }: HabitSocialSectionProps) {
+  const { t, i18n } = useTranslation('habits');
   const navigate = useNavigate();
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
   
   // Enable real-time updates for feed
   useHabitFeedRealtime();
@@ -25,7 +27,6 @@ export function HabitSocialSection({ habitId, habitName }: HabitSocialSectionPro
   const { data: friends, isLoading: friendsLoading } = useHabitFriendsWithSame(habitName);
   const { data: teams, isLoading: teamsLoading } = useTeamsWithHabit(habitName);
   const { data: feedEvents, isLoading: feedLoading } = useHabitSocialFeed(habitId);
-
   const isLoading = friendsLoading || teamsLoading || feedLoading;
 
   if (isLoading) {
@@ -50,7 +51,7 @@ export function HabitSocialSection({ habitId, habitName }: HabitSocialSectionPro
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold flex items-center gap-2">
             <Users className="h-5 w-5 text-primary" />
-            Социальная активность
+            {t('social.activity')}
           </h2>
         </div>
 
@@ -58,7 +59,7 @@ export function HabitSocialSection({ habitId, habitName }: HabitSocialSectionPro
         <div className="space-y-3">
           <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
             <UserPlus className="h-4 w-4" />
-            Друзья также выполняют
+            {t('social.friendsAlso')}
           </h3>
           {friends && friends.length > 0 ? (
             <div className="grid gap-3 md:grid-cols-2">
@@ -69,10 +70,10 @@ export function HabitSocialSection({ habitId, habitName }: HabitSocialSectionPro
           ) : (
             <EmptyState
               icon={<UserPlus className="h-12 w-12" />}
-              title="Пригласите друзей"
-              description="Отслеживайте привычки вместе и мотивируйте друг друга"
+              title={t('social.inviteFriends')}
+              description={t('social.trackTogether')}
               action={{
-                label: "Добавить друзей",
+                label: t('social.addFriends'),
                 onClick: () => navigate('/habits-v3?tab=social')
               }}
               className="border-dashed"
@@ -84,7 +85,7 @@ export function HabitSocialSection({ habitId, habitName }: HabitSocialSectionPro
         <div className="space-y-3">
           <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
             <Users className="h-4 w-4" />
-            Команды
+            {t('social.teams')}
           </h3>
           {teams && teams.length > 0 ? (
             <div className="space-y-2">
@@ -95,10 +96,10 @@ export function HabitSocialSection({ habitId, habitName }: HabitSocialSectionPro
           ) : (
             <EmptyState
               icon={<Users className="h-12 w-12" />}
-              title="Создайте команду"
-              description="Объединитесь с другими и достигайте целей вместе"
+              title={t('social.createTeam')}
+              description={t('social.joinOthers')}
               action={{
-                label: "Создать команду",
+                label: t('social.createTeamBtn'),
                 onClick: () => navigate('/habits-v3?tab=social')
               }}
               className="border-dashed"
@@ -111,7 +112,7 @@ export function HabitSocialSection({ habitId, habitName }: HabitSocialSectionPro
           <div className="space-y-3">
             <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
               <Sparkles className="h-4 w-4" />
-              Недавняя активность
+              {t('social.recentActivity')}
             </h3>
           <div className="space-y-2">
               {feedEvents.map(event => (
@@ -120,16 +121,16 @@ export function HabitSocialSection({ habitId, habitName }: HabitSocialSectionPro
                     <div className="flex-1 min-w-0">
                       <p className="text-sm">
                         <span className="font-semibold">
-                          {event.profiles?.username || event.profiles?.full_name || 'Пользователь'}
+                          {event.profiles?.username || event.profiles?.full_name || t('common.user')}
                         </span>
                         {' '}
-                        {event.event_type === 'habit_completed' && 'выполнил привычку'}
-                        {event.event_type === 'streak_milestone' && 'достиг новой серии'}
-                        {event.event_type === 'level_up' && 'повысил уровень'}
-                        {!['habit_completed', 'streak_milestone', 'level_up'].includes(event.event_type) && 'обновил активность'}
+                        {event.event_type === 'habit_completed' && t('social.events.habitCompleted')}
+                        {event.event_type === 'streak_milestone' && t('social.events.streakMilestone')}
+                        {event.event_type === 'level_up' && t('social.events.levelUp')}
+                        {!['habit_completed', 'streak_milestone', 'level_up'].includes(event.event_type) && t('social.events.activityUpdate')}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {formatDistanceToNow(new Date(event.created_at), { addSuffix: true, locale: ru })}
+                        {formatDistanceToNow(new Date(event.created_at), { addSuffix: true, locale: dateLocale })}
                       </p>
                     </div>
                   </div>
@@ -143,11 +144,11 @@ export function HabitSocialSection({ habitId, habitName }: HabitSocialSectionPro
           <div className="text-center py-8">
             <Users className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
             <p className="text-sm text-muted-foreground mb-4">
-              Пока нет социальной активности для этой привычки
+              {t('social.noActivity')}
             </p>
             <Button onClick={() => navigate('/habits-v3?tab=social')} variant="outline" className="gap-2">
               <Users className="h-4 w-4" />
-              Перейти к социальным функциям
+              {t('social.goToSocial')}
             </Button>
           </div>
         )}

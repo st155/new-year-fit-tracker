@@ -274,7 +274,21 @@
     "good": "Good",
     "fair": "Fair",
     "poor": "Poor",
-    "lowQualityMetrics": "{{count}} low quality metrics"
+    "lowQualityMetrics": "{{count}} low quality metrics",
+    "qualityTrend": "Quality trend (7 days)",
+    "quality": "Quality",
+    "metrics": "{{count}} metric(s)"
+  },
+  "sleep": {
+    "noData": "No data to display",
+    "phasesByDays": "Sleep phases by day",
+    "minutes": "Minutes",
+    "deep": "Deep",
+    "light": "Light",
+    "awake": "Awake",
+    "total": "Total",
+    "averageDuration": "Average duration",
+    "lastScore": "Last Score"
   },
   "activity": {
     "loading": "Loading activity data...",

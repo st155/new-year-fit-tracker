@@ -522,5 +522,62 @@
     "historyTitle": "История выполнений (последние 30 дней)",
     "streakLabel": "серия",
     "created": "Создано"
+  },
+  "focusMode": {
+    "noHabits": "Нет доступных привычек",
+    "back": "Вернуться",
+    "target": "Цель:",
+    "streak": "Серия",
+    "completed": "Завершено",
+    "previous": "Назад",
+    "complete": "Завершить",
+    "next": "Далее",
+    "habitCount": "Привычка {{current}} из {{total}}"
+  },
+  "teamDialog": {
+    "inviteMember": "Пригласить участника",
+    "searchDescription": "Найдите пользователя по имени или username",
+    "spotsAvailable": "{{count}} мест доступно",
+    "searchPlaceholder": "Начните вводить имя...",
+    "searching": "Поиск...",
+    "minChars": "Введите минимум 2 символа для поиска",
+    "noUsersFound": "Пользователи не найдены",
+    "add": "Добавить"
+  },
+  "friendsView": {
+    "signInToView": "Войдите, чтобы видеть друзей",
+    "title": "Друзья",
+    "add": "Добавить",
+    "requests": "Запросы",
+    "remove": "Удалить",
+    "noFriends": "У вас пока нет друзей",
+    "addFriendsHint": "Добавьте друзей, чтобы следить за их прогрессом и мотивировать друг друга",
+    "findFriends": "Найти друзей",
+    "wantsToAdd": "Хочет добавить вас в друзья",
+    "noRequests": "Нет новых запросов"
+  },
+  "social": {
+    "activity": "Социальная активность",
+    "friendsAlso": "Друзья также выполняют",
+    "inviteFriends": "Пригласите друзей",
+    "trackTogether": "Отслеживайте привычки вместе и мотивируйте друг друга",
+    "addFriends": "Добавить друзей",
+    "teams": "Команды",
+    "createTeam": "Создайте команду",
+    "joinOthers": "Объединитесь с другими и достигайте целей вместе",
+    "createTeamBtn": "Создать команду",
+    "recentActivity": "Недавняя активность",
+    "events": {
+      "habitCompleted": "выполнил привычку",
+      "streakMilestone": "достиг новой серии",
+      "levelUp": "повысил уровень",
+      "activityUpdate": "обновил активность"
+    },
+    "noActivity": "Пока нет социальной активности для этой привычки",
+    "goToSocial": "Перейти к социальным функциям"
+  },
+  "common": {
+    "anonymous": "Аноним",
+    "user": "Пользователь"
   }
 }

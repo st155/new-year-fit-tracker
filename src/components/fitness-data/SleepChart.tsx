@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Badge } from '@/components/ui/badge';
+import { useTranslation } from 'react-i18next';
 
 interface SleepChartProps {
   data: { 
@@ -15,12 +16,14 @@ interface SleepChartProps {
 }
 
 export function SleepChart({ data }: SleepChartProps) {
+  const { t } = useTranslation('dashboard');
+
   if (!data || data.length === 0) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>Sleep Analysis</CardTitle>
-          <CardDescription>Нет данных для отображения</CardDescription>
+          <CardDescription>{t('sleep.noData')}</CardDescription>
         </CardHeader>
       </Card>
     );
@@ -35,7 +38,7 @@ export function SleepChart({ data }: SleepChartProps) {
         <div className="flex items-center justify-between">
           <div>
             <CardTitle>Sleep Analysis</CardTitle>
-            <CardDescription>Фазы сна по дням</CardDescription>
+            <CardDescription>{t('sleep.phasesByDays')}</CardDescription>
           </div>
           {latestScore && (
             <Badge variant={latestScore >= 80 ? 'default' : latestScore >= 60 ? 'secondary' : 'destructive'}>
@@ -60,7 +63,7 @@ export function SleepChart({ data }: SleepChartProps) {
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
-                label={{ value: 'Минуты', angle: -90, position: 'insideLeft' }}
+                label={{ value: t('sleep.minutes'), angle: -90, position: 'insideLeft' }}
               />
               <Tooltip
                 cursor={false}
@@ -74,13 +77,13 @@ export function SleepChart({ data }: SleepChartProps) {
                           <div className="grid gap-1 text-sm">
                             {data.deep && (
                               <div className="flex items-center justify-between gap-4">
-                                <span className="text-muted-foreground">Глубокий:</span>
+                                <span className="text-muted-foreground">{t('sleep.deep')}:</span>
                                 <span className="font-medium">{(data.deep / 60).toFixed(1)}ч</span>
                               </div>
                             )}
                             {data.light && (
                               <div className="flex items-center justify-between gap-4">
-                                <span className="text-muted-foreground">Легкий:</span>
+                                <span className="text-muted-foreground">{t('sleep.light')}:</span>
                                 <span className="font-medium">{(data.light / 60).toFixed(1)}ч</span>
                               </div>
                             )}
@@ -92,13 +95,13 @@ export function SleepChart({ data }: SleepChartProps) {
                             )}
                             {data.awake && (
                               <div className="flex items-center justify-between gap-4">
-                                <span className="text-muted-foreground">Бодрствование:</span>
+                                <span className="text-muted-foreground">{t('sleep.awake')}:</span>
                                 <span className="font-medium">{(data.awake / 60).toFixed(1)}ч</span>
                               </div>
                             )}
                             {data.total && (
                               <div className="flex items-center justify-between gap-4 pt-1 border-t">
-                                <span className="font-medium">Всего:</span>
+                                <span className="font-medium">{t('sleep.total')}:</span>
                                 <span className="font-bold">{data.total.toFixed(1)}ч</span>
                               </div>
                             )}
@@ -111,10 +114,10 @@ export function SleepChart({ data }: SleepChartProps) {
                 }}
               />
               <Legend />
-              <Bar dataKey="deep" stackId="sleep" fill="hsl(var(--chart-1))" name="Глубокий" radius={[0, 0, 0, 0]} />
-              <Bar dataKey="light" stackId="sleep" fill="hsl(var(--chart-2))" name="Легкий" radius={[0, 0, 0, 0]} />
+              <Bar dataKey="deep" stackId="sleep" fill="hsl(var(--chart-1))" name={t('sleep.deep')} radius={[0, 0, 0, 0]} />
+              <Bar dataKey="light" stackId="sleep" fill="hsl(var(--chart-2))" name={t('sleep.light')} radius={[0, 0, 0, 0]} />
               <Bar dataKey="rem" stackId="sleep" fill="hsl(var(--chart-3))" name="REM" radius={[0, 0, 0, 0]} />
-              <Bar dataKey="awake" stackId="sleep" fill="hsl(var(--chart-5))" name="Бодрствование" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="awake" stackId="sleep" fill="hsl(var(--chart-5))" name={t('sleep.awake')} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -122,12 +125,12 @@ export function SleepChart({ data }: SleepChartProps) {
         {/* Summary stats */}
         <div className="mt-4 grid grid-cols-2 gap-2">
           <div className="flex flex-col p-2 rounded-lg bg-muted/50">
-            <span className="text-xs text-muted-foreground">Средняя длительность</span>
+            <span className="text-xs text-muted-foreground">{t('sleep.averageDuration')}</span>
             <span className="font-medium">{averageTotal.toFixed(1)}ч</span>
           </div>
           {latestScore && (
             <div className="flex flex-col p-2 rounded-lg bg-muted/50">
-              <span className="text-xs text-muted-foreground">Последний Score</span>
+              <span className="text-xs text-muted-foreground">{t('sleep.lastScore')}</span>
               <span className="font-medium">{latestScore}/100</span>
             </div>
           )}

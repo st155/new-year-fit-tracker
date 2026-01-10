@@ -275,7 +275,21 @@
     "good": "Хорошо",
     "fair": "Средне",
     "poor": "Плохо",
-    "lowQualityMetrics": "{{count}} метрик с низким качеством"
+    "lowQualityMetrics": "{{count}} метрик с низким качеством",
+    "qualityTrend": "Тренд качества (7 дней)",
+    "quality": "Качество",
+    "metrics": "{{count}} показателей"
+  },
+  "sleep": {
+    "noData": "Нет данных для отображения",
+    "phasesByDays": "Фазы сна по дням",
+    "minutes": "Минуты",
+    "deep": "Глубокий",
+    "light": "Легкий",
+    "awake": "Бодрствование",
+    "total": "Всего",
+    "averageDuration": "Средняя длительность",
+    "lastScore": "Последний Score"
   },
   "activity": {
     "loading": "Загрузка данных активности...",

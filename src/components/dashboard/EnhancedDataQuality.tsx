@@ -32,7 +32,7 @@ function QualityZoneRow({ zone }: QualityZoneRowProps) {
         <div className="flex items-center justify-between mb-1">
           <span className="text-sm font-medium">{zone.label}</span>
           <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
-            {zone.count} показател{zone.count === 1 ? 'ь' : 'ей'} · {zone.percentage}%
+            {zone.count} · {zone.percentage}%
           </span>
         </div>
         <Progress 
@@ -166,7 +166,7 @@ export function EnhancedDataQuality({ userId }: EnhancedDataQualityProps) {
             disabled={isRecalculating}
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${isRecalculating ? 'animate-spin' : ''}`} />
-            Пересчитать
+            {t('dataQuality.recalculate')}
           </Button>
         </div>
       </CardHeader>
@@ -175,7 +175,7 @@ export function EnhancedDataQuality({ userId }: EnhancedDataQualityProps) {
           {/* Left: Radial */}
           <div className="flex flex-col items-center justify-center">
             <CompactRadialProgress value={Math.round(averageConfidence)} size={140} />
-            <p className="text-sm text-muted-foreground mt-2">Общий балл</p>
+            <p className="text-sm text-muted-foreground mt-2">{t('dataQuality.overallScore')}</p>
           </div>
           
           {/* Right: Zones breakdown */}
@@ -191,7 +191,7 @@ export function EnhancedDataQuality({ userId }: EnhancedDataQualityProps) {
           <div className="mt-6 pt-6 border-t">
             <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
-              Тренд качества (7 дней)
+              {t('dataQuality.qualityTrend')}
             </h4>
             <div className="h-[100px]">
               <ResponsiveContainer width="100%" height="100%">
@@ -207,8 +207,8 @@ export function EnhancedDataQuality({ userId }: EnhancedDataQualityProps) {
                     tick={{ fontSize: 12 }}
                   />
                   <Tooltip 
-                    labelFormatter={(value) => new Date(value).toLocaleDateString('ru-RU')}
-                    formatter={(value: number) => [`${value}%`, 'Качество']}
+                    labelFormatter={(value) => new Date(value).toLocaleDateString()}
+                    formatter={(value: number) => [`${value}%`, t('dataQuality.quality')]}
                   />
                   <Line 
                     type="monotone" 

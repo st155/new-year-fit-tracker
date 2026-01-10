@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { formatDuration, getTimeBasedTheme } from '@/lib/habit-utils-v3';
 import { HabitCelebration } from '../legacy/HabitCelebration';
+import { useTranslation } from 'react-i18next';
 
 interface FocusModeProps {
   habits: any[];
@@ -24,6 +25,7 @@ interface FocusModeProps {
 }
 
 export function FocusMode({ habits, onHabitComplete, onExit }: FocusModeProps) {
+  const { t } = useTranslation('habits');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(0);
@@ -31,7 +33,6 @@ export function FocusMode({ habits, onHabitComplete, onExit }: FocusModeProps) {
 
   const currentHabit = habits[currentIndex];
   const theme = getTimeBasedTheme(currentHabit?.time_of_day || null);
-
   // Timer logic
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -101,8 +102,8 @@ export function FocusMode({ habits, onHabitComplete, onExit }: FocusModeProps) {
   if (!currentHabit) {
     return (
       <Card className="glass-card p-12 text-center">
-        <p className="text-muted-foreground">Нет доступных привычек</p>
-        <Button onClick={onExit} className="mt-4">Вернуться</Button>
+        <p className="text-muted-foreground">{t('focusMode.noHabits')}</p>
+        <Button onClick={onExit} className="mt-4">{t('focusMode.back')}</Button>
       </Card>
     );
   }
@@ -154,7 +155,7 @@ export function FocusMode({ habits, onHabitComplete, onExit }: FocusModeProps) {
                       {formatTime(timerSeconds)}
                     </div>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Цель: {formatDuration(currentHabit.target_duration)}
+                      {t('focusMode.target')} {formatDuration(currentHabit.target_duration)}
                     </p>
                   </div>
 
@@ -189,7 +190,7 @@ export function FocusMode({ habits, onHabitComplete, onExit }: FocusModeProps) {
                 {currentHabit.current_streak > 0 && (
                   <div className="glass-card p-4 rounded-lg">
                     <div className="text-2xl font-bold">🔥 {currentHabit.current_streak}</div>
-                    <div className="text-xs text-muted-foreground mt-1">Серия</div>
+                    <div className="text-xs text-muted-foreground mt-1">{t('focusMode.streak')}</div>
                   </div>
                 )}
                 {currentHabit.xp_reward && (
@@ -201,7 +202,7 @@ export function FocusMode({ habits, onHabitComplete, onExit }: FocusModeProps) {
                 {currentHabit.completion_rate && (
                   <div className="glass-card p-4 rounded-lg">
                     <div className="text-2xl font-bold">{Math.round(currentHabit.completion_rate)}%</div>
-                    <div className="text-xs text-muted-foreground mt-1">Завершено</div>
+                    <div className="text-xs text-muted-foreground mt-1">{t('focusMode.completed')}</div>
                   </div>
                 )}
               </div>
@@ -215,7 +216,7 @@ export function FocusMode({ habits, onHabitComplete, onExit }: FocusModeProps) {
                   size="lg"
                 >
                   <ChevronLeft className="w-5 h-5 mr-2" />
-                  Назад
+                  {t('focusMode.previous')}
                 </Button>
 
                 <Button
@@ -225,7 +226,7 @@ export function FocusMode({ habits, onHabitComplete, onExit }: FocusModeProps) {
                   className="flex-1 text-lg"
                 >
                   <Check className="w-5 h-5 mr-2" />
-                  {currentHabit.completed_today ? 'Завершено' : 'Завершить'}
+                  {currentHabit.completed_today ? t('focusMode.completed') : t('focusMode.complete')}
                 </Button>
 
                 <Button
@@ -234,14 +235,14 @@ export function FocusMode({ habits, onHabitComplete, onExit }: FocusModeProps) {
                   disabled={currentIndex === habits.length - 1}
                   size="lg"
                 >
-                  Далее
+                  {t('focusMode.next')}
                   <ChevronRight className="w-5 h-5 ml-2" />
                 </Button>
               </div>
 
               {/* Progress Text */}
               <div className="text-center text-sm text-muted-foreground">
-                Привычка {currentIndex + 1} из {habits.length}
+                {t('focusMode.habitCount', { current: currentIndex + 1, total: habits.length })}
               </div>
             </CardContent>
           </Card>

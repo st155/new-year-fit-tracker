@@ -7,8 +7,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UserPlus, Users, Check, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export function FriendsList() {
+  const { t } = useTranslation('habits');
   const { user } = useAuth();
   const { data: friends, isLoading: loadingFriends } = useFriends(user?.id);
   const { data: requests, isLoading: loadingRequests } = useFriendRequests(user?.id);
@@ -19,7 +21,7 @@ export function FriendsList() {
     return (
       <Card className="p-8 text-center">
         <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-        <p className="text-muted-foreground">Войдите, чтобы видеть друзей</p>
+        <p className="text-muted-foreground">{t('friendsView.signInToView')}</p>
       </Card>
     );
   }
@@ -29,20 +31,20 @@ export function FriendsList() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Друзья</h2>
+        <h2 className="text-2xl font-bold">{t('friendsView.title')}</h2>
         <Button variant="outline">
           <UserPlus className="h-4 w-4 mr-2" />
-          Добавить
+          {t('friendsView.add')}
         </Button>
       </div>
 
       <Tabs defaultValue="friends">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="friends">
-            Друзья {friends && `(${friends.length})`}
+            {t('friendsView.title')} {friends && `(${friends.length})`}
           </TabsTrigger>
           <TabsTrigger value="requests">
-            Запросы
+            {t('friendsView.requests')}
             {pendingCount > 0 && (
               <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 flex items-center justify-center">
                 {pendingCount}
@@ -75,7 +77,7 @@ export function FriendsList() {
                       <p className="font-medium">
                         {friendship.friend_profile?.full_name || 
                          friendship.friend_profile?.username || 
-                         'Аноним'}
+                         t('common.anonymous')}
                       </p>
                       {friendship.friend_profile?.username && (
                         <p className="text-sm text-muted-foreground">
@@ -89,7 +91,7 @@ export function FriendsList() {
                     size="sm"
                     onClick={() => removeFriend.mutate(friendship.friend_id)}
                   >
-                    Удалить
+                    {t('friendsView.remove')}
                   </Button>
                 </div>
               </Card>
@@ -97,13 +99,13 @@ export function FriendsList() {
           ) : (
             <Card className="p-8 text-center">
               <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-semibold mb-2">У вас пока нет друзей</h3>
+              <h3 className="text-lg font-semibold mb-2">{t('friendsView.noFriends')}</h3>
               <p className="text-muted-foreground mb-4">
-                Добавьте друзей, чтобы следить за их прогрессом
+                {t('friendsView.addFriendsHint')}
               </p>
               <Button>
                 <UserPlus className="h-4 w-4 mr-2" />
-                Найти друзей
+                {t('friendsView.findFriends')}
               </Button>
             </Card>
           )}
@@ -133,10 +135,10 @@ export function FriendsList() {
                       <p className="font-medium">
                         {request.friend_profile?.full_name || 
                          request.friend_profile?.username || 
-                         'Аноним'}
+                         t('common.anonymous')}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        Хочет добавить вас в друзья
+                        {t('friendsView.wantsToAdd')}
                       </p>
                     </div>
                   </div>
@@ -161,7 +163,7 @@ export function FriendsList() {
           ) : (
             <Card className="p-8 text-center">
               <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-muted-foreground">Нет новых запросов</p>
+              <p className="text-muted-foreground">{t('friendsView.noRequests')}</p>
             </Card>
           )}
         </TabsContent>

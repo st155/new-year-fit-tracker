@@ -502,5 +502,62 @@
       "autophagy": "Autophagy active!",
       "autophagyDesc": "Cellular regeneration is in full swing. Anti-aging effect is maximized."
     }
+  },
+  "focusMode": {
+    "noHabits": "No available habits",
+    "back": "Go back",
+    "target": "Target:",
+    "streak": "Streak",
+    "completed": "Completed",
+    "previous": "Back",
+    "complete": "Complete",
+    "next": "Next",
+    "habitCount": "Habit {{current}} of {{total}}"
+  },
+  "teamDialog": {
+    "inviteMember": "Invite member",
+    "searchDescription": "Find a user by name or username",
+    "spotsAvailable": "{{count}} spot(s) available",
+    "searchPlaceholder": "Start typing a name...",
+    "searching": "Searching...",
+    "minChars": "Enter at least 2 characters to search",
+    "noUsersFound": "No users found",
+    "add": "Add"
+  },
+  "friendsView": {
+    "signInToView": "Sign in to see friends",
+    "title": "Friends",
+    "add": "Add",
+    "requests": "Requests",
+    "remove": "Remove",
+    "noFriends": "You don't have friends yet",
+    "addFriendsHint": "Add friends to track their progress and motivate each other",
+    "findFriends": "Find friends",
+    "wantsToAdd": "Wants to add you as a friend",
+    "noRequests": "No new requests"
+  },
+  "social": {
+    "activity": "Social Activity",
+    "friendsAlso": "Friends also doing this",
+    "inviteFriends": "Invite friends",
+    "trackTogether": "Track habits together and motivate each other",
+    "addFriends": "Add friends",
+    "teams": "Teams",
+    "createTeam": "Create a team",
+    "joinOthers": "Join others and achieve goals together",
+    "createTeamBtn": "Create team",
+    "recentActivity": "Recent activity",
+    "events": {
+      "habitCompleted": "completed a habit",
+      "streakMilestone": "reached a new streak",
+      "levelUp": "leveled up",
+      "activityUpdate": "updated activity"
+    },
+    "noActivity": "No social activity for this habit yet",
+    "goToSocial": "Go to social features"
+  },
+  "common": {
+    "anonymous": "Anonymous",
+    "user": "User"
   }
 }
