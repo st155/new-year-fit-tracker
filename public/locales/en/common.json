@@ -462,5 +462,10 @@
     "dragAndDrop": "Drag and drop fitness tracker screenshot or click to select",
     "aiExtractHint": "AI will automatically extract data: weight, body fat %, heart rate, steps and other metrics",
     "supportedFormats": "Supported: JPG, PNG, WebP (up to 5MB)"
+  },
+  "devTools": {
+    "copied": "Copied!",
+    "noSyncIssues": "No sync issues found",
+    "syncIssuesTitle": "EN/RU Desync"
   }
 }

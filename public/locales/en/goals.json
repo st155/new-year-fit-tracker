@@ -230,5 +230,8 @@
     "kgx8": "kg ×8",
     "mlkgmin": "ml/kg/min",
     "percent": "%"
+  },
+  "errors": {
+    "loadingGoals": "Error loading goals"
   }
 }

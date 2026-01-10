@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { aiTrainingApi } from "@/lib/api";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -23,6 +24,7 @@ export function EditPlanPreferencesDialog({
   onSuccess 
 }: EditPlanPreferencesDialogProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation('workouts');
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<any>(null);
 
@@ -69,7 +71,7 @@ export function EditPlanPreferencesDialog({
       return data;
     },
     onSuccess: () => {
-      toast.success('План обновлен! Переход к новому плану...');
+      toast.success(t('editPlan.planUpdated'));
       queryClient.invalidateQueries({ queryKey: ['my-training-plans'] });
       queryClient.invalidateQueries({ queryKey: ['active-training-plan'] });
       onOpenChange(false);
@@ -82,7 +84,7 @@ export function EditPlanPreferencesDialog({
     },
     onError: (error: any) => {
       console.error('[EditPlanPreferencesDialog] Error:', error);
-      toast.error(error.message || 'Не удалось обновить план');
+      toast.error(error.message || t('editPlan.updateFailed'));
     }
   });
 
@@ -110,17 +112,17 @@ export function EditPlanPreferencesDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-cyan-500" />
-            Изменить параметры плана
+            {t('editPlan.title')}
           </DialogTitle>
           <DialogDescription>
-            Обновите параметры и AI создаст новый план на их основе
+            {t('editPlan.description')}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Основная цель</Label>
+              <Label>{t('editPlan.primaryGoal')}</Label>
               <Select 
                 value={formData.primary_goal}
                 onValueChange={(value) => setFormData({ ...formData, primary_goal: value })}
@@ -129,16 +131,16 @@ export function EditPlanPreferencesDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="strength">Сила</SelectItem>
-                  <SelectItem value="hypertrophy">Масса</SelectItem>
-                  <SelectItem value="conditioning">Выносливость</SelectItem>
-                  <SelectItem value="general_fitness">Общая физподготовка</SelectItem>
+                  <SelectItem value="strength">{t('editPlan.strength')}</SelectItem>
+                  <SelectItem value="hypertrophy">{t('editPlan.hypertrophy')}</SelectItem>
+                  <SelectItem value="conditioning">{t('editPlan.conditioning')}</SelectItem>
+                  <SelectItem value="general_fitness">{t('editPlan.generalFitness')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label>Уровень опыта</Label>
+              <Label>{t('editPlan.experienceLevel')}</Label>
               <Select 
                 value={formData.experience_level}
                 onValueChange={(value) => setFormData({ ...formData, experience_level: value })}
@@ -147,15 +149,15 @@ export function EditPlanPreferencesDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="beginner">Начинающий</SelectItem>
-                  <SelectItem value="intermediate">Средний</SelectItem>
-                  <SelectItem value="advanced">Продвинутый</SelectItem>
+                  <SelectItem value="beginner">{t('editPlan.beginner')}</SelectItem>
+                  <SelectItem value="intermediate">{t('editPlan.intermediate')}</SelectItem>
+                  <SelectItem value="advanced">{t('editPlan.advanced')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label>Тренировок в неделю</Label>
+              <Label>{t('editPlan.workoutsPerWeek')}</Label>
               <Select 
                 value={formData.days_per_week?.toString()}
                 onValueChange={(value) => setFormData({ ...formData, days_per_week: parseInt(value) })}
@@ -164,20 +166,20 @@ export function EditPlanPreferencesDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="3">3 дня</SelectItem>
-                  <SelectItem value="4">4 дня</SelectItem>
-                  <SelectItem value="5">5 дней</SelectItem>
-                  <SelectItem value="6">6 дней</SelectItem>
+                  <SelectItem value="3">{t('editPlan.daysCount', { count: 3 })}</SelectItem>
+                  <SelectItem value="4">{t('editPlan.daysCount', { count: 4 })}</SelectItem>
+                  <SelectItem value="5">{t('editPlan.daysCount', { count: 5 })}</SelectItem>
+                  <SelectItem value="6">{t('editPlan.daysCount', { count: 6 })}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label>Травмы и ограничения (необязательно)</Label>
+              <Label>{t('editPlan.injuries')}</Label>
               <Textarea 
                 value={formData.injuries_limitations || ''}
                 onChange={(e) => setFormData({ ...formData, injuries_limitations: e.target.value })}
-                placeholder="Опишите любые травмы или ограничения..."
+                placeholder={t('editPlan.injuriesPlaceholder')}
                 rows={3}
               />
             </div>
@@ -190,7 +192,7 @@ export function EditPlanPreferencesDialog({
               onClick={() => onOpenChange(false)}
               disabled={regenerateMutation.isPending}
             >
-              Отмена
+              {t('editPlan.cancel')}
             </Button>
             <Button 
               type="submit"
@@ -200,12 +202,12 @@ export function EditPlanPreferencesDialog({
               {regenerateMutation.isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Создание плана...
+                  {t('editPlan.creating')}
                 </>
               ) : (
                 <>
                   <Sparkles className="w-4 h-4" />
-                  Создать новый план
+                  {t('editPlan.createNew')}
                 </>
               )}
             </Button>

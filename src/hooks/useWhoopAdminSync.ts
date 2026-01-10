@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import i18n from '@/i18n';
 
 interface SyncResult {
   success: boolean;
@@ -30,8 +31,11 @@ export function useWhoopAdminSync() {
       }
 
       toast({
-        title: "Синхронизация завершена",
-        description: `Загружено ${data.metrics_count} метрик и ${data.workouts_count} тренировок`,
+        title: i18n.t('integrations:whoop.syncComplete'),
+        description: i18n.t('integrations:whoop.syncCompleteDesc', { 
+          metrics: data.metrics_count, 
+          workouts: data.workouts_count 
+        }),
       });
 
       return {
@@ -44,7 +48,7 @@ export function useWhoopAdminSync() {
       console.error('[useWhoopAdminSync] Error:', error);
       
       toast({
-        title: "Ошибка синхронизации",
+        title: i18n.t('integrations:whoop.syncError'),
         description: error.message,
         variant: "destructive",
       });

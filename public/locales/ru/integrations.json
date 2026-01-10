@@ -129,7 +129,10 @@
     "syncWillStart": "Данные Whoop начнут синхронизироваться автоматически.",
     "closeWindow": "Закрыть окно",
     "returnToIntegrations": "Вернуться на страницу интеграций",
-    "tryAgain": "Попробовать снова"
+    "tryAgain": "Попробовать снова",
+    "syncComplete": "Синхронизация завершена",
+    "syncCompleteDesc": "Загружено {{metrics}} метрик и {{workouts}} тренировок",
+    "syncError": "Ошибка синхронизации"
   },
   "whoopDirect": {
     "title": "Whoop Direct",

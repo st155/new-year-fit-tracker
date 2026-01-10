@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import i18n from '@/i18n';
 
 /**
  * Generate demo teams for testing social features
@@ -56,11 +57,11 @@ export async function generateDemoTeams(userId: string) {
       }
     }
 
-    toast.success('✅ Демо команды созданы!');
+    toast.success(i18n.t('habits:demo.teamsCreated'));
     return true;
   } catch (error) {
     console.error('Error generating demo teams:', error);
-    toast.error('Ошибка создания демо команд');
+    toast.error(i18n.t('habits:demo.teamsCreateError'));
     return false;
   }
 }
@@ -118,11 +119,11 @@ export async function generateDemoFeedEvents(userId: string, habitId: string, ha
 
     if (error) throw error;
 
-    toast.success('✅ Демо события созданы!');
+    toast.success(i18n.t('habits:demo.eventsCreated'));
     return true;
   } catch (error) {
     console.error('Error generating demo events:', error);
-    toast.error('Ошибка создания демо событий');
+    toast.error(i18n.t('habits:demo.eventsCreateError'));
     return false;
   }
 }

@@ -384,5 +384,19 @@
   "habitTypes": {
     "numericCounter": "Numeric counter",
     "daily": "Daily habit"
+  },
+  "friends": {
+    "requestSent": "Friend request sent",
+    "requestSentError": "Could not send request",
+    "requestAccepted": "Request accepted",
+    "requestAcceptError": "Could not accept request",
+    "friendRemoved": "Friend removed",
+    "friendRemoveError": "Could not remove friend"
+  },
+  "demo": {
+    "teamsCreated": "✅ Demo teams created!",
+    "teamsCreateError": "Error creating demo teams",
+    "eventsCreated": "✅ Demo events created!",
+    "eventsCreateError": "Error creating demo events"
   }
 }

@@ -386,5 +386,19 @@
   "habitTypes": {
     "numericCounter": "Числовой счётчик",
     "daily": "Ежедневная привычка"
+  },
+  "friends": {
+    "requestSent": "Запрос дружбы отправлен",
+    "requestSentError": "Не удалось отправить запрос",
+    "requestAccepted": "Запрос принят",
+    "requestAcceptError": "Не удалось принять запрос",
+    "friendRemoved": "Друг удалён",
+    "friendRemoveError": "Не удалось удалить друга"
+  },
+  "demo": {
+    "teamsCreated": "✅ Демо команды созданы!",
+    "teamsCreateError": "Ошибка создания демо команд",
+    "eventsCreated": "✅ Демо события созданы!",
+    "eventsCreateError": "Ошибка создания демо событий"
   }
 }

@@ -10,6 +10,7 @@ import {
   getMetricNameVariants,
 } from "../../utils/goalCalculations";
 import { toast } from "sonner";
+import i18n from "@/i18n";
 
 /**
  * Query hook for fetching challenge goals with body metrics integration
@@ -238,7 +239,7 @@ export function useChallengeGoalsQuery(userId?: string) {
         return challengeGoals;
       } catch (error) {
         console.error('❌ Error fetching challenge goals:', error);
-        toast.error('Ошибка загрузки целей');
+        toast.error(i18n.t('goals:errors.loadingGoals'));
         return [];
       }
     },
