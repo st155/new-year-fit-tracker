@@ -190,5 +190,17 @@
     "noMessages": "Сообщений пока нет",
     "beFirst": "Будьте первым, кто начнёт разговор!",
     "placeholder": "Введите сообщение..."
+  },
+  "activity": {
+    "title": "Активность",
+    "activeDays": "Активных дней",
+    "totalSteps": "Всего шагов",
+    "workouts": "Тренировок",
+    "caloriesBurned": "Калорий сожжено",
+    "bestStreak": "Лучший стрик",
+    "dailySteps": "Шагов в день",
+    "kcal": "ккал",
+    "days": "дней",
+    "average": "в среднем"
   }
 }

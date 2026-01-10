@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -30,23 +31,26 @@ import {
 } from '@/hooks/biostack/useDoctorActionItems';
 import { useAddSupplementToLibrary, useAddProtocolToLibrary } from '@/hooks/biostack/useDoctorProtocol';
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
+import i18n from '@/i18n';
+
+const getDateLocale = () => i18n.language === 'ru' ? ru : enUS;
 
 const ACTION_TYPE_CONFIG = {
-  supplement: { icon: Pill, label: 'Добавки', color: 'text-green-500' },
-  exercise: { icon: Dumbbell, label: 'Упражнения', color: 'text-blue-500' },
-  lifestyle: { icon: Heart, label: 'Образ жизни', color: 'text-pink-500' },
-  test: { icon: FlaskConical, label: 'Анализы', color: 'text-purple-500' },
-  medication: { icon: Pill, label: 'Медикаменты', color: 'text-orange-500' },
-  consultation: { icon: Stethoscope, label: 'Консультации', color: 'text-cyan-500' },
+  supplement: { icon: Pill, labelKey: 'protocol.actionType.supplement', color: 'text-green-500' },
+  exercise: { icon: Dumbbell, labelKey: 'protocol.actionType.exercise', color: 'text-blue-500' },
+  lifestyle: { icon: Heart, labelKey: 'protocol.actionType.lifestyle', color: 'text-pink-500' },
+  test: { icon: FlaskConical, labelKey: 'protocol.actionType.test', color: 'text-purple-500' },
+  medication: { icon: Pill, labelKey: 'protocol.actionType.medication', color: 'text-orange-500' },
+  consultation: { icon: Stethoscope, labelKey: 'protocol.actionType.consultation', color: 'text-cyan-500' },
 };
 
 const STATUS_CONFIG = {
-  pending: { label: 'Ожидает', color: 'bg-yellow-500/20 text-yellow-500' },
-  active: { label: 'Активно', color: 'bg-green-500/20 text-green-500' },
-  completed: { label: 'Выполнено', color: 'bg-blue-500/20 text-blue-500' },
-  dismissed: { label: 'Отклонено', color: 'bg-muted text-muted-foreground' },
-  added_to_library: { label: 'В библиотеке', color: 'bg-primary/20 text-primary' },
+  pending: { labelKey: 'protocol.status.pending', color: 'bg-yellow-500/20 text-yellow-500' },
+  active: { labelKey: 'protocol.status.active', color: 'bg-green-500/20 text-green-500' },
+  completed: { labelKey: 'protocol.status.completed', color: 'bg-blue-500/20 text-blue-500' },
+  dismissed: { labelKey: 'protocol.status.dismissed', color: 'bg-muted text-muted-foreground' },
+  added_to_library: { labelKey: 'protocol.status.addedToLibrary', color: 'bg-primary/20 text-primary' },
 };
 
 function ActionItemCard({ 
@@ -60,6 +64,7 @@ function ActionItemCard({
   onDismiss?: (itemId: string) => void;
   isAdding?: boolean;
 }) {
+  const { t } = useTranslation('medicalDocs');
   const config = ACTION_TYPE_CONFIG[item.action_type];
   const Icon = config.icon;
   const statusConfig = STATUS_CONFIG[item.status];
@@ -76,10 +81,10 @@ function ActionItemCard({
               <div className="flex items-center gap-2 flex-wrap">
                 <h4 className="font-medium truncate">{item.name}</h4>
                 <Badge variant="outline" className={statusConfig.color}>
-                  {statusConfig.label}
+                  {t(statusConfig.labelKey)}
                 </Badge>
                 {item.priority === 'high' && (
-                  <Badge variant="destructive" className="text-xs">Важно</Badge>
+                  <Badge variant="destructive" className="text-xs">{t('actionItems.important')}</Badge>
                 )}
               </div>
               
@@ -115,7 +120,7 @@ function ActionItemCard({
                   <User className="h-3 w-3" />
                   {item.doctor_name}
                   {item.prescription_date && (
-                    <span> • {format(new Date(item.prescription_date), 'd MMM yyyy', { locale: ru })}</span>
+                    <span> • {format(new Date(item.prescription_date), 'd MMM yyyy', { locale: getDateLocale() })}</span>
                   )}
                 </p>
               )}
@@ -136,7 +141,7 @@ function ActionItemCard({
                 ) : (
                   <>
                     <Plus className="h-3 w-3 mr-1" />
-                    В библиотеку
+                    {t('actionItems.addToLibrary')}
                   </>
                 )}
               </Button>
@@ -148,7 +153,7 @@ function ActionItemCard({
                   className="text-xs text-muted-foreground"
                 >
                   <XCircle className="h-3 w-3 mr-1" />
-                  Отклонить
+                  {t('actionItems.dismiss')}
                 </Button>
               )}
             </div>
@@ -168,6 +173,7 @@ function ProtocolCard({
   onAddAllToLibrary: () => void;
   isAdding: boolean;
 }) {
+  const { t } = useTranslation('medicalDocs');
   const supplements = protocol.items.filter(i => i.action_type === 'supplement');
   const pendingSupplements = supplements.filter(s => s.status === 'pending');
   const otherItems = protocol.items.filter(i => i.action_type !== 'supplement');
@@ -182,7 +188,7 @@ function ProtocolCard({
               <CardTitle className="text-base">{protocol.protocolTag}</CardTitle>
               {protocol.prescriptionDate && (
                 <CardDescription className="text-xs">
-                  {format(new Date(protocol.prescriptionDate), 'd MMMM yyyy', { locale: ru })}
+                  {format(new Date(protocol.prescriptionDate), 'd MMMM yyyy', { locale: getDateLocale() })}
                 </CardDescription>
               )}
             </div>
@@ -198,7 +204,7 @@ function ProtocolCard({
               ) : (
                 <Package className="h-4 w-4 mr-2" />
               )}
-              Добавить все ({pendingSupplements.length})
+              {t('actionItems.addAll', { count: pendingSupplements.length })}
             </Button>
           )}
         </div>
@@ -209,7 +215,7 @@ function ProtocolCard({
             <div>
               <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
                 <Pill className="h-3 w-3" />
-                Добавки ({supplements.length})
+                {t('actionItems.supplements', { count: supplements.length })}
               </p>
               <div className="grid gap-2">
                 {supplements.map(item => (
@@ -239,7 +245,7 @@ function ProtocolCard({
           {otherItems.length > 0 && (
             <div className="mt-3">
               <p className="text-xs font-medium text-muted-foreground mb-2">
-                Другие рекомендации ({otherItems.length})
+                {t('actionItems.otherRecommendations', { count: otherItems.length })}
               </p>
               <div className="space-y-1">
                 {otherItems.map(item => {
@@ -270,6 +276,7 @@ function ProtocolCard({
 }
 
 export function ActionItemsDashboard() {
+  const { t } = useTranslation('medicalDocs');
   const [activeTab, setActiveTab] = useState('protocols');
   const { data: grouped, items, isLoading } = useGroupedActionItems();
   const { data: protocols } = useProtocolGroups();
@@ -314,8 +321,7 @@ export function ActionItemsDashboard() {
       <Alert>
         <FileText className="h-4 w-4" />
         <AlertDescription>
-          Нет извлечённых рекомендаций. Загрузите медицинские документы с назначениями врача, 
-          и система автоматически извлечёт рекомендации по добавкам, упражнениям и анализам.
+          {t('actionItems.empty.noRecommendations')}
         </AlertDescription>
       </Alert>
     );
@@ -343,7 +349,7 @@ export function ActionItemsDashboard() {
                 <Icon className={`h-4 w-4 ${config.color}`} />
                 <div>
                   <p className="text-lg font-bold">{count}</p>
-                  <p className="text-xs text-muted-foreground">{config.label}</p>
+                  <p className="text-xs text-muted-foreground">{t(config.labelKey)}</p>
                 </div>
               </div>
             </Card>
@@ -355,22 +361,22 @@ export function ActionItemsDashboard() {
         <TabsList className="glass-card grid w-full grid-cols-4 h-auto p-1">
           <TabsTrigger value="protocols" className="gap-2 data-[state=active]:bg-primary/20">
             <FileText className="h-4 w-4" />
-            <span className="hidden sm:inline">Протоколы</span>
+            <span className="hidden sm:inline">{t('actionItems.tabs.protocols')}</span>
           </TabsTrigger>
           <TabsTrigger value="supplements" className="gap-2 data-[state=active]:bg-primary/20">
             <Pill className="h-4 w-4" />
-            <span className="hidden sm:inline">Добавки</span>
+            <span className="hidden sm:inline">{t('actionItems.tabs.supplements')}</span>
             {counts.supplements > 0 && (
               <Badge variant="secondary" className="ml-1">{counts.supplements}</Badge>
             )}
           </TabsTrigger>
           <TabsTrigger value="exercises" className="gap-2 data-[state=active]:bg-primary/20">
             <Dumbbell className="h-4 w-4" />
-            <span className="hidden sm:inline">Упражнения</span>
+            <span className="hidden sm:inline">{t('actionItems.tabs.exercises')}</span>
           </TabsTrigger>
           <TabsTrigger value="tests" className="gap-2 data-[state=active]:bg-primary/20">
             <FlaskConical className="h-4 w-4" />
-            <span className="hidden sm:inline">Анализы</span>
+            <span className="hidden sm:inline">{t('actionItems.tabs.tests')}</span>
           </TabsTrigger>
         </TabsList>
 
@@ -386,7 +392,7 @@ export function ActionItemsDashboard() {
             ))
           ) : (
             <Alert>
-              <AlertDescription>Нет протоколов от врачей.</AlertDescription>
+              <AlertDescription>{t('actionItems.empty.protocols')}</AlertDescription>
             </Alert>
           )}
         </TabsContent>
@@ -404,7 +410,7 @@ export function ActionItemsDashboard() {
             ))
           ) : (
             <Alert>
-              <AlertDescription>Нет рекомендаций по добавкам.</AlertDescription>
+              <AlertDescription>{t('actionItems.empty.supplements')}</AlertDescription>
             </Alert>
           )}
         </TabsContent>
@@ -416,7 +422,7 @@ export function ActionItemsDashboard() {
             ))
           ) : (
             <Alert>
-              <AlertDescription>Нет рекомендаций по упражнениям.</AlertDescription>
+              <AlertDescription>{t('actionItems.empty.exercises')}</AlertDescription>
             </Alert>
           )}
         </TabsContent>
@@ -428,7 +434,7 @@ export function ActionItemsDashboard() {
             ))
           ) : (
             <Alert>
-              <AlertDescription>Нет рекомендаций по анализам и консультациям.</AlertDescription>
+              <AlertDescription>{t('actionItems.empty.tests')}</AlertDescription>
             </Alert>
           )}
         </TabsContent>

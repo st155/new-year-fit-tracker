@@ -190,5 +190,17 @@
     "noMessages": "No messages yet",
     "beFirst": "Be the first to start the conversation!",
     "placeholder": "Type a message..."
+  },
+  "activity": {
+    "title": "Activity",
+    "activeDays": "Active days",
+    "totalSteps": "Total steps",
+    "workouts": "Workouts",
+    "caloriesBurned": "Calories burned",
+    "bestStreak": "Best streak",
+    "dailySteps": "Steps/day",
+    "kcal": "kcal",
+    "days": "days",
+    "average": "average"
   }
 }

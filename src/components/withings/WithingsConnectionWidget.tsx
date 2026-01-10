@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -6,9 +7,13 @@ import { useWithingsDataFreshness } from '@/hooks/useWithingsDataFreshness';
 import { useWithingsBackfill } from '@/hooks/useWithingsBackfill';
 import { useForceTerraSync } from '@/hooks/useForceTerraSync';
 import { formatDistanceToNow } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
+import i18n from '@/i18n';
+
+const getDateLocale = () => i18n.language === 'ru' ? ru : enUS;
 
 export function WithingsConnectionWidget() {
+  const { t } = useTranslation('integrations');
   const { data: freshness, isLoading } = useWithingsDataFreshness();
   const backfillMutation = useWithingsBackfill();
   const syncMutation = useForceTerraSync();
@@ -46,43 +51,43 @@ export function WithingsConnectionWidget() {
               isStale ? (
                 <span className="flex items-center gap-1">
                   <AlertCircle className="h-3 w-3" />
-                  Устаревшие данные
+                  {t('withings.staleData')}
                 </span>
               ) : (
                 <span className="flex items-center gap-1">
                   <CheckCircle2 className="h-3 w-3" />
-                  Активно
+                  {t('withings.active')}
                 </span>
               )
             ) : (
-              'Нет данных'
+              t('withings.noData')
             )}
           </Badge>
         </div>
         <CardDescription>
           {isConnected ? (
             <span>
-              Последние данные:{' '}
+              {t('withings.lastData')}{' '}
               {freshness?.lastSyncDate ? (
                 <strong>
                   {formatDistanceToNow(freshness.lastSyncDate, {
                     addSuffix: true,
-                    locale: ru,
+                    locale: getDateLocale(),
                   })}
                 </strong>
               ) : (
-                'неизвестно'
+                t('withings.unknown')
               )}
             </span>
           ) : (
-            'Подключите устройство Withings для синхронизации данных'
+            t('withings.connectDevice')
           )}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         {isConnected && (
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Метрик за 7 дней:</span>
+            <span className="text-muted-foreground">{t('withings.metricsLast7Days')}</span>
             <strong className="text-foreground">{freshness?.metricsCount7Days ?? 0}</strong>
           </div>
         )}
@@ -91,9 +96,9 @@ export function WithingsConnectionWidget() {
           <div className="flex items-start gap-2 rounded-md bg-warning/10 p-2 text-xs text-warning-foreground">
             <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
             <div>
-              <p className="font-medium">Данные устарели</p>
+              <p className="font-medium">{t('withings.dataStale')}</p>
               <p className="text-muted-foreground mt-0.5">
-                Прошло {freshness?.daysSinceSync} дн. с последней синхронизации. Обновите данные.
+                {t('withings.daysSinceSync', { days: freshness?.daysSinceSync })}
               </p>
             </div>
           </div>
@@ -108,7 +113,7 @@ export function WithingsConnectionWidget() {
             className="flex-1"
           >
             {isPending && <RefreshCw className="mr-2 h-3 w-3 animate-spin" />}
-            Быстрая синхронизация
+            {t('withings.quickSync')}
           </Button>
           <Button
             onClick={handleFullBackfill}
@@ -118,7 +123,7 @@ export function WithingsConnectionWidget() {
             className="flex-1"
           >
             {isPending && <RefreshCw className="mr-2 h-3 w-3 animate-spin" />}
-            Загрузить 30 дней
+            {t('withings.load30Days')}
           </Button>
         </div>
       </CardContent>

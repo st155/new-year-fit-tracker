@@ -487,5 +487,18 @@
       "step5": "After sync wait 30-60 seconds for data processing",
       "step6": "If no data - try Load data or reconnect Withings"
     }
+  },
+  "withings": {
+    "staleData": "Stale data",
+    "active": "Active",
+    "noData": "No data",
+    "lastData": "Last data:",
+    "unknown": "unknown",
+    "connectDevice": "Connect Withings device to sync data",
+    "metricsLast7Days": "Metrics (7 days):",
+    "dataStale": "Data is stale",
+    "daysSinceSync": "{{days}} days since last sync. Update data.",
+    "quickSync": "Quick sync",
+    "load30Days": "Load 30 days"
   }
 }
