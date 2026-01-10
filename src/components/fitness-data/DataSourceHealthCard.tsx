@@ -3,8 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { RefreshCw, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 interface DataSource {
   name: string;
@@ -21,6 +22,9 @@ interface DataSourceHealthCardProps {
 }
 
 export function DataSourceHealthCard({ source, onForceSync }: DataSourceHealthCardProps) {
+  const { t, i18n } = useTranslation('common');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'text-success';
@@ -33,13 +37,13 @@ export function DataSourceHealthCard({ source, onForceSync }: DataSourceHealthCa
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
-        return <Badge className="bg-success/20 text-success border-success/50">Активно</Badge>;
+        return <Badge className="bg-success/20 text-success border-success/50">{t('status.active')}</Badge>;
       case 'stale':
-        return <Badge className="bg-warning/20 text-warning border-warning/50">Устарело</Badge>;
+        return <Badge className="bg-warning/20 text-warning border-warning/50">{t('status.stale')}</Badge>;
       case 'error':
-        return <Badge variant="destructive">Ошибка</Badge>;
+        return <Badge variant="destructive">{t('status.error')}</Badge>;
       default:
-        return <Badge variant="outline">Неизвестно</Badge>;
+        return <Badge variant="outline">{t('status.unknown')}</Badge>;
     }
   };
 
@@ -69,11 +73,11 @@ export function DataSourceHealthCard({ source, onForceSync }: DataSourceHealthCa
         {/* Metrics */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="text-xs text-muted-foreground mb-1">Метрик</p>
+            <p className="text-xs text-muted-foreground mb-1">{t('dataSource.metrics')}</p>
             <p className="text-xl font-bold text-foreground">{source.metricsCount}</p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground mb-1">Качество данных</p>
+            <p className="text-xs text-muted-foreground mb-1">{t('dataSource.dataQuality')}</p>
             <p className={cn("text-xl font-bold", getConfidenceColor(source.confidence))}>
               {source.confidence}%
             </p>
@@ -83,15 +87,15 @@ export function DataSourceHealthCard({ source, onForceSync }: DataSourceHealthCa
         {/* Last Sync */}
         <div className="flex items-center gap-2 text-sm">
           <Clock className="h-4 w-4 text-muted-foreground" />
-          <span className="text-muted-foreground">Последний sync:</span>
+          <span className="text-muted-foreground">{t('dataSource.lastSync')}:</span>
           <span className="font-medium text-foreground">
-            {formatDistanceToNow(source.lastSync, { addSuffix: true, locale: ru })}
+            {formatDistanceToNow(source.lastSync, { addSuffix: true, locale: dateLocale })}
           </span>
         </div>
 
         {/* Data Freshness */}
         <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Свежесть данных:</span>
+          <span className="text-muted-foreground">{t('dataSource.freshness')}:</span>
           <span className={cn(
             "font-medium",
             source.dataFreshness < 24 ? 'text-success' :
@@ -99,8 +103,8 @@ export function DataSourceHealthCard({ source, onForceSync }: DataSourceHealthCa
             'text-destructive'
           )}>
             {source.dataFreshness < 24 
-              ? `${Math.round(source.dataFreshness)}ч`
-              : `${Math.round(source.dataFreshness / 24)}д`
+              ? t('dataSource.hoursAgo', { hours: Math.round(source.dataFreshness) })
+              : t('dataSource.daysAgo', { days: Math.round(source.dataFreshness / 24) })
             }
           </span>
         </div>

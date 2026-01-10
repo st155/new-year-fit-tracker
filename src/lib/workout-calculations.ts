@@ -56,21 +56,23 @@ export interface ZoneChartData {
   color: string;
 }
 
+import i18n from '@/i18n';
+
 export function transformZoneDurations(zoneData: any): ZoneChartData[] {
   if (!zoneData) return [];
   
   const zones = [
-    { key: 'zone_zero_milli', name: 'Зона 0', color: 'hsl(var(--muted))' },
-    { key: 'zone_one_milli', name: 'Зона 1', color: 'hsl(142, 76%, 36%)' },
-    { key: 'zone_two_milli', name: 'Зона 2', color: 'hsl(45, 93%, 47%)' },
-    { key: 'zone_three_milli', name: 'Зона 3', color: 'hsl(25, 95%, 53%)' },
-    { key: 'zone_four_milli', name: 'Зона 4', color: 'hsl(0, 72%, 51%)' },
-    { key: 'zone_five_milli', name: 'Зона 5', color: 'hsl(330, 81%, 60%)' },
+    { key: 'zone_zero_milli', nameKey: 'zones.zone0', color: 'hsl(var(--muted))' },
+    { key: 'zone_one_milli', nameKey: 'zones.zone1', color: 'hsl(142, 76%, 36%)' },
+    { key: 'zone_two_milli', nameKey: 'zones.zone2', color: 'hsl(45, 93%, 47%)' },
+    { key: 'zone_three_milli', nameKey: 'zones.zone3', color: 'hsl(25, 95%, 53%)' },
+    { key: 'zone_four_milli', nameKey: 'zones.zone4', color: 'hsl(0, 72%, 51%)' },
+    { key: 'zone_five_milli', nameKey: 'zones.zone5', color: 'hsl(330, 81%, 60%)' },
   ];
   
   return zones
     .map(zone => ({
-      zone: zone.name,
+      zone: i18n.t(`workouts:${zone.nameKey}`),
       minutes: (zoneData[zone.key] || 0) / 60000, // Convert ms to minutes
       color: zone.color
     }))

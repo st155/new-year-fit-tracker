@@ -268,7 +268,21 @@
   "units": {
     "min": "min",
     "km": "km",
-    "kcal": "kcal"
+    "kcal": "kcal",
+    "kg": "kg"
+  },
+  "zones": {
+    "zone0": "Zone 0",
+    "zone1": "Zone 1",
+    "zone2": "Zone 2",
+    "zone3": "Zone 3",
+    "zone4": "Zone 4",
+    "zone5": "Zone 5"
+  },
+  "logger": {
+    "weight": "Weight",
+    "recommended": "Recommended: {{weight}}kg",
+    "useRecommended": "Use recommended"
   },
   "map": {
     "title": "Route Map",
