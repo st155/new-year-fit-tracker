@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -14,6 +15,8 @@ interface LogWorkoutDialogProps {
 }
 
 export function LogWorkoutDialog({ isOpen, onClose, onSuccess }: LogWorkoutDialogProps) {
+  const { t } = useTranslation('leaderboard');
+  const { t: tCommon } = useTranslation('common');
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
 
@@ -36,7 +39,7 @@ export function LogWorkoutDialog({ isOpen, onClose, onSuccess }: LogWorkoutDialo
 
       if (workoutError) throw workoutError;
 
-      toast.success('Workout logged successfully! 🎉');
+      toast.success(t('workoutDialog.success'));
       
       // Sync to Echo11 (non-blocking)
       syncTodayToEcho11({
@@ -51,7 +54,7 @@ export function LogWorkoutDialog({ isOpen, onClose, onSuccess }: LogWorkoutDialo
       onClose();
     } catch (error) {
       console.error('Error logging workout:', error);
-      toast.error('Failed to log workout');
+      toast.error(t('workoutDialog.failed'));
     } finally {
       setLoading(false);
     }
@@ -63,12 +66,12 @@ export function LogWorkoutDialog({ isOpen, onClose, onSuccess }: LogWorkoutDialo
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Dumbbell className="h-5 w-5" />
-            Log Workout
+            {t('workoutDialog.title')}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Log a workout for today to complete the "Daily Grind" challenge.
+            {t('workoutDialog.description')}
           </p>
           <div className="flex gap-2">
             <Button 
@@ -76,14 +79,14 @@ export function LogWorkoutDialog({ isOpen, onClose, onSuccess }: LogWorkoutDialo
               disabled={loading}
               className="flex-1"
             >
-              {loading ? 'Logging...' : 'Log Workout'}
+              {loading ? t('workoutDialog.logging') : t('workoutDialog.logWorkout')}
             </Button>
             <Button 
               variant="outline" 
               onClick={onClose}
               disabled={loading}
             >
-              Cancel
+              {tCommon('actions.cancel')}
             </Button>
           </div>
         </div>
