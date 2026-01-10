@@ -5,7 +5,11 @@
 
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
+import i18n from '@/i18n';
+
+// Get current date-fns locale based on i18n language
+const getDateLocale = () => i18n.language === 'ru' ? ru : enUS;
 
 interface Goal {
   id: string;
@@ -86,7 +90,7 @@ export async function generateClientReport(data: ClientReportData): Promise<Uint
   const coverPage = pdfDoc.addPage([595, 842]);
   let y = 700;
 
-  coverPage.drawText('Отчет о прогрессе', {
+  coverPage.drawText(i18n.t('trainerDashboard:report.title'), {
     x: 50,
     y: y,
     size: 32,
@@ -106,7 +110,7 @@ export async function generateClientReport(data: ClientReportData): Promise<Uint
 
   y -= 30;
 
-  const periodText = `${format(data.period.start, 'd MMMM yyyy', { locale: ru })} - ${format(data.period.end, 'd MMMM yyyy', { locale: ru })}`;
+  const periodText = `${format(data.period.start, 'd MMMM yyyy', { locale: getDateLocale() })} - ${format(data.period.end, 'd MMMM yyyy', { locale: getDateLocale() })}`;
   coverPage.drawText(periodText, {
     x: 50,
     y: y,
@@ -119,9 +123,9 @@ export async function generateClientReport(data: ClientReportData): Promise<Uint
 
   // Summary Stats
   const summaryStats = [
-    { label: 'Целей', value: data.goals.length.toString() },
-    { label: 'Метрик', value: data.healthMetrics.length.toString() },
-    { label: 'Заметок', value: (data.trainerNotes?.length || 0).toString() },
+    { label: i18n.t('trainerDashboard:report.goals'), value: data.goals.length.toString() },
+    { label: i18n.t('trainerDashboard:report.metrics'), value: data.healthMetrics.length.toString() },
+    { label: i18n.t('trainerDashboard:report.notes'), value: (data.trainerNotes?.length || 0).toString() },
   ];
 
   summaryStats.forEach((stat, index) => {
@@ -159,7 +163,7 @@ export async function generateClientReport(data: ClientReportData): Promise<Uint
     const goalsPage = pdfDoc.addPage([595, 842]);
     let goalY = 750;
 
-    goalsPage.drawText('Цели и прогресс', {
+    goalsPage.drawText(i18n.t('trainerDashboard:report.goalsAndProgress'), {
       x: 50,
       y: goalY,
       size: 24,
@@ -219,8 +223,8 @@ export async function generateClientReport(data: ClientReportData): Promise<Uint
       goalY -= 30;
 
       // Current vs Target
-      const currentText = `Текущее: ${goal.current_value?.toFixed(1) || '—'} ${goal.target_unit}`;
-      const targetText = `Цель: ${goal.target_value.toFixed(1)} ${goal.target_unit}`;
+      const currentText = `${i18n.t('trainerDashboard:report.current')} ${goal.current_value?.toFixed(1) || '—'} ${goal.target_unit}`;
+      const targetText = `${i18n.t('trainerDashboard:report.target')} ${goal.target_value.toFixed(1)} ${goal.target_unit}`;
 
       goalsPage.drawText(currentText, {
         x: 70,
@@ -247,7 +251,7 @@ export async function generateClientReport(data: ClientReportData): Promise<Uint
     const healthPage = pdfDoc.addPage([595, 842]);
     let healthY = 750;
 
-    healthPage.drawText('Метрики здоровья', {
+    healthPage.drawText(i18n.t('trainerDashboard:report.healthMetrics'), {
       x: 50,
       y: healthY,
       size: 24,
@@ -284,7 +288,7 @@ export async function generateClientReport(data: ClientReportData): Promise<Uint
         color: textColor,
       });
 
-      healthPage.drawText(`Среднее: ${avg.toFixed(1)} ${data.unit}`, {
+      healthPage.drawText(`${i18n.t('trainerDashboard:report.average')} ${avg.toFixed(1)} ${data.unit}`, {
         x: 250,
         y: healthY,
         size: 12,
@@ -294,7 +298,7 @@ export async function generateClientReport(data: ClientReportData): Promise<Uint
 
       healthY -= 20;
 
-      healthPage.drawText(`Мин: ${min.toFixed(1)} | Макс: ${max.toFixed(1)} | Источник: ${data.source}`, {
+      healthPage.drawText(`${i18n.t('trainerDashboard:report.min')} ${min.toFixed(1)} | ${i18n.t('trainerDashboard:report.max')} ${max.toFixed(1)} | ${i18n.t('trainerDashboard:report.source')} ${data.source}`, {
         x: 70,
         y: healthY,
         size: 10,
@@ -311,7 +315,7 @@ export async function generateClientReport(data: ClientReportData): Promise<Uint
     const whoopPage = pdfDoc.addPage([595, 842]);
     let whoopY = 750;
 
-    whoopPage.drawText('Whoop Данные', {
+    whoopPage.drawText(i18n.t('trainerDashboard:report.whoopData'), {
       x: 50,
       y: whoopY,
       size: 24,
@@ -322,11 +326,11 @@ export async function generateClientReport(data: ClientReportData): Promise<Uint
     whoopY -= 50;
 
     const whoopStats = [
-      { label: 'Среднее восстановление', value: `${data.whoopSummary.avgRecovery.toFixed(0)}%`, color: getHealthColor(data.whoopSummary.avgRecovery, successColor, warningColor, dangerColor) },
-      { label: 'Средняя нагрузка', value: data.whoopSummary.avgStrain.toFixed(1), color: successColor },
-      { label: 'Средний сон', value: `${data.whoopSummary.avgSleep.toFixed(1)} ч`, color: successColor },
-      { label: 'Среднее HRV', value: data.whoopSummary.avgHRV.toFixed(0), color: successColor },
-      { label: 'Всего тренировок', value: data.whoopSummary.totalWorkouts.toString(), color: primaryColor },
+      { label: i18n.t('trainerDashboard:report.avgRecovery'), value: `${data.whoopSummary.avgRecovery.toFixed(0)}%`, color: getHealthColor(data.whoopSummary.avgRecovery, successColor, warningColor, dangerColor) },
+      { label: i18n.t('trainerDashboard:report.avgStrain'), value: data.whoopSummary.avgStrain.toFixed(1), color: successColor },
+      { label: i18n.t('trainerDashboard:report.avgSleep'), value: `${data.whoopSummary.avgSleep.toFixed(1)} ${i18n.t('trainerDashboard:report.hours')}`, color: successColor },
+      { label: i18n.t('trainerDashboard:report.avgHRV'), value: data.whoopSummary.avgHRV.toFixed(0), color: successColor },
+      { label: i18n.t('trainerDashboard:report.totalWorkouts'), value: data.whoopSummary.totalWorkouts.toString(), color: primaryColor },
     ];
 
     whoopStats.forEach((stat) => {
@@ -355,7 +359,7 @@ export async function generateClientReport(data: ClientReportData): Promise<Uint
     const ouraPage = pdfDoc.addPage([595, 842]);
     let ouraY = 750;
 
-    ouraPage.drawText('Oura Данные', {
+    ouraPage.drawText(i18n.t('trainerDashboard:report.ouraData'), {
       x: 50,
       y: ouraY,
       size: 24,
@@ -366,11 +370,11 @@ export async function generateClientReport(data: ClientReportData): Promise<Uint
     ouraY -= 50;
 
     const ouraStats = [
-      { label: 'Средняя готовность', value: `${data.ouraSummary.avgReadiness.toFixed(0)}%`, color: getHealthColor(data.ouraSummary.avgReadiness, successColor, warningColor, dangerColor) },
-      { label: 'Средний сон', value: `${data.ouraSummary.avgSleep.toFixed(1)} ч`, color: successColor },
-      { label: 'Средняя активность', value: data.ouraSummary.avgActivity.toFixed(0), color: successColor },
-      { label: 'Среднее HRV', value: data.ouraSummary.avgHRV.toFixed(0), color: successColor },
-      { label: 'Всего тренировок', value: data.ouraSummary.totalWorkouts.toString(), color: primaryColor },
+      { label: i18n.t('trainerDashboard:report.avgReadiness'), value: `${data.ouraSummary.avgReadiness.toFixed(0)}%`, color: getHealthColor(data.ouraSummary.avgReadiness, successColor, warningColor, dangerColor) },
+      { label: i18n.t('trainerDashboard:report.avgSleep'), value: `${data.ouraSummary.avgSleep.toFixed(1)} ${i18n.t('trainerDashboard:report.hours')}`, color: successColor },
+      { label: i18n.t('trainerDashboard:report.avgActivity'), value: data.ouraSummary.avgActivity.toFixed(0), color: successColor },
+      { label: i18n.t('trainerDashboard:report.avgHRV'), value: data.ouraSummary.avgHRV.toFixed(0), color: successColor },
+      { label: i18n.t('trainerDashboard:report.totalWorkouts'), value: data.ouraSummary.totalWorkouts.toString(), color: primaryColor },
     ];
 
     ouraStats.forEach((stat) => {
@@ -399,7 +403,7 @@ export async function generateClientReport(data: ClientReportData): Promise<Uint
     const notesPage = pdfDoc.addPage([595, 842]);
     let notesY = 750;
 
-    notesPage.drawText('Заметки тренера', {
+    notesPage.drawText(i18n.t('trainerDashboard:report.trainerNotes'), {
       x: 50,
       y: notesY,
       size: 24,
@@ -415,7 +419,7 @@ export async function generateClientReport(data: ClientReportData): Promise<Uint
         notesY = 750;
       }
 
-      const dateText = format(new Date(note.created_at), 'd MMMM yyyy', { locale: ru });
+      const dateText = format(new Date(note.created_at), 'd MMMM yyyy', { locale: getDateLocale() });
       
       notesPage.drawText(dateText, {
         x: 50,
@@ -449,7 +453,7 @@ export async function generateClientReport(data: ClientReportData): Promise<Uint
   // Footer on all pages
   const pages = pdfDoc.getPages();
   pages.forEach((page, index) => {
-    page.drawText(`Страница ${index + 1} из ${pages.length}`, {
+    page.drawText(i18n.t('trainerDashboard:report.page', { current: index + 1, total: pages.length }), {
       x: 50,
       y: 30,
       size: 10,
@@ -457,7 +461,7 @@ export async function generateClientReport(data: ClientReportData): Promise<Uint
       color: grayColor,
     });
 
-    page.drawText(`Создано: ${format(new Date(), 'd MMMM yyyy, HH:mm', { locale: ru })}`, {
+    page.drawText(`${i18n.t('trainerDashboard:report.created')} ${format(new Date(), 'd MMMM yyyy, HH:mm', { locale: getDateLocale() })}`, {
       x: 400,
       y: 30,
       size: 10,
