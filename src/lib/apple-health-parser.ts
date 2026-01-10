@@ -1,5 +1,6 @@
 // lib/apple-health-parser.ts
 import JSZip from 'jszip';
+import i18n from '@/i18n';
 
 // Типы данных Apple Health
 export interface AppleHealthRecord {
@@ -55,98 +56,117 @@ export interface ParsedHealthData {
   };
 }
 
-// Маппинг типов метрик Apple Health на наши категории
-const METRIC_MAPPING: Record<string, { name: string; unit: string; category: string }> = {
-  // Витальные показатели
-  'HKQuantityTypeIdentifierHeartRate': { name: 'Частота пульса', unit: 'уд/мин', category: 'heart' },
-  'HKQuantityTypeIdentifierRestingHeartRate': { name: 'Пульс в покое', unit: 'уд/мин', category: 'heart' },
-  'HKQuantityTypeIdentifierHeartRateVariabilitySDNN': { name: 'Вариабельность пульса', unit: 'мс', category: 'heart' },
-  'HKQuantityTypeIdentifierBloodPressureSystolic': { name: 'Систолическое давление', unit: 'мм рт.ст.', category: 'heart' },
-  'HKQuantityTypeIdentifierBloodPressureDiastolic': { name: 'Диастолическое давление', unit: 'мм рт.ст.', category: 'heart' },
-  'HKQuantityTypeIdentifierRespiratoryRate': { name: 'Частота дыхания', unit: 'вдохов/мин', category: 'vitals' },
-  'HKQuantityTypeIdentifierOxygenSaturation': { name: 'Насыщение кислородом', unit: '%', category: 'vitals' },
-  'HKQuantityTypeIdentifierBodyTemperature': { name: 'Температура тела', unit: '°C', category: 'vitals' },
+// Metric mapping with localization keys
+const METRIC_MAPPING: Record<string, { nameKey: string; unitKey: string; category: string }> = {
+  // Vitals
+  'HKQuantityTypeIdentifierHeartRate': { nameKey: 'heartRate', unitKey: 'bpm', category: 'heart' },
+  'HKQuantityTypeIdentifierRestingHeartRate': { nameKey: 'restingHeartRate', unitKey: 'bpm', category: 'heart' },
+  'HKQuantityTypeIdentifierHeartRateVariabilitySDNN': { nameKey: 'hrv', unitKey: 'ms', category: 'heart' },
+  'HKQuantityTypeIdentifierBloodPressureSystolic': { nameKey: 'systolicBP', unitKey: 'mmHg', category: 'heart' },
+  'HKQuantityTypeIdentifierBloodPressureDiastolic': { nameKey: 'diastolicBP', unitKey: 'mmHg', category: 'heart' },
+  'HKQuantityTypeIdentifierRespiratoryRate': { nameKey: 'respiratoryRate', unitKey: 'breathsPerMin', category: 'vitals' },
+  'HKQuantityTypeIdentifierOxygenSaturation': { nameKey: 'oxygenSaturation', unitKey: 'percent', category: 'vitals' },
+  'HKQuantityTypeIdentifierBodyTemperature': { nameKey: 'bodyTemperature', unitKey: 'celsius', category: 'vitals' },
   
-  // Композиция тела
-  'HKQuantityTypeIdentifierBodyMass': { name: 'Вес', unit: 'кг', category: 'body' },
-  'HKQuantityTypeIdentifierBodyMassIndex': { name: 'ИМТ', unit: 'кг/м²', category: 'body' },
-  'HKQuantityTypeIdentifierBodyFatPercentage': { name: 'Процент жира', unit: '%', category: 'body' },
-  'HKQuantityTypeIdentifierLeanBodyMass': { name: 'Мышечная масса', unit: 'кг', category: 'body' },
-  'HKQuantityTypeIdentifierHeight': { name: 'Рост', unit: 'см', category: 'body' },
-  'HKQuantityTypeIdentifierWaistCircumference': { name: 'Окружность талии', unit: 'см', category: 'body' },
+  // Body composition
+  'HKQuantityTypeIdentifierBodyMass': { nameKey: 'weight', unitKey: 'kg', category: 'body' },
+  'HKQuantityTypeIdentifierBodyMassIndex': { nameKey: 'bmi', unitKey: 'kgm2', category: 'body' },
+  'HKQuantityTypeIdentifierBodyFatPercentage': { nameKey: 'bodyFat', unitKey: 'percent', category: 'body' },
+  'HKQuantityTypeIdentifierLeanBodyMass': { nameKey: 'leanMass', unitKey: 'kg', category: 'body' },
+  'HKQuantityTypeIdentifierHeight': { nameKey: 'height', unitKey: 'cm', category: 'body' },
+  'HKQuantityTypeIdentifierWaistCircumference': { nameKey: 'waist', unitKey: 'cm', category: 'body' },
   
-  // Активность
-  'HKQuantityTypeIdentifierStepCount': { name: 'Шаги', unit: 'шагов', category: 'activity' },
-  'HKQuantityTypeIdentifierDistanceWalkingRunning': { name: 'Дистанция ходьба/бег', unit: 'км', category: 'activity' },
-  'HKQuantityTypeIdentifierDistanceCycling': { name: 'Дистанция велосипед', unit: 'км', category: 'activity' },
-  'HKQuantityTypeIdentifierDistanceSwimming': { name: 'Дистанция плавание', unit: 'км', category: 'activity' },
-  'HKQuantityTypeIdentifierFlightsClimbed': { name: 'Этажей пройдено', unit: 'этажей', category: 'activity' },
-  'HKQuantityTypeIdentifierActiveEnergyBurned': { name: 'Активные калории', unit: 'ккал', category: 'activity' },
-  'HKQuantityTypeIdentifierBasalEnergyBurned': { name: 'Базовые калории', unit: 'ккал', category: 'activity' },
-  'HKQuantityTypeIdentifierAppleExerciseTime': { name: 'Время тренировки', unit: 'мин', category: 'activity' },
-  'HKQuantityTypeIdentifierAppleStandTime': { name: 'Время стояния', unit: 'мин', category: 'activity' },
-  'HKQuantityTypeIdentifierAppleMoveTime': { name: 'Время движения', unit: 'мин', category: 'activity' },
+  // Activity
+  'HKQuantityTypeIdentifierStepCount': { nameKey: 'steps', unitKey: 'stepsUnit', category: 'activity' },
+  'HKQuantityTypeIdentifierDistanceWalkingRunning': { nameKey: 'distanceWalkRun', unitKey: 'km', category: 'activity' },
+  'HKQuantityTypeIdentifierDistanceCycling': { nameKey: 'distanceCycling', unitKey: 'km', category: 'activity' },
+  'HKQuantityTypeIdentifierDistanceSwimming': { nameKey: 'distanceSwimming', unitKey: 'km', category: 'activity' },
+  'HKQuantityTypeIdentifierFlightsClimbed': { nameKey: 'floorsClimbed', unitKey: 'floors', category: 'activity' },
+  'HKQuantityTypeIdentifierActiveEnergyBurned': { nameKey: 'activeCalories', unitKey: 'kcal', category: 'activity' },
+  'HKQuantityTypeIdentifierBasalEnergyBurned': { nameKey: 'basalCalories', unitKey: 'kcal', category: 'activity' },
+  'HKQuantityTypeIdentifierAppleExerciseTime': { nameKey: 'exerciseTime', unitKey: 'min', category: 'activity' },
+  'HKQuantityTypeIdentifierAppleStandTime': { nameKey: 'standTime', unitKey: 'min', category: 'activity' },
+  'HKQuantityTypeIdentifierAppleMoveTime': { nameKey: 'moveTime', unitKey: 'min', category: 'activity' },
   
-  // Сон
-  'HKCategoryTypeIdentifierSleepAnalysis': { name: 'Анализ сна', unit: 'часов', category: 'sleep' },
-  'HKQuantityTypeIdentifierSleepDuration': { name: 'Длительность сна', unit: 'часов', category: 'sleep' },
+  // Sleep
+  'HKCategoryTypeIdentifierSleepAnalysis': { nameKey: 'sleepAnalysis', unitKey: 'hours', category: 'sleep' },
+  'HKQuantityTypeIdentifierSleepDuration': { nameKey: 'sleepDuration', unitKey: 'hours', category: 'sleep' },
   
-  // Питание
-  'HKQuantityTypeIdentifierDietaryWater': { name: 'Вода', unit: 'мл', category: 'nutrition' },
-  'HKQuantityTypeIdentifierDietaryCaffeine': { name: 'Кофеин', unit: 'мг', category: 'nutrition' },
-  'HKQuantityTypeIdentifierDietaryProtein': { name: 'Белки', unit: 'г', category: 'nutrition' },
-  'HKQuantityTypeIdentifierDietaryCarbohydrates': { name: 'Углеводы', unit: 'г', category: 'nutrition' },
-  'HKQuantityTypeIdentifierDietaryFatTotal': { name: 'Жиры', unit: 'г', category: 'nutrition' },
-  'HKQuantityTypeIdentifierDietaryEnergyConsumed': { name: 'Калории потреблено', unit: 'ккал', category: 'nutrition' },
+  // Nutrition
+  'HKQuantityTypeIdentifierDietaryWater': { nameKey: 'water', unitKey: 'ml', category: 'nutrition' },
+  'HKQuantityTypeIdentifierDietaryCaffeine': { nameKey: 'caffeine', unitKey: 'mg', category: 'nutrition' },
+  'HKQuantityTypeIdentifierDietaryProtein': { nameKey: 'protein', unitKey: 'g', category: 'nutrition' },
+  'HKQuantityTypeIdentifierDietaryCarbohydrates': { nameKey: 'carbs', unitKey: 'g', category: 'nutrition' },
+  'HKQuantityTypeIdentifierDietaryFatTotal': { nameKey: 'fat', unitKey: 'g', category: 'nutrition' },
+  'HKQuantityTypeIdentifierDietaryEnergyConsumed': { nameKey: 'caloriesConsumed', unitKey: 'kcal', category: 'nutrition' },
   
-  // Тренировки
-  'HKQuantityTypeIdentifierVO2Max': { name: 'VO2 Max', unit: 'мл/кг/мин', category: 'fitness' },
-  'HKQuantityTypeIdentifierWalkingSpeed': { name: 'Скорость ходьбы', unit: 'км/ч', category: 'fitness' },
-  'HKQuantityTypeIdentifierWalkingStepLength': { name: 'Длина шага', unit: 'см', category: 'fitness' },
-  'HKQuantityTypeIdentifierPushCount': { name: 'Отжимания', unit: 'раз', category: 'fitness' },
-  'HKQuantityTypeIdentifierSwimmingStrokeCount': { name: 'Гребки при плавании', unit: 'гребков', category: 'fitness' },
+  // Fitness
+  'HKQuantityTypeIdentifierVO2Max': { nameKey: 'vo2max', unitKey: 'mlkgmin', category: 'fitness' },
+  'HKQuantityTypeIdentifierWalkingSpeed': { nameKey: 'walkingSpeed', unitKey: 'kmh', category: 'fitness' },
+  'HKQuantityTypeIdentifierWalkingStepLength': { nameKey: 'stepLength', unitKey: 'cm', category: 'fitness' },
+  'HKQuantityTypeIdentifierPushCount': { nameKey: 'pushups', unitKey: 'reps', category: 'fitness' },
+  'HKQuantityTypeIdentifierSwimmingStrokeCount': { nameKey: 'swimmingStrokes', unitKey: 'strokes', category: 'fitness' },
   
-  // Другие
-  'HKQuantityTypeIdentifierUVExposure': { name: 'УФ-излучение', unit: 'индекс', category: 'environment' },
-  'HKQuantityTypeIdentifierEnvironmentalAudioExposure': { name: 'Уровень шума', unit: 'дБ', category: 'environment' },
-  'HKQuantityTypeIdentifierHeadphoneAudioExposure': { name: 'Громкость наушников', unit: 'дБ', category: 'environment' },
+  // Environment
+  'HKQuantityTypeIdentifierUVExposure': { nameKey: 'uvExposure', unitKey: 'index', category: 'environment' },
+  'HKQuantityTypeIdentifierEnvironmentalAudioExposure': { nameKey: 'environmentalNoise', unitKey: 'dB', category: 'environment' },
+  'HKQuantityTypeIdentifierHeadphoneAudioExposure': { nameKey: 'headphoneVolume', unitKey: 'dB', category: 'environment' },
 };
 
-// Маппинг типов тренировок
+// Workout type mapping with localization keys
 const WORKOUT_MAPPING: Record<string, string> = {
-  'HKWorkoutActivityTypeRunning': 'Бег',
-  'HKWorkoutActivityTypeWalking': 'Ходьба',
-  'HKWorkoutActivityTypeCycling': 'Велосипед',
-  'HKWorkoutActivityTypeSwimming': 'Плавание',
-  'HKWorkoutActivityTypeYoga': 'Йога',
-  'HKWorkoutActivityTypeStrengthTraining': 'Силовая тренировка',
-  'HKWorkoutActivityTypeFunctionalStrengthTraining': 'Функциональная тренировка',
-  'HKWorkoutActivityTypeTraditionalStrengthTraining': 'Классическая силовая',
-  'HKWorkoutActivityTypeCrossTraining': 'Кросс-тренинг',
-  'HKWorkoutActivityTypeElliptical': 'Эллипсоид',
-  'HKWorkoutActivityTypeRowing': 'Гребля',
-  'HKWorkoutActivityTypeStairClimbing': 'Подъем по лестнице',
-  'HKWorkoutActivityTypeHighIntensityIntervalTraining': 'HIIT',
-  'HKWorkoutActivityTypePilates': 'Пилатес',
-  'HKWorkoutActivityTypeDancing': 'Танцы',
-  'HKWorkoutActivityTypeMartialArts': 'Единоборства',
-  'HKWorkoutActivityTypeSoccer': 'Футбол',
-  'HKWorkoutActivityTypeBasketball': 'Баскетбол',
-  'HKWorkoutActivityTypeTennis': 'Теннис',
-  'HKWorkoutActivityTypeVolleyball': 'Волейбол',
-  'HKWorkoutActivityTypeAmericanFootball': 'Американский футбол',
-  'HKWorkoutActivityTypeGolf': 'Гольф',
-  'HKWorkoutActivityTypeClimbing': 'Скалолазание',
-  'HKWorkoutActivityTypeHiking': 'Хайкинг',
-  'HKWorkoutActivityTypeSurfing': 'Серфинг',
-  'HKWorkoutActivityTypeSnowboarding': 'Сноуборд',
-  'HKWorkoutActivityTypeSkiing': 'Лыжи',
-  'HKWorkoutActivityTypeSkating': 'Катание на коньках',
-  'HKWorkoutActivityTypeBoxing': 'Бокс',
-  'HKWorkoutActivityTypeBadminton': 'Бадминтон',
-  'HKWorkoutActivityTypeTableTennis': 'Настольный теннис',
-  'HKWorkoutActivityTypeOther': 'Другое'
+  'HKWorkoutActivityTypeRunning': 'running',
+  'HKWorkoutActivityTypeWalking': 'walking',
+  'HKWorkoutActivityTypeCycling': 'cycling',
+  'HKWorkoutActivityTypeSwimming': 'swimming',
+  'HKWorkoutActivityTypeYoga': 'yoga',
+  'HKWorkoutActivityTypeStrengthTraining': 'strength',
+  'HKWorkoutActivityTypeFunctionalStrengthTraining': 'functionalStrength',
+  'HKWorkoutActivityTypeTraditionalStrengthTraining': 'traditionalStrength',
+  'HKWorkoutActivityTypeCrossTraining': 'crossTraining',
+  'HKWorkoutActivityTypeElliptical': 'elliptical',
+  'HKWorkoutActivityTypeRowing': 'rowing',
+  'HKWorkoutActivityTypeStairClimbing': 'stairClimbing',
+  'HKWorkoutActivityTypeHighIntensityIntervalTraining': 'hiit',
+  'HKWorkoutActivityTypePilates': 'pilates',
+  'HKWorkoutActivityTypeDancing': 'dancing',
+  'HKWorkoutActivityTypeMartialArts': 'martialArts',
+  'HKWorkoutActivityTypeSoccer': 'soccer',
+  'HKWorkoutActivityTypeBasketball': 'basketball',
+  'HKWorkoutActivityTypeTennis': 'tennis',
+  'HKWorkoutActivityTypeVolleyball': 'volleyball',
+  'HKWorkoutActivityTypeAmericanFootball': 'americanFootball',
+  'HKWorkoutActivityTypeGolf': 'golf',
+  'HKWorkoutActivityTypeClimbing': 'climbing',
+  'HKWorkoutActivityTypeHiking': 'hiking',
+  'HKWorkoutActivityTypeSurfing': 'surfing',
+  'HKWorkoutActivityTypeSnowboarding': 'snowboarding',
+  'HKWorkoutActivityTypeSkiing': 'skiing',
+  'HKWorkoutActivityTypeSkating': 'skating',
+  'HKWorkoutActivityTypeBoxing': 'boxing',
+  'HKWorkoutActivityTypeBadminton': 'badminton',
+  'HKWorkoutActivityTypeTableTennis': 'tableTennis',
+  'HKWorkoutActivityTypeOther': 'other'
 };
+
+// Helper function to get localized metric info
+export function getMetricInfo(type: string): { name: string; unit: string; category: string } | null {
+  const mapping = METRIC_MAPPING[type];
+  if (!mapping) return null;
+  return {
+    name: i18n.t(`workouts:appleHealth.metrics.${mapping.nameKey}`),
+    unit: i18n.t(`workouts:appleHealth.units.${mapping.unitKey}`),
+    category: mapping.category
+  };
+}
+
+// Helper function to get localized workout name
+export function getWorkoutName(type: string): string {
+  const key = WORKOUT_MAPPING[type];
+  return key 
+    ? i18n.t(`workouts:appleHealth.workouts.${key}`) 
+    : i18n.t('workouts:appleHealth.workouts.other');
+}
 
 export class AppleHealthParser {
   private parser: DOMParser;
@@ -175,7 +195,7 @@ export class AppleHealthParser {
       }
       
       if (!xmlContent) {
-        throw new Error('Не найден файл export.xml в архиве');
+        throw new Error(i18n.t('workouts:appleHealth.errors.exportNotFound'));
       }
       
       // Парсим XML
@@ -184,7 +204,7 @@ export class AppleHealthParser {
       // Проверяем на ошибки парсинга
       const parserError = doc.querySelector('parsererror');
       if (parserError) {
-        throw new Error('Ошибка парсинга XML: ' + parserError.textContent);
+        throw new Error(i18n.t('workouts:appleHealth.errors.xmlParseError') + ': ' + parserError.textContent);
       }
       
       // Извлекаем данные
@@ -387,7 +407,7 @@ export class AppleHealthParser {
     };
   }
 
-  /**
+/**
    * Группирует записи по дням и метрикам для оптимизации
    */
   groupRecordsByDate(
@@ -397,7 +417,7 @@ export class AppleHealthParser {
     
     records.forEach((record) => {
       const dateKey = record.startDate.toISOString().split('T')[0];
-      const metricInfo = METRIC_MAPPING[record.type];
+      const metricInfo = getMetricInfo(record.type);
       
       if (!metricInfo) return;
       
@@ -420,7 +440,7 @@ export class AppleHealthParser {
   /**
    * Агрегирует данные за день (среднее, сумма и т.д.)
    */
-  aggregateDailyData(
+aggregateDailyData(
     records: AppleHealthRecord[]
   ): { date: string; metric: string; value: number; unit: string; source: string }[] {
     const grouped = this.groupRecordsByDate(records);
@@ -428,15 +448,17 @@ export class AppleHealthParser {
     
     grouped.forEach((dateGroup, date) => {
       dateGroup.forEach((metricRecords, metricName) => {
-        const metricInfo = Object.values(METRIC_MAPPING).find(m => m.name === metricName);
+        // Find category by looking up the first record's type
+        const firstRecord = metricRecords[0];
+        const metricInfo = firstRecord ? getMetricInfo(firstRecord.type) : null;
         if (!metricInfo) return;
         
         let aggregatedValue: number;
         
         // Определяем тип агрегации в зависимости от метрики
         if (metricInfo.category === 'activity' || 
-            metricName.includes('Калории') || 
-            metricName.includes('Шаги')) {
+            metricName.includes('Калории') || metricName.includes('Calories') ||
+            metricName.includes('Шаги') || metricName.includes('Steps')) {
           // Для активности суммируем
           aggregatedValue = metricRecords.reduce((sum, r) => sum + (r.value as number), 0);
         } else {
@@ -527,7 +549,7 @@ export class AppleHealthParser {
     const metricCounts = new Map<string, { count: number; category: string }>();
     
     data.records.forEach(record => {
-      const metricInfo = METRIC_MAPPING[record.type];
+      const metricInfo = getMetricInfo(record.type);
       if (metricInfo) {
         const existing = metricCounts.get(metricInfo.name) || { count: 0, category: metricInfo.category };
         existing.count++;
@@ -539,7 +561,7 @@ export class AppleHealthParser {
     const workoutCounts = new Map<string, number>();
     
     data.workouts.forEach(workout => {
-      const type = WORKOUT_MAPPING[workout.workoutActivityType] || 'Другое';
+      const type = getWorkoutName(workout.workoutActivityType);
       workoutCounts.set(type, (workoutCounts.get(type) || 0) + 1);
     });
     
@@ -573,14 +595,14 @@ export class AppleHealthParser {
     const metrics: any[] = [];
     
     data.records.forEach(record => {
-      const mapping = METRIC_MAPPING[record.type];
-      if (!mapping) return;
+      const metricInfo = getMetricInfo(record.type);
+      if (!metricInfo) return;
       
       metrics.push({
         user_id: userId,
-        metric_name: mapping.name,
+        metric_name: metricInfo.name,
         metric_type: 'health',
-        unit: mapping.unit,
+        unit: metricInfo.unit,
         value: record.value,
         measurement_date: record.startDate.toISOString().split('T')[0],
         source_data: {

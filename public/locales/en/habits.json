@@ -38,13 +38,23 @@
   "errors": {
     "completionError": "Error marking habit complete"
   },
-  "categories": {
+"categories": {
     "health": "Health",
     "fitness": "Fitness",
     "nutrition": "Nutrition",
     "sleep": "Sleep",
     "mindfulness": "Mindfulness",
+    "learning": "Learning",
+    "productivity": "Productivity",
+    "social": "Social",
     "custom": "Other"
+  },
+  "types": {
+    "daily_check": { "label": "Daily check", "description": "Simple completion every day" },
+    "duration_counter": { "label": "Duration counter", "description": "Time since start (quit smoking, etc.)" },
+    "numeric_counter": { "label": "Numeric counter", "description": "Quantity (glasses of water, etc.)" },
+    "fasting_tracker": { "label": "Intermittent fasting", "description": "Eating windows" },
+    "daily_measurement": { "label": "Daily measurement", "description": "Value each day" }
   },
   "frequencies": {
     "daily": "Daily",
