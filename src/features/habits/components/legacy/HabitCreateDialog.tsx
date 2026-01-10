@@ -44,34 +44,34 @@ interface HabitCreateDialogProps {
   onHabitCreated?: () => void;
 }
 
-const categories = [
-  { value: "fitness", label: "Фитнес" },
-  { value: "nutrition", label: "Питание" },
-  { value: "sleep", label: "Сон" },
-  { value: "mindfulness", label: "Медитация" },
-  { value: "custom", label: "Другое" },
-];
-
-const frequencies = [
-  { value: "daily", label: "Ежедневно" },
-  { value: "weekly", label: "Еженедельно" },
-  { value: "custom", label: "Кастомное" },
-];
-
-const habitTypes = [
-  { value: "daily_check", label: "Daily Check-in", description: "Simple daily completion", icon: "✅" },
-  { value: "duration_counter", label: "Duration Counter", description: "Track time (e.g., quit smoking)", icon: "⏱️" },
-  { value: "fasting_tracker", label: "Fasting Tracker", description: "Track intermittent fasting windows", icon: "⏰🍽️" },
-  { value: "numeric_counter", label: "Numeric Counter", description: "Count items (e.g., books read)", icon: "🔢" },
-  { value: "daily_measurement", label: "Daily Measurement", description: "Track daily values (e.g., pages read)", icon: "📊" },
-];
-
 export function HabitCreateDialog({ open, onOpenChange, linkedGoalId, prefilledName, onHabitCreated }: HabitCreateDialogProps) {
   const { t } = useTranslation('habits');
   const { user } = useAuth();
   const { personalGoals } = useGoalsQuery(user?.id);
   const isMobile = useIsMobile();
-  
+
+  const categories = [
+    { value: "fitness", label: t("categories.fitness") },
+    { value: "nutrition", label: t("categories.nutrition") },
+    { value: "sleep", label: t("categories.sleep") },
+    { value: "mindfulness", label: t("categories.mindfulness") },
+    { value: "custom", label: t("categories.custom") },
+  ];
+
+  const frequencies = [
+    { value: "daily", label: t("frequencies.daily") },
+    { value: "weekly", label: t("frequencies.weekly") },
+    { value: "custom", label: t("frequencies.custom") },
+  ];
+
+  const habitTypes = [
+    { value: "daily_check", label: t("habitTypes.daily_check.label"), icon: t("habitTypes.daily_check.icon"), description: t("habitTypes.daily_check.description") },
+    { value: "duration_counter", label: t("habitTypes.duration_counter.label"), icon: t("habitTypes.duration_counter.icon"), description: t("habitTypes.duration_counter.description") },
+    { value: "fasting_tracker", label: t("habitTypes.fasting_tracker.label"), icon: t("habitTypes.fasting_tracker.icon"), description: t("habitTypes.fasting_tracker.description") },
+    { value: "numeric_counter", label: t("habitTypes.numeric_counter.label"), icon: t("habitTypes.numeric_counter.icon"), description: t("habitTypes.numeric_counter.description") },
+    { value: "daily_measurement", label: t("habitTypes.daily_measurement.label"), icon: t("habitTypes.daily_measurement.icon"), description: t("habitTypes.daily_measurement.description") },
+  ];
+
   const [name, setName] = useState(prefilledName || "");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("custom");

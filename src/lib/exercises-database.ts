@@ -1,3 +1,5 @@
+import i18n from '@/i18n';
+
 export interface Exercise {
   id: string;
   name: string;
@@ -181,6 +183,28 @@ export const EXERCISES: Exercise[] = [
   }
 ];
 
+// Getter functions for localized exercise categories
+export const getExerciseCategories = () => [
+  { value: 'chest', label: i18n.t('workouts:exerciseCategories.chest') },
+  { value: 'back', label: i18n.t('workouts:exerciseCategories.back') },
+  { value: 'legs', label: i18n.t('workouts:exerciseCategories.legs') },
+  { value: 'shoulders', label: i18n.t('workouts:exerciseCategories.shoulders') },
+  { value: 'arms', label: i18n.t('workouts:exerciseCategories.arms') },
+  { value: 'core', label: i18n.t('workouts:exerciseCategories.core') },
+  { value: 'cardio', label: i18n.t('workouts:exerciseCategories.cardio') },
+];
+
+// Getter functions for localized equipment types
+export const getEquipmentTypes = () => [
+  { value: 'barbell', label: i18n.t('workouts:equipment.barbell') },
+  { value: 'dumbbell', label: i18n.t('workouts:equipment.dumbbell') },
+  { value: 'machine', label: i18n.t('workouts:equipment.machine') },
+  { value: 'bodyweight', label: i18n.t('workouts:equipment.bodyweight') },
+  { value: 'cable', label: i18n.t('workouts:equipment.cable') },
+  { value: 'other', label: i18n.t('workouts:equipment.other') },
+];
+
+// Legacy exports for backward compatibility (note: will use language at import time)
 export const EXERCISE_CATEGORIES = [
   { value: 'chest', label: 'Грудь' },
   { value: 'back', label: 'Спина' },

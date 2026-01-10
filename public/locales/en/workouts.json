@@ -178,6 +178,23 @@
     "ultrahuman": "Ultrahuman",
     "linked": "WHOOP + Manual"
   },
+  "exerciseCategories": {
+    "chest": "Chest",
+    "back": "Back",
+    "legs": "Legs",
+    "shoulders": "Shoulders",
+    "arms": "Arms",
+    "core": "Core",
+    "cardio": "Cardio"
+  },
+  "equipment": {
+    "barbell": "Barbell",
+    "dumbbell": "Dumbbell",
+    "machine": "Machine",
+    "bodyweight": "Bodyweight",
+    "cable": "Cable",
+    "other": "Other"
+  },
   "plan": {
     "weekOf": "Week {{current}} of {{total}}",
     "completed": "{{percent}}% completed",

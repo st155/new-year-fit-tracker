@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format, subDays } from "date-fns";
 import { ru } from "date-fns/locale";
+import i18n from "@/i18n";
 
 export type PeriodFilter = '7d' | '30d' | '90d' | 'all';
 export type MetricCategory = 'strength' | 'wellness' | 'body';
@@ -24,31 +25,37 @@ function getPeriodDays(period: PeriodFilter): number {
   }
 }
 
+// Helper functions for localized labels
+const getBodyMetricLabel = (key: string): string => i18n.t(`progress:bodyMetrics.${key}.label`);
+const getBodyMetricUnit = (key: string): string => i18n.t(`progress:bodyMetrics.${key}.unit`);
+const getWellnessLabel = (key: string): string => i18n.t(`progress:wellnessActivities.${key}`);
+
 // Body metrics from unified_metrics (body composition + health metrics)
 const BODY_METRICS = [
   // Состав тела
-  { name: 'Weight', label: 'Вес', unit: 'кг' },
-  { name: 'Body Fat Percentage', label: 'Процент жира', unit: '%' },
-  { name: 'Muscle Mass', label: 'Мышечная масса', unit: 'кг' },
+  { name: 'Weight', key: 'weight', get label() { return getBodyMetricLabel('weight'); }, get unit() { return getBodyMetricUnit('weight'); } },
+  { name: 'Body Fat Percentage', key: 'body_fat_percentage', get label() { return getBodyMetricLabel('body_fat_percentage'); }, get unit() { return getBodyMetricUnit('body_fat_percentage'); } },
+  { name: 'Muscle Mass', key: 'muscle_mass', get label() { return getBodyMetricLabel('muscle_mass'); }, get unit() { return getBodyMetricUnit('muscle_mass'); } },
   // Метрики здоровья
-  { name: 'Recovery Score', label: 'Восстановление', unit: '%' },
-  { name: 'Sleep Duration', label: 'Продолжительность сна', unit: 'ч' },
-  { name: 'HRV', label: 'Вариабельность пульса (HRV)', unit: 'мс' },
-  { name: 'Resting Heart Rate', label: 'Пульс покоя', unit: 'уд/мин' },
-  { name: 'Sleep Efficiency', label: 'Эффективность сна', unit: '%' },
+  { name: 'Recovery Score', key: 'recovery_score', get label() { return getBodyMetricLabel('recovery_score'); }, get unit() { return getBodyMetricUnit('recovery_score'); } },
+  { name: 'Sleep Duration', key: 'sleep_duration', get label() { return getBodyMetricLabel('sleep_duration'); }, get unit() { return getBodyMetricUnit('sleep_duration'); } },
+  { name: 'HRV', key: 'hrv', get label() { return getBodyMetricLabel('hrv'); }, get unit() { return getBodyMetricUnit('hrv'); } },
+  { name: 'Resting Heart Rate', key: 'resting_heart_rate', get label() { return getBodyMetricLabel('resting_heart_rate'); }, get unit() { return getBodyMetricUnit('resting_heart_rate'); } },
+  { name: 'Sleep Efficiency', key: 'sleep_efficiency', get label() { return getBodyMetricLabel('sleep_efficiency'); }, get unit() { return getBodyMetricUnit('sleep_efficiency'); } },
 ];
+
 // Wellness activities from workouts table (Whoop activity types)
-const WELLNESS_ACTIVITY_TYPES: Record<string, { label: string; icon: string }> = {
-  'Массаж': { label: 'Массаж', icon: '💆' },
-  'Медитация': { label: 'Медитация', icon: '🧘' },
-  '125': { label: 'Массаж', icon: '💆' },
-  '45': { label: 'Медитация', icon: '🧘' },
-  '70': { label: 'Медитация', icon: '🧘' },
-  '88': { label: 'Ледяная ванна', icon: '🧊' },
-  '43': { label: 'Пилатес', icon: '🏃' },
-  '44': { label: 'Йога', icon: '🧘' },
-  '233': { label: 'Растяжка', icon: '🤸' },
-  '237': { label: 'Сауна', icon: '🧖' },
+const WELLNESS_ACTIVITY_TYPES: Record<string, { key: string; get label(): string; icon: string }> = {
+  'Массаж': { key: 'massage', get label() { return getWellnessLabel('massage'); }, icon: '💆' },
+  'Медитация': { key: 'meditation', get label() { return getWellnessLabel('meditation'); }, icon: '🧘' },
+  '125': { key: 'massage', get label() { return getWellnessLabel('massage'); }, icon: '💆' },
+  '45': { key: 'meditation', get label() { return getWellnessLabel('meditation'); }, icon: '🧘' },
+  '70': { key: 'meditation', get label() { return getWellnessLabel('meditation'); }, icon: '🧘' },
+  '88': { key: 'iceBath', get label() { return getWellnessLabel('iceBath'); }, icon: '🧊' },
+  '43': { key: 'pilates', get label() { return getWellnessLabel('pilates'); }, icon: '🏃' },
+  '44': { key: 'yoga', get label() { return getWellnessLabel('yoga'); }, icon: '🧘' },
+  '233': { key: 'stretching', get label() { return getWellnessLabel('stretching'); }, icon: '🤸' },
+  '237': { key: 'sauna', get label() { return getWellnessLabel('sauna'); }, icon: '🧖' },
 };
 
 const WELLNESS_ACTIVITY_CODES = Object.keys(WELLNESS_ACTIVITY_TYPES);
@@ -136,7 +143,7 @@ export function useProgressMetrics(userId?: string) {
           value: `activity:${type}`,
           label: meta?.label || type,
           icon: meta?.icon || '🏃',
-          unit: 'мин',
+          unit: i18n.t('progress:units.min'),
           category: 'wellness' as const,
           isActivity: true
         };

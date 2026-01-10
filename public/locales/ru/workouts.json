@@ -178,6 +178,23 @@
     "ultrahuman": "Ultrahuman",
     "linked": "WHOOP + Вручную"
   },
+  "exerciseCategories": {
+    "chest": "Грудь",
+    "back": "Спина",
+    "legs": "Ноги",
+    "shoulders": "Плечи",
+    "arms": "Руки",
+    "core": "Кор",
+    "cardio": "Кардио"
+  },
+  "equipment": {
+    "barbell": "Штанга",
+    "dumbbell": "Гантели",
+    "machine": "Тренажёр",
+    "bodyweight": "Своё тело",
+    "cable": "Блок",
+    "other": "Другое"
+  },
   "plan": {
     "weekOf": "Неделя {{current}} из {{total}}",
     "completed": "{{percent}}% выполнено",
