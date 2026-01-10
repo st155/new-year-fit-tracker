@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { queryKeys } from '@/lib/query-keys';
 import { healthApi } from '@/lib/api';
+import i18n from '@/i18n';
 
 interface RecalculateConfidenceParams {
   user_id: string;
@@ -19,9 +20,10 @@ export function useConfidenceRecalculation() {
       return data;
     },
     onSuccess: (data, variables) => {
-      toast.success(
-        `Confidence recalculation started${variables.metric_name ? ` for ${variables.metric_name}` : ''}`
-      );
+      const message = variables.metric_name 
+        ? i18n.t('common:dataQuality.recalculationStartedFor', { metric: variables.metric_name })
+        : i18n.t('common:dataQuality.recalculationStarted');
+      toast.success(message);
       
       // Invalidate relevant queries
       queryClient.invalidateQueries({
@@ -30,7 +32,7 @@ export function useConfidenceRecalculation() {
     },
     onError: (error) => {
       console.error('Confidence recalculation error:', error);
-      toast.error('Failed to start confidence recalculation');
+      toast.error(i18n.t('common:dataQuality.recalculationFailed'));
     },
   });
 

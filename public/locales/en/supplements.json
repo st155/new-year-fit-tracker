@@ -1,4 +1,24 @@
 {
+  "scanner": {
+    "title": "Scan Barcode",
+    "uploadPhoto": "Upload Barcode Photo",
+    "enterManually": "Enter Barcode Manually",
+    "hint": "Scan or enter the UPC/EAN barcode from your supplement bottle",
+    "scanning": "Scanning barcode...",
+    "lookingUp": "Looking up product information",
+    "enriching": "Enriching data...",
+    "gatheringInfo": "Gathering comprehensive information about this supplement",
+    "productFound": "Product found!",
+    "productNotFound": "Product not found",
+    "notInDatabase": "This product is not in our database",
+    "scanFailed": "Scan failed",
+    "addedToStack": "Added to stack",
+    "addedToStackDesc": "{{name}} added to your supplement stack",
+    "ratingFeature": "Rating feature",
+    "ratingComingSoon": "Rating functionality coming soon!",
+    "scanAnother": "Scan Another",
+    "enterBarcodePrompt": "Enter the barcode number:"
+  },
   "title": "BioStack V3.0",
   "subtitle": "Your biohacking correlation engine - Track what works, optimize what doesn't",
   "today": {

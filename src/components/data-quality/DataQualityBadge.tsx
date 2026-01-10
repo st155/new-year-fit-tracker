@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useState } from 'react';
 import { healthApi } from '@/lib/api';
+import { useTranslation } from 'react-i18next';
 
 interface ConfidenceFactors {
   sourceReliability: number;
@@ -34,8 +35,9 @@ export function DataQualityBadge({
   size = 'default',
   showLabel = true,
 }: DataQualityBadgeProps) {
+  const { t } = useTranslation('common');
   const [isRecalculating, setIsRecalculating] = useState(false);
-  const { icon, variant, label, color } = getConfidenceDisplay(confidence);
+  const { icon, variant, label, color } = getConfidenceDisplay(confidence, t);
 
   const handleRecalculate = async () => {
     if (!userId || !metricName) return;
@@ -46,11 +48,11 @@ export function DataQualityBadge({
 
       if (error) throw error;
 
-      toast.success('Confidence recalculation started');
+      toast.success(t('dataQuality.recalculationStarted'));
       onRecalculate?.();
     } catch (error) {
       console.error('Recalculation error:', error);
-      toast.error('Failed to recalculate confidence');
+      toast.error(t('dataQuality.recalculateFailed'));
     } finally {
       setIsRecalculating(false);
     }
@@ -111,12 +113,12 @@ export function DataQualityBadge({
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <div className={`h-2 w-2 rounded-full`} style={{ backgroundColor: color }} />
-              <p className="font-semibold">Data Quality: {label}</p>
+              <p className="font-semibold">{t('dataQuality.title')}: {label}</p>
             </div>
 
             <div className="space-y-1 text-xs border-t pt-2">
               <div className="flex justify-between items-center">
-                <span>Source Reliability:</span>
+                <span>{t('dataQuality.sourceReliability')}:</span>
                 <div className="flex items-center gap-1">
                   <div className="h-1.5 w-16 bg-muted rounded-full overflow-hidden">
                     <div
@@ -131,7 +133,7 @@ export function DataQualityBadge({
               </div>
 
               <div className="flex justify-between items-center">
-                <span>Data Freshness:</span>
+                <span>{t('dataQuality.dataFreshness')}:</span>
                 <div className="flex items-center gap-1">
                   <div className="h-1.5 w-16 bg-muted rounded-full overflow-hidden">
                     <div
@@ -146,7 +148,7 @@ export function DataQualityBadge({
               </div>
 
               <div className="flex justify-between items-center">
-                <span>Frequency:</span>
+                <span>{t('dataQuality.frequency')}:</span>
                 <div className="flex items-center gap-1">
                   <div className="h-1.5 w-16 bg-muted rounded-full overflow-hidden">
                     <div
@@ -161,7 +163,7 @@ export function DataQualityBadge({
               </div>
 
               <div className="flex justify-between items-center">
-                <span>Cross-validation:</span>
+                <span>{t('dataQuality.crossValidation')}:</span>
                 <div className="flex items-center gap-1">
                   <div className="h-1.5 w-16 bg-muted rounded-full overflow-hidden">
                     <div
@@ -177,7 +179,7 @@ export function DataQualityBadge({
             </div>
 
             <div className="text-xs text-muted-foreground border-t pt-2">
-              Higher scores indicate more reliable data from trusted sources
+              {t('dataQuality.hint')}
             </div>
           </div>
         </TooltipContent>
@@ -186,7 +188,7 @@ export function DataQualityBadge({
   );
 }
 
-function getConfidenceDisplay(confidence: number): {
+function getConfidenceDisplay(confidence: number, t: (key: string) => string): {
   icon: JSX.Element;
   variant: string;
   label: string;
@@ -196,28 +198,28 @@ function getConfidenceDisplay(confidence: number): {
     return {
       icon: <CheckCircle2 className="h-3 w-3" />,
       variant: 'default',
-      label: 'Excellent',
+      label: t('dataQuality.excellent'),
       color: 'hsl(var(--success))',
     };
   } else if (confidence >= 60) {
     return {
       icon: <CheckCircle2 className="h-3 w-3" />,
       variant: 'secondary',
-      label: 'Good',
+      label: t('dataQuality.good'),
       color: 'hsl(var(--primary))',
     };
   } else if (confidence >= 40) {
     return {
       icon: <AlertTriangle className="h-3 w-3" />,
       variant: 'outline',
-      label: 'Fair',
+      label: t('dataQuality.fair'),
       color: 'hsl(var(--warning))',
     };
   } else {
     return {
       icon: <XCircle className="h-3 w-3" />,
       variant: 'destructive',
-      label: 'Poor',
+      label: t('dataQuality.poor'),
       color: 'hsl(var(--destructive))',
     };
   }

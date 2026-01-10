@@ -414,5 +414,30 @@
   "dev": {
     "analyzingLocalizations": "Анализ локализаций...",
     "analysisError": "Ошибка анализа"
+  },
+  "dataQuality": {
+    "title": "Качество данных",
+    "excellent": "Отлично",
+    "good": "Хорошо",
+    "fair": "Средне",
+    "poor": "Плохо",
+    "sourceReliability": "Надёжность источника",
+    "dataFreshness": "Свежесть данных",
+    "frequency": "Частота",
+    "crossValidation": "Кросс-валидация",
+    "hint": "Высокие показатели означают более надёжные данные из проверенных источников",
+    "recalculationStarted": "Пересчёт уверенности запущен",
+    "recalculationStartedFor": "Пересчёт уверенности запущен для {{metric}}",
+    "recalculationFailed": "Не удалось запустить пересчёт уверенности",
+    "recalculateFailed": "Не удалось пересчитать уверенность"
+  },
+  "webhook": {
+    "queued": "Webhook добавлен в очередь на обработку",
+    "updateIn2min": "Данные обновятся в течение 2 минут",
+    "reprocessFailed": "Не удалось переобработать webhook"
+  },
+  "reactions": {
+    "addFailed": "Не удалось добавить реакцию",
+    "removeFailed": "Не удалось удалить реакцию"
   }
 }
