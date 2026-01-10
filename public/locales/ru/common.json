@@ -439,5 +439,28 @@
   "reactions": {
     "addFailed": "Не удалось добавить реакцию",
     "removeFailed": "Не удалось удалить реакцию"
+  },
+  "aiUpload": {
+    "error": "Ошибка",
+    "signInRequired": "Пожалуйста, войдите для продолжения",
+    "selectImage": "Пожалуйста, выберите изображение",
+    "fileTooLarge": "Размер файла не должен превышать 5 МБ",
+    "photoUploaded": "Фото загружено!",
+    "startingAnalysis": "Запуск AI анализа...",
+    "analysisComplete": "Анализ завершён!",
+    "analysisError": "Ошибка анализа",
+    "uploadFailed": "Не удалось загрузить фото: {{error}}",
+    "analyzeFailed": "Не удалось проанализировать изображение с помощью AI",
+    "noDataFound": "Данные не найдены на изображении",
+    "analyzingWithAI": "Анализ с помощью AI...",
+    "uploading": "Загрузка фото...",
+    "qualityHigh": "Высокое качество",
+    "qualityMedium": "Среднее качество",
+    "qualityLow": "Низкое качество",
+    "replace": "Заменить",
+    "selectScreenshot": "Выберите скриншот",
+    "dragAndDrop": "Перетащите скриншот фитнес-трекера или нажмите для выбора",
+    "aiExtractHint": "AI автоматически извлечёт данные: вес, процент жира, пульс, шаги и другие метрики",
+    "supportedFormats": "Поддерживается: JPG, PNG, WebP (до 5 МБ)"
   }
 }

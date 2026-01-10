@@ -382,5 +382,9 @@
   "achievements": {
     "progress": "Прогресс",
     "unlocked": "Разблокировано"
+  },
+  "habitTypes": {
+    "numericCounter": "Числовой счётчик",
+    "daily": "Ежедневная привычка"
   }
 }

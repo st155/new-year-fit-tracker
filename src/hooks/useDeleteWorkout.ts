@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { WorkoutHistoryItem } from "./useWorkoutHistory";
 import { startOfDay, endOfDay } from "date-fns";
+import i18n from '@/i18n';
 
 export function useDeleteWorkout() {
   const queryClient = useQueryClient();
@@ -41,15 +42,15 @@ export function useDeleteWorkout() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['workout-history'] });
       toast({
-        title: "Тренировка удалена",
-        description: "Запись успешно удалена из журнала"
+        title: i18n.t('workouts:logging.workoutDeleted'),
+        description: i18n.t('workouts:logging.workoutDeletedDesc')
       });
     },
     onError: (error) => {
       console.error('Delete workout error:', error);
       toast({
-        title: "Ошибка удаления",
-        description: "Не удалось удалить тренировку",
+        title: i18n.t('workouts:logging.deleteError'),
+        description: i18n.t('workouts:logging.deleteErrorDesc'),
         variant: "destructive"
       });
     }

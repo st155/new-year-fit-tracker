@@ -380,5 +380,9 @@
   "achievements": {
     "progress": "Progress",
     "unlocked": "Unlocked"
+  },
+  "habitTypes": {
+    "numericCounter": "Numeric counter",
+    "daily": "Daily habit"
   }
 }

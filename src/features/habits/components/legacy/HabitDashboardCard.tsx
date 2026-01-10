@@ -268,7 +268,7 @@ export function HabitDashboardCard({ habit, userId }: HabitDashboardCardProps) {
           <div className="flex-1">
             <h3 className="font-semibold text-lg">{habit.name}</h3>
             <p className="text-xs text-muted-foreground">
-              {habit.habit_type === "numeric_counter" ? "Числовой счётчик" : "Ежедневная привычка"}
+              {habit.habit_type === "numeric_counter" ? t('habitTypes.numericCounter') : t('habitTypes.daily')}
             </p>
           </div>
         </div>

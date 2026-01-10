@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { aiApi } from '@/lib/api';
+import { useTranslation } from 'react-i18next';
 
 interface AIPhotoUploadProps {
   onDataExtracted?: (analysisResult: any) => void;
@@ -26,6 +27,7 @@ export function AIPhotoUpload({
   label = "Upload fitness tracker screenshot",
   goalId
 }: AIPhotoUploadProps) {
+  const { t } = useTranslation('common');
   const { user } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -38,8 +40,8 @@ export function AIPhotoUpload({
   const handleFileSelect = async (file: File) => {
     if (!user) {
       toast({
-        title: "Error",
-        description: "Please sign in to continue",
+        title: t('aiUpload.error'),
+        description: t('aiUpload.signInRequired'),
         variant: "destructive",
       });
       return;
@@ -50,8 +52,8 @@ export function AIPhotoUpload({
     // Проверка типа файла
     if (!file.type.startsWith('image/')) {
       toast({
-        title: "Error",
-        description: "Please select an image",
+        title: t('aiUpload.error'),
+        description: t('aiUpload.selectImage'),
         variant: "destructive",
       });
       return;
@@ -60,8 +62,8 @@ export function AIPhotoUpload({
     // Проверка размера файла (максимум 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast({
-        title: "Error",
-        description: "File size must not exceed 5MB",
+        title: t('aiUpload.error'),
+        description: t('aiUpload.fileTooLarge'),
         variant: "destructive",
       });
       return;
@@ -107,8 +109,8 @@ export function AIPhotoUpload({
       onPhotoUploaded?.(photoUrl);
 
       toast({
-        title: "Photo uploaded!",
-        description: "Starting AI analysis...",
+        title: t('aiUpload.photoUploaded'),
+        description: t('aiUpload.startingAnalysis'),
       });
 
       // Запускаем анализ с помощью ChatGPT
@@ -118,8 +120,8 @@ export function AIPhotoUpload({
     } catch (error) {
       console.error('Error uploading file:', error);
       toast({
-        title: "Error",
-        description: `Failed to upload photo: ${error.message}`,
+        title: t('aiUpload.error'),
+        description: t('aiUpload.uploadFailed', { error: (error as any).message }),
         variant: "destructive",
       });
       setPreviewUrl(existingPhotoUrl || null);
@@ -149,14 +151,14 @@ export function AIPhotoUpload({
 
       if (data.success && data.saved) {
         toast({
-          title: "Analysis complete!",
+          title: t('aiUpload.analysisComplete'),
           description: data.message,
         });
         onDataExtracted?.(data);
       } else {
         toast({
-          title: "Analysis complete",
-          description: data.message || "No data found in the image",
+          title: t('aiUpload.analysisComplete'),
+          description: data.message || t('aiUpload.noDataFound'),
           variant: "destructive",
         });
       }
@@ -164,8 +166,8 @@ export function AIPhotoUpload({
     } catch (error) {
       console.error('Error analyzing image:', error);
       toast({
-        title: "Analysis error",
-        description: "Failed to analyze the image with AI",
+        title: t('aiUpload.analysisError'),
+        description: t('aiUpload.analyzeFailed'),
         variant: "destructive",
       });
     } finally {
@@ -241,7 +243,7 @@ export function AIPhotoUpload({
                 className="animate-scale-in"
               >
                 <Camera className="h-4 w-4 mr-1" />
-                Replace
+                {t('aiUpload.replace')}
               </Button>
               <Button
                 size="sm"
@@ -266,7 +268,7 @@ export function AIPhotoUpload({
                   )}
                 </div>
                 <p className="text-sm">
-                  {analyzing ? "Analyzing with AI..." : "Uploading photo..."}
+                  {analyzing ? t('aiUpload.analyzingWithAI') : t('aiUpload.uploading')}
                 </p>
               </div>
             </div>
@@ -282,8 +284,8 @@ export function AIPhotoUpload({
                   <AlertCircle className="h-4 w-4 text-warning" />
                 )}
                 <Badge className={getQualityColor(analysisResult.analysis?.dataQuality)}>
-                  {analysisResult.analysis?.dataQuality === 'high' ? 'High quality' :
-                   analysisResult.analysis?.dataQuality === 'medium' ? 'Medium quality' : 'Low quality'}
+                  {analysisResult.analysis?.dataQuality === 'high' ? t('aiUpload.qualityHigh') :
+                   analysisResult.analysis?.dataQuality === 'medium' ? t('aiUpload.qualityMedium') : t('aiUpload.qualityLow')}
                 </Badge>
               </div>
               <p className="text-xs">
@@ -334,24 +336,24 @@ export function AIPhotoUpload({
               <h3 className="font-medium">{label}</h3>
               <p className="text-sm text-muted-foreground">
                 {uploading 
-                  ? "Uploading photo..." 
+                  ? t('aiUpload.uploading')
                   : analyzing
-                  ? "Analyzing data with AI..."
-                  : "Drag and drop fitness tracker screenshot or click to select"
+                  ? t('aiUpload.analyzingWithAI')
+                  : t('aiUpload.dragAndDrop')
                 }
               </p>
               <p className="text-xs text-muted-foreground">
-                AI will automatically extract data: weight, body fat %, heart rate, steps and other metrics
+                {t('aiUpload.aiExtractHint')}
               </p>
               <p className="text-xs text-muted-foreground">
-                Supported: JPG, PNG, WebP (up to 5MB)
+                {t('aiUpload.supportedFormats')}
               </p>
             </div>
 
             {!uploading && !analyzing && (
               <Button variant="outline" size="sm" className="animate-scale-in">
                 <Upload className="h-4 w-4 mr-2" />
-                Select screenshot
+                {t('aiUpload.selectScreenshot')}
               </Button>
             )}
           </div>

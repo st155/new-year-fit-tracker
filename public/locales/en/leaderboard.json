@@ -85,5 +85,20 @@
     "sent": "🎉 Celebration sent!",
     "celebrated": "Celebrated",
     "celebrate": "Celebrate"
+  },
+  "userOverview": {
+    "title": "Health Metrics Overview",
+    "today": "Today",
+    "last7days": "Last 7 days",
+    "last30days": "Last 30 days",
+    "loading": "Loading metrics...",
+    "metrics": {
+      "sleepDuration": "Sleep Duration",
+      "recoveryScore": "Recovery Score",
+      "steps": "Steps",
+      "activeCalories": "Active Calories",
+      "restingHeartRate": "Resting Heart Rate",
+      "hrv": "HRV"
+    }
   }
 }

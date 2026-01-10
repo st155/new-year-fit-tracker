@@ -21,16 +21,16 @@ interface GoalTemplate {
 }
 
 const goalTemplateKeys = [
-  { key: 'rowing2km', type: "endurance", value: 8.5, unit: "мин" },
-  { key: 'run1km', type: "endurance", value: 4.0, unit: "мин" },
-  { key: 'pullups', type: "strength", value: 17, unit: "раз" },
-  { key: 'benchPress', type: "strength", value: 90, unit: "кг" },
-  { key: 'lunges', type: "strength", value: 50, unit: "кг ×8" },
-  { key: 'plank', type: "endurance", value: 4, unit: "мин" },
-  { key: 'pushups', type: "strength", value: 60, unit: "раз" },
-  { key: 'legRaises', type: "strength", value: 17, unit: "раз" },
-  { key: 'vo2max', type: "cardio", value: 52, unit: "мл/кг/мин" },
-  { key: 'bodyFat', type: "body_composition", value: 11, unit: "%" }
+  { key: 'rowing2km', type: "endurance", value: 8.5, unitKey: "min" },
+  { key: 'run1km', type: "endurance", value: 4.0, unitKey: "min" },
+  { key: 'pullups', type: "strength", value: 17, unitKey: "reps" },
+  { key: 'benchPress', type: "strength", value: 90, unitKey: "kg" },
+  { key: 'lunges', type: "strength", value: 50, unitKey: "kgx8" },
+  { key: 'plank', type: "endurance", value: 4, unitKey: "min" },
+  { key: 'pushups', type: "strength", value: 60, unitKey: "reps" },
+  { key: 'legRaises', type: "strength", value: 17, unitKey: "reps" },
+  { key: 'vo2max', type: "cardio", value: 52, unitKey: "mlkgmin" },
+  { key: 'bodyFat', type: "body_composition", value: 11, unitKey: "percent" }
 ];
 
 const goalTypeKeys = ['strength', 'cardio', 'endurance', 'body_composition', 'flexibility'] as const;
@@ -65,7 +65,7 @@ export function GoalCreateDialog({
     key: tmpl.key,
     type: tmpl.type,
     value: tmpl.value,
-    unit: tmpl.unit
+    unit: t(`units.${tmpl.unitKey}`)
   }));
   // Fetch user's active challenges
   useEffect(() => {

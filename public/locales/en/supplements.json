@@ -255,5 +255,16 @@
     "addError": "Add error",
     "failedToAdd": "Failed to add {{count}} supplements",
     "intakeTimeCorrected": "Intake time corrected"
+  },
+  "toast": {
+    "protocolCreated": "Protocol created successfully",
+    "protocolActivated": "Protocol activated",
+    "protocolDeactivated": "Protocol deactivated",
+    "protocolDeleted": "Protocol deleted",
+    "markedAsTaken": "Marked as taken",
+    "noteAdded": "Note added",
+    "addedToInventory": "Added to inventory",
+    "inventoryUpdated": "Inventory updated",
+    "removedFromInventory": "Removed from inventory"
   }
 }

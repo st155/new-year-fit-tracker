@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import i18n from '@/i18n';
 
 export function useSupplementInventory(userId: string | undefined) {
   const queryClient = useQueryClient();
@@ -59,7 +60,7 @@ export function useSupplementInventory(userId: string | undefined) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user-inventory"] });
-      toast({ title: "Added to inventory" });
+      toast({ title: i18n.t('supplements:toast.addedToInventory') });
     },
   });
 
@@ -77,7 +78,7 @@ export function useSupplementInventory(userId: string | undefined) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user-inventory"] });
-      toast({ title: "Inventory updated" });
+      toast({ title: i18n.t('supplements:toast.inventoryUpdated') });
     },
   });
 
@@ -92,7 +93,7 @@ export function useSupplementInventory(userId: string | undefined) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user-inventory"] });
-      toast({ title: "Removed from inventory" });
+      toast({ title: i18n.t('supplements:toast.removedFromInventory') });
     },
   });
 

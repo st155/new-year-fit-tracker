@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { HealthMetricCard } from "@/components/trainer/health-data/HealthMetricCard";
 import { useMetricHistory } from "@/hooks/composite";
@@ -8,55 +9,35 @@ interface UserOverviewTabProps {
 }
 
 interface MetricConfig {
+  key: string;
   name: string;
   icon: string;
   unit: string;
-  title: string;
 }
 
-const METRIC_CONFIGS: MetricConfig[] = [
-  { 
-    name: "Sleep Duration", 
-    icon: "💤", 
-    unit: "hours",
-    title: "Sleep Duration"
-  },
-  { 
-    name: "Recovery Score", 
-    icon: "⚡", 
-    unit: "%",
-    title: "Recovery Score"
-  },
-  { 
-    name: "Steps", 
-    icon: "👟", 
-    unit: "steps",
-    title: "Steps"
-  },
-  { 
-    name: "Active Calories", 
-    icon: "🔥", 
-    unit: "kcal",
-    title: "Active Calories"
-  },
-  { 
-    name: "Resting Heart Rate", 
-    icon: "❤️", 
-    unit: "bpm",
-    title: "Resting Heart Rate"
-  },
-  { 
-    name: "HRV", 
-    icon: "💓", 
-    unit: "ms",
-    title: "HRV"
-  },
-];
+const METRIC_KEYS = ['sleepDuration', 'recoveryScore', 'steps', 'activeCalories', 'restingHeartRate', 'hrv'] as const;
+
+const METRIC_BASE_CONFIG: Record<string, { name: string; icon: string; unit: string }> = {
+  sleepDuration: { name: "Sleep Duration", icon: "💤", unit: "hours" },
+  recoveryScore: { name: "Recovery Score", icon: "⚡", unit: "%" },
+  steps: { name: "Steps", icon: "👟", unit: "steps" },
+  activeCalories: { name: "Active Calories", icon: "🔥", unit: "kcal" },
+  restingHeartRate: { name: "Resting Heart Rate", icon: "❤️", unit: "bpm" },
+  hrv: { name: "HRV", icon: "💓", unit: "ms" },
+};
 
 type PeriodType = "1" | "7" | "30";
 
 export function UserOverviewTab({ userId }: UserOverviewTabProps) {
+  const { t } = useTranslation('leaderboard');
   const [period, setPeriod] = useState<PeriodType>("30");
+
+  const METRIC_CONFIGS: MetricConfig[] = METRIC_KEYS.map(key => ({
+    key,
+    name: METRIC_BASE_CONFIG[key].name,
+    icon: METRIC_BASE_CONFIG[key].icon,
+    unit: METRIC_BASE_CONFIG[key].unit,
+  }));
 
   const daysBack = parseInt(period);
   const endDate = new Date();
@@ -75,7 +56,7 @@ export function UserOverviewTab({ userId }: UserOverviewTabProps) {
       const metricData = metricsData?.filter(m => m.metric_name === config.name) || [];
       
       if (metricData.length === 0) {
-        stats[config.name] = { 
+        stats[config.key] = { 
           current: 0, 
           history: [], 
           trend: { min: 0, avg: 0, max: 0 } 
@@ -91,7 +72,7 @@ export function UserOverviewTab({ userId }: UserOverviewTabProps) {
       const values = sorted.map(m => m.value);
       const current = sorted[sorted.length - 1]?.value || 0;
       
-      stats[config.name] = {
+      stats[config.key] = {
         current,
         history: sorted.map(m => ({
           date: m.measurement_date, // Keep ISO format for HealthMetricCard
@@ -111,30 +92,30 @@ export function UserOverviewTab({ userId }: UserOverviewTabProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Health Metrics Overview</h3>
+        <h3 className="text-lg font-semibold">{t('userOverview.title')}</h3>
         <Select value={period} onValueChange={(v) => setPeriod(v as PeriodType)}>
           <SelectTrigger className="w-[140px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="1">Today</SelectItem>
-            <SelectItem value="7">Last 7 days</SelectItem>
-            <SelectItem value="30">Last 30 days</SelectItem>
+            <SelectItem value="1">{t('userOverview.today')}</SelectItem>
+            <SelectItem value="7">{t('userOverview.last7days')}</SelectItem>
+            <SelectItem value="30">{t('userOverview.last30days')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       {isLoading ? (
-        <div className="text-center py-8 text-muted-foreground">Loading metrics...</div>
+        <div className="text-center py-8 text-muted-foreground">{t('userOverview.loading')}</div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {METRIC_CONFIGS.map(config => {
-            const stats = metricStats[config.name];
+            const stats = metricStats[config.key];
             
             return (
               <HealthMetricCard
-                key={config.name}
-                title={config.title}
+                key={config.key}
+                title={t(`userOverview.metrics.${config.key}`)}
                 icon={config.icon}
                 value={stats?.current || 0}
                 unit={config.unit}

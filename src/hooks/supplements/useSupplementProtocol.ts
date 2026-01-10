@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import i18n from '@/i18n';
 
 export function useSupplementProtocol(userId: string | undefined) {
   const queryClient = useQueryClient();
@@ -133,7 +134,7 @@ export function useSupplementProtocol(userId: string | undefined) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["active-protocol"] });
       queryClient.invalidateQueries({ queryKey: ["protocol-history"] });
-      toast({ title: "Protocol created successfully" });
+      toast({ title: i18n.t('supplements:toast.protocolCreated') });
     },
   });
 
@@ -161,7 +162,7 @@ export function useSupplementProtocol(userId: string | undefined) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["active-protocol"] });
-      toast({ title: "Protocol activated" });
+      toast({ title: i18n.t('supplements:toast.protocolActivated') });
     },
   });
 
@@ -179,7 +180,7 @@ export function useSupplementProtocol(userId: string | undefined) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["active-protocol"] });
-      toast({ title: "Protocol deactivated" });
+      toast({ title: i18n.t('supplements:toast.protocolDeactivated') });
     },
   });
 
@@ -195,7 +196,7 @@ export function useSupplementProtocol(userId: string | undefined) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["active-protocol"] });
       queryClient.invalidateQueries({ queryKey: ["protocol-history"] });
-      toast({ title: "Protocol deleted" });
+      toast({ title: i18n.t('supplements:toast.protocolDeleted') });
     },
   });
 
