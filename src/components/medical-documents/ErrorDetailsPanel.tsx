@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { AlertCircle, ChevronRight, RefreshCw } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface ErrorDetailsPanelProps {
   documentId: string;
@@ -12,42 +13,6 @@ interface ErrorDetailsPanelProps {
   isRetrying?: boolean;
 }
 
-const errorTypeLabels: Record<string, { label: string; icon: string; color: string }> = {
-  pdf_download: { label: 'Ошибка загрузки PDF', icon: '⬇️', color: 'orange' },
-  pdf_parse: { label: 'Ошибка парсинга PDF', icon: '📄', color: 'red' },
-  gemini_api: { label: 'Ошибка Gemini API', icon: '🤖', color: 'purple' },
-  json_parse: { label: 'Ошибка парсинга JSON', icon: '📋', color: 'yellow' },
-  database_save: { label: 'Ошибка сохранения в БД', icon: '💾', color: 'blue' },
-  unknown: { label: 'Неизвестная ошибка', icon: '❓', color: 'gray' },
-};
-
-const errorSuggestions: Record<string, string[]> = {
-  pdf_download: [
-    'Проверьте, что файл не был удалён из хранилища',
-    'Убедитесь, что у вас есть доступ к документу',
-  ],
-  pdf_parse: [
-    'Файл может быть повреждён - попробуйте перезагрузить',
-    'Убедитесь, что это действительно PDF файл',
-  ],
-  gemini_api: [
-    'Возможно, превышен лимит API - попробуйте позже',
-    'Документ может быть слишком большим для обработки',
-  ],
-  json_parse: [
-    'AI вернул некорректный ответ - попробуйте ещё раз',
-    'Возможно, документ слишком сложный для анализа',
-  ],
-  database_save: [
-    'Проблема с подключением к базе данных',
-    'Попробуйте повторить обработку через несколько минут',
-  ],
-  unknown: [
-    'Попробуйте повторить обработку',
-    'Если проблема повторяется, свяжитесь с поддержкой',
-  ],
-};
-
 export const ErrorDetailsPanel = ({
   documentId,
   processingError,
@@ -55,7 +20,47 @@ export const ErrorDetailsPanel = ({
   onRetry,
   isRetrying = false,
 }: ErrorDetailsPanelProps) => {
+  const { t } = useTranslation('medicalDocs');
+
+  const getErrorTypeLabels = (): Record<string, { label: string; icon: string; color: string }> => ({
+    pdf_download: { label: t('errorPanel.types.pdfDownload'), icon: '⬇️', color: 'orange' },
+    pdf_parse: { label: t('errorPanel.types.pdfParse'), icon: '📄', color: 'red' },
+    gemini_api: { label: t('errorPanel.types.geminiApi'), icon: '🤖', color: 'purple' },
+    json_parse: { label: t('errorPanel.types.jsonParse'), icon: '📋', color: 'yellow' },
+    database_save: { label: t('errorPanel.types.databaseSave'), icon: '💾', color: 'blue' },
+    unknown: { label: t('errorPanel.types.unknown'), icon: '❓', color: 'gray' },
+  });
+
+  const getErrorSuggestions = (): Record<string, string[]> => ({
+    pdf_download: [
+      t('errorPanel.suggestions.pdfDownload.checkDeleted'),
+      t('errorPanel.suggestions.pdfDownload.checkAccess'),
+    ],
+    pdf_parse: [
+      t('errorPanel.suggestions.pdfParse.corrupted'),
+      t('errorPanel.suggestions.pdfParse.checkFormat'),
+    ],
+    gemini_api: [
+      t('errorPanel.suggestions.geminiApi.limit'),
+      t('errorPanel.suggestions.geminiApi.tooLarge'),
+    ],
+    json_parse: [
+      t('errorPanel.suggestions.jsonParse.invalidResponse'),
+      t('errorPanel.suggestions.jsonParse.tooComplex'),
+    ],
+    database_save: [
+      t('errorPanel.suggestions.databaseSave.connection'),
+      t('errorPanel.suggestions.databaseSave.tryLater'),
+    ],
+    unknown: [
+      t('errorPanel.suggestions.unknown.retry'),
+      t('errorPanel.suggestions.unknown.contactSupport'),
+    ],
+  });
+
   const errorType = processingErrorDetails?.error_type || 'unknown';
+  const errorTypeLabels = getErrorTypeLabels();
+  const errorSuggestions = getErrorSuggestions();
   const errorInfo = errorTypeLabels[errorType] || errorTypeLabels.unknown;
   const suggestions = errorSuggestions[errorType] || errorSuggestions.unknown;
 
@@ -64,7 +69,7 @@ export const ErrorDetailsPanel = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-red-400">
           <AlertCircle className="h-5 w-5" />
-          Ошибка обработки документа
+          {t('errorPanel.title')}
         </CardTitle>
       </CardHeader>
 
@@ -94,12 +99,12 @@ export const ErrorDetailsPanel = ({
         {/* PDF Info (if available) */}
         {processingErrorDetails?.pdf_info && (
           <div className="p-3 bg-neutral-900 rounded-lg border border-border/50">
-            <h4 className="text-sm font-semibold text-foreground mb-2">📄 Информация о файле:</h4>
+            <h4 className="text-sm font-semibold text-foreground mb-2">📄 {t('errorPanel.fileInfo')}</h4>
             <div className="text-xs text-muted-foreground space-y-1">
-              <div>Размер: {(processingErrorDetails.pdf_info.file_size / 1024 / 1024).toFixed(2)} MB</div>
-              <div>Тип: {processingErrorDetails.pdf_info.mime_type}</div>
+              <div>{t('errorPanel.size')}: {(processingErrorDetails.pdf_info.file_size / 1024 / 1024).toFixed(2)} MB</div>
+              <div>{t('errorPanel.type')}: {processingErrorDetails.pdf_info.mime_type}</div>
               <div>
-                PDF заголовок: {processingErrorDetails.pdf_info.has_valid_header ? '✅ Валидный' : '❌ Невалидный'}
+                {t('errorPanel.pdfHeader')}: {processingErrorDetails.pdf_info.has_valid_header ? t('errorPanel.valid') : t('errorPanel.invalid')}
               </div>
             </div>
           </div>
@@ -108,16 +113,16 @@ export const ErrorDetailsPanel = ({
         {/* Gemini Response Info (if available) */}
         {processingErrorDetails?.gemini_response && (
           <div className="p-3 bg-neutral-900 rounded-lg border border-border/50">
-            <h4 className="text-sm font-semibold text-foreground mb-2">🤖 Ответ Gemini:</h4>
+            <h4 className="text-sm font-semibold text-foreground mb-2">🤖 {t('errorPanel.geminiResponse')}</h4>
             <div className="text-xs text-muted-foreground space-y-1">
               {processingErrorDetails.gemini_response.status_code && (
-                <div>Статус: {processingErrorDetails.gemini_response.status_code}</div>
+                <div>{t('errorPanel.status')}: {processingErrorDetails.gemini_response.status_code}</div>
               )}
               {processingErrorDetails.gemini_response.finish_reason && (
-                <div>Причина завершения: {processingErrorDetails.gemini_response.finish_reason}</div>
+                <div>{t('errorPanel.finishReason')}: {processingErrorDetails.gemini_response.finish_reason}</div>
               )}
               {processingErrorDetails.gemini_response.response_length && (
-                <div>Длина ответа: {processingErrorDetails.gemini_response.response_length} символов</div>
+                <div>{t('errorPanel.responseLength')}: {processingErrorDetails.gemini_response.response_length} {t('errorPanel.characters')}</div>
               )}
             </div>
           </div>
@@ -128,7 +133,7 @@ export const ErrorDetailsPanel = ({
           <Collapsible>
             <CollapsibleTrigger className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
               <ChevronRight className="h-4 w-4" />
-              Технические детали
+              {t('errorPanel.technicalDetails')}
             </CollapsibleTrigger>
             <CollapsibleContent className="mt-2 p-3 bg-neutral-900 rounded-lg border border-border/50">
               <pre className="text-xs font-mono text-muted-foreground whitespace-pre-wrap overflow-x-auto">
@@ -140,7 +145,7 @@ export const ErrorDetailsPanel = ({
 
         {/* Suggestions */}
         <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-          <h4 className="text-sm font-semibold text-blue-400 mb-2">💡 Рекомендации:</h4>
+          <h4 className="text-sm font-semibold text-blue-400 mb-2">💡 {t('errorPanel.suggestionsTitle')}</h4>
           <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
             {suggestions.map((suggestion, idx) => (
               <li key={idx}>{suggestion}</li>
@@ -158,11 +163,11 @@ export const ErrorDetailsPanel = ({
             {isRetrying ? (
               <>
                 <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                Обработка...
+                {t('errorPanel.processing')}
               </>
             ) : (
               <>
-                🔄 Попробовать снова
+                🔄 {t('errorPanel.tryAgain')}
               </>
             )}
           </Button>
@@ -172,7 +177,7 @@ export const ErrorDetailsPanel = ({
             onClick={() => window.open('https://docs.lovable.dev/troubleshooting', '_blank')}
             className="border-border/50 hover:bg-accent"
           >
-            📚 Помощь
+            📚 {t('errorPanel.help')}
           </Button>
         </div>
       </CardContent>

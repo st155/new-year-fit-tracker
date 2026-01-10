@@ -434,5 +434,63 @@
     "historyTitle": "Completion History (last 30 days)",
     "streakLabel": "streak",
     "created": "Created"
+  },
+  "widget": {
+    "days": "days",
+    "hours": "hours",
+    "fastingActive": "🔥 Fasting active",
+    "goalDays": "Goal: {{days}}d",
+    "goalValue": "Goal: {{target}}{{unit}}",
+    "streak": "Streak: {{days}} days",
+    "streakLabel": "Streak: {{days}}",
+    "window": "Window: {{hours}}h",
+    "progress": "Progress: {{percent}}%",
+    "untilGoal": "Until goal: {{days}}d"
+  },
+  "intermittentFasting": {
+    "title": "Intermittent Fasting",
+    "active": "Fasting is active",
+    "selectMode": "Select mode and start",
+    "start": "Start fasting",
+    "complete": "Complete",
+    "cancel": "Cancel",
+    "ketosis": "Ketosis",
+    "hoursShort": "h",
+    "minutesShort": "m",
+    "outOf": "of {{hours}}h",
+    "startedAt": "Started",
+    "history": "History (last 14 days)",
+    "hoursOfFasting": "{{hours}}h of fasting",
+    "modes": {
+      "16:8": "16:8 (Intermittent)",
+      "18:6": "18:6 (Warrior)",
+      "20:4": "20:4",
+      "23:1": "23:1 (OMAD)",
+      "36h-dry": "36h Dry",
+      "48h": "48h Extended",
+      "custom": "Custom"
+    },
+    "phases": {
+      "digestion": { "name": "Digestion", "benefits": ["Food digestion", "Glucose level stabilizes"] },
+      "transition": { "name": "Transition", "benefits": ["Glycogen stores depleting", "Fat burning starts"] },
+      "fatBurning": { "name": "Fat Burning", "benefits": ["Active fat burning", "Energy boost"] },
+      "ketosis": { "name": "Ketosis", "benefits": ["Ketone production", "Mental clarity"] },
+      "deepKetosis": { "name": "Deep Ketosis", "benefits": ["Maximum fat burning", "HGH increase"] },
+      "autophagy": { "name": "Autophagy", "benefits": ["Cellular regeneration", "Anti-aging effect", "Immunity boost"] }
+    },
+    "stats": {
+      "streak": "Streak",
+      "average": "Average",
+      "record": "Record",
+      "total": "Total",
+      "totalHours": "Total"
+    },
+    "insights": {
+      "deepKetosis": "Deep ketosis!",
+      "deepKetosisDesc": "Your body is actively using fat as energy source.",
+      "hydrationReminder": "Don't forget hydration and electrolytes.",
+      "autophagy": "Autophagy active!",
+      "autophagyDesc": "Cellular regeneration is in full swing. Anti-aging effect is maximized."
+    }
   }
 }

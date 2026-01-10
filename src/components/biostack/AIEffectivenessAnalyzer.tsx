@@ -20,6 +20,7 @@ import {
   Loader2,
   RefreshCw
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAIEffectivenessAnalysis, AIAnalysisResult, BiomarkerComparison } from '@/hooks/biostack/useAIEffectivenessAnalysis';
 
 interface AIEffectivenessAnalyzerProps {
@@ -35,6 +36,7 @@ export function AIEffectivenessAnalyzer({
   supplementName,
   onAnalysisComplete
 }: AIEffectivenessAnalyzerProps) {
+  const { t } = useTranslation('biostack');
   const { analyze, data, isAnalyzing, error, reset } = useAIEffectivenessAnalysis();
   const [isExpanded, setIsExpanded] = useState(true);
 
@@ -53,7 +55,7 @@ export function AIEffectivenessAnalyzer({
           color: 'text-green-400',
           bgColor: 'bg-green-500/10',
           borderColor: 'border-green-500/30',
-          label: 'Эффективно',
+          label: t('aiAnalysis.verdict.effective'),
           badgeVariant: 'default' as const
         };
       case 'needs_more_time':
@@ -62,7 +64,7 @@ export function AIEffectivenessAnalyzer({
           color: 'text-amber-400',
           bgColor: 'bg-amber-500/10',
           borderColor: 'border-amber-500/30',
-          label: 'Нужно больше времени',
+          label: t('aiAnalysis.verdict.needsMoreTime'),
           badgeVariant: 'secondary' as const
         };
       case 'not_working':
@@ -71,7 +73,7 @@ export function AIEffectivenessAnalyzer({
           color: 'text-red-400',
           bgColor: 'bg-red-500/10',
           borderColor: 'border-red-500/30',
-          label: 'Не работает',
+          label: t('aiAnalysis.verdict.notWorking'),
           badgeVariant: 'destructive' as const
         };
       default:
@@ -80,7 +82,7 @@ export function AIEffectivenessAnalyzer({
           color: 'text-muted-foreground',
           bgColor: 'bg-muted/10',
           borderColor: 'border-muted/30',
-          label: 'Нет данных',
+          label: t('aiAnalysis.verdict.noData'),
           badgeVariant: 'outline' as const
         };
     }
@@ -103,11 +105,11 @@ export function AIEffectivenessAnalyzer({
 
   const getStatusLabel = (status: BiomarkerComparison['status']) => {
     switch (status) {
-      case 'on_track': return 'В норме';
-      case 'partial': return 'Частично';
-      case 'no_effect': return 'Нет эффекта';
-      case 'opposite': return 'Обратный эффект';
-      default: return 'Нет данных';
+      case 'on_track': return t('aiAnalysis.status.onTrack');
+      case 'partial': return t('aiAnalysis.status.partial');
+      case 'no_effect': return t('aiAnalysis.status.noEffect');
+      case 'opposite': return t('aiAnalysis.status.opposite');
+      default: return t('aiAnalysis.status.noData');
     }
   };
 
@@ -121,15 +123,15 @@ export function AIEffectivenessAnalyzer({
               <Brain className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h4 className="font-medium">AI-анализ эффективности</h4>
+              <h4 className="font-medium">{t('aiAnalysis.title')}</h4>
               <p className="text-sm text-muted-foreground">
-                Сравнение ожидаемых и фактических изменений биомаркеров
+                {t('aiAnalysis.description')}
               </p>
             </div>
           </div>
           <Button onClick={handleAnalyze} className="gap-2">
             <Sparkles className="h-4 w-4" />
-            Анализировать
+            {t('aiAnalysis.analyze')}
           </Button>
         </div>
         {error && (
@@ -151,9 +153,9 @@ export function AIEffectivenessAnalyzer({
             <Brain className="h-8 w-8 text-primary animate-pulse" />
           </div>
           <div className="text-center">
-            <p className="font-medium">AI анализирует данные...</p>
+            <p className="font-medium">{t('aiAnalysis.analyzing')}</p>
             <p className="text-sm text-muted-foreground">
-              Сравнение биомаркеров и генерация вердикта
+              {t('aiAnalysis.analyzingDesc')}
             </p>
           </div>
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -181,11 +183,11 @@ export function AIEffectivenessAnalyzer({
               <div className="flex items-center gap-2">
                 <h4 className={`font-semibold ${config.color}`}>{config.label}</h4>
                 <Badge variant={config.badgeVariant}>
-                  {data.overallScore}% эффективности
+                  {t('aiAnalysis.effectiveness', { percent: data.overallScore })}
                 </Badge>
               </div>
               <p className="text-sm text-muted-foreground">
-                {data.weeksOnSupplement} нед. приёма • Ожидается {data.expectedTimeframeWeeks} нед.
+                {t('aiAnalysis.weeksInfo', { weeks: data.weeksOnSupplement, expected: data.expectedTimeframeWeeks })}
               </p>
             </div>
           </div>
@@ -197,7 +199,7 @@ export function AIEffectivenessAnalyzer({
         {/* Progress bar */}
         <div className="mt-3">
           <div className="flex justify-between text-xs text-muted-foreground mb-1">
-            <span>Прогресс</span>
+            <span>{t('aiAnalysis.progress')}</span>
             <span>{Math.min(100, Math.round((data.weeksOnSupplement / data.expectedTimeframeWeeks) * 100))}%</span>
           </div>
           <Progress 
@@ -219,7 +221,7 @@ export function AIEffectivenessAnalyzer({
       <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
         <CollapsibleTrigger asChild>
           <Button variant="ghost" className="w-full justify-between p-4 rounded-none h-auto">
-            <span className="text-sm font-medium">Детальный анализ</span>
+            <span className="text-sm font-medium">{t('aiAnalysis.detailedAnalysis')}</span>
             <ChevronDown className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
           </Button>
         </CollapsibleTrigger>
@@ -231,7 +233,7 @@ export function AIEffectivenessAnalyzer({
               <div>
                 <h5 className="text-sm font-medium mb-3 flex items-center gap-2">
                   <Target className="h-4 w-4" />
-                  Сравнение биомаркеров
+                  {t('aiAnalysis.biomarkerComparison')}
                 </h5>
                 <div className="space-y-2">
                   {data.comparisons.map((comparison, idx) => (
@@ -245,14 +247,14 @@ export function AIEffectivenessAnalyzer({
                       </div>
                       <div className="flex items-center gap-4 text-sm">
                         <div className="text-right">
-                          <span className="text-muted-foreground">Ожидалось: </span>
+                          <span className="text-muted-foreground">{t('aiAnalysis.expected')}: </span>
                           <span className={comparison.expectedChangePercent > 0 ? 'text-green-400' : 'text-red-400'}>
                             {comparison.expectedChangePercent > 0 ? '+' : ''}{comparison.expectedChangePercent}%
                           </span>
                         </div>
                         {comparison.status !== 'no_data' ? (
                           <div className="text-right">
-                            <span className="text-muted-foreground">Факт: </span>
+                            <span className="text-muted-foreground">{t('aiAnalysis.actual')}: </span>
                             <span className={
                               comparison.actualChangePercent! > 0 ? 'text-green-400' : 
                               comparison.actualChangePercent! < 0 ? 'text-red-400' : ''
@@ -261,7 +263,7 @@ export function AIEffectivenessAnalyzer({
                             </span>
                           </div>
                         ) : (
-                          <span className="text-muted-foreground">Нет данных</span>
+                          <span className="text-muted-foreground">{t('aiAnalysis.status.noData')}</span>
                         )}
                         <Badge variant="outline" className="min-w-[80px] justify-center">
                           {comparison.status !== 'no_data' ? `${comparison.matchPercent}%` : '—'}
@@ -276,7 +278,7 @@ export function AIEffectivenessAnalyzer({
             {/* Key Findings */}
             {data.aiAnalysis.keyFindings.length > 0 && (
               <div>
-                <h5 className="text-sm font-medium mb-2">Ключевые выводы</h5>
+                <h5 className="text-sm font-medium mb-2">{t('aiAnalysis.keyFindings')}</h5>
                 <ul className="space-y-1">
                   {data.aiAnalysis.keyFindings.map((finding, idx) => (
                     <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
@@ -291,7 +293,7 @@ export function AIEffectivenessAnalyzer({
             {/* Recommendations */}
             {data.aiAnalysis.recommendations.length > 0 && (
               <div>
-                <h5 className="text-sm font-medium mb-2">Рекомендации</h5>
+                <h5 className="text-sm font-medium mb-2">{t('aiAnalysis.recommendations')}</h5>
                 <ul className="space-y-1">
                   {data.aiAnalysis.recommendations.map((rec, idx) => (
                     <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
@@ -307,7 +309,7 @@ export function AIEffectivenessAnalyzer({
             {data.aiAnalysis.nextSteps && (
               <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
                 <p className="text-sm">
-                  <span className="font-medium">Следующий шаг: </span>
+                  <span className="font-medium">{t('aiAnalysis.nextStep')}: </span>
                   {data.aiAnalysis.nextSteps}
                 </p>
               </div>
@@ -315,10 +317,10 @@ export function AIEffectivenessAnalyzer({
 
             {/* Confidence */}
             <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border/50">
-              <span>Уверенность анализа</span>
+              <span>{t('aiAnalysis.confidence')}</span>
               <Badge variant="outline" className="text-xs">
-                {data.confidenceLevel === 'high' ? 'Высокая' : 
-                 data.confidenceLevel === 'medium' ? 'Средняя' : 'Низкая'}
+                {data.confidenceLevel === 'high' ? t('aiAnalysis.confidenceHigh') : 
+                 data.confidenceLevel === 'medium' ? t('aiAnalysis.confidenceMedium') : t('aiAnalysis.confidenceLow')}
               </Badge>
             </div>
           </div>
