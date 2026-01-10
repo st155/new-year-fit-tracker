@@ -119,7 +119,13 @@
     "noValidFiles": "No valid image files selected",
     "skippedUnsupported": "Skipped: {{name}} - unsupported format",
     "largeFileWarning": "Large file ({{size}}MB). Processing may be slow.",
-    "processingHeic": "Processing {{name}} as HEIC (iPhone format)"
+    "processingHeic": "Processing {{name}} as HEIC (iPhone format)",
+    
+    "addedPhotosToQueue": "📸 Added {{count}} photo(s) to queue",
+    "loggedSupplements": "✅ Logged {{count}} supplement(s)",
+    "failedLogAll": "Failed to log all supplements",
+    "reorderWarning": "⚠️ Time to reorder!",
+    "reorderDescription": "Your {{name}} is running low ({{count}} servings left)"
   },
   "scanner": {
     "frontReady": "📸 Front side ready",
@@ -136,5 +142,66 @@
     "productNotFound": "Product not found",
     "genericError": "An error occurred",
     "unknownError": "Unknown error"
+  },
+  "theStack": {
+    "timeGroups": {
+      "morning": "Morning Stack",
+      "afternoon": "Afternoon Stack",
+      "evening": "Evening Stack",
+      "asNeeded": "As Needed"
+    },
+    "shortTimeGroups": {
+      "morning": "AM",
+      "afternoon": "PM",
+      "evening": "Eve",
+      "asNeeded": "Need"
+    },
+    "actions": {
+      "takeAllMorning": "Take All Morning Stack",
+      "takeAllMorningShort": "Morning Stack",
+      "scanBottle": "Scan Bottle",
+      "scanShort": "Scan",
+      "aiGenerator": "AI Stack Generator",
+      "aiGeneratorShort": "AI Generator",
+      "takeAll": "Take All"
+    },
+    "sections": {
+      "activeProtocols": "Active Protocols",
+      "manualSupplements": "Manual Supplements"
+    },
+    "filters": {
+      "all": "All"
+    },
+    "empty": {
+      "title": "Your stack is empty",
+      "description": "Import a protocol or scan your first bottle to get started"
+    }
+  },
+  "hero": {
+    "activeProtocols": "Active Protocols",
+    "adherenceRate": "Adherence Rate",
+    "optimized": "Optimized"
+  },
+  "bulkUpload": {
+    "title": "📷 Bulk Supplement Upload",
+    "dropHint": "Drop 10-20 photos here or click to browse",
+    "dropHintMobile": "Upload supplement bottle photos for automatic recognition",
+    "selectGallery": "🖼️ Select from Gallery (Multiple)",
+    "takePhoto": "📷 Take Photo (Single)",
+    "queue": "Queue",
+    "pending": "pending",
+    "addMore": "Add More",
+    "gallery": "🖼️ Gallery",
+    "camera": "📷 Camera",
+    "processing": "Processing",
+    "successfullyAdded": "✅ Successfully added",
+    "failed": "❌ Failed",
+    "analyzing": "Analyzing...",
+    "close": "Close",
+    "cancel": "Cancel",
+    "stopProcessing": "Stop Processing",
+    "retryFailed": "🔄 Retry Failed",
+    "loadingPreviews": "Loading previews...",
+    "startProcessing": "Start Processing"
   }
 }

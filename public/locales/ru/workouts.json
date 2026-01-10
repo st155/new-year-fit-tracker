@@ -492,5 +492,38 @@
       "sleepExample": "Например: 7",
       "injuries": "Например: боль в нижней части спины..."
     }
+  },
+  "logging": {
+    "enterWeightAndReps": "Введите вес и повторения",
+    "notAuthenticated": "Не авторизован",
+    "failedToSaveSet": "Не удалось сохранить подход",
+    "setLogged": "Подход {{number}} записан!",
+    "exerciseCompleted": "Упражнение завершено!",
+    "logMore": "Записать оставшиеся подходы",
+    "usePrescribedValues": "Использовать назначенные значения",
+    "saveSet": "Сохранить подход",
+    "completeExercise": "Завершить упражнение",
+    "switchToRPE": "Переключить на RPE",
+    "switchToRIR": "Переключить на RIR",
+    "setsLogged": "{{completed}}/{{total}} подходов записано",
+    "prescribed": "Назначено",
+    "rpeTarget": "Целевой RPE",
+    "rirTarget": "Целевой RIR",
+    "rest": "Отдых",
+    "set": "Подход",
+    "weight": "Вес (кг)",
+    "reps": "Повторения",
+    "rpe": "RPE (Шкала воспринимаемой нагрузки)",
+    "rir": "RIR (Повторения в запасе)",
+    "rpeScale": {
+      "easy": "Легко (1)",
+      "max": "Макс. усилие (10)"
+    },
+    "rirScale": {
+      "failure": "Отказ (0)",
+      "manyLeft": "Много в запасе (10)"
+    },
+    "notes": "Заметки (необязательно)",
+    "notesPlaceholder": "Как ощущалось упражнение? Какие-то наблюдения..."
   }
 }

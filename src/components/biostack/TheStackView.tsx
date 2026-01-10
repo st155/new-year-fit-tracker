@@ -13,16 +13,19 @@ import { AIStackGenerator } from "./AIStackGenerator";
 import { useLowStockAlerts } from "@/hooks/biostack/useLowStockAlerts";
 import { useProtocolManagement } from "@/hooks/biostack/useProtocolManagement";
 import { useRemoveFromStack } from "@/hooks/biostack/useRemoveFromStack";
+import { useTranslation } from "react-i18next";
 
-const INTAKE_TIME_GROUPS = [
-  { key: 'morning', label: 'Morning Stack', icon: Sun },
-  { key: 'afternoon', label: 'Afternoon Stack', icon: Sunset },
-  { key: 'evening', label: 'Evening Stack', icon: Moon },
-  { key: 'as_needed', label: 'As Needed', icon: Clock },
-];
+const INTAKE_TIME_KEYS = ['morning', 'afternoon', 'evening', 'as_needed'] as const;
+const INTAKE_TIME_ICONS = {
+  morning: Sun,
+  afternoon: Sunset,
+  evening: Moon,
+  as_needed: Clock,
+};
 
 export function TheStackView() {
   const { user } = useAuth();
+  const { t } = useTranslation('biostack');
   const queryClient = useQueryClient();
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [isBulkUploaderOpen, setIsBulkUploaderOpen] = useState(false);
@@ -47,12 +50,15 @@ export function TheStackView() {
   useEffect(() => {
     if (lowStockItems.length > 0) {
       const firstItem = lowStockItems[0];
-      toast.warning('⚠️ Time to reorder!', {
-        description: `Your ${firstItem.supplement_products?.name || firstItem.stack_name} is running low (${firstItem.servings_remaining} servings left)`,
+      toast.warning(t('toast.reorderWarning'), {
+        description: t('toast.reorderDescription', { 
+          name: firstItem.supplement_products?.name || firstItem.stack_name, 
+          count: firstItem.servings_remaining 
+        }),
         duration: 5000,
       });
     }
-  }, [lowStockItems.length]); // Only trigger when count changes
+  }, [lowStockItems.length, t]);
 
   // Fetch user's stack with calculated servings remaining
   const { data: stackItems, isLoading } = useQuery({
@@ -118,11 +124,11 @@ export function TheStackView() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-stack'] });
-      toast.success('✅ Intake logged successfully');
+      toast.success(t('toast.intakeLogged'));
     },
     onError: (error) => {
       console.error('Error logging intake:', error);
-      toast.error('Failed to log intake');
+      toast.error(t('toast.failedLogIntake'));
     },
   });
 
@@ -177,11 +183,11 @@ export function TheStackView() {
     onSuccess: (count) => {
       queryClient.invalidateQueries({ queryKey: ['user-stack'] });
       queryClient.invalidateQueries({ queryKey: ['active-protocols'] });
-      toast.success(`✅ Logged ${count} supplement(s)`);
+      toast.success(t('toast.loggedSupplements', { count }));
     },
     onError: (error) => {
       console.error('Error taking all:', error);
-      toast.error('Failed to log all supplements');
+      toast.error(t('toast.failedLogAll'));
     },
   });
 
@@ -218,8 +224,8 @@ export function TheStackView() {
           className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold shadow-[0_0_15px_rgba(34,197,94,0.4)]"
         >
           <Zap className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-          <span className="hidden sm:inline">Take All Morning Stack</span>
-          <span className="sm:hidden">Morning Stack</span>
+          <span className="hidden sm:inline">{t('theStack.actions.takeAllMorning')}</span>
+          <span className="sm:hidden">{t('theStack.actions.takeAllMorningShort')}</span>
         </Button>
         
         <Button 
@@ -229,8 +235,8 @@ export function TheStackView() {
           className="w-full sm:w-auto border-neutral-700 hover:border-blue-500 hover:shadow-[0_0_10px_rgba(59,130,246,0.3)] transition-all"
         >
           <Camera className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-          <span className="hidden sm:inline">Scan Bottle</span>
-          <span className="sm:hidden">Scan</span>
+          <span className="hidden sm:inline">{t('theStack.actions.scanBottle')}</span>
+          <span className="sm:hidden">{t('theStack.actions.scanShort')}</span>
         </Button>
 
         <Button 
@@ -240,8 +246,8 @@ export function TheStackView() {
           className="w-full sm:w-auto border-neutral-700 hover:border-purple-500 hover:shadow-[0_0_10px_rgba(168,85,247,0.3)]"
         >
           <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-          <span className="hidden sm:inline">AI Stack Generator</span>
-          <span className="sm:hidden">AI Generator</span>
+          <span className="hidden sm:inline">{t('theStack.actions.aiGenerator')}</span>
+          <span className="sm:hidden">{t('theStack.actions.aiGeneratorShort')}</span>
         </Button>
       </div>
 
@@ -253,21 +259,24 @@ export function TheStackView() {
           onClick={() => setSelectedTime(null)}
           className="border-neutral-700 text-xs sm:text-sm"
         >
-          All
+          {t('theStack.filters.all')}
         </Button>
-        {INTAKE_TIME_GROUPS.map(({ key, label, icon: Icon }) => (
-          <Button
-            key={key}
-            variant={selectedTime === key ? "default" : "outline"}
-            size="sm"
-            onClick={() => setSelectedTime(key)}
-            className="border-neutral-700 text-xs sm:text-sm"
-          >
-            <Icon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 shrink-0" />
-            <span className="hidden sm:inline">{label}</span>
-            <span className="sm:hidden">{key === 'morning' ? 'AM' : key === 'afternoon' ? 'PM' : key === 'evening' ? 'Eve' : 'Need'}</span>
-          </Button>
-        ))}
+        {INTAKE_TIME_KEYS.map((key) => {
+          const Icon = INTAKE_TIME_ICONS[key];
+          return (
+            <Button
+              key={key}
+              variant={selectedTime === key ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedTime(key)}
+              className="border-neutral-700 text-xs sm:text-sm"
+            >
+              <Icon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 shrink-0" />
+              <span className="hidden sm:inline">{t(`theStack.timeGroups.${key}`)}</span>
+              <span className="sm:hidden">{t(`theStack.shortTimeGroups.${key}`)}</span>
+            </Button>
+          );
+        })}
       </div>
 
       {/* Active Protocols Section */}
@@ -277,7 +286,7 @@ export function TheStackView() {
             <div className="flex items-center gap-2 sm:gap-3">
               <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
               <h2 className="text-lg sm:text-xl font-bold text-foreground">
-                Active Protocols
+                {t('theStack.sections.activeProtocols')}
               </h2>
             </div>
             <span className="text-sm text-muted-foreground">
@@ -305,7 +314,7 @@ export function TheStackView() {
             <div className="flex items-center gap-2 sm:gap-3">
               <Pill className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
               <h2 className="text-lg sm:text-xl font-bold text-foreground">
-                Manual Supplements
+                {t('theStack.sections.manualSupplements')}
               </h2>
             </div>
             <span className="text-sm text-muted-foreground">
@@ -316,7 +325,8 @@ export function TheStackView() {
           <div className="space-y-8">
             {!selectedTime ? (
               // Show grouped by time
-              INTAKE_TIME_GROUPS.map(({ key, label, icon: Icon }) => {
+              INTAKE_TIME_KEYS.map((key) => {
+                const Icon = INTAKE_TIME_ICONS[key];
                 const items = stackItems?.filter(item => 
                   item.intake_times.includes(key)
                 ) || [];
@@ -329,7 +339,7 @@ export function TheStackView() {
                       <div className="flex items-center gap-2 flex-1 min-w-0">
                         <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground shrink-0" />
                         <h3 className="text-base sm:text-lg font-semibold text-foreground truncate">
-                          {label}
+                          {t(`theStack.timeGroups.${key}`)}
                         </h3>
                         <span className="text-sm text-muted-foreground shrink-0">
                           ({items.length})
@@ -343,8 +353,8 @@ export function TheStackView() {
                           disabled={takeAllMutation.isPending}
                           className="shrink-0 w-full sm:w-auto mt-2 sm:mt-0 text-xs"
                         >
-                          <span className="hidden sm:inline">Take All {label}</span>
-                          <span className="sm:hidden">Take All</span>
+                          <span className="hidden sm:inline">{t('theStack.actions.takeAll')} {t(`theStack.timeGroups.${key}`)}</span>
+                          <span className="sm:hidden">{t('theStack.actions.takeAll')}</span>
                         </Button>
                       )}
                     </div>
@@ -385,10 +395,10 @@ export function TheStackView() {
         <div className="text-center py-12">
           <Pill className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <p className="text-muted-foreground mb-2">
-            В вашем стеке пока нет добавок
+            {t('theStack.empty.title')}
           </p>
           <p className="text-sm text-muted-foreground mb-6">
-            Импортируйте протокол или отсканируйте первую бутылочку, чтобы начать
+            {t('theStack.empty.description')}
           </p>
           <div className="flex justify-center gap-3">
             <Button 
@@ -396,7 +406,7 @@ export function TheStackView() {
               onClick={() => setIsBulkUploaderOpen(true)}
             >
               <Camera className="h-4 w-4 mr-2" />
-              Scan Bottle
+              {t('theStack.actions.scanBottle')}
             </Button>
           </div>
         </div>

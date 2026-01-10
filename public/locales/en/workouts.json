@@ -490,5 +490,38 @@
       "sleepExample": "e.g.: 7",
       "injuries": "e.g.: lower back pain..."
     }
+  },
+  "logging": {
+    "enterWeightAndReps": "Please enter weight and reps",
+    "notAuthenticated": "Not authenticated",
+    "failedToSaveSet": "Failed to save set",
+    "setLogged": "Set {{number}} logged!",
+    "exerciseCompleted": "Exercise completed!",
+    "logMore": "Log remaining sets",
+    "usePrescribedValues": "Use Prescribed Values",
+    "saveSet": "Save Set",
+    "completeExercise": "Complete Exercise",
+    "switchToRPE": "Switch to RPE",
+    "switchToRIR": "Switch to RIR",
+    "setsLogged": "{{completed}}/{{total}} sets logged",
+    "prescribed": "Prescribed",
+    "rpeTarget": "RPE Target",
+    "rirTarget": "RIR Target",
+    "rest": "Rest",
+    "set": "Set",
+    "weight": "Weight (kg)",
+    "reps": "Reps",
+    "rpe": "RPE (Rate of Perceived Exertion)",
+    "rir": "RIR (Reps In Reserve)",
+    "rpeScale": {
+      "easy": "Easy (1)",
+      "max": "Max Effort (10)"
+    },
+    "rirScale": {
+      "failure": "Failure (0)",
+      "manyLeft": "Many Reps Left (10)"
+    },
+    "notes": "Notes (optional)",
+    "notesPlaceholder": "How did this exercise feel? Any observations..."
   }
 }
