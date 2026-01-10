@@ -1,6 +1,8 @@
 // Hybrid scoring system for challenges (Option 3)
 // 40% Relative Improvement + 30% Absolute Improvement + 30% Difficulty Bonus
 
+import i18n from '@/i18n';
+
 export interface BodyMetrics {
   weight?: number;
   body_fat_percentage?: number;
@@ -20,10 +22,10 @@ export interface ScoreBreakdown {
 
 // Difficulty zones for body fat percentage
 const BODY_FAT_DIFFICULTY_ZONES = [
-  { threshold: 0, max: 10, multiplier: 4.0, label: 'Атлет' },      // <10% = extremely difficult
-  { threshold: 10, max: 15, multiplier: 2.5, label: 'Низкий' },   // 10-15% = very difficult
-  { threshold: 15, max: 25, multiplier: 1.5, label: 'Средний' },  // 15-25% = medium
-  { threshold: 25, max: 100, multiplier: 1.0, label: 'Высокий' }, // >25% = relatively easy
+  { threshold: 0, max: 10, multiplier: 4.0, labelKey: 'athlete' },      // <10% = extremely difficult
+  { threshold: 10, max: 15, multiplier: 2.5, labelKey: 'low' },   // 10-15% = very difficult
+  { threshold: 15, max: 25, multiplier: 1.5, labelKey: 'medium' },  // 15-25% = medium
+  { threshold: 25, max: 100, multiplier: 1.0, labelKey: 'high' }, // >25% = relatively easy
 ];
 
 // Scoring weights for hybrid formula
@@ -47,7 +49,8 @@ export function getDifficultyMultiplier(bodyFatPercent: number): { multiplier: n
     z => bodyFatPercent >= z.threshold && bodyFatPercent < z.max
   ) || BODY_FAT_DIFFICULTY_ZONES[BODY_FAT_DIFFICULTY_ZONES.length - 1];
   
-  return { multiplier: zone.multiplier, label: zone.label };
+  const label = i18n.t(`challenges:scoring.difficultyZones.${zone.labelKey}`);
+  return { multiplier: zone.multiplier, label };
 }
 
 export function calculateProgressScore(

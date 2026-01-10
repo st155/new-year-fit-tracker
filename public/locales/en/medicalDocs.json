@@ -371,5 +371,34 @@
       "tests": "No test or consultation recommendations.",
       "noRecommendations": "No extracted recommendations. Upload medical documents with prescriptions, and the system will automatically extract recommendations for supplements, exercises, and tests."
     }
+  },
+  "errorPanel": {
+    "title": "Document Processing Error",
+    "fileInfo": "File Information:",
+    "pdfHeader": "PDF Header:",
+    "valid": "Valid",
+    "invalid": "Invalid",
+    "geminiResponse": "Gemini Response:",
+    "technicalDetails": "Technical Details",
+    "recommendations": "Recommendations:",
+    "tryAgain": "Try Again",
+    "processing": "Processing...",
+    "help": "Help",
+    "errorTypes": {
+      "pdf_download": "PDF Download Error",
+      "pdf_parse": "PDF Parsing Error",
+      "gemini_api": "Gemini API Error",
+      "json_parse": "JSON Parsing Error",
+      "timeout": "Timeout Error",
+      "unknown": "Unknown Error"
+    },
+    "suggestions": {
+      "pdf_download": ["Check that file wasn't deleted", "Try re-uploading the document", "Check if file link is valid"],
+      "pdf_parse": ["File may be corrupted", "Check if this is a real PDF", "Try scanning the document again"],
+      "gemini_api": ["Temporary server issue", "Try again in a few minutes", "Report issue if persists"],
+      "json_parse": ["AI generated incorrect format", "Try processing again", "Try different document"],
+      "timeout": ["Document too large", "Try splitting into parts", "Try again later"],
+      "unknown": ["Try processing again", "Contact support if persists"]
+    }
   }
 }
