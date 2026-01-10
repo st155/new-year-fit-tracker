@@ -112,12 +112,12 @@ export function AddTeamMemberDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserPlus className="h-5 w-5" />
-            Пригласить участника
+            {t('teamDialog.inviteMember')}
           </DialogTitle>
           <DialogDescription>
-            Найдите пользователя по имени или username
+            {t('teamDialog.searchDescription')}
             <Badge variant="secondary" className="ml-2">
-              {spotsLeft} {spotsLeft === 1 ? 'место' : 'мест'} доступно
+              {t('teamDialog.spotsAvailable', { count: spotsLeft })}
             </Badge>
           </DialogDescription>
         </DialogHeader>
@@ -126,7 +126,7 @@ export function AddTeamMemberDialog({
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Начните вводить имя..."
+              placeholder={t('teamDialog.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
@@ -147,20 +147,20 @@ export function AddTeamMemberDialog({
           <div className="max-h-[300px] overflow-y-auto space-y-2">
             {isSearching ? (
               <Card className="p-4 text-center">
-                <p className="text-sm text-muted-foreground">Поиск...</p>
+                <p className="text-sm text-muted-foreground">{t('teamDialog.searching')}</p>
               </Card>
             ) : searchQuery.length < 2 ? (
               <Card className="p-4 text-center">
                 <Search className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">
-                  Введите минимум 2 символа для поиска
+                  {t('teamDialog.minChars')}
                 </p>
               </Card>
             ) : searchResults.length === 0 ? (
               <Card className="p-4 text-center">
                 <Users className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">
-                  Пользователи не найдены
+                  {t('teamDialog.noUsersFound')}
                 </p>
               </Card>
             ) : (
@@ -176,7 +176,7 @@ export function AddTeamMemberDialog({
                       </Avatar>
                       <div>
                         <p className="font-medium text-sm">
-                          {user.full_name || user.username || 'Аноним'}
+                          {user.full_name || user.username || t('common.anonymous')}
                         </p>
                         {user.username && (
                           <p className="text-xs text-muted-foreground">
@@ -191,7 +191,7 @@ export function AddTeamMemberDialog({
                       disabled={isAdding || spotsLeft <= 0}
                     >
                       <UserPlus className="h-4 w-4 mr-1" />
-                      Добавить
+                      {t('teamDialog.add')}
                     </Button>
                   </div>
                 </Card>
