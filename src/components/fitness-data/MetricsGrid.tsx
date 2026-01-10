@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { MetricCard } from './MetricCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Activity } from 'lucide-react';
@@ -25,6 +26,8 @@ interface MetricsGridProps {
 }
 
 export function MetricsGrid({ metrics, isLoading }: MetricsGridProps) {
+  const { t } = useTranslation('fitnessData');
+  
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -45,9 +48,9 @@ export function MetricsGrid({ metrics, isLoading }: MetricsGridProps) {
         <div className="p-4 rounded-full bg-muted mb-4">
           <Activity className="h-8 w-8 text-muted-foreground" />
         </div>
-        <h3 className="text-lg font-semibold mb-2">Нет данных</h3>
+        <h3 className="text-lg font-semibold mb-2">{t('emptyStates.noData')}</h3>
         <p className="text-sm text-muted-foreground max-w-sm mb-4">
-          Подключите первое устройство для автоматической синхронизации ваших фитнес-данных
+          {t('emptyStates.connectDevice')}
         </p>
       </motion.div>
     );

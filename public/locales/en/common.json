@@ -488,5 +488,13 @@
       "stayHydrated": "Don't forget to drink water and track metrics!",
       "keepMoving": "Move forward - no one else will do it for you!"
     }
+  },
+  "globalNotifications": {
+    "goalsAttention_one": "{{count}} goal needs attention",
+    "goalsAttention_other": "{{count}} goals need attention",
+    "metricsConflicts_one": "{{count}} metric with conflicts",
+    "metricsConflicts_other": "{{count}} metrics with conflicts",
+    "activeChallenges_one": "{{count}} active challenge",
+    "activeChallenges_other": "{{count}} active challenges"
   }
 }

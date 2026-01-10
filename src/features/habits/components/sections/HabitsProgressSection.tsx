@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, Award } from 'lucide-react';
 import { HabitMiniChart } from '../charts/HabitMiniChart';
@@ -28,6 +29,8 @@ export function HabitsProgressSection({ habits, onHabitClick }: HabitsProgressSe
       .slice(0, 3);
   }, [habits]);
 
+  const { t } = useTranslation('habits');
+  
   if (topHabits.length === 0) {
     return null;
   }
@@ -37,7 +40,7 @@ export function HabitsProgressSection({ habits, onHabitClick }: HabitsProgressSe
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-primary" />
-          Прогресс привычек
+          {t('progressSection.title')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -61,7 +64,7 @@ export function HabitsProgressSection({ habits, onHabitClick }: HabitsProgressSe
                 <div>
                   <h3 className="font-semibold text-sm">{habit.name}</h3>
                   <p className="text-xs text-muted-foreground">
-                    {habit.category || 'Привычка'}
+                    {habit.category || t('progressSection.habitFallback')}
                   </p>
                 </div>
               </div>
@@ -70,7 +73,7 @@ export function HabitsProgressSection({ habits, onHabitClick }: HabitsProgressSe
                   {Math.round(habit.stats?.completion_rate || 0)}%
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {habit.stats?.total_completions || 0} раз
+                  {habit.stats?.total_completions || 0} {t('progressSection.times')}
                 </p>
               </div>
             </div>

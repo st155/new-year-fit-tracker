@@ -524,5 +524,16 @@
       "stayHydrated": "Не забывай пить воду и отслеживать метрики!",
       "keepMoving": "Двигайся вперёд - никто другой не сделает это за тебя!"
     }
+  },
+  "globalNotifications": {
+    "goalsAttention_one": "{{count}} цель требует внимания",
+    "goalsAttention_few": "{{count}} цели требуют внимания",
+    "goalsAttention_many": "{{count}} целей требуют внимания",
+    "metricsConflicts_one": "{{count}} метрика с конфликтами",
+    "metricsConflicts_few": "{{count}} метрики с конфликтами",
+    "metricsConflicts_many": "{{count}} метрик с конфликтами",
+    "activeChallenges_one": "{{count}} активный челлендж",
+    "activeChallenges_few": "{{count}} активных челленджа",
+    "activeChallenges_many": "{{count}} активных челленджей"
   }
 }

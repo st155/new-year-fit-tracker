@@ -497,6 +497,27 @@
   "legacy": {
     "noHabits": "You don't have any habits yet. Create your first habit to start tracking progress!"
   },
+  "progressSection": {
+    "title": "Habits Progress",
+    "habitFallback": "Habit",
+    "times": "times"
+  },
+  "socialOnboarding": {
+    "welcome": "Welcome to social habits! 🎉",
+    "step1": {
+      "title": "1. Complete habits",
+      "description": "Each habit completion will automatically appear in your activity feed"
+    },
+    "step2": {
+      "title": "2. Create or join a team",
+      "description": "Compete with friends, motivate each other and achieve goals together"
+    },
+    "step3": {
+      "title": "3. Track progress",
+      "description": "Follow team achievements, react and support friends"
+    },
+    "gotIt": "Got it, let's start! 🚀"
+  },
   "resetHabit": {
     "reason": "Reset via list",
     "resetting": "Resetting...",

@@ -368,7 +368,7 @@ export function CorrelationEngine() {
                 <Card className="p-4 bg-neutral-950 border-purple-500/30 shadow-[0_0_10px_rgba(168,85,247,0.2)]">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Изменение биомаркера</span>
+                      <span className="text-sm text-muted-foreground">{t('correlation.biomarkerChange')}</span>
                       {correlation.biomarker && correlation.biomarker.changePercent > 0 ? (
                         <TrendingUp className="h-4 w-4 text-green-500" />
                       ) : (
@@ -389,12 +389,12 @@ export function CorrelationEngine() {
                 <Card className="p-4 bg-neutral-950 border-green-500/30 shadow-[0_0_10px_rgba(34,197,94,0.2)]">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Регулярность приёма</span>
+                      <span className="text-sm text-muted-foreground">{t('correlation.intakeConsistency')}</span>
                       <Activity className="h-4 w-4 text-green-500" />
                     </div>
                     <div className="text-2xl font-bold">{correlation.avgConsistency}%</div>
                     <div className="text-xs text-muted-foreground">
-                      За {timeframe} месяцев
+                      {t('correlation.overMonths', { count: timeframe })}
                     </div>
                   </div>
                 </Card>

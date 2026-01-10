@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -74,6 +75,7 @@ export function TrainerClientCard({
   onAskAI,
   className
 }: TrainerClientCardProps) {
+  const { t } = useTranslation('trainer');
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -225,13 +227,13 @@ export function TrainerClientCard({
             <div className="flex items-center gap-3 text-xs">
               <div className="flex items-center gap-1">
                 <Target className="h-3 w-3 text-trainer-green" />
-                <span className="text-muted-foreground">На треке:</span>
+                <span className="text-muted-foreground">{t('clientCard.onTrack')}</span>
                 <span className="font-medium">{goalsOnTrack}/{goalsCount}</span>
               </div>
               {goalsAtRisk > 0 && (
                 <div className="flex items-center gap-1">
                   <AlertTriangle className="h-3 w-3 text-trainer-orange" />
-                  <span className="text-muted-foreground">В риске:</span>
+                  <span className="text-muted-foreground">{t('clientCard.atRisk')}</span>
                   <span className="font-medium text-trainer-orange">{goalsAtRisk}</span>
                 </div>
               )}
@@ -318,7 +320,7 @@ export function TrainerClientCard({
           }}
         >
           <Eye className="h-3 w-3" />
-          Детали
+          {t('clientCard.details')}
         </Button>
         <Button 
           size="sm"
@@ -329,7 +331,7 @@ export function TrainerClientCard({
           }}
         >
           <Sparkles className="h-3 w-3" />
-          Спросить AI
+          {t('clientCard.askAI')}
         </Button>
       </div>
     </CardHoverEffect>

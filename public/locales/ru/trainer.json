@@ -1,4 +1,10 @@
 {
+"clientCard": {
+    "onTrack": "На треке:",
+    "atRisk": "В риске:",
+    "details": "Детали",
+    "askAI": "Спросить AI"
+  },
   "goalEdit": {
     "title": "Редактировать цель",
     "nameLabel": "Название цели",
