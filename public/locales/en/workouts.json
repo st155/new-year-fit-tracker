@@ -670,5 +670,8 @@
     "cancel": "Cancel",
     "creating": "Creating plan...",
     "createNew": "Create new plan"
+  },
+  "fallback": {
+    "planName": "Workouts"
   }
 }

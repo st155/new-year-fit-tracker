@@ -480,5 +480,13 @@
     "freshness": "Data freshness",
     "hoursAgo": "{{hours}}h",
     "daysAgo": "{{days}}d"
+  },
+  "ticker": {
+    "tips": {
+      "followPlan": "Follow your plan and track progress!",
+      "consistency": "Consistency is the key to achieving goals!",
+      "stayHydrated": "Don't forget to drink water and track metrics!",
+      "keepMoving": "Move forward - no one else will do it for you!"
+    }
   }
 }

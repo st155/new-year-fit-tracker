@@ -1,17 +1,19 @@
 import { Lightbulb } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useGlobalNotifications } from "@/hooks/useGlobalNotifications";
 import { useNavigate } from "react-router-dom";
 
 export function GlobalTicker() {
+  const { t } = useTranslation('common');
   const { notifications } = useGlobalNotifications();
   const navigate = useNavigate();
   
-  // Если нет уведомлений, показываем мотивационные советы
+  // If no notifications, show motivational tips
   const fallbackTips = [
-    { icon: '💪', message: 'Следуй своему плану и отслеживай прогресс!' },
-    { icon: '🔥', message: 'Постоянство - ключ к достижению целей!' },
-    { icon: '💧', message: 'Не забывай пить воду и отслеживать метрики!' },
-    { icon: '🎯', message: 'Двигайся вперёд - никто другой не сделает это за тебя!' },
+    { icon: '💪', messageKey: 'ticker.tips.followPlan' },
+    { icon: '🔥', messageKey: 'ticker.tips.consistency' },
+    { icon: '💧', messageKey: 'ticker.tips.stayHydrated' },
+    { icon: '🎯', messageKey: 'ticker.tips.keepMoving' },
   ];
 
   const displayItems = notifications.length > 0 
@@ -19,7 +21,7 @@ export function GlobalTicker() {
     : fallbackTips.map((tip, i) => ({
         id: `tip-${i}`,
         icon: tip.icon,
-        message: tip.message,
+        message: t(tip.messageKey),
         href: '/',
       }));
 

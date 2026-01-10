@@ -101,15 +101,17 @@ export default function WorkoutV31() {
     navigate('/workouts/live-logger');
   };
 
+  const { t: tCommon } = useTranslation('common');
+  
   const vitalData = useMemo(() => [
-    { date: "Пн", value: 85 },
-    { date: "Вт", value: 78 },
-    { date: "Ср", value: 92 },
-    { date: "Чт", value: 88 },
-    { date: "Пт", value: 75 },
-    { date: "Сб", value: 90 },
-    { date: "Вс", value: 87 }
-  ], []);
+    { date: tCommon('dayNamesShort.mon'), value: 85 },
+    { date: tCommon('dayNamesShort.tue'), value: 78 },
+    { date: tCommon('dayNamesShort.wed'), value: 92 },
+    { date: tCommon('dayNamesShort.thu'), value: 88 },
+    { date: tCommon('dayNamesShort.fri'), value: 75 },
+    { date: tCommon('dayNamesShort.sat'), value: 90 },
+    { date: tCommon('dayNamesShort.sun'), value: 87 }
+  ], [tCommon]);
 
   // Note: removed blocking skeleton - each widget shows its own loading state
 
@@ -139,7 +141,7 @@ export default function WorkoutV31() {
       <div className="max-w-[1800px] mx-auto mb-6">
         <div className="flex items-center justify-between mb-4">
           <WorkoutDayNavigator
-            planName={dailyWorkout?.plan_name || "Тренировки"}
+            planName={dailyWorkout?.plan_name || t('fallback.planName')}
             weekNumber={dailyWorkout?.week_number || 1}
             dayOfWeek={selectedDay}
             onDayChange={setSelectedDay}

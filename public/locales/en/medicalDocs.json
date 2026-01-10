@@ -349,5 +349,27 @@
     "max": "Max"
   },
   "measurements": "{{count}} measurement",
-  "measurements_other": "{{count}} measurements"
+  "measurements_other": "{{count}} measurements",
+  "actionItems": {
+    "title": "Action Items",
+    "important": "Important",
+    "addToLibrary": "Add to library",
+    "dismiss": "Dismiss",
+    "supplements": "Supplements ({{count}})",
+    "otherRecommendations": "Other recommendations ({{count}})",
+    "addAll": "Add all ({{count}})",
+    "tabs": {
+      "protocols": "Protocols",
+      "supplements": "Supplements",
+      "exercises": "Exercises",
+      "tests": "Tests"
+    },
+    "empty": {
+      "protocols": "No doctor protocols.",
+      "supplements": "No supplement recommendations.",
+      "exercises": "No exercise recommendations.",
+      "tests": "No test or consultation recommendations.",
+      "noRecommendations": "No extracted recommendations. Upload medical documents with prescriptions, and the system will automatically extract recommendations for supplements, exercises, and tests."
+    }
+  }
 }

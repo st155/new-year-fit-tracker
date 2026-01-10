@@ -350,5 +350,27 @@
   },
   "measurements_one": "{{count}} измерение",
   "measurements_few": "{{count}} измерения",
-  "measurements_many": "{{count}} измерений"
+  "measurements_many": "{{count}} измерений",
+  "actionItems": {
+    "title": "Рекомендации",
+    "important": "Важно",
+    "addToLibrary": "В библиотеку",
+    "dismiss": "Отклонить",
+    "supplements": "Добавки ({{count}})",
+    "otherRecommendations": "Другие рекомендации ({{count}})",
+    "addAll": "Добавить все ({{count}})",
+    "tabs": {
+      "protocols": "Протоколы",
+      "supplements": "Добавки",
+      "exercises": "Упражнения",
+      "tests": "Анализы"
+    },
+    "empty": {
+      "protocols": "Нет протоколов от врачей.",
+      "supplements": "Нет рекомендаций по добавкам.",
+      "exercises": "Нет рекомендаций по упражнениям.",
+      "tests": "Нет рекомендаций по анализам и консультациям.",
+      "noRecommendations": "Нет извлечённых рекомендаций. Загрузите медицинские документы с назначениями врача, и система автоматически извлечёт рекомендации по добавкам, упражнениям и анализам."
+    }
+  }
 }
