@@ -383,7 +383,32 @@
   },
   "habitTypes": {
     "numericCounter": "Numeric counter",
-    "daily": "Daily habit"
+    "daily": "Daily habit",
+    "daily_check": {
+      "icon": "✅",
+      "label": "Daily Check-in",
+      "description": "Simple daily completion"
+    },
+    "duration_counter": {
+      "icon": "⏱️",
+      "label": "Duration Counter",
+      "description": "Track time (e.g., quit smoking)"
+    },
+    "fasting_tracker": {
+      "icon": "⏰🍽️",
+      "label": "Fasting Tracker",
+      "description": "Track intermittent fasting windows"
+    },
+    "numeric_counter": {
+      "icon": "🔢",
+      "label": "Numeric Counter",
+      "description": "Count items (e.g., books read)"
+    },
+    "daily_measurement": {
+      "icon": "📊",
+      "label": "Daily Measurement",
+      "description": "Track daily values (e.g., pages read)"
+    }
   },
   "friends": {
     "requestSent": "Friend request sent",

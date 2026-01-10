@@ -1,4 +1,26 @@
 {
+  "bodyMetrics": {
+    "weight": { "label": "Weight", "unit": "kg" },
+    "body_fat_percentage": { "label": "Body Fat %", "unit": "%" },
+    "muscle_mass": { "label": "Muscle Mass", "unit": "kg" },
+    "recovery_score": { "label": "Recovery", "unit": "%" },
+    "sleep_duration": { "label": "Sleep Duration", "unit": "h" },
+    "hrv": { "label": "HRV", "unit": "ms" },
+    "resting_heart_rate": { "label": "Resting HR", "unit": "bpm" },
+    "sleep_efficiency": { "label": "Sleep Efficiency", "unit": "%" }
+  },
+  "wellnessActivities": {
+    "massage": "Massage",
+    "meditation": "Meditation",
+    "iceBath": "Ice Bath",
+    "pilates": "Pilates",
+    "yoga": "Yoga",
+    "stretching": "Stretching",
+    "sauna": "Sauna"
+  },
+  "units": {
+    "min": "min"
+  },
   "title": "Progress",
   "description": "Configure widgets to track your progress",
   "goalsFromChallenges": "{{count}} goals from challenges",

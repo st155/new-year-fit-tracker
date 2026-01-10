@@ -1,4 +1,26 @@
 {
+  "bodyMetrics": {
+    "weight": { "label": "Вес", "unit": "кг" },
+    "body_fat_percentage": { "label": "Процент жира", "unit": "%" },
+    "muscle_mass": { "label": "Мышечная масса", "unit": "кг" },
+    "recovery_score": { "label": "Восстановление", "unit": "%" },
+    "sleep_duration": { "label": "Продолжительность сна", "unit": "ч" },
+    "hrv": { "label": "Вариабельность пульса (HRV)", "unit": "мс" },
+    "resting_heart_rate": { "label": "Пульс покоя", "unit": "уд/мин" },
+    "sleep_efficiency": { "label": "Эффективность сна", "unit": "%" }
+  },
+  "wellnessActivities": {
+    "massage": "Массаж",
+    "meditation": "Медитация",
+    "iceBath": "Ледяная ванна",
+    "pilates": "Пилатес",
+    "yoga": "Йога",
+    "stretching": "Растяжка",
+    "sauna": "Сауна"
+  },
+  "units": {
+    "min": "мин"
+  },
   "title": "Прогресс",
   "description": "Настройте виджеты для отслеживания прогресса",
   "goalsFromChallenges": "{{count}} целей из челленджей",
