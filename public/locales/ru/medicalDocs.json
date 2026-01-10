@@ -60,9 +60,12 @@
     "retryProcessing": "Повторить обработку",
     "reprocessDocument": "Переобработать документ"
   },
-  "extraction": {
+"extraction": {
     "reprocessSuccess": "Документ успешно переобработан",
-    "reprocessFailed": "Ошибка переобработки документа: {{error}}"
+    "reprocessFailed": "Ошибка переобработки документа: {{error}}",
+    "extracted": "Извлечено",
+    "matched": "Сопоставлено ({{percent}}%)",
+    "needsReview": "Требуют проверки"
   },
   "dialog": {
     "deleteTitle": "Удалить документ?",

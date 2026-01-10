@@ -1,8 +1,8 @@
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { RotateCcw, TrendingUp } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 interface HabitWidgetCardProps {
   habit: any;
@@ -10,6 +10,7 @@ interface HabitWidgetCardProps {
 }
 
 export function HabitWidgetCard({ habit, onClick }: HabitWidgetCardProps) {
+  const { t, i18n } = useTranslation('habits');
   const [elapsedTime, setElapsedTime] = useState({ days: 0, hours: 0, minutes: 0 });
 
   useEffect(() => {
@@ -60,7 +61,9 @@ export function HabitWidgetCard({ habit, onClick }: HabitWidgetCardProps) {
     if (!costPerDay || !elapsedTime.days) return null;
     
     const saved = Math.floor((elapsedTime.days + elapsedTime.hours / 24) * costPerDay);
-    return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 0 }).format(saved);
+    const locale = i18n.language === 'ru' ? 'ru-RU' : 'en-US';
+    const currency = i18n.language === 'ru' ? 'RUB' : 'USD';
+    return new Intl.NumberFormat(locale, { style: 'currency', currency, minimumFractionDigits: 0 }).format(saved);
   };
 
   return (
@@ -85,11 +88,11 @@ export function HabitWidgetCard({ habit, onClick }: HabitWidgetCardProps) {
         <div className="text-center my-4">
           <div className="inline-flex items-baseline gap-2 bg-gradient-to-r from-primary/20 to-accent/20 px-4 py-2 rounded-lg">
             <span className="text-3xl font-bold">{elapsedTime.days}</span>
-            <span className="text-sm text-muted-foreground">дней</span>
+            <span className="text-sm text-muted-foreground">{t('widget.days')}</span>
             <span className="text-xl font-semibold">{elapsedTime.hours}</span>
-            <span className="text-xs text-muted-foreground">ч</span>
+            <span className="text-xs text-muted-foreground">{t('widget.hours')}</span>
             <span className="text-lg">{elapsedTime.minutes}</span>
-            <span className="text-xs text-muted-foreground">м</span>
+            <span className="text-xs text-muted-foreground">{t('widget.minutes')}</span>
           </div>
         </div>
       )}
@@ -100,15 +103,15 @@ export function HabitWidgetCard({ habit, onClick }: HabitWidgetCardProps) {
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-1">
               <TrendingUp className="h-3 w-3 text-primary" />
-              <span className="text-muted-foreground">Лучший результат:</span>
+              <span className="text-muted-foreground">{t('widget.bestResult')}</span>
             </div>
-            <span className="font-semibold">{habit.stats.longest_streak} дней</span>
+            <span className="font-semibold">{t('widget.daysCount', { count: habit.stats.longest_streak })}</span>
           </div>
         )}
 
         {formatMoneySaved() && (
           <div className="text-sm">
-            <span className="text-muted-foreground">💰 Сэкономлено: </span>
+            <span className="text-muted-foreground">{t('widget.saved')} </span>
             <span className="font-semibold text-green-600">{formatMoneySaved()}</span>
           </div>
         )}
@@ -118,7 +121,7 @@ export function HabitWidgetCard({ habit, onClick }: HabitWidgetCardProps) {
           <div className="mt-3">
             <Progress value={getProgressToNextMilestone()} className="h-2" />
             <p className="text-xs text-muted-foreground mt-1 text-center">
-              {Math.round(getProgressToNextMilestone())}% до следующего достижения
+              {t('widget.progressToMilestone', { percent: Math.round(getProgressToNextMilestone()) })}
             </p>
           </div>
         )}

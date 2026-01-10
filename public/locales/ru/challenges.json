@@ -100,7 +100,15 @@
     "start": "Старт",
     "current": "Текущее",
     "target": "Цель",
-    "progress": "Прогресс"
+    "progress": "Прогресс",
+    "challengeResults": "Итоги челленджа",
+    "participants": "{{count}} участников",
+    "place": "{{rank}} место",
+    "finalScore": "Итоговый счёт",
+    "points": "очков",
+    "activity": "Активность",
+    "recovery": "Восстановление",
+    "synergy": "Синергия"
   },
   "info": {
     "notFound": "Информация о челлендже не найдена",

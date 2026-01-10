@@ -45,7 +45,7 @@
     "loadError": "Load Error",
     "loadErrorDesc": "Could not load image from this URL"
   },
-  "stats": {
+"stats": {
     "duration": "Duration",
     "minutes": "{{value}} min",
     "totalVolume": "Total Volume",
@@ -67,7 +67,14 @@
     "volumeTons": " t",
     "week": "Week",
     "month": "Month",
-    "allTime": "All time"
+    "allTime": "All time",
+    "distance": "Distance",
+    "avgHeartRate": "Avg Heart Rate",
+    "source": "Source:"
+  },
+  "generating": {
+    "title": "Generating your AI plan",
+    "status": "GENERATING YOUR NEW PROGRAM..."
   },
   "feeling": {
     "title": "How do you feel?",
@@ -320,11 +327,12 @@
     "workout": "Workout",
     "volume": "volume"
   },
-  "units": {
+"units": {
     "min": "min",
     "km": "km",
     "kcal": "kcal",
-    "kg": "kg"
+    "kg": "kg",
+    "bpm": "bpm"
   },
   "zones": {
     "zone0": "Zone 0",

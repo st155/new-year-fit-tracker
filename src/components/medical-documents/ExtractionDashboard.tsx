@@ -127,21 +127,21 @@ export const ExtractionDashboard = ({ documentId, category }: ExtractionDashboar
             <Card className="bg-blue-500/5 border-blue-500/30">
               <CardContent className="p-4">
                 <div className="text-2xl font-bold text-blue-400">{totalCount}</div>
-                <div className="text-xs text-muted-foreground">Извлечено</div>
+                <div className="text-xs text-muted-foreground">{t('extraction.extracted')}</div>
               </CardContent>
             </Card>
             <Card className="bg-green-500/5 border-green-500/30">
               <CardContent className="p-4">
                 <div className="text-2xl font-bold text-green-400">{matchedCount}</div>
                 <div className="text-xs text-muted-foreground">
-                  Сопоставлено ({totalCount > 0 ? Math.round((matchedCount / totalCount) * 100) : 0}%)
+                  {t('extraction.matched', { percent: totalCount > 0 ? Math.round((matchedCount / totalCount) * 100) : 0 })}
                 </div>
               </CardContent>
             </Card>
             <Card className="bg-red-500/5 border-red-500/30">
               <CardContent className="p-4">
                 <div className="text-2xl font-bold text-red-400">{unmatchedCount}</div>
-                <div className="text-xs text-muted-foreground">Требуют проверки</div>
+                <div className="text-xs text-muted-foreground">{t('extraction.needsReview')}</div>
               </CardContent>
             </Card>
           </div>

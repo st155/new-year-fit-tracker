@@ -60,9 +60,12 @@
     "retryProcessing": "Retry Processing",
     "reprocessDocument": "Reprocess Document"
   },
-  "extraction": {
+"extraction": {
     "reprocessSuccess": "Document reprocessed successfully",
-    "reprocessFailed": "Failed to reprocess document: {{error}}"
+    "reprocessFailed": "Failed to reprocess document: {{error}}",
+    "extracted": "Extracted",
+    "matched": "Matched ({{percent}}%)",
+    "needsReview": "Need review"
   },
   "dialog": {
     "deleteTitle": "Delete Document?",

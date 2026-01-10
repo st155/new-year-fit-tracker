@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from 'react-i18next';
 import * as Icons from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -16,6 +17,7 @@ interface MultiSelectChipGroupProps {
 }
 
 export function MultiSelectChipGroup({ options, onSelect }: MultiSelectChipGroupProps) {
+  const { t } = useTranslation('workouts');
   const [selected, setSelected] = useState<string[]>([]);
 
   const toggleOption = (value: string) => {
@@ -75,7 +77,7 @@ export function MultiSelectChipGroup({ options, onSelect }: MultiSelectChipGroup
         disabled={selected.length === 0}
         className="w-full bg-gradient-to-r from-cyan-500 to-primary hover:from-cyan-600 hover:to-primary/90"
       >
-        Продолжить ({selected.length})
+        {t('onboarding.continueWithDays', { count: selected.length })}
       </Button>
     </div>
   );
