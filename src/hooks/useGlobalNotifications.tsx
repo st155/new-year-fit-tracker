@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 
 export interface GlobalNotification {
@@ -12,6 +13,7 @@ export interface GlobalNotification {
 
 export function useGlobalNotifications() {
   const { user } = useAuth();
+  const { t } = useTranslation('common');
   const [notifications, setNotifications] = useState<GlobalNotification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   
@@ -38,12 +40,11 @@ export function useGlobalNotifications() {
 
         const goalsCount = goalsResult?.count || 0;
         if (goalsCount > 0) {
-          const goalText = goalsCount === 1 ? 'цель требует внимания' : `${goalsCount} целей требуют внимания`;
           newNotifications.push({
             id: 'goals-attention',
             type: 'goal',
             icon: '🎯',
-            message: goalText,
+            message: t('globalNotifications.goalsAttention', { count: goalsCount }),
             href: '/goals?filter=attention',
             priority: 1,
           });
@@ -60,12 +61,11 @@ export function useGlobalNotifications() {
         if (conflictsData.length > 0) {
           const uniqueMetrics = new Set(conflictsData.map((d: any) => d.metric_name));
           const conflicts = uniqueMetrics.size;
-          const conflictText = conflicts === 1 ? 'метрика с конфликтами' : `${conflicts} метрик с конфликтами`;
           newNotifications.push({
             id: 'data-conflicts',
             type: 'conflict',
             icon: '⚠️',
-            message: conflictText,
+            message: t('globalNotifications.metricsConflicts', { count: conflicts }),
             href: '/?tab=quality',
             priority: 2,
           });
@@ -80,12 +80,11 @@ export function useGlobalNotifications() {
 
         const challengesCount = challengesResult?.count || 0;
         if (challengesCount > 0) {
-          const challengeText = challengesCount === 1 ? 'активный челлендж' : `${challengesCount} активных челленджа`;
           newNotifications.push({
             id: 'active-challenges',
             type: 'habit',
             icon: '🏆',
-            message: challengeText,
+            message: t('globalNotifications.activeChallenges', { count: challengesCount }),
             href: '/progress',
             priority: 4,
           });

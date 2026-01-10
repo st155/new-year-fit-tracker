@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { X, Sparkles, Users, TrendingUp } from 'lucide-react';
@@ -11,6 +12,7 @@ interface SocialOnboardingProps {
 }
 
 export function SocialOnboarding({ onDismiss }: SocialOnboardingProps) {
+  const { t } = useTranslation('habits');
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -43,7 +45,7 @@ export function SocialOnboarding({ onDismiss }: SocialOnboardingProps) {
               <div className="p-2 rounded-lg bg-primary/20">
                 <Sparkles className="h-5 w-5 text-primary" />
               </div>
-              <h3 className="text-lg font-bold">Добро пожаловать в социальные привычки! 🎉</h3>
+              <h3 className="text-lg font-bold">{t('socialOnboarding.welcome')}</h3>
             </div>
             <Button
               variant="ghost"
@@ -61,9 +63,9 @@ export function SocialOnboarding({ onDismiss }: SocialOnboardingProps) {
                 <span className="text-lg">✓</span>
               </div>
               <div>
-                <p className="font-medium mb-1">1. Завершайте привычки</p>
+                <p className="font-medium mb-1">{t('socialOnboarding.step1.title')}</p>
                 <p className="text-sm text-muted-foreground">
-                  Каждое завершение привычки автоматически попадёт в вашу ленту активности
+                  {t('socialOnboarding.step1.description')}
                 </p>
               </div>
             </div>
@@ -73,9 +75,9 @@ export function SocialOnboarding({ onDismiss }: SocialOnboardingProps) {
                 <Users className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="font-medium mb-1">2. Создайте или присоединитесь к команде</p>
+                <p className="font-medium mb-1">{t('socialOnboarding.step2.title')}</p>
                 <p className="text-sm text-muted-foreground">
-                  Соревнуйтесь с друзьями, мотивируйте друг друга и достигайте целей вместе
+                  {t('socialOnboarding.step2.description')}
                 </p>
               </div>
             </div>
@@ -85,9 +87,9 @@ export function SocialOnboarding({ onDismiss }: SocialOnboardingProps) {
                 <TrendingUp className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="font-medium mb-1">3. Следите за прогрессом</p>
+                <p className="font-medium mb-1">{t('socialOnboarding.step3.title')}</p>
                 <p className="text-sm text-muted-foreground">
-                  Отслеживайте достижения команды, ставьте реакции и поддерживайте друзей
+                  {t('socialOnboarding.step3.description')}
                 </p>
               </div>
             </div>
@@ -98,7 +100,7 @@ export function SocialOnboarding({ onDismiss }: SocialOnboardingProps) {
               className="flex-1"
               onClick={handleDismiss}
             >
-              Понятно, приступим! 🚀
+              {t('socialOnboarding.gotIt')}
             </Button>
           </div>
         </Card>

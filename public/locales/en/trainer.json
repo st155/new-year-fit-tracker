@@ -1,4 +1,10 @@
 {
+"clientCard": {
+    "onTrack": "On track:",
+    "atRisk": "At risk:",
+    "details": "Details",
+    "askAI": "Ask AI"
+  },
   "goalEdit": {
     "title": "Edit Goal",
     "nameLabel": "Goal Name",
