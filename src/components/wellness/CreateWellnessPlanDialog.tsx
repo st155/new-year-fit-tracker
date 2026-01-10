@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { useCreateWellnessPlan, useCreateActivities, generateActivitiesFromPlan } from "@/hooks/useWellnessActivities";
-import { parseActivityDescription, getActivityConfig, ACTIVITY_TYPES, ActivityType } from "@/lib/wellness-activity-types";
+import { parseActivityDescription, getActivityConfig, getActivityLabel, ACTIVITY_TYPES, ActivityType } from "@/lib/wellness-activity-types";
 import { toast } from "sonner";
 import { Sparkles, Calendar, Check, Plus, Minus } from "lucide-react";
 import { format, addDays, startOfWeek } from "date-fns";
@@ -176,7 +176,7 @@ export function CreateWellnessPlanDialog({ open, onOpenChange, onSuccess }: Crea
                   >
                     <div className="flex items-center gap-2">
                       <span className="text-xl">{config.icon}</span>
-                      <span className={config.color}>{config.label}</span>
+                      <span className={config.color}>{getActivityLabel(type)}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Button
@@ -218,7 +218,7 @@ export function CreateWellnessPlanDialog({ open, onOpenChange, onSuccess }: Crea
                         className={`cursor-pointer hover:${config.bgColor} ${config.borderColor}`}
                         onClick={() => handleAddActivity(type)}
                       >
-                        {config.icon} {config.label}
+                        {config.icon} {getActivityLabel(type)}
                       </Badge>
                     );
                   })}

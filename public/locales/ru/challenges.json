@@ -74,6 +74,12 @@
     "selected": "Выбрано",
     "select": "Выбрать"
   },
+  "difficultyBadge": {
+    "basic": "Базовый",
+    "level1": "+1 Level",
+    "level2": "+2 Level",
+    "level3": "+3 Level"
+  },
   "report": {
     "resultsOf": "Итоги {{name}}",
     "shareText": "Я занял {{rank}} место в челлендже {{name}} с {{points}} очками!",

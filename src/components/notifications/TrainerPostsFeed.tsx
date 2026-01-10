@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -21,6 +22,7 @@ interface TrainerPost {
 }
 
 export function TrainerPostsFeed() {
+  const { t, i18n } = useTranslation('trainerDashboard');
   const { user } = useAuth();
   const [posts, setPosts] = useState<TrainerPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -109,13 +111,11 @@ export function TrainerPostsFeed() {
   };
 
   const getPostTypeLabel = (type: string) => {
-    switch (type) {
-      case 'weekly_task': return 'Задание на неделю';
-      case 'daily_tip': return 'Совет дня';
-      case 'announcement': return 'Объявление';
-      case 'motivation': return 'Мотивация';
-      default: return type;
-    }
+    return t(`posts.types.${type}`, type);
+  };
+
+  const getPriorityLabel = (priority: string) => {
+    return t(`posts.priorities.${priority}`, priority);
   };
 
   const getPriorityColor = (priority: string) => {
@@ -132,7 +132,7 @@ export function TrainerPostsFeed() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Сообщения от тренера</CardTitle>
+          <CardTitle>{t('clientPosts.title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -157,13 +157,13 @@ export function TrainerPostsFeed() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Сообщения от тренера</CardTitle>
-          <CardDescription>Здесь будут отображаться советы и задания от вашего тренера</CardDescription>
+          <CardTitle>{t('clientPosts.title')}</CardTitle>
+          <CardDescription>{t('clientPosts.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
             <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">Пока нет сообщений</p>
+            <p className="text-muted-foreground">{t('clientPosts.noMessages')}</p>
           </div>
         </CardContent>
       </Card>
@@ -173,8 +173,8 @@ export function TrainerPostsFeed() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Сообщения от тренера</CardTitle>
-        <CardDescription>Последние советы и задания</CardDescription>
+        <CardTitle>{t('clientPosts.title')}</CardTitle>
+        <CardDescription>{t('clientPosts.latestTips')}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -188,9 +188,7 @@ export function TrainerPostsFeed() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant={getPriorityColor(post.priority) as any}>
-                    {post.priority === 'urgent' ? 'Срочно' : 
-                     post.priority === 'high' ? 'Высокий' :
-                     post.priority === 'normal' ? 'Обычный' : 'Низкий'}
+                    {getPriorityLabel(post.priority)}
                   </Badge>
                   <Badge variant="outline">
                     {getPostTypeLabel(post.post_type)}
@@ -216,7 +214,7 @@ export function TrainerPostsFeed() {
                 </div>
                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Calendar className="h-3 w-3" />
-                  {new Date(post.created_at).toLocaleDateString('ru-RU')}
+                  {new Date(post.created_at).toLocaleDateString(i18n.language === 'ru' ? 'ru-RU' : 'en-US')}
                 </div>
               </div>
             </div>

@@ -284,6 +284,29 @@
     "recommended": "Recommended: {{weight}}kg",
     "useRecommended": "Use recommended"
   },
+  "activityTypes": {
+    "strength": "Strength",
+    "cardio": "Cardio",
+    "running": "Running",
+    "massage": "Massage",
+    "stretching": "Stretching",
+    "yoga": "Yoga",
+    "sauna": "Sauna",
+    "barochamber": "Barochamber",
+    "swimming": "Swimming",
+    "recovery": "Recovery",
+    "cryo": "Cryotherapy",
+    "rest": "Rest",
+    "other": "Other"
+  },
+  "onboarding": {
+    "planCreated": "Plan created!",
+    "createError": "Error creating plan",
+    "continue": "Continue",
+    "continueWithDays": "Continue ({{count}} days)",
+    "recommended": "Recommended: {{weight}}kg",
+    "useRecommended": "Use recommended"
+  },
   "map": {
     "title": "Route Map",
     "noGps": "GPS data unavailable",

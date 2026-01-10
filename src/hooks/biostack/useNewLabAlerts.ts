@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import i18n from '@/i18n';
 
 /**
  * Hook to monitor new lab test results and alert users when biomarkers
@@ -71,10 +72,10 @@ export function useNewLabAlerts() {
         biomarkerUpdates.forEach((result, biomarkerId) => {
           const biomarkerName = (result.biomarker_master as any)?.display_name || 'Unknown';
           
-          toast.info(`Новые анализы! ${biomarkerName} обновлён`, {
+          toast.info(i18n.t('biostack:labAlerts.newResults', { name: biomarkerName }), {
             description: `${result.normalized_value} ${result.normalized_unit}`,
             action: {
-              label: 'Открыть',
+              label: i18n.t('biostack:labAlerts.open'),
               onClick: () => navigate(`/biomarkers/${biomarkerId}`),
             },
             duration: 10000,

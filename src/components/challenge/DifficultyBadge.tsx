@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -7,13 +8,15 @@ interface DifficultyBadgeProps {
 }
 
 const DIFFICULTY_CONFIG = {
-  0: { icon: "🎯", label: "Базовый", color: "bg-blue-500" },
-  1: { icon: "🔥", label: "+1 Level", color: "bg-orange-500" },
-  2: { icon: "⚡", label: "+2 Level", color: "bg-purple-500" },
-  3: { icon: "💀", label: "+3 Level", color: "bg-red-600" },
+  0: { icon: "🎯", labelKey: "basic", color: "bg-blue-500" },
+  1: { icon: "🔥", labelKey: "level1", color: "bg-orange-500" },
+  2: { icon: "⚡", labelKey: "level2", color: "bg-purple-500" },
+  3: { icon: "💀", labelKey: "level3", color: "bg-red-600" },
 };
 
 export function DifficultyBadge({ level, className }: DifficultyBadgeProps) {
+  const { t } = useTranslation('challenges');
+  
   if (level === 0) return null;
 
   const config = DIFFICULTY_CONFIG[level as keyof typeof DIFFICULTY_CONFIG];
@@ -28,7 +31,7 @@ export function DifficultyBadge({ level, className }: DifficultyBadgeProps) {
         className
       )}
     >
-      {config.icon} {config.label}
+      {config.icon} {t(`difficultyBadge.${config.labelKey}`)}
     </Badge>
   );
 }

@@ -184,6 +184,8 @@
   },
   "appleHealth": {
     "title": "Apple Health Data",
+    "deletedRecords": "Удалено {{count}} записей Apple Health",
+    "deleteError": "Ошибка при удалении данных: {{error}}",
     "description": "Загрузите экспорт данных Apple Health для автоматического импорта ваших показателей здоровья",
     "largeFile": "Большой файл Apple Health",
     "largeFileDesc": "Размер файла: {{size}}MB. Обработка может занять несколько минут. Используется оптимизированный алгоритм для больших файлов.",

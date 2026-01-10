@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -8,16 +9,17 @@ interface DaySelectorProps {
 }
 
 const DAYS = [
-  { value: 1, label: 'Пн' },
-  { value: 2, label: 'Вт' },
-  { value: 3, label: 'Ср' },
-  { value: 4, label: 'Чт' },
-  { value: 5, label: 'Пт' },
-  { value: 6, label: 'Сб' },
-  { value: 7, label: 'Вс' }
+  { value: 1, labelKey: 'mon' },
+  { value: 2, labelKey: 'tue' },
+  { value: 3, labelKey: 'wed' },
+  { value: 4, labelKey: 'thu' },
+  { value: 5, labelKey: 'fri' },
+  { value: 6, labelKey: 'sat' },
+  { value: 7, labelKey: 'sun' }
 ];
 
 export function DaySelector({ onSelect }: DaySelectorProps) {
+  const { t } = useTranslation('workouts');
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
 
   const toggleDay = (day: number) => {
@@ -59,7 +61,7 @@ export function DaySelector({ onSelect }: DaySelectorProps) {
                 "font-bold transition-colors",
                 isSelected ? "text-white" : "text-muted-foreground"
               )}>
-                {day.label}
+                {t(`dayNames.${day.labelKey}`)}
               </span>
             </motion.button>
           );
@@ -71,7 +73,7 @@ export function DaySelector({ onSelect }: DaySelectorProps) {
         disabled={selectedDays.length === 0}
         className="w-full bg-gradient-to-r from-cyan-500 to-primary hover:from-cyan-600 hover:to-primary/90"
       >
-        Продолжить ({selectedDays.length} {selectedDays.length === 1 ? 'день' : 'дней'})
+        {t('onboarding.continueWithDays', { count: selectedDays.length })}
       </Button>
     </div>
   );

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuickLogActivity } from "@/hooks/useWellnessActivities";
-import { ACTIVITY_TYPES, ActivityType, getActivityConfig } from "@/lib/wellness-activity-types";
+import { ACTIVITY_TYPES, ActivityType, getActivityConfig, getActivityLabel } from "@/lib/wellness-activity-types";
 import { toast } from "sonner";
 import { Plus, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -31,7 +31,7 @@ export function QuickActivityLogger() {
       });
 
       const config = getActivityConfig(type);
-      toast.success(t('quick.logged', { icon: config.icon, label: config.label }));
+      toast.success(t('quick.logged', { icon: config.icon, label: getActivityLabel(type) }));
       setSelectedType(null);
       setDuration('');
       setIsOpen(false);
@@ -75,14 +75,14 @@ export function QuickActivityLogger() {
                     disabled={quickLog.isPending}
                   >
                     <span className="mr-1">{config.icon}</span>
-                    {config.label}
+                    {getActivityLabel(type)}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-60 bg-neutral-900 border-neutral-700" align="start">
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <span className="text-xl">{config.icon}</span>
-                      <span className="font-medium">{config.label}</span>
+                      <span className="font-medium">{getActivityLabel(type)}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock className="w-4 h-4 text-muted-foreground" />

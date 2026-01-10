@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Edit3, Save, X, Target } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ interface GoalEditorProps {
 }
 
 export function GoalEditor({ goal, onGoalUpdated, className }: GoalEditorProps) {
+  const { t } = useTranslation('goals');
   const { user } = useAuth();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [goalForm, setGoalForm] = useState({
@@ -39,27 +41,27 @@ export function GoalEditor({ goal, onGoalUpdated, className }: GoalEditorProps) 
   const goalTypes = [
     { 
       value: 'strength', 
-      label: 'Силовые упражнения', 
+      labelKey: 'strength',
       color: 'bg-primary/10 text-primary border-primary/20',
-      description: 'Подтягивания, отжимания, приседания, жим лежа'
+      descKey: 'strengthDesc'
     },
     { 
       value: 'cardio', 
-      label: 'Кардио', 
+      labelKey: 'cardio',
       color: 'bg-accent/10 text-accent border-accent/20',
-      description: 'Бег, велосипед, плавание, ходьба'
+      descKey: 'cardioDesc'
     },
     { 
       value: 'endurance', 
-      label: 'Выносливость', 
+      labelKey: 'endurance',
       color: 'bg-success/10 text-success border-success/20',
-      description: 'Длительность тренировок, количество кругов'
+      descKey: 'enduranceDesc'
     },
     { 
       value: 'body_composition', 
-      label: 'Состав тела', 
+      labelKey: 'body_composition',
       color: 'bg-secondary/10 text-secondary-foreground border-secondary/20',
-      description: 'Вес, процент жира, объемы тела'
+      descKey: 'body_compositionDesc'
     }
   ];
 
@@ -107,10 +109,10 @@ export function GoalEditor({ goal, onGoalUpdated, className }: GoalEditorProps) 
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Target className="h-5 w-5 text-primary" />
-            Редактировать цель
+            {t('editor.title')}
           </DialogTitle>
           <DialogDescription>
-            Измените параметры вашей цели. Прогресс и измерения сохранятся.
+            {t('editor.description')}
           </DialogDescription>
         </DialogHeader>
         
@@ -119,9 +121,9 @@ export function GoalEditor({ goal, onGoalUpdated, className }: GoalEditorProps) 
           <Card className="bg-muted/30">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Текущий прогресс</span>
+                <span className="text-sm font-medium">{t('editor.currentProgress')}</span>
                 <Badge className={getGoalTypeColor(goal.goal_type)}>
-                  {goalTypes.find(t => t.value === goal.goal_type)?.label}
+                  {t(`editor.types.${goalTypes.find(gt => gt.value === goal.goal_type)?.labelKey}`)}
                 </Badge>
               </div>
               <div className="flex items-center gap-4">
@@ -144,7 +146,7 @@ export function GoalEditor({ goal, onGoalUpdated, className }: GoalEditorProps) 
                 </div>
                 <div className="text-right">
                   <span className="text-sm font-medium">{Math.round(getProgressPercentage())}%</span>
-                  <p className="text-xs text-muted-foreground">завершено</p>
+                  <p className="text-xs text-muted-foreground">{t('editor.completed')}</p>
                 </div>
               </div>
             </CardContent>
@@ -153,17 +155,17 @@ export function GoalEditor({ goal, onGoalUpdated, className }: GoalEditorProps) 
           {/* Edit form */}
           <div className="space-y-4">
             <div>
-              <Label htmlFor="goal_name">Название цели *</Label>
+              <Label htmlFor="goal_name">{t('editor.goalName')}</Label>
               <Input
                 id="goal_name"
-                placeholder="Например: Подтягивания"
+                placeholder={t('editor.goalNamePlaceholder')}
                 value={goalForm.goal_name}
                 onChange={(e) => setGoalForm(prev => ({ ...prev, goal_name: e.target.value }))}
               />
             </div>
 
             <div>
-              <Label>Тип цели *</Label>
+              <Label>{t('editor.goalType')}</Label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
                 {goalTypes.map((type) => (
                   <Card
@@ -178,14 +180,14 @@ export function GoalEditor({ goal, onGoalUpdated, className }: GoalEditorProps) 
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-2">
                         <Badge className={type.color}>
-                          {type.label}
+                          {t(`editor.types.${type.labelKey}`)}
                         </Badge>
                         {goalForm.goal_type === type.value && (
                           <div className="w-2 h-2 bg-primary rounded-full"></div>
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        {type.description}
+                        {t(`editor.types.${type.descKey}`)}
                       </p>
                     </CardContent>
                   </Card>
@@ -195,7 +197,7 @@ export function GoalEditor({ goal, onGoalUpdated, className }: GoalEditorProps) 
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="target_value">Целевое значение *</Label>
+                <Label htmlFor="target_value">{t('editor.targetValue')}</Label>
                 <Input
                   id="target_value"
                   type="number"
@@ -206,10 +208,10 @@ export function GoalEditor({ goal, onGoalUpdated, className }: GoalEditorProps) 
                 />
               </div>
               <div>
-                <Label htmlFor="target_unit">Единица измерения *</Label>
+                <Label htmlFor="target_unit">{t('editor.targetUnit')}</Label>
                 <Input
                   id="target_unit"
-                  placeholder="кг, раз, км, мин"
+                  placeholder={t('editor.unitPlaceholder')}
                   value={goalForm.target_unit}
                   onChange={(e) => setGoalForm(prev => ({ ...prev, target_unit: e.target.value }))}
                 />
@@ -225,7 +227,7 @@ export function GoalEditor({ goal, onGoalUpdated, className }: GoalEditorProps) 
               className="flex-1"
             >
               <X className="h-4 w-4 mr-2" />
-              Отмена
+              {t('editor.cancel')}
             </Button>
             <Button
               onClick={handleUpdateGoal}
@@ -235,12 +237,12 @@ export function GoalEditor({ goal, onGoalUpdated, className }: GoalEditorProps) 
               {updateGoal.isPending ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Сохранение...
+                  {t('editor.saving')}
                 </>
               ) : (
                 <>
                   <Save className="h-4 w-4 mr-2" />
-                  Сохранить
+                  {t('editor.save')}
                 </>
               )}
             </Button>
