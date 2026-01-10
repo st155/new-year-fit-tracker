@@ -4,6 +4,8 @@
  * Centralized constants for the Habits feature.
  */
 
+import i18n from '@/i18n';
+
 // ============================================================================
 // Query Keys
 // ============================================================================
@@ -85,25 +87,49 @@ export const STREAK_MILESTONES = [7, 14, 21, 30, 60, 90, 180, 365] as const;
 // Categories
 // ============================================================================
 
-export const HABIT_CATEGORIES = [
-  { value: 'health', label: 'Здоровье', emoji: '❤️' },
-  { value: 'fitness', label: 'Фитнес', emoji: '💪' },
-  { value: 'nutrition', label: 'Питание', emoji: '🥗' },
-  { value: 'sleep', label: 'Сон', emoji: '😴' },
-  { value: 'mindfulness', label: 'Осознанность', emoji: '🧘' },
-  { value: 'learning', label: 'Обучение', emoji: '📚' },
-  { value: 'productivity', label: 'Продуктивность', emoji: '⚡' },
-  { value: 'social', label: 'Социальное', emoji: '👥' },
-  { value: 'custom', label: 'Другое', emoji: '✨' },
-] as const;
+const HABIT_CATEGORY_VALUES = ['health', 'fitness', 'nutrition', 'sleep', 'mindfulness', 'learning', 'productivity', 'social', 'custom'] as const;
 
-export const HABIT_TYPES = [
-  { value: 'daily_check', label: 'Ежедневная галочка', description: 'Простое выполнение каждый день' },
-  { value: 'duration_counter', label: 'Счётчик времени', description: 'Время с начала (бросить курить и т.д.)' },
-  { value: 'numeric_counter', label: 'Числовой счётчик', description: 'Количество (стаканы воды и т.д.)' },
-  { value: 'fasting_tracker', label: 'Интервальное голодание', description: 'Окна приёма пищи' },
-  { value: 'daily_measurement', label: 'Ежедневное измерение', description: 'Значение каждый день' },
-] as const;
+const CATEGORY_EMOJIS: Record<string, string> = {
+  health: '❤️',
+  fitness: '💪',
+  nutrition: '🥗',
+  sleep: '😴',
+  mindfulness: '🧘',
+  learning: '📚',
+  productivity: '⚡',
+  social: '👥',
+  custom: '✨',
+};
+
+export const getHabitCategories = () =>
+  HABIT_CATEGORY_VALUES.map(value => ({
+    value,
+    label: i18n.t(`habits:categories.${value}`),
+    emoji: CATEGORY_EMOJIS[value],
+  }));
+
+// For backwards compatibility
+export const HABIT_CATEGORIES = HABIT_CATEGORY_VALUES.map(value => ({
+  value,
+  label: i18n.t(`habits:categories.${value}`),
+  emoji: CATEGORY_EMOJIS[value],
+}));
+
+const HABIT_TYPE_VALUES = ['daily_check', 'duration_counter', 'numeric_counter', 'fasting_tracker', 'daily_measurement'] as const;
+
+export const getHabitTypes = () =>
+  HABIT_TYPE_VALUES.map(value => ({
+    value,
+    label: i18n.t(`habits:types.${value}.label`),
+    description: i18n.t(`habits:types.${value}.description`),
+  }));
+
+// For backwards compatibility
+export const HABIT_TYPES = HABIT_TYPE_VALUES.map(value => ({
+  value,
+  label: i18n.t(`habits:types.${value}.label`),
+  description: i18n.t(`habits:types.${value}.description`),
+}));
 
 // ============================================================================
 // Sentiment Keywords

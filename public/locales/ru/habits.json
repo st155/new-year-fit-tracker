@@ -38,13 +38,23 @@
   "errors": {
     "completionError": "Ошибка при отметке привычки"
   },
-  "categories": {
+"categories": {
     "health": "Здоровье",
     "fitness": "Фитнес",
     "nutrition": "Питание",
     "sleep": "Сон",
-    "mindfulness": "Медитация",
+    "mindfulness": "Осознанность",
+    "learning": "Обучение",
+    "productivity": "Продуктивность",
+    "social": "Социальное",
     "custom": "Другое"
+  },
+  "types": {
+    "daily_check": { "label": "Ежедневная галочка", "description": "Простое выполнение каждый день" },
+    "duration_counter": { "label": "Счётчик времени", "description": "Время с начала (бросить курить и т.д.)" },
+    "numeric_counter": { "label": "Числовой счётчик", "description": "Количество (стаканы воды и т.д.)" },
+    "fasting_tracker": { "label": "Интервальное голодание", "description": "Окна приёма пищи" },
+    "daily_measurement": { "label": "Ежедневное измерение", "description": "Значение каждый день" }
   },
   "frequencies": {
     "daily": "Ежедневно",
