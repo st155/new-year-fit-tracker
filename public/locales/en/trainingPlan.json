@@ -65,6 +65,77 @@
     "exShort": "ex.",
     "rest": "Rest"
   },
+  "detail": {
+    "demo": "Demo",
+    "weeks": "{{count}} week(s)",
+    "clients": "{{count}} clients",
+    "workouts": "{{count}} workouts",
+    "tabs": {
+      "week": "Week",
+      "details": "Details",
+      "settings": "Settings"
+    },
+    "rest": "Rest",
+    "status": {
+      "active": "Active",
+      "completed": "Completed"
+    },
+    "startDate": "Start: {{date}}",
+    "noPlan": {
+      "title": "Plan not assigned",
+      "description": "Assign this plan to clients to start training"
+    },
+    "assignToClient": "Assign to client",
+    "info": {
+      "title": "Basic Information",
+      "name": "Name:",
+      "duration": "Duration:",
+      "created": "Created:"
+    },
+    "demoDescription": "Demo plan",
+    "actions": {
+      "title": "Actions",
+      "edit": "Edit plan",
+      "duplicate": "Duplicate plan",
+      "delete": "Delete plan"
+    },
+    "deleteDialog": {
+      "title": "Delete training plan?",
+      "description": "This action cannot be undone. The plan will be permanently deleted with all workouts.",
+      "warning": "Warning: plan assigned to {{count}} clients",
+      "cancel": "Cancel",
+      "delete": "Delete"
+    }
+  },
+  "demo": {
+    "name": "Demo Plan: Mass Gain",
+    "description": "Example training plan for 3 times a week. This is a demo plan for demonstration.",
+    "workouts": {
+      "chestTriceps": {
+        "name": "Chest + Triceps",
+        "description": "Basic upper body workout"
+      },
+      "backBiceps": {
+        "name": "Back + Biceps",
+        "description": "Pulling exercises"
+      },
+      "legsShoulders": {
+        "name": "Legs + Shoulders",
+        "description": "Legs and delts day"
+      }
+    },
+    "exercises": {
+      "benchPress": "Barbell Bench Press",
+      "inclineDumbbellPress": "Incline Dumbbell Press",
+      "frenchPress": "French Press",
+      "deadlift": "Deadlift",
+      "pullups": "Pull-ups",
+      "barbellCurl": "Barbell Curl",
+      "squats": "Squats",
+      "legPress": "Leg Press",
+      "seatedDumbbellPress": "Seated Dumbbell Press"
+    }
+  },
   "toast": {
     "planNotFound": "Plan not found",
     "planNotFoundOrDeleted": "Plan not found or was deleted",

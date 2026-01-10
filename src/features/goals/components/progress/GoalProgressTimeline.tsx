@@ -4,7 +4,8 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, TrendingDown, Minus, Calendar } from "lucide-react";
 import { format, subDays, startOfWeek, startOfMonth, isWithinInterval } from "date-fns";
-import { ru } from "date-fns/locale";
+import { ru, enUS } from "date-fns/locale";
+import { useTranslation } from "react-i18next";
 
 interface Measurement {
   value: number;
@@ -26,6 +27,9 @@ export function GoalProgressTimeline({
   unit = '',
   period = 'week' 
 }: GoalProgressTimelineProps) {
+  const { t, i18n } = useTranslation('goals');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
+
   const timelineData = useMemo(() => {
     const today = new Date();
     const startDate = period === 'week' 
@@ -42,7 +46,7 @@ export function GoalProgressTimeline({
       
       days.push({
         date: dateStr,
-        dayLabel: format(date, 'EEE', { locale: ru }),
+        dayLabel: format(date, 'EEE', { locale: dateLocale }),
         dayNumber: format(date, 'd'),
         value: measurement?.value || null,
         hasData: !!measurement
@@ -50,7 +54,7 @@ export function GoalProgressTimeline({
     }
     
     return days;
-  }, [measurements, period]);
+  }, [measurements, period, dateLocale]);
 
   const getTrend = () => {
     const recentMeasurements = measurements.slice(0, 3);
@@ -88,11 +92,11 @@ export function GoalProgressTimeline({
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm flex items-center gap-2">
             <Calendar className="h-4 w-4" />
-            Прогресс за {period === 'week' ? 'неделю' : 'месяц'}
+            {t('timeline.title', { period: period === 'week' ? t('timeline.week') : t('timeline.month') })}
           </CardTitle>
           <Badge variant={isTrendPositive ? 'default' : 'secondary'} className="text-xs">
             <TrendIcon className="h-3 w-3 mr-1" />
-            {trend === 'stable' ? 'Стабильно' : isTrendPositive ? 'Рост' : 'Снижение'}
+            {trend === 'stable' ? t('timeline.stable') : isTrendPositive ? t('timeline.growth') : t('timeline.decline')}
           </Badge>
         </div>
       </CardHeader>
@@ -132,17 +136,17 @@ export function GoalProgressTimeline({
         {/* Summary */}
         <div className="grid grid-cols-3 gap-2 text-xs pt-2 border-t">
           <div className="text-center">
-            <div className="text-muted-foreground">Начало</div>
+            <div className="text-muted-foreground">{t('timeline.start')}</div>
             <div className="font-semibold">{startValue.toFixed(1)} {unit}</div>
           </div>
           <div className="text-center">
-            <div className="text-muted-foreground">Сейчас</div>
+            <div className="text-muted-foreground">{t('timeline.now')}</div>
             <div className="font-semibold" style={{ color: getProgressColor(latestValue) }}>
               {latestValue.toFixed(1)} {unit}
             </div>
           </div>
           <div className="text-center">
-            <div className="text-muted-foreground">Цель</div>
+            <div className="text-muted-foreground">{t('timeline.target')}</div>
             <div className="font-semibold">{target.toFixed(1)} {unit}</div>
           </div>
         </div>

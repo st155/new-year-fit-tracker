@@ -78,5 +78,17 @@
     "afternoon": "днём",
     "evening": "вечером",
     "night": "ночью"
-  }
+  },
+  "types": {
+    "habit_pattern": "Паттерн",
+    "habit_risk": "Риск",
+    "habit_optimization": "Оптимизация",
+    "achievement": "Достижение",
+    "recommendation": "Рекомендация",
+    "habit_chain": "Связь",
+    "critical": "Критично",
+    "warning": "Внимание",
+    "info": "Инфо"
+  },
+  "learnMore": "Подробнее"
 }

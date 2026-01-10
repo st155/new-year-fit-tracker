@@ -65,6 +65,77 @@
     "exShort": "упр.",
     "rest": "Отдых"
   },
+  "detail": {
+    "demo": "Демо",
+    "weeks": "{{count}} нед.",
+    "clients": "{{count}} клиентов",
+    "workouts": "{{count}} тренировок",
+    "tabs": {
+      "week": "Неделя",
+      "details": "Детали",
+      "settings": "Настройки"
+    },
+    "rest": "Отдых",
+    "status": {
+      "active": "Активен",
+      "completed": "Завершен"
+    },
+    "startDate": "Начало: {{date}}",
+    "noPlan": {
+      "title": "План не назначен",
+      "description": "Назначьте этот план клиентам для начала тренировок"
+    },
+    "assignToClient": "Назначить клиенту",
+    "info": {
+      "title": "Основная информация",
+      "name": "Название:",
+      "duration": "Длительность:",
+      "created": "Создан:"
+    },
+    "demoDescription": "Демонстрационный план",
+    "actions": {
+      "title": "Действия",
+      "edit": "Редактировать план",
+      "duplicate": "Дублировать план",
+      "delete": "Удалить план"
+    },
+    "deleteDialog": {
+      "title": "Удалить тренировочный план?",
+      "description": "Это действие нельзя отменить. План будет удален навсегда вместе со всеми тренировками.",
+      "warning": "Внимание: план назначен {{count}} клиентам",
+      "cancel": "Отмена",
+      "delete": "Удалить"
+    }
+  },
+  "demo": {
+    "name": "Демо-план: Набор массы",
+    "description": "Пример тренировочного плана на 3 раза в неделю. Это демонстрационный план для ознакомления.",
+    "workouts": {
+      "chestTriceps": {
+        "name": "Грудь + Трицепс",
+        "description": "Базовая тренировка на верх тела"
+      },
+      "backBiceps": {
+        "name": "Спина + Бицепс",
+        "description": "Тяговые упражнения"
+      },
+      "legsShoulders": {
+        "name": "Ноги + Плечи",
+        "description": "День ног и дельт"
+      }
+    },
+    "exercises": {
+      "benchPress": "Жим штанги лежа",
+      "inclineDumbbellPress": "Жим гантелей на наклонной",
+      "frenchPress": "Французский жим",
+      "deadlift": "Становая тяга",
+      "pullups": "Подтягивания",
+      "barbellCurl": "Подъем штанги на бицепс",
+      "squats": "Приседания",
+      "legPress": "Жим ногами",
+      "seatedDumbbellPress": "Жим гантелей сидя"
+    }
+  },
   "toast": {
     "planNotFound": "План не найден",
     "planNotFoundOrDeleted": "План не найден или был удален",

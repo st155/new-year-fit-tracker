@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { SmartInsight } from '@/lib/insights/types';
 import { X, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface InsightCardProps {
   insight: SmartInsight;
@@ -15,10 +16,18 @@ interface InsightCardProps {
 }
 
 export function InsightCard({ insight, onAction, onDismiss }: InsightCardProps) {
+  const { t } = useTranslation('insights');
+  
   const priorityColor = 
     insight.priority >= 80 ? 'destructive' :
     insight.priority >= 60 ? 'default' :
     'secondary';
+
+  const getTypeLabel = (type: string): string => {
+    const typeKey = `types.${type}`;
+    const translated = t(typeKey, { defaultValue: '' });
+    return translated || type;
+  };
 
   const typeLabel = getTypeLabel(insight.type);
 
@@ -48,7 +57,7 @@ export function InsightCard({ insight, onAction, onDismiss }: InsightCardProps) 
               className="mt-2 h-8 px-2 text-xs group-hover:text-primary"
               onClick={() => onAction(insight)}
             >
-              Подробнее
+              {t('learnMore')}
               <ChevronRight className="ml-1 h-3 w-3" />
             </Button>
           )}
@@ -67,19 +76,4 @@ export function InsightCard({ insight, onAction, onDismiss }: InsightCardProps) 
       </div>
     </div>
   );
-}
-
-function getTypeLabel(type: string): string {
-  const labels: Record<string, string> = {
-    habit_pattern: 'Паттерн',
-    habit_risk: 'Риск',
-    habit_optimization: 'Оптимизация',
-    achievement: 'Достижение',
-    recommendation: 'Рекомендация',
-    habit_chain: 'Связь',
-    critical: 'Критично',
-    warning: 'Внимание',
-    info: 'Инфо',
-  };
-  return labels[type] || type;
 }
