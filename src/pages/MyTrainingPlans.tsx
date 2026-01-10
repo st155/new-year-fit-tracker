@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +26,7 @@ interface AssignedPlan {
 
 export default function MyTrainingPlans() {
   const navigate = useNavigate();
+  const { t } = useTranslation('trainingPlan');
 
   const { data: plans, isLoading, refetch } = useQuery({
     queryKey: ['my-training-plans'],
@@ -82,9 +84,9 @@ export default function MyTrainingPlans() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold">Мои тренировочные планы</h1>
+            <h1 className="text-3xl font-bold">{t('myPlans.title')}</h1>
             <p className="text-muted-foreground mt-1">
-              Управляйте своими планами тренировок
+              {t('myPlans.subtitle')}
             </p>
           </div>
         </div>
@@ -93,7 +95,7 @@ export default function MyTrainingPlans() {
           className="gap-2"
         >
           <Plus className="w-4 h-4" />
-          Создать новый план
+          {t('myPlans.createNew')}
         </Button>
       </div>
 
@@ -103,9 +105,9 @@ export default function MyTrainingPlans() {
             <div className="mx-auto w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500/20 to-pink-500/20 flex items-center justify-center mb-4">
               <Sparkles className="w-6 h-6 text-cyan-500" />
             </div>
-            <CardTitle>У вас пока нет тренировочных планов</CardTitle>
+            <CardTitle>{t('myPlans.noPlans.title')}</CardTitle>
             <CardDescription className="max-w-md mx-auto">
-              Создайте свой первый AI-план тренировок, отвечая на несколько простых вопросов
+              {t('myPlans.noPlans.description')}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center pb-6">
@@ -115,7 +117,7 @@ export default function MyTrainingPlans() {
               className="gap-2"
             >
               <Sparkles className="w-4 h-4" />
-              Создать AI план
+              {t('myPlans.noPlans.action')}
             </Button>
           </CardContent>
         </Card>
@@ -123,7 +125,7 @@ export default function MyTrainingPlans() {
         <>
           {activePlans.length > 0 && (
             <div className="space-y-4">
-              <h2 className="text-xl font-semibold">Активный план</h2>
+              <h2 className="text-xl font-semibold">{t('myPlans.activePlan')}</h2>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {activePlans.map(plan => (
                   <MyTrainingPlanCard 
@@ -139,7 +141,7 @@ export default function MyTrainingPlans() {
           {inactivePlans.length > 0 && (
             <div className="space-y-4">
               <h2 className="text-xl font-semibold text-muted-foreground">
-                Предыдущие планы
+                {t('myPlans.previousPlans')}
               </h2>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {inactivePlans.map(plan => (

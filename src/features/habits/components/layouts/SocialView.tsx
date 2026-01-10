@@ -40,9 +40,9 @@ export function SocialView() {
     return (
       <Card className="p-8 text-center">
         <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-        <h3 className="text-lg font-semibold mb-2">Войдите, чтобы увидеть активность</h3>
+        <h3 className="text-lg font-semibold mb-2">{t('socialView.signInToView')}</h3>
         <p className="text-muted-foreground">
-          Присоединяйтесь к командам и следите за прогрессом друзей
+          {t('socialView.joinTeamsDescription')}
         </p>
       </Card>
     );
@@ -92,7 +92,7 @@ export function SocialView() {
         )}
 
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Социальная активность</h2>
+          <h2 className="text-2xl font-bold">{t('socialView.title')}</h2>
           <Button variant="ghost" size="icon" onClick={() => refetch()}>
             <RefreshCw className="h-5 w-5" />
           </Button>
@@ -100,9 +100,9 @@ export function SocialView() {
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'all' | 'team')}>
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="all">Все события</TabsTrigger>
+            <TabsTrigger value="all">{t('socialView.tabs.all')}</TabsTrigger>
             <TabsTrigger value="team" disabled={!hasTeams}>
-              Моя команда {!hasTeams && '🔒'}
+              {t('socialView.tabs.myTeam')} {!hasTeams && '🔒'}
             </TabsTrigger>
           </TabsList>
 
@@ -150,10 +150,9 @@ export function SocialView() {
                   <div className="relative mb-4">
                     <Sparkles className="h-12 w-12 mx-auto text-primary animate-pulse" />
                   </div>
-                  <h3 className="text-lg font-bold mb-2">Начните свой путь! 🚀</h3>
+                  <h3 className="text-lg font-bold mb-2">{t('socialView.emptyState.title')}</h3>
                   <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                    Завершайте привычки, чтобы они появлялись в ленте активности. 
-                    Создавайте команды и следите за прогрессом друзей!
+                    {t('socialView.emptyState.description')}
                   </p>
                   <div className="flex flex-col sm:flex-row gap-2 justify-center">
                     <Button 
@@ -161,14 +160,14 @@ export function SocialView() {
                       variant="default"
                     >
                       <Plus className="h-4 w-4 mr-2" />
-                      Создать команду
+                      {t('socialView.emptyState.createTeam')}
                     </Button>
                     <Button 
                       onClick={() => navigate('/habits-v3/teams')}
                       variant="outline"
                     >
                       <Search className="h-4 w-4 mr-2" />
-                      Найти команду
+                      {t('socialView.emptyState.findTeam')}
                     </Button>
                   </div>
                 </motion.div>
@@ -184,7 +183,7 @@ export function SocialView() {
                   value={selectedTeamId}
                   onChange={(e) => setSelectedTeamId(e.target.value)}
                 >
-                  <option value="">Выберите команду</option>
+                  <option value="">{t('socialView.selectTeam')}</option>
                   {myTeams.map((team) => (
                     <option key={team.id} value={team.id}>
                       {team.name}
@@ -232,8 +231,8 @@ export function SocialView() {
                 <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
                 <p className="text-muted-foreground">
                   {selectedTeamId 
-                    ? 'В команде пока нет активности'
-                    : 'Выберите команду для просмотра активности'}
+                    ? t('socialView.noTeamActivity')
+                    : t('socialView.selectTeamToView')}
                 </p>
               </Card>
             )}

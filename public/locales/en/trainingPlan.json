@@ -146,5 +146,17 @@
     "deleteFailed": "Failed to delete plan",
     "copied": "Plan copied",
     "copyFailed": "Failed to copy plan"
+  },
+  "myPlans": {
+    "title": "My training plans",
+    "subtitle": "Manage your training plans",
+    "createNew": "Create new plan",
+    "noPlans": {
+      "title": "You don't have any training plans yet",
+      "description": "Create your first AI training plan by answering a few simple questions",
+      "action": "Create AI plan"
+    },
+    "activePlan": "Active plan",
+    "previousPlans": "Previous plans"
   }
 }

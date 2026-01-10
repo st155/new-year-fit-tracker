@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { HabitCard } from "./HabitCard";
@@ -28,6 +29,7 @@ interface HabitWithStats extends Habit {
 }
 
 export function HabitsList() {
+  const { t } = useTranslation('habits');
   const { user } = useAuth();
   const [habits, setHabits] = useState<HabitWithStats[]>([]);
   const [loading, setLoading] = useState(true);
@@ -108,7 +110,7 @@ export function HabitsList() {
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
-          У вас пока нет привычек. Создайте свою первую привычку, чтобы начать отслеживать прогресс!
+          {t('legacy.noHabits')}
         </AlertDescription>
       </Alert>
     );
