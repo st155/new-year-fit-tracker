@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Dialog,
@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Settings, Plus, Trash2, Info, Sparkles, Loader2 } from 'lucide-react';
+import { Settings, Plus, Trash2, Info, Sparkles, Loader2, Database } from 'lucide-react';
 import { Widget } from '@/hooks/useWidgetsQuery';
 import {
   Select,
@@ -26,6 +26,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { widgetKeys } from '@/hooks/useWidgetsQuery';
 import { useAIWidgetSuggestions } from '@/hooks/useAIWidgetSuggestions';
 import { useAuth } from '@/hooks/useAuth';
+import { useAvailableMetrics } from '@/hooks/useAvailableMetrics';
+
+// Habit widgets that are always available (not from unified_metrics)
+const SPECIAL_WIDGETS = [
+  '🏆 Habit Level',
+  '🔥 Habit Streaks',
+  '🤝 Habit Social',
+];
 
 interface WidgetSettingsProps {
   widgets: Widget[];
@@ -33,35 +41,6 @@ interface WidgetSettingsProps {
   onRemove: (widgetId: string) => void;
   onReorder: (newOrder: Widget[]) => void;
 }
-
-// Available metrics (source is selected automatically)
-const AVAILABLE_METRICS = [
-  // Habits 3.0 виджеты
-  '🏆 Habit Level',
-  '🔥 Habit Streaks',
-  '🤝 Habit Social',
-  // Обычные метрики
-  'Steps',
-  'Active Calories',
-  'Sleep Duration',
-  'Resting Heart Rate',
-  'Recovery Score',
-  'Day Strain',
-  'Max Heart Rate',
-  'Weight',
-  'Body Fat Percentage',
-  'HRV RMSSD',
-  'Sleep Efficiency',
-  'Training Readiness',
-  'VO2Max',
-  'Muscle Mass',
-  'Workout Calories',
-  'Sleep Performance',
-  'Average Heart Rate',
-  'BMR',
-  'Visceral Fat',
-  'Body Water',
-];
 
 export function WidgetSettings({ 
   widgets, 
@@ -78,6 +57,25 @@ export function WidgetSettings({
   const { t } = useTranslation('dashboard');
   
   const { data: aiSuggestions = [], isLoading: aiLoading } = useAIWidgetSuggestions(user?.id, widgets);
+  const { data: availableMetrics = [], isLoading: metricsLoading } = useAvailableMetrics(user?.id);
+  
+  // Combine database metrics with special widgets, filter out already added
+  const addedMetricNames = useMemo(() => new Set(widgets.map(w => w.metric_name)), [widgets]);
+  
+  const filteredMetrics = useMemo(() => {
+    // Get metrics from database that aren't already added
+    const dbMetrics = availableMetrics
+      .filter(m => !addedMetricNames.has(m.metric_name))
+      .map(m => ({ name: m.metric_name, dataPoints: m.data_points }));
+    
+    // Get special widgets that aren't already added
+    const specialMetrics = SPECIAL_WIDGETS
+      .filter(name => !addedMetricNames.has(name))
+      .map(name => ({ name, dataPoints: null as number | null }));
+    
+    // Special widgets first, then db metrics sorted by data points
+    return [...specialMetrics, ...dbMetrics];
+  }, [availableMetrics, addedMetricNames]);
 
   const updateDisplayModeMutation = useMutation({
     mutationFn: async ({ widgetId, mode }: { widgetId: string; mode: 'single' | 'multi' }) => {
@@ -240,21 +238,48 @@ export function WidgetSettings({
 
           {/* Add Widget Section */}
           <div className="border rounded-lg p-4 space-y-4">
-            <h3 className="font-medium">{t('widgets.addManual')}</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium">{t('widgets.addManual')}</h3>
+              {metricsLoading && (
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  <span>{t('widgets.loadingMetrics', 'Loading...')}</span>
+                </div>
+              )}
+            </div>
             
             <div className="space-y-4">
               <div className="grid gap-2">
-                <label className="text-sm font-medium">{t('widgets.metric')}</label>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium">{t('widgets.metric')}</label>
+                  <span className="text-xs text-muted-foreground">
+                    <Database className="h-3 w-3 inline mr-1" />
+                    {filteredMetrics.length} {t('widgets.available', 'available')}
+                  </span>
+                </div>
                 <Select value={selectedMetric} onValueChange={setSelectedMetric}>
                   <SelectTrigger>
                     <SelectValue placeholder={t('widgets.selectMetric')} />
                   </SelectTrigger>
-                  <SelectContent>
-                    {AVAILABLE_METRICS.map((metric) => (
-                      <SelectItem key={metric} value={metric}>
-                        {metric}
-                      </SelectItem>
-                    ))}
+                  <SelectContent className="max-h-[300px]">
+                    {filteredMetrics.length === 0 ? (
+                      <div className="py-6 text-center text-sm text-muted-foreground">
+                        {t('widgets.allAdded', 'All available metrics are already added')}
+                      </div>
+                    ) : (
+                      filteredMetrics.map((metric) => (
+                        <SelectItem key={metric.name} value={metric.name}>
+                          <span className="flex items-center gap-2">
+                            <span>{metric.name}</span>
+                            {metric.dataPoints !== null && (
+                              <span className="text-xs text-muted-foreground">
+                                ({metric.dataPoints})
+                              </span>
+                            )}
+                          </span>
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -268,7 +293,7 @@ export function WidgetSettings({
 
               <Button 
                 onClick={handleAdd} 
-                disabled={!selectedMetric || widgets.length >= 20}
+                disabled={!selectedMetric || widgets.length >= 20 || filteredMetrics.length === 0}
                 className="w-full"
                 variant="outline"
               >
