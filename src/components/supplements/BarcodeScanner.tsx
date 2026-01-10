@@ -6,11 +6,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { SupplementInfoCard } from "@/components/biostack/SupplementInfoCard";
 import { supplementsApi } from "@/lib/api";
+import { useTranslation } from "react-i18next";
 
 type ScanStep = 'idle' | 'processing' | 'enriching' | 'results';
 
 export function BarcodeScanner() {
   const { toast } = useToast();
+  const { t } = useTranslation('supplements');
   const [scanStep, setScanStep] = useState<ScanStep>('idle');
   const [scannedProduct, setScannedProduct] = useState<any>(null);
   const [enrichedProduct, setEnrichedProduct] = useState<any>(null);
@@ -21,7 +23,7 @@ export function BarcodeScanner() {
     if (!file) return;
 
     // For now, prompt user to manually enter barcode
-    const barcode = prompt("Enter the barcode number:");
+    const barcode = prompt(t('scanner.enterBarcodePrompt'));
     if (!barcode) return;
 
     await scanBarcode(barcode);
@@ -79,13 +81,13 @@ export function BarcodeScanner() {
 
         setScanStep('results');
         toast({
-          title: "Product found!",
+          title: t('scanner.productFound'),
           description: `${data.product.name} by ${data.product.brand}`,
         });
       } else {
         toast({
-          title: "Product not found",
-          description: "This product is not in our database",
+          title: t('scanner.productNotFound'),
+          description: t('scanner.notInDatabase'),
           variant: "destructive",
         });
         setScanStep('idle');
@@ -93,7 +95,7 @@ export function BarcodeScanner() {
     } catch (error: any) {
       console.error("Error scanning barcode:", error);
       toast({
-        title: "Scan failed",
+        title: t('scanner.scanFailed'),
         description: error.message,
         variant: "destructive",
       });
@@ -102,7 +104,7 @@ export function BarcodeScanner() {
   };
 
   const handleManualEntry = () => {
-    const barcode = prompt("Enter the barcode number:");
+    const barcode = prompt(t('scanner.enterBarcodePrompt'));
     if (barcode) {
       scanBarcode(barcode);
     }
@@ -113,7 +115,7 @@ export function BarcodeScanner() {
       {scanStep === 'idle' && (
         <Card className="glass-card">
           <CardHeader>
-            <CardTitle>Scan Barcode</CardTitle>
+            <CardTitle>{t('scanner.title')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-3">
@@ -122,7 +124,7 @@ export function BarcodeScanner() {
                 className="w-full"
               >
                 <Camera className="mr-2 h-4 w-4" />
-                Upload Barcode Photo
+                {t('scanner.uploadPhoto')}
               </Button>
 
               <Button
@@ -130,7 +132,7 @@ export function BarcodeScanner() {
                 onClick={handleManualEntry}
                 className="w-full"
               >
-                Enter Barcode Manually
+                {t('scanner.enterManually')}
               </Button>
 
               <input
@@ -144,7 +146,7 @@ export function BarcodeScanner() {
             </div>
 
             <p className="text-xs text-muted-foreground text-center">
-              Scan or enter the UPC/EAN barcode from your supplement bottle
+              {t('scanner.hint')}
             </p>
           </CardContent>
         </Card>
@@ -154,8 +156,8 @@ export function BarcodeScanner() {
         <Card className="glass-card">
           <CardContent className="py-12 flex flex-col items-center justify-center space-y-4">
             <Loader2 className="h-12 w-12 animate-spin text-green-500" />
-            <p className="text-lg font-medium">Scanning barcode...</p>
-            <p className="text-sm text-muted-foreground">Looking up product information</p>
+            <p className="text-lg font-medium">{t('scanner.scanning')}</p>
+            <p className="text-sm text-muted-foreground">{t('scanner.lookingUp')}</p>
           </CardContent>
         </Card>
       )}
@@ -164,8 +166,8 @@ export function BarcodeScanner() {
         <Card className="glass-card">
           <CardContent className="py-12 flex flex-col items-center justify-center space-y-4">
             <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
-            <p className="text-lg font-medium">Enriching data...</p>
-            <p className="text-sm text-muted-foreground">Gathering comprehensive information about this supplement</p>
+            <p className="text-lg font-medium">{t('scanner.enriching')}</p>
+            <p className="text-sm text-muted-foreground">{t('scanner.gatheringInfo')}</p>
           </CardContent>
         </Card>
       )}
@@ -176,8 +178,8 @@ export function BarcodeScanner() {
             product={enrichedProduct}
             onAddToStack={() => {
               toast({
-                title: "Added to stack",
-                description: `${enrichedProduct.name} added to your supplement stack`,
+                title: t('scanner.addedToStack'),
+                description: t('scanner.addedToStackDesc', { name: enrichedProduct.name }),
               });
               setScanStep('idle');
               setEnrichedProduct(null);
@@ -185,8 +187,8 @@ export function BarcodeScanner() {
             }}
             onRate={() => {
               toast({
-                title: "Rating feature",
-                description: "Rating functionality coming soon!",
+                title: t('scanner.ratingFeature'),
+                description: t('scanner.ratingComingSoon'),
               });
             }}
           />
@@ -200,7 +202,7 @@ export function BarcodeScanner() {
             }}
             className="w-full"
           >
-            Scan Another
+            {t('scanner.scanAnother')}
           </Button>
         </div>
       )}

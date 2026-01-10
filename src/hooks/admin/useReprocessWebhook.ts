@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { adminApi } from '@/lib/api/client';
 import { toast } from 'sonner';
+import i18n from '@/i18n';
 
 export function useReprocessWebhook() {
   return useMutation({
@@ -10,12 +11,12 @@ export function useReprocessWebhook() {
       return data;
     },
     onSuccess: () => {
-      toast.success('Webhook queued for reprocessing', {
-        description: 'Data will update within 2 minutes'
+      toast.success(i18n.t('common:webhook.queued'), {
+        description: i18n.t('common:webhook.updateIn2min')
       });
     },
     onError: (error: any) => {
-      toast.error('Failed to reprocess webhook', {
+      toast.error(i18n.t('common:webhook.reprocessFailed'), {
         description: error.message
       });
     }

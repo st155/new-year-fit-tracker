@@ -414,5 +414,30 @@
   "dev": {
     "analyzingLocalizations": "Analyzing localizations...",
     "analysisError": "Analysis error"
+  },
+  "dataQuality": {
+    "title": "Data Quality",
+    "excellent": "Excellent",
+    "good": "Good",
+    "fair": "Fair",
+    "poor": "Poor",
+    "sourceReliability": "Source Reliability",
+    "dataFreshness": "Data Freshness",
+    "frequency": "Frequency",
+    "crossValidation": "Cross-validation",
+    "hint": "Higher scores indicate more reliable data from trusted sources",
+    "recalculationStarted": "Confidence recalculation started",
+    "recalculationStartedFor": "Confidence recalculation started for {{metric}}",
+    "recalculationFailed": "Failed to start confidence recalculation",
+    "recalculateFailed": "Failed to recalculate confidence"
+  },
+  "webhook": {
+    "queued": "Webhook queued for reprocessing",
+    "updateIn2min": "Data will update within 2 minutes",
+    "reprocessFailed": "Failed to reprocess webhook"
+  },
+  "reactions": {
+    "addFailed": "Failed to add reaction",
+    "removeFailed": "Failed to remove reaction"
   }
 }

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useHabitFeedRealtime, useFeedReactionsRealtime, useHabitNotificationsRealtime } from '@/hooks/composite/realtime';
+import i18n from '@/i18n';
 
 export interface HabitFeedEvent {
   id: string;
@@ -158,7 +159,7 @@ export function useAddReaction() {
       if (context?.previousData) {
         queryClient.setQueryData(['habit-feed'], context.previousData);
       }
-      toast.error('Не удалось добавить реакцию');
+      toast.error(i18n.t('common:reactions.addFailed'));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['habit-feed'] });
@@ -216,7 +217,7 @@ export function useRemoveReaction() {
       if (context?.previousData) {
         queryClient.setQueryData(['habit-feed'], context.previousData);
       }
-      toast.error('Не удалось удалить реакцию');
+      toast.error(i18n.t('common:reactions.removeFailed'));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['habit-feed'] });
