@@ -77,7 +77,10 @@
     "publish": "Publish",
     "publishing": "Publishing...",
     "hideOptional": "Hide",
-    "showOptional": "Add"
+    "showOptional": "Add",
+    "workout": "Workout",
+    "addWater": "+250ml",
+    "weighIn": "Weigh in"
   },
   "states": {
     "loading": "Loading...",
@@ -351,7 +354,9 @@
     "minAgo": "{{min}} min ago",
     "hoursAgo": "{{hours}} h ago",
     "daysAgo": "{{days}} d ago",
-    "syncedAt": "Synced"
+    "syncedAt": "Synced",
+    "active": "Active",
+    "stale": "Stale"
   },
   "notifications": {
     "allMarkedRead": "All notifications marked as read",
@@ -467,5 +472,13 @@
     "copied": "Copied!",
     "noSyncIssues": "No sync issues found",
     "syncIssuesTitle": "EN/RU Desync"
+  },
+  "dataSource": {
+    "metrics": "Metrics",
+    "dataQuality": "Data Quality",
+    "lastSync": "Last sync",
+    "freshness": "Data freshness",
+    "hoursAgo": "{{hours}}h",
+    "daysAgo": "{{days}}d"
   }
 }

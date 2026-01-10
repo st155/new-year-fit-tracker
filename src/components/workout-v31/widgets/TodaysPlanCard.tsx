@@ -156,7 +156,7 @@ export function TodaysPlanCard({
                     {exercise.sets} x {exercise.reps} {t('todaysPlan.reps')}
                     {exercise.weight && (
                       <span className={exercise.was_modified ? "text-cyan-400 ml-2 font-medium" : "ml-2"}>
-                        @ {exercise.weight} кг
+                        @ {exercise.weight} {t('units.kg')}
                         {exercise.was_modified && (
                           <Sparkles className="w-3 h-3 inline ml-1 text-cyan-400" />
                         )}

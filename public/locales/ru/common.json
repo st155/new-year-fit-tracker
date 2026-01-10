@@ -462,5 +462,59 @@
     "dragAndDrop": "Перетащите скриншот фитнес-трекера или нажмите для выбора",
     "aiExtractHint": "AI автоматически извлечёт данные: вес, процент жира, пульс, шаги и другие метрики",
     "supportedFormats": "Поддерживается: JPG, PNG, WebP (до 5 МБ)"
+  },
+  "devTools": {
+    "copied": "Скопировано!",
+    "noSyncIssues": "Проблем синхронизации не найдено",
+    "syncIssuesTitle": "Рассинхронизация EN/RU"
+  },
+  "actions": {
+    "save": "Сохранить",
+    "saving": "Сохранение...",
+    "cancel": "Отмена",
+    "delete": "Удалить",
+    "deleting": "Удаление...",
+    "add": "Добавить",
+    "adding": "Добавляю...",
+    "edit": "Редактировать",
+    "close": "Закрыть",
+    "confirm": "Подтвердить",
+    "retry": "Повторить",
+    "back": "Назад",
+    "next": "Далее",
+    "send": "Отправить",
+    "replace": "Заменить",
+    "choose": "Выбрать",
+    "chooseFile": "Выбрать файл",
+    "upload": "Загрузить",
+    "publish": "Опубликовать",
+    "publishing": "Публикую...",
+    "hideOptional": "Скрыть",
+    "showOptional": "Добавить",
+    "workout": "Тренировка",
+    "addWater": "+250мл",
+    "weighIn": "Взвеситься"
+  },
+  "status": {
+    "connected": "Подключено",
+    "disconnected": "Отключено",
+    "pending": "Ожидание",
+    "error": "Ошибка",
+    "unknown": "Неизвестно",
+    "justNow": "только что",
+    "minAgo": "{{min}} мин назад",
+    "hoursAgo": "{{hours}} ч назад",
+    "daysAgo": "{{days}} дн назад",
+    "syncedAt": "Синхронизация",
+    "active": "Активно",
+    "stale": "Устарело"
+  },
+  "dataSource": {
+    "metrics": "Метрик",
+    "dataQuality": "Качество данных",
+    "lastSync": "Последний sync",
+    "freshness": "Свежесть данных",
+    "hoursAgo": "{{hours}}ч",
+    "daysAgo": "{{days}}д"
   }
 }

@@ -9,6 +9,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useTranslation } from 'react-i18next';
 
 interface WeightSliderProps {
   value: number;
@@ -31,6 +32,8 @@ export default function WeightSlider({
   step = 2.5,
   suggestion
 }: WeightSliderProps) {
+  const { t } = useTranslation('workouts');
+
   const handleQuickChange = (delta: number) => {
     const newValue = Math.max(min, Math.min(max, value + delta));
     onChange(newValue);
@@ -45,9 +48,9 @@ export default function WeightSlider({
     >
       <div className="text-center mb-6">
         <div className="text-6xl font-bold text-primary mb-2">
-          {value}<span className="text-3xl text-muted-foreground">kg</span>
+          {value}<span className="text-3xl text-muted-foreground">{t('units.kg')}</span>
         </div>
-        <p className="text-sm text-muted-foreground">Weight</p>
+        <p className="text-sm text-muted-foreground">{t('logger.weight')}</p>
         
         {/* Smart Suggestion */}
         {suggestion && (
@@ -60,7 +63,7 @@ export default function WeightSlider({
                     className="cursor-pointer backdrop-blur-xl bg-primary/10 border-primary/30 hover:bg-primary/20 transition-colors"
                   >
                     <Lightbulb className="w-3 h-3 mr-1" />
-                    Рекомендуем: {suggestion.suggestedWeight}кг
+                    {t('logger.recommended', { weight: suggestion.suggestedWeight })}
                   </Badge>
                 </div>
               </TooltipTrigger>
@@ -78,7 +81,7 @@ export default function WeightSlider({
             onClick={() => onChange(suggestion.suggestedWeight)}
             className="mt-2 text-xs backdrop-blur-xl bg-white/5 hover:bg-white/10"
           >
-            Использовать рекомендованный
+            {t('logger.useRecommended')}
           </Button>
         )}
       </div>
