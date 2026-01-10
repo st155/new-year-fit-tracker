@@ -202,5 +202,13 @@
     "kcal": "ккал",
     "days": "дней",
     "average": "в среднем"
+  },
+  "scoring": {
+    "difficultyZones": {
+      "athlete": "Атлет",
+      "low": "Низкий",
+      "medium": "Средний",
+      "high": "Высокий"
+    }
   }
 }

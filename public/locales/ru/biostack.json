@@ -272,5 +272,37 @@
     "addToLibraryFailed": "Не удалось добавить в библиотеку",
     "protocolAddedCount": "Добавлено {{count}} добавок в библиотеку",
     "addProtocolFailed": "Не удалось добавить протокол"
+  },
+  "aiAnalysis": {
+    "title": "AI-анализ эффективности",
+    "subtitle": "Сравнение ожидаемых и фактических изменений биомаркеров",
+    "analyze": "Анализировать",
+    "analyzing": "AI анализирует данные...",
+    "effectiveness": "{{percent}}% эффективности",
+    "weeksTaking": "{{current}} нед. приёма • Ожидается {{expected}} нед.",
+    "progress": "Прогресс",
+    "detailedAnalysis": "Детальный анализ",
+    "biomarkerComparison": "Сравнение биомаркеров",
+    "expected": "Ожидалось:",
+    "actual": "Факт:",
+    "keyFindings": "Ключевые выводы",
+    "recommendations": "Рекомендации",
+    "nextStep": "Следующий шаг:",
+    "confidence": "Уверенность анализа",
+    "confidenceHigh": "Высокая",
+    "confidenceMedium": "Средняя",
+    "confidenceLow": "Низкая",
+    "verdict": {
+      "effective": "Эффективно",
+      "needs_more_time": "Нужно больше времени",
+      "not_working": "Не работает",
+      "unknown": "Нет данных"
+    },
+    "status": {
+      "on_track": "В норме",
+      "partial": "Частично",
+      "no_change": "Без изменений",
+      "opposite": "Противоположно"
+    }
   }
 }

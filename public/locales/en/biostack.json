@@ -273,5 +273,37 @@
     "addToLibraryFailed": "Could not add to library",
     "protocolAddedCount": "Added {{count}} supplements to library",
     "addProtocolFailed": "Could not add protocol"
+  },
+  "aiAnalysis": {
+    "title": "AI Effectiveness Analysis",
+    "subtitle": "Comparing expected and actual biomarker changes",
+    "analyze": "Analyze",
+    "analyzing": "AI is analyzing data...",
+    "effectiveness": "{{percent}}% effectiveness",
+    "weeksTaking": "{{current}} weeks intake • Expected {{expected}} weeks",
+    "progress": "Progress",
+    "detailedAnalysis": "Detailed Analysis",
+    "biomarkerComparison": "Biomarker Comparison",
+    "expected": "Expected:",
+    "actual": "Actual:",
+    "keyFindings": "Key Findings",
+    "recommendations": "Recommendations",
+    "nextStep": "Next Step:",
+    "confidence": "Analysis Confidence",
+    "confidenceHigh": "High",
+    "confidenceMedium": "Medium",
+    "confidenceLow": "Low",
+    "verdict": {
+      "effective": "Effective",
+      "needs_more_time": "Needs more time",
+      "not_working": "Not working",
+      "unknown": "No data"
+    },
+    "status": {
+      "on_track": "On track",
+      "partial": "Partial",
+      "no_change": "No change",
+      "opposite": "Opposite"
+    }
   }
 }

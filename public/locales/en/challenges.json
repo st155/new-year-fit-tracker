@@ -202,5 +202,13 @@
     "kcal": "kcal",
     "days": "days",
     "average": "average"
+  },
+  "scoring": {
+    "difficultyZones": {
+      "athlete": "Athlete",
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High"
+    }
   }
 }
