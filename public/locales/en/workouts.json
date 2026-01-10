@@ -545,6 +545,10 @@
       "manyLeft": "Many Reps Left (10)"
     },
     "notes": "Notes (optional)",
-    "notesPlaceholder": "How did this exercise feel? Any observations..."
+    "notesPlaceholder": "How did this exercise feel? Any observations...",
+    "workoutDeleted": "Workout deleted",
+    "workoutDeletedDesc": "Entry successfully removed from log",
+    "deleteError": "Delete error",
+    "deleteErrorDesc": "Could not delete workout"
   }
 }

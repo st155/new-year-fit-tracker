@@ -439,5 +439,28 @@
   "reactions": {
     "addFailed": "Failed to add reaction",
     "removeFailed": "Failed to remove reaction"
+  },
+  "aiUpload": {
+    "error": "Error",
+    "signInRequired": "Please sign in to continue",
+    "selectImage": "Please select an image",
+    "fileTooLarge": "File size must not exceed 5MB",
+    "photoUploaded": "Photo uploaded!",
+    "startingAnalysis": "Starting AI analysis...",
+    "analysisComplete": "Analysis complete!",
+    "analysisError": "Analysis error",
+    "uploadFailed": "Failed to upload photo: {{error}}",
+    "analyzeFailed": "Failed to analyze the image with AI",
+    "noDataFound": "No data found in the image",
+    "analyzingWithAI": "Analyzing with AI...",
+    "uploading": "Uploading photo...",
+    "qualityHigh": "High quality",
+    "qualityMedium": "Medium quality",
+    "qualityLow": "Low quality",
+    "replace": "Replace",
+    "selectScreenshot": "Select screenshot",
+    "dragAndDrop": "Drag and drop fitness tracker screenshot or click to select",
+    "aiExtractHint": "AI will automatically extract data: weight, body fat %, heart rate, steps and other metrics",
+    "supportedFormats": "Supported: JPG, PNG, WebP (up to 5MB)"
   }
 }

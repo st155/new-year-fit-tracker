@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import i18n from '@/i18n';
 
 export function useSupplementLogs(userId: string | undefined) {
   const queryClient = useQueryClient();
@@ -79,7 +80,7 @@ export function useSupplementLogs(userId: string | undefined) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["today-schedule"] });
       queryClient.invalidateQueries({ queryKey: ["adherence-stats"] });
-      toast({ title: "Marked as taken" });
+      toast({ title: i18n.t('supplements:toast.markedAsTaken') });
     },
   });
 
@@ -97,7 +98,7 @@ export function useSupplementLogs(userId: string | undefined) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["today-schedule"] });
-      toast({ title: "Note added" });
+      toast({ title: i18n.t('supplements:toast.noteAdded') });
     },
   });
 

@@ -259,5 +259,16 @@
     "addError": "Ошибка добавления",
     "failedToAdd": "Не удалось добавить {{count}} добавок",
     "intakeTimeCorrected": "Время приема скорректировано"
+  },
+  "toast": {
+    "protocolCreated": "Протокол успешно создан",
+    "protocolActivated": "Протокол активирован",
+    "protocolDeactivated": "Протокол деактивирован",
+    "protocolDeleted": "Протокол удалён",
+    "markedAsTaken": "Отмечено как принято",
+    "noteAdded": "Заметка добавлена",
+    "addedToInventory": "Добавлено в инвентарь",
+    "inventoryUpdated": "Инвентарь обновлён",
+    "removedFromInventory": "Удалено из инвентаря"
   }
 }

@@ -222,5 +222,13 @@
     "current": "Current",
     "target": "Target",
     "forecastDate": "📅 Estimated completion:"
+  },
+  "units": {
+    "min": "min",
+    "reps": "reps",
+    "kg": "kg",
+    "kgx8": "kg ×8",
+    "mlkgmin": "ml/kg/min",
+    "percent": "%"
   }
 }
