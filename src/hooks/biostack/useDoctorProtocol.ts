@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import i18n from '@/i18n';
 import { DoctorActionItem, parseScheduleFormat } from './useDoctorActionItems';
 
 interface AddToLibraryResult {
@@ -157,11 +158,11 @@ export function useAddSupplementToLibrary() {
       queryClient.invalidateQueries({ queryKey: ['supplement-library'] });
       queryClient.invalidateQueries({ queryKey: ['user-stack'] });
       queryClient.invalidateQueries({ queryKey: ['doctor-action-items'] });
-      toast.success(`${result.name} добавлен в библиотеку`);
+      toast.success(i18n.t('biostack:doctorProtocol.addedToLibrary', { name: result.name }));
     },
     onError: (error) => {
       console.error('Failed to add supplement to library:', error);
-      toast.error('Не удалось добавить в библиотеку');
+      toast.error(i18n.t('biostack:doctorProtocol.addToLibraryFailed'));
     },
   });
 }
@@ -202,11 +203,11 @@ export function useAddProtocolToLibrary() {
       queryClient.invalidateQueries({ queryKey: ['supplement-library'] });
       queryClient.invalidateQueries({ queryKey: ['user-stack'] });
       queryClient.invalidateQueries({ queryKey: ['doctor-action-items'] });
-      toast.success(`Добавлено ${results.length} добавок в библиотеку`);
+      toast.success(i18n.t('biostack:doctorProtocol.protocolAddedCount', { count: results.length }));
     },
     onError: (error) => {
       console.error('Failed to add protocol to library:', error);
-      toast.error('Не удалось добавить протокол');
+      toast.error(i18n.t('biostack:doctorProtocol.addProtocolFailed'));
     },
   });
 }

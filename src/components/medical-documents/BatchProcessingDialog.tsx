@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -22,6 +23,7 @@ interface BatchProcessingDialogProps {
 }
 
 export function BatchProcessingDialog({ open, onOpenChange, onComplete }: BatchProcessingDialogProps) {
+  const { t } = useTranslation('medicalDocs');
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [total, setTotal] = useState(0);
@@ -116,7 +118,7 @@ export function BatchProcessingDialog({ open, onOpenChange, onComplete }: BatchP
 
     } catch (error) {
       console.error('Batch processing error:', error);
-      toast.error('Ошибка при обработке документов');
+      toast.error(t('batch.processingError'));
       setIsProcessing(false);
     }
   };
@@ -129,7 +131,7 @@ export function BatchProcessingDialog({ open, onOpenChange, onComplete }: BatchP
 
   const handleClose = () => {
     if (isProcessing) {
-      toast.info('Обработка продолжается в фоновом режиме');
+      toast.info(t('batch.processingInBackground'));
     }
     onOpenChange(false);
   };
@@ -144,11 +146,11 @@ export function BatchProcessingDialog({ open, onOpenChange, onComplete }: BatchP
                 <Zap className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <DialogTitle>Массовая обработка документов</DialogTitle>
+                <DialogTitle>{t('batch.title')}</DialogTitle>
                 <DialogDescription>
                   {isProcessing
-                    ? `Обработано ${current} из ${total} документов`
-                    : `Завершено: ${succeeded} успешно, ${failed} ошибок`
+                    ? t('batch.processing', { current, total })
+                    : t('batch.completed', { succeeded, failed })
                   }
                 </DialogDescription>
               </div>
@@ -165,13 +167,13 @@ export function BatchProcessingDialog({ open, onOpenChange, onComplete }: BatchP
           {/* Progress Bar */}
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Прогресс</span>
+              <span className="text-muted-foreground">{t('batch.progress')}</span>
               <span className="font-medium">{Math.round(progress)}%</span>
             </div>
             <Progress value={progress} className="h-2" />
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>✅ Успешно: {succeeded}</span>
-              <span>❌ Ошибок: {failed}</span>
+              <span>✅ {t('batch.succeeded')}: {succeeded}</span>
+              <span>❌ {t('batch.failed')}: {failed}</span>
             </div>
           </div>
 
@@ -183,10 +185,10 @@ export function BatchProcessingDialog({ open, onOpenChange, onComplete }: BatchP
                   {isProcessing ? (
                     <div className="flex flex-col items-center gap-3">
                       <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                      <p>Подготовка к обработке...</p>
+                      <p>{t('batch.preparing')}</p>
                     </div>
                   ) : (
-                    <p>Нет данных для отображения</p>
+                    <p>{t('batch.noData')}</p>
                   )}
                 </div>
               )}
@@ -224,11 +226,11 @@ export function BatchProcessingDialog({ open, onOpenChange, onComplete }: BatchP
           <div className="flex gap-3">
             {isProcessing ? (
               <Button variant="outline" className="w-full" onClick={handleClose}>
-                Скрыть (обработка продолжится)
+                {t('batch.hide')}
               </Button>
             ) : (
               <Button className="w-full" onClick={handleClose}>
-                Закрыть
+                {t('batch.close')}
               </Button>
             )}
           </div>

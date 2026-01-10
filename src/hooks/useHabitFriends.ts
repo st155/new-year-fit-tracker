@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import i18n from '@/i18n';
 
 export interface Friendship {
   id: string;
@@ -79,10 +80,10 @@ export function useSendFriendRequest() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['friends'] });
-      toast.success('Запрос дружбы отправлен');
+      toast.success(i18n.t('habits:friends.requestSent'));
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Не удалось отправить запрос');
+      toast.error(error.message || i18n.t('habits:friends.requestSentError'));
     },
   });
 }
@@ -119,10 +120,10 @@ export function useAcceptFriendRequest() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['friends'] });
       queryClient.invalidateQueries({ queryKey: ['friend-requests'] });
-      toast.success('Запрос принят');
+      toast.success(i18n.t('habits:friends.requestAccepted'));
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Не удалось принять запрос');
+      toast.error(error.message || i18n.t('habits:friends.requestAcceptError'));
     },
   });
 }
@@ -143,10 +144,10 @@ export function useRemoveFriend() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['friends'] });
-      toast.success('Друг удален');
+      toast.success(i18n.t('habits:friends.friendRemoved'));
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Не удалось удалить друга');
+      toast.error(error.message || i18n.t('habits:friends.friendRemoveError'));
     },
   });
 }

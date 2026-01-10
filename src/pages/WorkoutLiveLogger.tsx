@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BackgroundWaves } from '@/components/workout/BackgroundWaves';
 import LiveLoggerHeader from '@/components/workout/logger/LiveLoggerHeader';
@@ -31,6 +32,7 @@ interface SetLog {
 
 export default function WorkoutLiveLogger() {
   const navigate = useNavigate();
+  const { t } = useTranslation('workouts');
   const [workoutData, setWorkoutData] = useState<WorkoutData | null>(null);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [currentSetNumber, setCurrentSetNumber] = useState(1);
@@ -77,7 +79,7 @@ export default function WorkoutLiveLogger() {
 
   const handleCompleteSet = async () => {
     if (!userId) {
-      toast.error('Not authenticated');
+      toast.error(t('liveLogger.notAuthenticated'));
       return;
     }
 
@@ -111,7 +113,7 @@ export default function WorkoutLiveLogger() {
       if (error) throw error;
 
       setLoggedSets([...loggedSets, setLog]);
-      toast.success(`Set ${currentSetNumber} completed!`);
+      toast.success(t('liveLogger.setCompleted', { number: currentSetNumber }));
       
       // Start rest timer
       if (currentSetNumber < totalSets) {
@@ -123,7 +125,7 @@ export default function WorkoutLiveLogger() {
       }
     } catch (error) {
       console.error('Error saving set:', error);
-      toast.error('Failed to save set');
+      toast.error(t('liveLogger.failedToSaveSet'));
     }
   };
 
@@ -139,7 +141,7 @@ export default function WorkoutLiveLogger() {
       setLoggedSets([]);
       setSelectedWeight(workoutData.exercises[currentExerciseIndex + 1].weight || 0);
       setCurrentReps(workoutData.exercises[currentExerciseIndex + 1].reps || 0);
-      toast.success('Next exercise!', {
+      toast.success(t('liveLogger.nextExercise'), {
         description: workoutData.exercises[currentExerciseIndex + 1].name
       });
     } else {

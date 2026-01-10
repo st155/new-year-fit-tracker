@@ -552,5 +552,33 @@
     "workoutDeletedDesc": "Запись успешно удалена из журнала",
     "deleteError": "Ошибка удаления",
     "deleteErrorDesc": "Не удалось удалить тренировку"
+  },
+  "liveLogger": {
+    "notAuthenticated": "Не авторизован",
+    "setCompleted": "Подход {{number}} выполнен!",
+    "failedToSaveSet": "Не удалось сохранить подход",
+    "nextExercise": "Следующее упражнение!"
+  },
+  "editPlan": {
+    "title": "Изменить параметры плана",
+    "description": "Обновите параметры и AI создаст новый план на их основе",
+    "planUpdated": "План обновлён! Переход к новому плану...",
+    "updateFailed": "Не удалось обновить план",
+    "primaryGoal": "Основная цель",
+    "strength": "Сила",
+    "hypertrophy": "Масса",
+    "conditioning": "Выносливость",
+    "generalFitness": "Общая физподготовка",
+    "experienceLevel": "Уровень опыта",
+    "beginner": "Начинающий",
+    "intermediate": "Средний",
+    "advanced": "Продвинутый",
+    "workoutsPerWeek": "Тренировок в неделю",
+    "daysCount": "{{count}} дней",
+    "injuries": "Травмы и ограничения (необязательно)",
+    "injuriesPlaceholder": "Опишите любые травмы или ограничения...",
+    "cancel": "Отмена",
+    "creating": "Создание плана...",
+    "createNew": "Создать новый план"
   }
 }

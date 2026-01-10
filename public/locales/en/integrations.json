@@ -129,7 +129,10 @@
     "syncWillStart": "Whoop data will start syncing automatically.",
     "closeWindow": "Close window",
     "returnToIntegrations": "Return to integrations page",
-    "tryAgain": "Try again"
+    "tryAgain": "Try again",
+    "syncComplete": "Sync complete",
+    "syncCompleteDesc": "Loaded {{metrics}} metrics and {{workouts}} workouts",
+    "syncError": "Sync error"
   },
   "whoopDirect": {
     "title": "Whoop Direct",

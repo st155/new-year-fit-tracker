@@ -550,5 +550,33 @@
     "workoutDeletedDesc": "Entry successfully removed from log",
     "deleteError": "Delete error",
     "deleteErrorDesc": "Could not delete workout"
+  },
+  "liveLogger": {
+    "notAuthenticated": "Not authenticated",
+    "setCompleted": "Set {{number}} completed!",
+    "failedToSaveSet": "Failed to save set",
+    "nextExercise": "Next exercise!"
+  },
+  "editPlan": {
+    "title": "Edit plan settings",
+    "description": "Update settings and AI will create a new plan",
+    "planUpdated": "Plan updated! Redirecting to new plan...",
+    "updateFailed": "Could not update plan",
+    "primaryGoal": "Primary goal",
+    "strength": "Strength",
+    "hypertrophy": "Hypertrophy",
+    "conditioning": "Conditioning",
+    "generalFitness": "General fitness",
+    "experienceLevel": "Experience level",
+    "beginner": "Beginner",
+    "intermediate": "Intermediate",
+    "advanced": "Advanced",
+    "workoutsPerWeek": "Workouts per week",
+    "daysCount": "{{count}} days",
+    "injuries": "Injuries and limitations (optional)",
+    "injuriesPlaceholder": "Describe any injuries or limitations...",
+    "cancel": "Cancel",
+    "creating": "Creating plan...",
+    "createNew": "Create new plan"
   }
 }

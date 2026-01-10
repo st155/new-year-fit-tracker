@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ interface SyncIssuesPanelProps {
 }
 
 export function SyncIssuesPanel({ issues, filters }: SyncIssuesPanelProps) {
+  const { t } = useTranslation('common');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [openNamespaces, setOpenNamespaces] = useState<Set<string>>(new Set());
 
@@ -40,7 +42,7 @@ export function SyncIssuesPanel({ issues, filters }: SyncIssuesPanelProps) {
     const code = `t('${namespace}:${key}')`;
     await navigator.clipboard.writeText(code);
     setCopiedKey(`${namespace}:${key}`);
-    toast.success('Скопировано!', { description: code });
+    toast.success(t('devTools.copied'), { description: code });
     setTimeout(() => setCopiedKey(null), 2000);
   };
 
@@ -60,7 +62,7 @@ export function SyncIssuesPanel({ issues, filters }: SyncIssuesPanelProps) {
         <CardContent className="flex items-center justify-center py-12 text-muted-foreground">
           <div className="text-center">
             <Check className="h-12 w-12 mx-auto mb-4 text-green-500" />
-            <p>Проблем синхронизации не найдено</p>
+            <p>{t('devTools.noSyncIssues')}</p>
           </div>
         </CardContent>
       </Card>
@@ -72,7 +74,7 @@ export function SyncIssuesPanel({ issues, filters }: SyncIssuesPanelProps) {
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
           <AlertTriangle className="h-5 w-5 text-yellow-500" />
-          Рассинхронизация EN/RU
+          {t('devTools.syncIssuesTitle')}
           <Badge variant="secondary">{filteredIssues.length}</Badge>
         </CardTitle>
       </CardHeader>

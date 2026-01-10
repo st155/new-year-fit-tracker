@@ -261,5 +261,11 @@
     "retryFailed": "🔄 Retry Failed",
     "loadingPreviews": "Loading previews...",
     "startProcessing": "Start Processing"
+  },
+  "doctorProtocol": {
+    "addedToLibrary": "{{name}} added to library",
+    "addToLibraryFailed": "Could not add to library",
+    "protocolAddedCount": "Added {{count}} supplements to library",
+    "addProtocolFailed": "Could not add protocol"
   }
 }

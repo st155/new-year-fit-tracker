@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { GoalsService } from "../../services/goals.service";
 import type { Goal, GoalsQueryResult, GoalSource } from "../../types";
 import { toast } from "sonner";
+import i18n from "@/i18n";
 
 /**
  * Query hook for fetching user's personal and challenge goals
@@ -42,7 +43,7 @@ export function useGoalsQuery(userId?: string): GoalsQueryResult {
         return { personal, challenge };
       } catch (error) {
         console.error('❌ Error fetching goals:', error);
-        toast.error('Ошибка загрузки целей');
+        toast.error(i18n.t('goals:errors.loadingGoals'));
         return { personal: [], challenge: [] };
       }
     },
