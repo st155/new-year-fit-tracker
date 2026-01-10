@@ -312,6 +312,16 @@
     "habitOfWeek": "Habit of the week",
     "days": "days"
   },
+  "card": {
+    "swipeAgainToDelete": "Swipe again to delete",
+    "moneySaved": "Saved",
+    "resetCounter": "Reset counter?",
+    "resetDescription": "Your progress ({{days}} days) will be saved in history. Counter will start from zero.",
+    "whatHappened": "What happened? (optional)",
+    "resetting": "Resetting...",
+    "startFresh": "Start fresh",
+    "swipeRightHint": "Swipe right to mark complete"
+  },
 "fastingControl": {
     "startFasting": "Start fasting",
     "eatingWindow": "Eating window",

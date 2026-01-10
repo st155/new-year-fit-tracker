@@ -175,5 +175,14 @@
     "commentDeleteFailed": "Failed to delete comment",
     "writeComment": "Write a comment...",
     "send": "Send"
+  },
+  "chat": {
+    "title": "Challenge Chat",
+    "description": "Communicate with participants in real-time",
+    "loadFailed": "Failed to load messages",
+    "sendFailed": "Failed to send message",
+    "noMessages": "No messages yet",
+    "beFirst": "Be the first to start the conversation!",
+    "placeholder": "Type a message..."
   }
 }
