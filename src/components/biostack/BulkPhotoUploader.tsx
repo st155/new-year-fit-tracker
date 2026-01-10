@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -14,6 +15,8 @@ interface BulkPhotoUploaderProps {
 }
 
 export function BulkPhotoUploader({ open, onOpenChange, onComplete }: BulkPhotoUploaderProps) {
+  const { t } = useTranslation('biostack');
+  const { t: tCommon } = useTranslation('common');
   const {
     items,
     isProcessing,
@@ -33,9 +36,9 @@ export function BulkPhotoUploader({ open, onOpenChange, onComplete }: BulkPhotoU
     if (e.target.files && e.target.files.length > 0) {
       const count = e.target.files.length;
       addFiles(e.target.files);
-      toast.info(`📸 Added ${count} photo${count > 1 ? 's' : ''} to queue`);
+      toast.info(t('toast.addedPhotosToQueue', { count }));
     }
-  }, [addFiles]);
+  }, [addFiles, t]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -75,7 +78,7 @@ export function BulkPhotoUploader({ open, onOpenChange, onComplete }: BulkPhotoU
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl">📷 Bulk Supplement Upload</DialogTitle>
+          <DialogTitle className="text-2xl">{t('bulkUpload.title')}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -102,9 +105,9 @@ export function BulkPhotoUploader({ open, onOpenChange, onComplete }: BulkPhotoU
                     <Camera className="h-12 w-12 text-muted-foreground" />
                   </div>
                   <div>
-                    <p className="text-lg font-medium">Drop 10-20 photos here or click to browse</p>
+                    <p className="text-lg font-medium">{t('bulkUpload.dropHint')}</p>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Upload supplement bottle photos for automatic recognition
+                      {t('bulkUpload.dropHintMobile')}
                     </p>
                   </div>
                 </div>
@@ -130,7 +133,7 @@ export function BulkPhotoUploader({ open, onOpenChange, onComplete }: BulkPhotoU
                   >
                     <span className="cursor-pointer flex items-center justify-center gap-2">
                       <ImagePlus className="h-5 w-5" />
-                      🖼️ Select from Gallery (Multiple)
+                      {t('bulkUpload.selectGallery')}
                     </span>
                   </Button>
                 </label>
@@ -153,7 +156,7 @@ export function BulkPhotoUploader({ open, onOpenChange, onComplete }: BulkPhotoU
                   >
                     <span className="cursor-pointer flex items-center justify-center gap-2">
                       <Camera className="h-5 w-5" />
-                      📷 Take Photo (Single)
+                      {t('bulkUpload.takePhoto')}
                     </span>
                   </Button>
                 </label>
@@ -167,7 +170,7 @@ export function BulkPhotoUploader({ open, onOpenChange, onComplete }: BulkPhotoU
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold">
-                    Queue ({items.filter(i => i.status === 'pending').length} pending)
+                    {t('bulkUpload.queue')} ({items.filter(i => i.status === 'pending').length} {t('bulkUpload.pending')})
                   </h3>
                   {!isProcessing && (
                     <div className="flex gap-2">
@@ -185,7 +188,7 @@ export function BulkPhotoUploader({ open, onOpenChange, onComplete }: BulkPhotoU
                           <Button variant="outline" size="sm" asChild>
                             <span className="cursor-pointer">
                               <Upload className="h-4 w-4 mr-2" />
-                              Add More
+                              {t('bulkUpload.addMore')}
                             </span>
                           </Button>
                         </label>
@@ -206,7 +209,7 @@ export function BulkPhotoUploader({ open, onOpenChange, onComplete }: BulkPhotoU
                           <Button variant="outline" size="sm" asChild>
                             <span className="cursor-pointer flex items-center gap-1">
                               <ImagePlus className="h-4 w-4" />
-                              🖼️ Gallery
+                              {t('bulkUpload.gallery')}
                             </span>
                           </Button>
                         </label>
@@ -224,7 +227,7 @@ export function BulkPhotoUploader({ open, onOpenChange, onComplete }: BulkPhotoU
                           <Button variant="outline" size="sm" asChild>
                             <span className="cursor-pointer flex items-center gap-1">
                               <Camera className="h-4 w-4" />
-                              📷 Camera
+                              {t('bulkUpload.camera')}
                             </span>
                           </Button>
                         </label>
@@ -237,7 +240,7 @@ export function BulkPhotoUploader({ open, onOpenChange, onComplete }: BulkPhotoU
                 {isProcessing && (
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span>Processing: {progress.current} / {progress.total}</span>
+                      <span>{t('bulkUpload.processing')}: {progress.current} / {progress.total}</span>
                       <span>{progress.percentage}%</span>
                     </div>
                     <Progress value={progress.percentage} className="h-2" />
@@ -304,11 +307,11 @@ export function BulkPhotoUploader({ open, onOpenChange, onComplete }: BulkPhotoU
                 <div className="grid grid-cols-2 gap-3 p-4 bg-neutral-900/50 rounded-lg border border-white/10">
                   <div className="text-center">
                     <p className="text-3xl font-bold text-green-400">{successCount}</p>
-                    <p className="text-sm text-muted-foreground">✅ Successfully added</p>
+                    <p className="text-sm text-muted-foreground">{t('bulkUpload.successfullyAdded')}</p>
                   </div>
                   <div className="text-center">
                     <p className="text-3xl font-bold text-red-400">{errorCount}</p>
-                    <p className="text-sm text-muted-foreground">❌ Failed</p>
+                    <p className="text-sm text-muted-foreground">{t('bulkUpload.failed')}</p>
                   </div>
                 </div>
               )}
@@ -343,11 +346,11 @@ export function BulkPhotoUploader({ open, onOpenChange, onComplete }: BulkPhotoU
                             </>
                           )}
                           {item.status === 'processing' && (
-                            <p className="text-sm text-muted-foreground">Analyzing...</p>
+                            <p className="text-sm text-muted-foreground">{t('bulkUpload.analyzing')}</p>
                           )}
                           {item.status === 'error' && (
                             <>
-                              <p className="text-sm font-medium text-red-400">Failed</p>
+                              <p className="text-sm font-medium text-red-400">{t('bulkUpload.failed')}</p>
                               <p className="text-xs text-muted-foreground">{item.error}</p>
                             </>
                           )}
@@ -366,7 +369,7 @@ export function BulkPhotoUploader({ open, onOpenChange, onComplete }: BulkPhotoU
               onClick={handleClose}
               disabled={isProcessing}
             >
-              {progress.current > 0 ? 'Close' : 'Cancel'}
+              {progress.current > 0 ? t('bulkUpload.close') : t('bulkUpload.cancel')}
             </Button>
             
             {items.length > 0 && (
@@ -376,7 +379,7 @@ export function BulkPhotoUploader({ open, onOpenChange, onComplete }: BulkPhotoU
                     variant="destructive"
                     onClick={cancelProcessing}
                   >
-                    Stop Processing
+                    {t('bulkUpload.stopProcessing')}
                   </Button>
                 ) : (
                   <>
@@ -387,7 +390,7 @@ export function BulkPhotoUploader({ open, onOpenChange, onComplete }: BulkPhotoU
                         variant="outline"
                         className="border-red-500/50 hover:bg-red-500/10"
                       >
-                        🔄 Retry Failed ({errorCount})
+                        {t('bulkUpload.retryFailed')} ({errorCount})
                       </Button>
                     )}
                     
@@ -403,12 +406,12 @@ export function BulkPhotoUploader({ open, onOpenChange, onComplete }: BulkPhotoU
                       {items.some(i => i.previewLoading) ? (
                         <>
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Loading previews...
+                          {t('bulkUpload.loadingPreviews')}
                         </>
                       ) : (
                         <>
                           <Camera className="h-4 w-4 mr-2" />
-                          Start Processing ({items.filter(i => i.status === 'pending').length})
+                          {t('bulkUpload.startProcessing')} ({items.filter(i => i.status === 'pending').length})
                         </>
                       )}
                     </Button>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ interface CelebrateButtonProps {
 }
 
 export function CelebrateButton({ activityId, userId }: CelebrateButtonProps) {
+  const { t } = useTranslation('leaderboard');
   const [celebrating, setCelebrating] = useState(false);
   const { toggleReaction, userReactions } = useActivityReactions(activityId, userId);
   
@@ -19,7 +21,7 @@ export function CelebrateButton({ activityId, userId }: CelebrateButtonProps) {
 
   const handleCelebrate = async () => {
     if (!userId) {
-      toast.error("Please log in to celebrate");
+      toast.error(t('celebrate.loginRequired'));
       return;
     }
 
@@ -64,7 +66,7 @@ export function CelebrateButton({ activityId, userId }: CelebrateButtonProps) {
       navigator.vibrate([50, 100, 50]);
     }
 
-    toast.success("🎉 Celebration sent!");
+    toast.success(t('celebrate.sent'));
 
     setTimeout(() => {
       setCelebrating(false);
@@ -87,7 +89,7 @@ export function CelebrateButton({ activityId, userId }: CelebrateButtonProps) {
           <PartyPopper className="h-4 w-4" />
         </motion.div>
         <span className="hidden sm:inline">
-          {hasCelebrated ? "Celebrated" : "Celebrate"}
+          {hasCelebrated ? t('celebrate.celebrated') : t('celebrate.celebrate')}
         </span>
       </Button>
     </motion.div>
