@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { SupplementTimeline } from "./SupplementTimeline";
 import { useState } from "react";
+import { useTranslation } from 'react-i18next';
 
 interface ProtocolPreviewProps {
   protocol: any;
@@ -19,6 +20,7 @@ export function ProtocolPreview({ protocol, onClose, onRegenerate }: ProtocolPre
   const { user } = useAuth();
   const { createProtocol } = useSupplementProtocol(user?.id);
   const { toast } = useToast();
+  const { t } = useTranslation('supplements');
   const [isCreating, setIsCreating] = useState(false);
 
   const handleAccept = async () => {
@@ -41,15 +43,15 @@ export function ProtocolPreview({ protocol, onClose, onRegenerate }: ProtocolPre
       });
 
       toast({
-        title: "Protocol created successfully!",
-        description: "Your personalized supplement protocol is now active.",
+        title: t('protocol.createdSuccess'),
+        description: t('protocol.createdSuccessDesc'),
       });
 
       onClose();
     } catch (error: any) {
       console.error("Error creating protocol:", error);
       toast({
-        title: "Failed to create protocol",
+        title: t('protocol.createFailed'),
         description: error.message,
         variant: "destructive",
       });
@@ -78,7 +80,7 @@ export function ProtocolPreview({ protocol, onClose, onRegenerate }: ProtocolPre
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <div>
                     <p className="text-2xl font-bold">{protocol.duration_days}</p>
-                    <p className="text-xs text-muted-foreground">days</p>
+                    <p className="text-xs text-muted-foreground">{t('protocol.days')}</p>
                   </div>
                 </div>
               </CardContent>
@@ -90,7 +92,7 @@ export function ProtocolPreview({ protocol, onClose, onRegenerate }: ProtocolPre
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                   <div>
                     <p className="text-2xl font-bold">${protocol.total_estimated_cost}</p>
-                    <p className="text-xs text-muted-foreground">per month</p>
+                    <p className="text-xs text-muted-foreground">{t('protocol.perMonth')}</p>
                   </div>
                 </div>
               </CardContent>
@@ -102,7 +104,7 @@ export function ProtocolPreview({ protocol, onClose, onRegenerate }: ProtocolPre
                   <Sparkles className="h-4 w-4 text-primary" />
                   <div>
                     <p className="text-2xl font-bold">{protocol.recommendations.length}</p>
-                    <p className="text-xs text-muted-foreground">supplements</p>
+                    <p className="text-xs text-muted-foreground">{t('protocol.supplements')}</p>
                   </div>
                 </div>
               </CardContent>
@@ -112,7 +114,7 @@ export function ProtocolPreview({ protocol, onClose, onRegenerate }: ProtocolPre
           <Separator />
 
           <div className="space-y-4">
-            <h3 className="font-semibold text-lg">Recommendations</h3>
+            <h3 className="font-semibold text-lg">{t('protocol.recommendations')}</h3>
             <div className="space-y-3">
               {protocol.recommendations.map((rec: any, index: number) => (
                 <Card key={index} className="glass-card">
@@ -121,7 +123,7 @@ export function ProtocolPreview({ protocol, onClose, onRegenerate }: ProtocolPre
                       <div>
                         <h4 className="font-semibold">{rec.supplement_name}</h4>
                         <p className="text-sm text-muted-foreground">
-                          {rec.brand_recommendation || "Any quality brand"}
+                          {rec.brand_recommendation || t('protocol.anyBrand')}
                         </p>
                       </div>
                       <span
@@ -140,11 +142,11 @@ export function ProtocolPreview({ protocol, onClose, onRegenerate }: ProtocolPre
                   <CardContent className="space-y-3">
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <span className="text-muted-foreground">Dosage:</span>{" "}
+                        <span className="text-muted-foreground">{t('protocol.dosage')}</span>{" "}
                         <span className="font-medium">{rec.dosage}</span>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">Frequency:</span>{" "}
+                        <span className="text-muted-foreground">{t('protocol.frequency')}</span>{" "}
                         <span className="font-medium">{rec.frequency}</span>
                       </div>
                     </div>
@@ -154,7 +156,7 @@ export function ProtocolPreview({ protocol, onClose, onRegenerate }: ProtocolPre
                     )}
 
                     <div className="p-3 bg-muted rounded-lg text-sm">
-                      <p className="font-medium mb-1">Why this supplement:</p>
+                      <p className="font-medium mb-1">{t('protocol.whyThisSupplement')}</p>
                       <p className="text-muted-foreground">{rec.reasoning}</p>
                     </div>
 
@@ -162,7 +164,7 @@ export function ProtocolPreview({ protocol, onClose, onRegenerate }: ProtocolPre
                       <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm">
                         <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
                         <div>
-                          <p className="font-medium text-destructive">Warnings:</p>
+                          <p className="font-medium text-destructive">{t('protocol.warnings')}</p>
                           <ul className="list-disc list-inside text-muted-foreground">
                             {rec.warnings.map((warning: string, i: number) => (
                               <li key={i}>{warning}</li>
@@ -174,7 +176,7 @@ export function ProtocolPreview({ protocol, onClose, onRegenerate }: ProtocolPre
 
                     {rec.estimated_cost_per_month && (
                       <p className="text-sm text-muted-foreground">
-                        Est. cost: ${rec.estimated_cost_per_month}/month
+                        {t('protocol.estimatedCost', { cost: rec.estimated_cost_per_month })}
                       </p>
                     )}
                   </CardContent>
@@ -187,7 +189,7 @@ export function ProtocolPreview({ protocol, onClose, onRegenerate }: ProtocolPre
             <>
               <Separator />
               <div className="space-y-2">
-                <h3 className="font-semibold">Key Considerations</h3>
+                <h3 className="font-semibold">{t('protocol.keyConsiderations')}</h3>
                 <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
                   {protocol.key_considerations.map((consideration: string, index: number) => (
                     <li key={index}>{consideration}</li>
@@ -200,7 +202,7 @@ export function ProtocolPreview({ protocol, onClose, onRegenerate }: ProtocolPre
           {protocol.review_schedule && (
             <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg">
               <p className="text-sm">
-                <span className="font-medium">Review Schedule:</span> {protocol.review_schedule}
+                <span className="font-medium">{t('protocol.reviewSchedule')}</span> {protocol.review_schedule}
               </p>
             </div>
           )}
@@ -208,13 +210,13 @@ export function ProtocolPreview({ protocol, onClose, onRegenerate }: ProtocolPre
 
         <div className="flex gap-3">
           <Button variant="outline" onClick={onRegenerate} className="flex-1">
-            Regenerate
+            {t('protocol.regenerate')}
           </Button>
           <Button variant="outline" onClick={onClose}>
-            Cancel
+            {t('common:actions.cancel', 'Cancel')}
           </Button>
           <Button onClick={handleAccept} disabled={isCreating} className="flex-1">
-            {isCreating ? "Creating..." : "Accept & Create Protocol"}
+            {isCreating ? t('protocol.creating') : t('protocol.acceptCreate')}
           </Button>
         </div>
       </DialogContent>

@@ -9,6 +9,7 @@ import { supplementsApi } from "@/lib/api";
 import { Sparkles, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ProtocolPreview } from "./ProtocolPreview";
+import { useTranslation } from 'react-i18next';
 
 interface ProtocolGeneratorProps {
   onClose: () => void;
@@ -45,6 +46,7 @@ const DIETARY_RESTRICTIONS = [
 export function ProtocolGenerator({ onClose }: ProtocolGeneratorProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation('supplements');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedProtocol, setGeneratedProtocol] = useState<any>(null);
   const [formData, setFormData] = useState({
@@ -67,7 +69,7 @@ export function ProtocolGenerator({ onClose }: ProtocolGeneratorProps) {
   const handleGenerate = async () => {
     if (formData.goals.length === 0) {
       toast({
-        title: "Please select at least one goal",
+        title: t('protocol.selectGoalRequired'),
         variant: "destructive",
       });
       return;
@@ -88,11 +90,11 @@ export function ProtocolGenerator({ onClose }: ProtocolGeneratorProps) {
       if (!data) throw new Error('No data returned');
 
       setGeneratedProtocol(data.protocol);
-      toast({ title: "Protocol generated successfully!" });
+      toast({ title: t('protocol.generatedSuccess') });
     } catch (error: any) {
       console.error("Error generating protocol:", error);
       toast({
-        title: "Failed to generate protocol",
+        title: t('protocol.generateFailed'),
         description: error.message,
         variant: "destructive",
       });
@@ -117,13 +119,13 @@ export function ProtocolGenerator({ onClose }: ProtocolGeneratorProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
-            Generate AI Protocol
+            {t('protocol.generateTitle')}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
           <div className="space-y-3">
-            <Label className="text-base">Select Your Goals</Label>
+            <Label className="text-base">{t('protocol.selectGoals')}</Label>
             <div className="grid grid-cols-2 gap-3">
               {GOAL_OPTIONS.map((goal) => (
                 <div key={goal} className="flex items-center space-x-2">
@@ -144,7 +146,7 @@ export function ProtocolGenerator({ onClose }: ProtocolGeneratorProps) {
           </div>
 
           <div className="space-y-3">
-            <Label className="text-base">Health Conditions (Optional)</Label>
+            <Label className="text-base">{t('protocol.healthConditions')}</Label>
             <div className="grid grid-cols-2 gap-3">
               {HEALTH_CONDITIONS.map((condition) => (
                 <div key={condition} className="flex items-center space-x-2">
@@ -167,7 +169,7 @@ export function ProtocolGenerator({ onClose }: ProtocolGeneratorProps) {
           </div>
 
           <div className="space-y-3">
-            <Label className="text-base">Dietary Restrictions (Optional)</Label>
+            <Label className="text-base">{t('protocol.dietaryRestrictions')}</Label>
             <div className="grid grid-cols-2 gap-3">
               {DIETARY_RESTRICTIONS.map((restriction) => (
                 <div key={restriction} className="flex items-center space-x-2">
@@ -191,7 +193,7 @@ export function ProtocolGenerator({ onClose }: ProtocolGeneratorProps) {
 
           <div className="space-y-3">
             <Label className="text-base">
-              Protocol Duration: {formData.protocol_duration_days} days
+              {t('protocol.duration', { days: formData.protocol_duration_days })}
             </Label>
             <Slider
               value={[formData.protocol_duration_days]}
@@ -204,14 +206,14 @@ export function ProtocolGenerator({ onClose }: ProtocolGeneratorProps) {
               className="w-full"
             />
             <p className="text-xs text-muted-foreground">
-              Recommended: 30-60 days for best results
+              {t('protocol.durationHint')}
             </p>
           </div>
         </div>
 
         <div className="flex gap-3">
           <Button variant="outline" onClick={onClose} className="flex-1">
-            Cancel
+            {t('common:actions.cancel', 'Cancel')}
           </Button>
           <Button
             onClick={handleGenerate}
@@ -221,12 +223,12 @@ export function ProtocolGenerator({ onClose }: ProtocolGeneratorProps) {
             {isGenerating ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Generating...
+                {t('protocol.generating')}
               </>
             ) : (
               <>
                 <Sparkles className="mr-2 h-4 w-4" />
-                Generate Protocol
+                {t('protocol.generate')}
               </>
             )}
           </Button>

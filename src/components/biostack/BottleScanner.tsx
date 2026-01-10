@@ -118,8 +118,8 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
           queryClient.invalidateQueries({ queryKey: ['supplement-library'] });
           queryClient.invalidateQueries({ queryKey: ['library-check', productId] });
           toast({
-            title: "📚 Scan Recorded",
-            description: `${productName} scan count updated.`,
+            title: t('scanner.scanRecorded'),
+            description: t('scanner.scanRecordedDesc', { name: productName }),
           });
         }
       } else {
@@ -136,16 +136,16 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
         if (libraryError) {
           console.error('[BOTTLE-SCANNER] ❌ Library creation failed:', libraryError);
           toast({
-            title: "⚠️ Library warning",
-            description: "Product found but couldn't add to library.",
+            title: t('scanner.libraryWarning'),
+            description: t('scanner.libraryWarningDesc'),
           });
         } else {
           console.log('[BOTTLE-SCANNER] ✅ Added to library');
           queryClient.invalidateQueries({ queryKey: ['supplement-library'] });
           queryClient.invalidateQueries({ queryKey: ['library-check', productId] });
           toast({
-            title: "📚 Added to Library",
-            description: `${productName} saved to your library.`,
+            title: t('scanner.addedToLibrary'),
+            description: t('scanner.addedToLibraryDesc', { name: productName }),
           });
         }
       }
@@ -192,7 +192,7 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
         setStep('preview');
       }
     }
-  }, [step, toast]);
+  }, [step, toast, t]);
 
   // Upload from gallery
   const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -218,7 +218,7 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
       }
     };
     reader.readAsDataURL(file);
-  }, [step, toast]);
+  }, [step, toast, t]);
 
   // Retake photo
   const handleRetake = useCallback((side: 'front' | 'back') => {
@@ -364,8 +364,8 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
         setEnrichedProduct(enrichedProductData);
         
         toast({
-          title: "✅ Supplement enriched!",
-          description: "Complete product information loaded.",
+          title: t('scanner.enriched'),
+          description: t('scanner.enrichedDesc'),
         });
       } catch (enrichError) {
         console.warn('[BOTTLE-SCANNER] ⚠️ Enrichment failed, using basic data:', enrichError);
@@ -389,8 +389,8 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
         setEnrichedProduct(basicProduct);
         
         toast({
-          title: "ℹ️ Basic info loaded",
-          description: "Showing extracted information (enrichment unavailable).",
+          title: t('scanner.basicInfoLoaded'),
+          description: t('scanner.basicInfoLoadedDesc'),
         });
       }
       
@@ -410,7 +410,7 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       
       toast({
-        title: "❌ Failed to process supplement",
+        title: t('scanner.processFailed'),
         description: errorMessage,
         variant: "destructive",
         duration: 5000,
@@ -495,8 +495,8 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
         await addToLibrary(data.productId, data.extracted.supplement_name);
         
         toast({
-          title: "⚡ Мгновенное распознавание!",
-          description: `${data.extracted.supplement_name} найден по баркоду`,
+          title: t('scanner.instantMatch'),
+          description: t('scanner.instantMatchDesc', { name: data.extracted.supplement_name }),
         });
         
         setStep('info-card');
@@ -505,8 +505,8 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
       
       // Regular flow (product not found by barcode)
       toast({
-        title: "✅ Bottle analyzed!",
-        description: `Detected: ${data.extracted.supplement_name}`,
+        title: t('scanner.analyzed'),
+        description: t('scanner.analyzedDesc', { name: data.extracted.supplement_name }),
       });
 
       // Create product and enrich immediately
@@ -514,13 +514,13 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
     } catch (error) {
       console.error('Analysis error:', error);
       toast({
-        title: "Analysis failed",
+        title: t('scanner.analysisFailed'),
         description: error instanceof Error ? error.message : "Failed to analyze bottle. Please try again.",
         variant: "destructive",
       });
       setStep('preview');
     }
-  }, [frontImage, backImage, toast]);
+  }, [frontImage, backImage, toast, t, manualBarcode]);
 
   // Add to stack mutation (product already created)
   const addToStackMutation = useMutation({
@@ -560,8 +560,8 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
       queryClient.invalidateQueries({ queryKey: ['library-check', productId] });
       queryClient.invalidateQueries({ queryKey: ['stack-check', productId] });
       toast({
-        title: "✅ Added to stack!",
-        description: `${editedData?.supplement_name} is now in your supplement stack.`,
+        title: t('scanner.addedToStack'),
+        description: t('scanner.addedToStackDesc', { name: editedData?.supplement_name }),
       });
       
       // Pass scanned data to callback
@@ -578,7 +578,7 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
     onError: (error) => {
       console.error('Add to stack error:', error);
       toast({
-        title: "Failed to add supplement",
+        title: t('scanner.addToStackFailed'),
         description: error instanceof Error ? error.message : "Please try again.",
         variant: "destructive",
       });
@@ -591,8 +591,8 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
 
   const handleSaveToLibraryOnly = () => {
     toast({
-      title: "📚 Добавлено в библиотеку",
-      description: `${enrichedProduct?.name} сохранен в вашей библиотеке`,
+      title: t('scanner.addedToLibraryOnly'),
+      description: t('scanner.addedToLibraryOnlyDesc', { name: enrichedProduct?.name }),
     });
     handleClose();
   };
@@ -603,7 +603,7 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
         <DialogHeader>
           <DialogTitle className="text-foreground flex items-center gap-2">
             <Camera className="h-5 w-5 text-blue-400" />
-            Scan Supplement Bottle
+            {t('scanner.title')}
           </DialogTitle>
         </DialogHeader>
 
@@ -614,7 +614,8 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
               <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 mb-4">
                 <p className="text-sm text-blue-400 flex items-center gap-2">
                   <span className="text-xl">📦</span>
-                  <span className="font-medium">Шаг 1 из 2:</span> Сфотографируйте <strong>лицевую сторону</strong> (название, бренд, дозировка)
+                  <span className="font-medium">{t('scanner.step1')}</span>{' '}
+                  <span dangerouslySetInnerHTML={{ __html: t('scanner.step1Desc') }} />
                 </p>
               </div>
               
@@ -639,7 +640,7 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
                   className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-[0_0_15px_rgba(34,197,94,0.3)]"
                 >
                   <Camera className="h-5 w-5 mr-2" />
-                  Сделать фото
+                  {t('scanner.takePhoto')}
                 </Button>
                 <Button
                   onClick={() => fileInputRef.current?.click()}
@@ -647,10 +648,10 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
                   variant="outline"
                 >
                   <Upload className="h-5 w-5 mr-2" />
-                  Загрузить из галереи
+                  {t('scanner.uploadFromGallery')}
                 </Button>
                 <Button onClick={handleClose} variant="outline">
-                  Отмена
+                  {t('scanner.cancel')}
                 </Button>
               </div>
 
@@ -671,7 +672,7 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
                 <div className="flex items-center gap-3 bg-green-500/10 border border-green-500/30 rounded-lg p-3">
                   <img src={frontImage} alt="Front side preview" className="w-16 h-16 object-cover rounded border border-green-500/50" />
                   <div className="flex-1">
-                    <p className="text-sm text-green-400 font-medium">✅ Лицевая сторона готова</p>
+                    <p className="text-sm text-green-400 font-medium">{t('scanner.frontSideReady')}</p>
                   </div>
                 </div>
               )}
@@ -679,7 +680,8 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
               <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
                 <p className="text-sm text-blue-400 flex items-center gap-2">
                   <span className="text-xl">🔲</span>
-                  <span className="font-medium">Шаг 2 из 2:</span> Сфотографируйте <strong>заднюю сторону</strong> с баркодом и составом
+                  <span className="font-medium">{t('scanner.step2')}</span>{' '}
+                  <span dangerouslySetInnerHTML={{ __html: t('scanner.step2Desc') }} />
                 </p>
               </div>
               
@@ -704,7 +706,7 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
                   className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-[0_0_15px_rgba(34,197,94,0.3)]"
                 >
                   <Camera className="h-5 w-5 mr-2" />
-                  Сделать фото
+                  {t('scanner.takePhoto')}
                 </Button>
                 <Button
                   onClick={() => fileInputRef.current?.click()}
@@ -712,13 +714,13 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
                   variant="outline"
                 >
                   <Upload className="h-5 w-5 mr-2" />
-                  Загрузить из галереи
+                  {t('scanner.uploadFromGallery')}
                 </Button>
                 <Button onClick={() => handleRetake('front')} variant="outline" size="lg">
-                  ← Переснять лицевую
+                  {t('scanner.retakeFront')}
                 </Button>
                 <Button onClick={handleSkipBackSide} variant="ghost" size="lg" className="text-muted-foreground">
-                  Пропустить →
+                  {t('scanner.skip')}
                 </Button>
               </div>
 
@@ -738,20 +740,20 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <div className="text-sm font-medium text-green-400 flex items-center gap-2">
-                    <span>📦 Лицевая сторона</span>
+                    <span>{t('scanner.frontSide')}</span>
                   </div>
                   <div className="relative aspect-video bg-neutral-900 rounded-lg overflow-hidden border border-green-500/50">
                     <img src={frontImage} alt="Front side" className="w-full h-full object-contain" />
                   </div>
                   <Button onClick={() => handleRetake('front')} variant="outline" size="sm" className="w-full">
                     <RotateCcw className="h-4 w-4 mr-2" />
-                    Переснять
+                    {t('scanner.retake')}
                   </Button>
                 </div>
                 
                 <div className="space-y-2">
                   <div className="text-sm font-medium text-blue-400 flex items-center gap-2">
-                    <span>🔲 Задняя сторона</span>
+                    <span>{t('scanner.backSide')}</span>
                   </div>
                   {backImage ? (
                     <>
@@ -760,12 +762,12 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
                       </div>
                       <Button onClick={() => handleRetake('back')} variant="outline" size="sm" className="w-full">
                         <RotateCcw className="h-4 w-4 mr-2" />
-                        Переснять
+                        {t('scanner.retake')}
                       </Button>
                     </>
                   ) : (
                     <div className="aspect-video bg-neutral-900 rounded-lg flex items-center justify-center border border-dashed border-neutral-700">
-                      <p className="text-sm text-muted-foreground">Не загружено</p>
+                      <p className="text-sm text-muted-foreground">{t('scanner.notUploaded')}</p>
                     </div>
                   )}
                 </div>
@@ -775,10 +777,10 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
               <div className="space-y-2 bg-neutral-900/50 border border-neutral-800 rounded-lg p-4">
                 <Label htmlFor="manual-barcode" className="text-sm font-medium flex items-center gap-2">
                   <span className="text-xl">🔲</span>
-                  Ручной ввод баркода (опционально)
+                  {t('scanner.manualBarcodeLabel')}
                 </Label>
                 <p className="text-xs text-muted-foreground mb-2">
-                  Введите баркод вручную, если AI не смог его извлечь (12-13 цифр)
+                  {t('scanner.manualBarcodeHint')}
                 </p>
                 <Input
                   id="manual-barcode"
@@ -796,12 +798,12 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
                 />
                 {manualBarcode && (manualBarcode.length !== 12 && manualBarcode.length !== 13) && (
                   <p className="text-xs text-yellow-400 flex items-center gap-1">
-                    ⚠️ Баркод должен содержать 12 (UPC-A) или 13 (EAN-13) цифр
+                    {t('scanner.barcodeWarning')}
                   </p>
                 )}
                 {manualBarcode && (manualBarcode.length === 12 || manualBarcode.length === 13) && (
                   <p className="text-xs text-green-400 flex items-center gap-1">
-                    ✅ Корректный формат баркода ({manualBarcode.length === 12 ? 'UPC-A' : 'EAN-13'})
+                    {t('scanner.barcodeValid')} ({manualBarcode.length === 12 ? 'UPC-A' : 'EAN-13'})
                   </p>
                 )}
               </div>
@@ -813,7 +815,7 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
                   className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]"
                 >
                   <Sparkles className="h-5 w-5 mr-2" />
-                  Анализировать с AI
+                  {t('scanner.analyzeWithAI')}
                 </Button>
               </div>
             </div>
@@ -824,11 +826,11 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
             <div className="py-12 text-center space-y-4">
               <Loader2 className="h-12 w-12 animate-spin text-blue-400 mx-auto" />
               <div className="space-y-2">
-                <p className="text-lg font-semibold text-foreground">🤖 Analyzing bottle with Gemini Vision...</p>
-                <p className="text-sm text-muted-foreground">Extracting supplement information from label</p>
+                <p className="text-lg font-semibold text-foreground">{t('scanner.analyzing')}</p>
+                <p className="text-sm text-muted-foreground">{t('scanner.analyzingDesc')}</p>
                 <div className="text-xs text-yellow-400 mt-3 space-y-1">
-                  <p>⏱️ This may take 10-30 seconds...</p>
-                  <p className="text-muted-foreground">Reading text, identifying brand, dosage, and servings</p>
+                  <p>{t('scanner.analyzingTime')}</p>
+                  <p className="text-muted-foreground">{t('scanner.analyzingDetails')}</p>
                 </div>
               </div>
             </div>
@@ -839,11 +841,11 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
             <div className="py-12 text-center space-y-4">
               <Loader2 className="h-12 w-12 animate-spin text-green-400 mx-auto" />
               <div className="space-y-2">
-                <p className="text-lg font-semibold text-foreground">🧬 Enriching supplement data...</p>
-                <p className="text-sm text-muted-foreground">Fetching detailed information, benefits, and research</p>
+                <p className="text-lg font-semibold text-foreground">{t('scanner.enrichingTitle')}</p>
+                <p className="text-sm text-muted-foreground">{t('scanner.enrichingDesc')}</p>
                 <div className="text-xs text-green-400 mt-3 space-y-1">
-                  <p>⏱️ Getting comprehensive product details...</p>
-                  <p className="text-muted-foreground">This creates a Vivino-style information card</p>
+                  <p>{t('scanner.enrichingTime')}</p>
+                  <p className="text-muted-foreground">{t('scanner.enrichingDetails')}</p>
                 </div>
               </div>
             </div>
@@ -856,8 +858,8 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
                 <div className="bg-cyan-500/10 border border-cyan-500/50 rounded-lg p-3 flex items-center gap-2 animate-pulse">
                   <span className="text-2xl">⚡</span>
                   <div>
-                    <p className="text-cyan-400 font-semibold">Мгновенно найден по баркоду!</p>
-                    <p className="text-xs text-cyan-300/70">Продукт уже в базе данных</p>
+                    <p className="text-cyan-400 font-semibold">{t('scanner.foundByBarcode')}</p>
+                    <p className="text-xs text-cyan-300/70">{t('scanner.alreadyInDatabase')}</p>
                   </div>
                 </div>
               )}
