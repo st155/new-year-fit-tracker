@@ -233,6 +233,13 @@
     "adherenceRate": "Adherence Rate",
     "optimized": "Optimized"
   },
+  "research": {
+    "linkBiomarkersHint": "Click \"Link Biomarkers\" to search for scientific data"
+  },
+  "intake": {
+    "addMore": "Add another intake",
+    "cancel": "Cancel intake"
+  },
   "bulkUpload": {
     "title": "📷 Bulk Supplement Upload",
     "dropHint": "Drop 10-20 photos here or click to browse",

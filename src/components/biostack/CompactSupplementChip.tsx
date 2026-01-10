@@ -5,6 +5,7 @@ import { UnifiedSupplementItem } from "@/hooks/biostack/useTodaysSupplements";
 import { cn } from "@/lib/utils";
 import { useLinkedBiomarkers } from "@/hooks/biostack/useLinkedBiomarkers";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 interface CompactSupplementChipProps {
   item: UnifiedSupplementItem;
@@ -17,6 +18,7 @@ interface CompactSupplementChipProps {
 }
 
 export function CompactSupplementChip({ item, isSelected, onToggle, onToggleIntake, onIncrementIntake, isToggling, onAddPhoto }: CompactSupplementChipProps) {
+  const { t } = useTranslation('biostack');
   const { data: linkedBiomarkers } = useLinkedBiomarkers(item.linkedBiomarkerIds);
 
   const getTrendIcon = (trend: 'up' | 'down' | 'stable' | null) => {
@@ -123,7 +125,7 @@ export function CompactSupplementChip({ item, isSelected, onToggle, onToggleInta
                     }}
                     disabled={isToggling}
                     className="p-1 rounded-full bg-blue-500/20 hover:bg-blue-500/30 transition-colors disabled:opacity-50"
-                    title="Добавить ещё приём"
+                    title={t('intake.addMore')}
                   >
                     <Plus className="h-4 w-4 text-blue-400" />
                   </button>
@@ -136,7 +138,7 @@ export function CompactSupplementChip({ item, isSelected, onToggle, onToggleInta
                     }}
                     disabled={isToggling}
                     className="p-1 rounded-full bg-green-500/20 hover:bg-green-500/30 transition-colors disabled:opacity-50"
-                    title="Отменить приём"
+                    title={t('intake.cancel')}
                   >
                     <CheckCircle2 className="h-5 w-5 text-green-500" />
                   </button>

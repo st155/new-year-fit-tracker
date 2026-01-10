@@ -60,6 +60,10 @@
     "retryProcessing": "Retry Processing",
     "reprocessDocument": "Reprocess Document"
   },
+  "extraction": {
+    "reprocessSuccess": "Document reprocessed successfully",
+    "reprocessFailed": "Failed to reprocess document: {{error}}"
+  },
   "dialog": {
     "deleteTitle": "Delete Document?",
     "deleteDescription": "This action is irreversible. The document will be permanently deleted.",

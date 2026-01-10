@@ -1,11 +1,13 @@
 import { HealthData } from "./types";
 import { HealthMetricCard } from "./HealthMetricCard";
+import { useTranslation } from "react-i18next";
 
 interface BodyMetricsProps {
   healthData: HealthData[];
 }
 
 export function BodyMetrics({ healthData }: BodyMetricsProps) {
+  const { t } = useTranslation('trainerHealth');
   const getLatestValue = (key: keyof HealthData) => {
     const latestData = healthData.find(d => d[key] !== undefined && d[key] !== null);
     return latestData?.[key] as number | undefined;
@@ -45,7 +47,7 @@ export function BodyMetrics({ healthData }: BodyMetricsProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <HealthMetricCard
-        title="Вес"
+        title={t('metrics.weight')}
         icon="⚖️"
         value={getLatestValue('weight') || 0}
         unit="кг"
@@ -55,7 +57,7 @@ export function BodyMetrics({ healthData }: BodyMetricsProps) {
       />
       
       <HealthMetricCard
-        title="Процент жира"
+        title={t('metrics.bodyFat')}
         icon="📊"
         value={getLatestValue('body_fat') || 0}
         unit="%"
@@ -65,7 +67,7 @@ export function BodyMetrics({ healthData }: BodyMetricsProps) {
       />
       
       <HealthMetricCard
-        title="Мышечная масса"
+        title={t('metrics.muscleMass')}
         icon="💪"
         value={getLatestValue('muscle_mass') || 0}
         unit="кг"
@@ -75,7 +77,7 @@ export function BodyMetrics({ healthData }: BodyMetricsProps) {
       />
       
       <HealthMetricCard
-        title="Процент мышц"
+        title={t('metrics.musclePercent')}
         icon="📈"
         value={getLatestValue('muscle_percent') || 0}
         unit="%"
