@@ -74,6 +74,12 @@
     "selected": "Selected",
     "select": "Select"
   },
+  "difficultyBadge": {
+    "basic": "Basic",
+    "level1": "+1 Level",
+    "level2": "+2 Level",
+    "level3": "+3 Level"
+  },
   "report": {
     "resultsOf": "Results of {{name}}",
     "shareText": "I took {{rank}} place in the {{name}} challenge with {{points}} points!",

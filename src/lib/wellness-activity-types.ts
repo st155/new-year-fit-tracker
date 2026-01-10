@@ -1,91 +1,93 @@
+import i18n from '@/i18n';
+
 // Activity types with their display configuration
 export const ACTIVITY_TYPES = {
   strength: {
-    label: 'Силовая',
+    labelKey: 'strength',
     icon: '🏋️',
     color: 'text-orange-400',
     bgColor: 'bg-orange-500/20',
     borderColor: 'border-orange-500/30',
   },
   cardio: {
-    label: 'Кардио',
+    labelKey: 'cardio',
     icon: '🏃',
     color: 'text-red-400',
     bgColor: 'bg-red-500/20',
     borderColor: 'border-red-500/30',
   },
   running: {
-    label: 'Пробежка',
+    labelKey: 'running',
     icon: '🏃',
     color: 'text-red-400',
     bgColor: 'bg-red-500/20',
     borderColor: 'border-red-500/30',
   },
   massage: {
-    label: 'Массаж',
+    labelKey: 'massage',
     icon: '💆',
     color: 'text-pink-400',
     bgColor: 'bg-pink-500/20',
     borderColor: 'border-pink-500/30',
   },
   stretching: {
-    label: 'Растяжка',
+    labelKey: 'stretching',
     icon: '🧘',
     color: 'text-purple-400',
     bgColor: 'bg-purple-500/20',
     borderColor: 'border-purple-500/30',
   },
   yoga: {
-    label: 'Йога',
+    labelKey: 'yoga',
     icon: '🧘',
     color: 'text-purple-400',
     bgColor: 'bg-purple-500/20',
     borderColor: 'border-purple-500/30',
   },
   sauna: {
-    label: 'Сауна',
+    labelKey: 'sauna',
     icon: '🧖',
     color: 'text-amber-400',
     bgColor: 'bg-amber-500/20',
     borderColor: 'border-amber-500/30',
   },
   barochamber: {
-    label: 'Барокамера',
+    labelKey: 'barochamber',
     icon: '🫁',
     color: 'text-cyan-400',
     bgColor: 'bg-cyan-500/20',
     borderColor: 'border-cyan-500/30',
   },
   swimming: {
-    label: 'Плавание',
+    labelKey: 'swimming',
     icon: '🏊',
     color: 'text-blue-400',
     bgColor: 'bg-blue-500/20',
     borderColor: 'border-blue-500/30',
   },
   recovery: {
-    label: 'Восстановление',
+    labelKey: 'recovery',
     icon: '🛌',
     color: 'text-emerald-400',
     bgColor: 'bg-emerald-500/20',
     borderColor: 'border-emerald-500/30',
   },
   cryo: {
-    label: 'Криотерапия',
+    labelKey: 'cryo',
     icon: '🧊',
     color: 'text-sky-400',
     bgColor: 'bg-sky-500/20',
     borderColor: 'border-sky-500/30',
   },
   rest: {
-    label: 'Отдых',
+    labelKey: 'rest',
     icon: '😴',
     color: 'text-slate-400',
     bgColor: 'bg-slate-500/20',
     borderColor: 'border-slate-500/30',
   },
   other: {
-    label: 'Другое',
+    labelKey: 'other',
     icon: '📌',
     color: 'text-gray-400',
     bgColor: 'bg-gray-500/20',
@@ -97,6 +99,15 @@ export type ActivityType = keyof typeof ACTIVITY_TYPES;
 
 export function getActivityConfig(type: string) {
   return ACTIVITY_TYPES[type as ActivityType] || ACTIVITY_TYPES.other;
+}
+
+/**
+ * Get translated label for activity type
+ */
+export function getActivityLabel(type: string): string {
+  const config = ACTIVITY_TYPES[type as ActivityType];
+  if (!config) return type;
+  return i18n.t(`workouts:activityTypes.${config.labelKey}`);
 }
 
 export function parseActivityDescription(text: string): Record<string, number> {

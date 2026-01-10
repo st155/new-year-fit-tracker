@@ -35,6 +35,7 @@
   },
 "toast": {
     "productEnriched": "✨ Product enriched with AI data",
+    "productEnriched": "✨ Product enriched with AI data",
     "enrichmentFailed": "Failed to enrich product",
     "addedToLibrary": "✅ Added {{count}} supplements to library",
     "libraryUpToDate": "Library is up to date",
@@ -126,6 +127,11 @@
     "failedLogAll": "Failed to log all supplements",
     "reorderWarning": "⚠️ Time to reorder!",
     "reorderDescription": "Your {{name}} is running low ({{count}} servings left)"
+  },
+  "labAlerts": {
+    "newResults": "New results! {{name}} updated",
+    "open": "Open"
+  },
   },
   "scanner": {
     "frontReady": "📸 Front side ready",

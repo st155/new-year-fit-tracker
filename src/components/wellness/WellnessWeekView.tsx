@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useWeeklyActivities, useToggleActivityCompletion, WellnessActivity } from "@/hooks/useWellnessActivities";
-import { getActivityConfig } from "@/lib/wellness-activity-types";
+import { getActivityConfig, getActivityLabel } from "@/lib/wellness-activity-types";
 import { format, startOfWeek, addDays, isSameDay, isToday } from "date-fns";
 import { ru } from "date-fns/locale";
 import { CheckCircle, Circle, Calendar } from "lucide-react";
@@ -162,7 +162,7 @@ export function WellnessWeekView({ compact = false }: WellnessWeekViewProps) {
                             activity.is_completed ? "opacity-50" : "hover:scale-110",
                             toggleCompletion.isPending && "cursor-wait"
                           )}
-                          title={`${config.label}${activity.is_completed ? ' ✓' : ''}`}
+                          title={`${getActivityLabel(activity.activity_type)}${activity.is_completed ? ' ✓' : ''}`}
                         >
                           {config.icon}
                         </button>

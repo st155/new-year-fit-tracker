@@ -184,6 +184,8 @@
   },
   "appleHealth": {
     "title": "Apple Health Data",
+    "deletedRecords": "Deleted {{count}} Apple Health records",
+    "deleteError": "Error deleting data: {{error}}",
     "description": "Upload Apple Health export to automatically import your health metrics",
     "largeFile": "Large Apple Health file",
     "largeFileDesc": "File size: {{size}}MB. Processing may take several minutes. Using optimized algorithm for large files.",

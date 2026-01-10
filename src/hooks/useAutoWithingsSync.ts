@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useWithingsDataFreshness } from './useWithingsDataFreshness';
 import { toast } from 'sonner';
+import i18n from '@/i18n';
 
 interface AutoSyncOptions {
   enabled?: boolean;
@@ -21,11 +22,11 @@ export function useAutoWithingsSync(options: AutoSyncOptions = {}) {
     const staleThresholdDays = staleThresholdHours / 24;
 
     if (freshness.hasData && freshness.daysSinceSync > staleThresholdDays) {
-      toast.info('Данные Withings устарели', {
-        description: `Последняя синхронизация была ${freshness.daysSinceSync} дн. назад. Рекомендуем обновить.`,
+      toast.info(i18n.t('integrations:withings.dataStale'), {
+        description: i18n.t('integrations:withings.dataStaleDesc', { days: freshness.daysSinceSync }),
         duration: 10000,
         action: {
-          label: 'Обновить',
+          label: i18n.t('integrations:withings.refresh'),
           onClick: () => {
             // Trigger sync via global event or navigation
             window.location.href = '/withings-debug';

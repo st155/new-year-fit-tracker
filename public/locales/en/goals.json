@@ -40,6 +40,31 @@
     "save": "Save",
     "cancel": "Cancel"
   },
+  "editor": {
+    "title": "Edit Goal",
+    "description": "Change goal parameters. Progress and measurements will be preserved.",
+    "currentProgress": "Current progress",
+    "completed": "completed",
+    "goalName": "Goal name *",
+    "goalNamePlaceholder": "For example: Pull-ups",
+    "goalType": "Goal type *",
+    "targetValue": "Target value *",
+    "targetUnit": "Unit of measurement *",
+    "unitPlaceholder": "kg, reps, km, min",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "save": "Save",
+    "types": {
+      "strength": "Strength exercises",
+      "strengthDesc": "Pull-ups, push-ups, squats, bench press",
+      "cardio": "Cardio",
+      "cardioDesc": "Running, cycling, swimming, walking",
+      "endurance": "Endurance",
+      "enduranceDesc": "Workout duration, number of rounds",
+      "body_composition": "Body composition",
+      "body_compositionDesc": "Weight, body fat %, body measurements"
+    }
+  },
   "types": {
     "strength": "Strength",
     "cardio": "Cardio",

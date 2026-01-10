@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { healthApi } from '@/lib/api';
+import i18n from '@/i18n';
 
 export function useCleanupAppleHealth() {
   const queryClient = useQueryClient();
@@ -13,7 +14,7 @@ export function useCleanupAppleHealth() {
       return data;
     },
     onSuccess: (data) => {
-      toast.success(`Удалено ${data.deletedMetrics} записей Apple Health`);
+      toast.success(i18n.t('integrations:appleHealth.deletedRecords', { count: data.deletedMetrics }));
       
       // Invalidate all relevant queries
       queryClient.invalidateQueries({ queryKey: ['unified-metrics'] });
@@ -22,7 +23,7 @@ export function useCleanupAppleHealth() {
       queryClient.invalidateQueries({ queryKey: ['terra-connections'] });
     },
     onError: (error: any) => {
-      toast.error(`Ошибка при удалении данных: ${error.message}`);
+      toast.error(i18n.t('integrations:appleHealth.deleteError', { error: error.message }));
     },
   });
 }

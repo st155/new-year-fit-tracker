@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useTodayActivities, useToggleActivityCompletion } from "@/hooks/useWellnessActivities";
-import { getActivityConfig } from "@/lib/wellness-activity-types";
+import { getActivityConfig, getActivityLabel } from "@/lib/wellness-activity-types";
 import { CheckCircle, Circle, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
@@ -76,7 +76,7 @@ export function TodayActivitiesCard() {
                       "flex-1 text-left",
                       activity.is_completed && "line-through"
                     )}>
-                      {activity.name || config.label}
+                      {activity.name || getActivityLabel(activity.activity_type)}
                     </span>
                     {activity.duration_minutes && (
                       <span className="text-xs text-muted-foreground">

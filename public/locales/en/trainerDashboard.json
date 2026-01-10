@@ -87,6 +87,7 @@
   },
   "posts": {
     "title": "Posts & Announcements",
+    "title": "Posts & Announcements",
     "subtitle": "Create tasks, tips and announcements for your clients",
     "createPost": "Create Post",
     "createNewPost": "Create New Post",
@@ -142,6 +143,12 @@
       "title": "No posts",
       "description": "Create your first post for your clients"
     }
+  },
+  "clientPosts": {
+    "title": "Messages from trainer",
+    "description": "Tips and assignments from your trainer will be displayed here",
+    "noMessages": "No messages yet",
+    "latestTips": "Latest tips and assignments"
   },
   "notes": {
     "title": "Trainer Notes",

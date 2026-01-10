@@ -286,6 +286,26 @@
     "recommended": "Рекомендуем: {{weight}}кг",
     "useRecommended": "Использовать рекомендованный"
   },
+  "activityTypes": {
+    "strength": "Силовая",
+    "cardio": "Кардио",
+    "running": "Пробежка",
+    "massage": "Массаж",
+    "stretching": "Растяжка",
+    "yoga": "Йога",
+    "sauna": "Сауна",
+    "barochamber": "Барокамера",
+    "swimming": "Плавание",
+    "recovery": "Восстановление",
+    "cryo": "Криотерапия",
+    "rest": "Отдых",
+    "other": "Другое"
+  },
+  "onboarding": {
+    "planCreated": "План создан!",
+    "createError": "Ошибка создания плана",
+    "continue": "Продолжить",
+    "continueWithDays": "Продолжить ({{count}} дней)",
   "map": {
     "title": "Карта маршрута",
     "noGps": "GPS-данные недоступны",
