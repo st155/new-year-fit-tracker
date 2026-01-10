@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { enUS } from "date-fns/locale";
+import { useTranslation } from "react-i18next";
 
 interface ChallengePostProps {
   post: {
@@ -40,6 +41,7 @@ interface ChallengePostProps {
 export const ChallengePost = ({ post, likes, isLiked, comments, onUpdate }: ChallengePostProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation('challenges');
   const [showComments, setShowComments] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -72,8 +74,8 @@ export const ChallengePost = ({ post, likes, isLiked, comments, onUpdate }: Chal
     } catch (error) {
       console.error('Error toggling like:', error);
       toast({
-        title: "Error",
-        description: "Failed to update like",
+        title: t('post.error'),
+        description: t('post.likeFailed'),
         variant: "destructive"
       });
     }
@@ -96,15 +98,15 @@ export const ChallengePost = ({ post, likes, isLiked, comments, onUpdate }: Chal
 
       setNewComment("");
       toast({
-        title: "Success!",
-        description: "Comment added"
+        title: t('post.success'),
+        description: t('post.commentAdded')
       });
       onUpdate();
     } catch (error) {
       console.error('Error adding comment:', error);
       toast({
-        title: "Error",
-        description: "Failed to add comment",
+        title: t('post.error'),
+        description: t('post.commentFailed'),
         variant: "destructive"
       });
     } finally {
@@ -124,15 +126,15 @@ export const ChallengePost = ({ post, likes, isLiked, comments, onUpdate }: Chal
       if (error) throw error;
 
       toast({
-        title: "Success!",
-        description: "Post deleted"
+        title: t('post.success'),
+        description: t('post.postDeleted')
       });
       onUpdate();
     } catch (error) {
       console.error('Error deleting post:', error);
       toast({
-        title: "Error",
-        description: "Failed to delete post",
+        title: t('post.error'),
+        description: t('post.postDeleteFailed'),
         variant: "destructive"
       });
     }
@@ -150,15 +152,15 @@ export const ChallengePost = ({ post, likes, isLiked, comments, onUpdate }: Chal
       if (error) throw error;
 
       toast({
-        title: "Success!",
-        description: "Comment deleted"
+        title: t('post.success'),
+        description: t('post.commentDeleted')
       });
       onUpdate();
     } catch (error) {
       console.error('Error deleting comment:', error);
       toast({
-        title: "Error",
-        description: "Failed to delete comment",
+        title: t('post.error'),
+        description: t('post.commentDeleteFailed'),
         variant: "destructive"
       });
     }
@@ -263,7 +265,7 @@ export const ChallengePost = ({ post, likes, isLiked, comments, onUpdate }: Chal
             {/* Форма нового комментария */}
             <div className="flex gap-2">
               <Textarea
-                placeholder="Write a comment..."
+                placeholder={t('post.writeComment')}
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 className="min-h-[60px]"
@@ -273,7 +275,7 @@ export const ChallengePost = ({ post, likes, isLiked, comments, onUpdate }: Chal
                 disabled={isSubmitting || !newComment.trim()}
                 className="shrink-0"
               >
-                Отправить
+                {t('post.send')}
               </Button>
             </div>
           </div>

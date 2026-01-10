@@ -3,6 +3,7 @@ import { Activity, TrendingUp, CheckCircle2, LucideIcon } from "lucide-react";
 import { useProtocolManagement } from "@/hooks/biostack/useProtocolManagement";
 import { useAuth } from "@/hooks/useAuth";
 import { useTopSupplements } from "@/hooks/biostack/useTopSupplements";
+import { useTranslation } from "react-i18next";
 
 interface SupplementsHeroSectionProps {
   onActiveProtocolsClick?: () => void;
@@ -25,6 +26,7 @@ export function SupplementsHeroSection({
   onOptimizedClick
 }: SupplementsHeroSectionProps) {
   const { user } = useAuth();
+  const { t } = useTranslation('biostack');
   const { activeProtocols, isLoading } = useProtocolManagement();
   const { data: topSupplements } = useTopSupplements(user?.id);
 
@@ -40,7 +42,7 @@ export function SupplementsHeroSection({
 
   const stats: StatItem[] = [
     {
-      label: "Active Protocols",
+      label: t('hero.activeProtocols'),
       value: activeProtocolsCount,
       icon: Activity,
       color: "blue",
@@ -48,7 +50,7 @@ export function SupplementsHeroSection({
       onClick: onActiveProtocolsClick
     },
     {
-      label: "Adherence Rate",
+      label: t('hero.adherenceRate'),
       value: `${adherenceRate}%`,
       icon: TrendingUp,
       color: "purple",
@@ -56,7 +58,7 @@ export function SupplementsHeroSection({
       onClick: onAdherenceRateClick
     },
     {
-      label: "Optimized",
+      label: t('hero.optimized'),
       value: optimizedSupplements,
       icon: CheckCircle2,
       color: "green",

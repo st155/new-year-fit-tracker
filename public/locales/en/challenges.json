@@ -162,5 +162,18 @@
       "balance": "Balance load and recovery for optimal synergy"
     },
     "noData": "No data available"
+  },
+  "post": {
+    "error": "Error",
+    "success": "Success!",
+    "likeFailed": "Failed to update like",
+    "commentAdded": "Comment added",
+    "commentFailed": "Failed to add comment",
+    "postDeleted": "Post deleted",
+    "postDeleteFailed": "Failed to delete post",
+    "commentDeleted": "Comment deleted",
+    "commentDeleteFailed": "Failed to delete comment",
+    "writeComment": "Write a comment...",
+    "send": "Send"
   }
 }

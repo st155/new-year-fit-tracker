@@ -71,5 +71,19 @@
     "confirm": "Yes, leave others",
     "success": "You stayed only in \"{{title}}\"",
     "error": "Error leaving other challenges: {{message}}"
+  },
+  "workoutDialog": {
+    "title": "Log Workout",
+    "description": "Log a workout for today to complete the \"Daily Grind\" challenge.",
+    "logging": "Logging...",
+    "logWorkout": "Log Workout",
+    "success": "Workout logged successfully! 🎉",
+    "failed": "Failed to log workout"
+  },
+  "celebrate": {
+    "loginRequired": "Please log in to celebrate",
+    "sent": "🎉 Celebration sent!",
+    "celebrated": "Celebrated",
+    "celebrate": "Celebrate"
   }
 }
