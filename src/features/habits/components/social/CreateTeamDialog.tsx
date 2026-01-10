@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -19,6 +20,7 @@ interface CreateTeamDialogProps {
 }
 
 export function CreateTeamDialog({ open, onOpenChange }: CreateTeamDialogProps) {
+  const { t } = useTranslation('habits');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [isPublic, setIsPublic] = useState(true);
@@ -49,37 +51,37 @@ export function CreateTeamDialog({ open, onOpenChange }: CreateTeamDialogProps) 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Создать команду</DialogTitle>
+          <DialogTitle>{t('createTeam.title')}</DialogTitle>
           <DialogDescription>
-            Создайте команду для совместного достижения целей
+            {t('createTeam.description')}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="team-name">Название команды</Label>
+            <Label htmlFor="team-name">{t('createTeam.teamName')}</Label>
             <Input
               id="team-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Введите название"
+              placeholder={t('createTeam.teamNamePlaceholder')}
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="team-description">Описание (опционально)</Label>
+            <Label htmlFor="team-description">{t('createTeam.descriptionLabel')}</Label>
             <Textarea
               id="team-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Расскажите о вашей команде"
+              placeholder={t('createTeam.descriptionPlaceholder')}
               rows={3}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="max-members">Максимум участников</Label>
+            <Label htmlFor="max-members">{t('createTeam.maxMembers')}</Label>
             <Input
               id="max-members"
               type="number"
@@ -92,9 +94,9 @@ export function CreateTeamDialog({ open, onOpenChange }: CreateTeamDialogProps) 
 
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <Label htmlFor="is-public">Публичная команда</Label>
+              <Label htmlFor="is-public">{t('createTeam.isPublic')}</Label>
               <p className="text-sm text-muted-foreground">
-                Любой может найти и вступить
+                {t('createTeam.publicHint')}
               </p>
             </div>
             <Switch
@@ -110,10 +112,10 @@ export function CreateTeamDialog({ open, onOpenChange }: CreateTeamDialogProps) 
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Отмена
+              {t('createTeam.cancel')}
             </Button>
             <Button type="submit" disabled={createTeam.isPending || !name.trim()}>
-              {createTeam.isPending ? 'Создание...' : 'Создать'}
+              {createTeam.isPending ? t('createTeam.creating') : t('createTeam.create')}
             </Button>
           </div>
         </form>

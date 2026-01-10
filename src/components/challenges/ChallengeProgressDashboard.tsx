@@ -72,15 +72,15 @@ export function ChallengeProgressDashboard({ challengeId, onRefresh }: Challenge
               <Trophy className="h-6 w-6 text-white" />
             </div>
             <div className="flex-1">
-              <h2 className="text-2xl font-bold">Ваш прогресс по дисциплинам</h2>
+              <h2 className="text-2xl font-bold">{t('progressDashboard.title')}</h2>
               <p className="text-sm text-muted-foreground">
-                Отслеживайте текущие результаты по целям. 
+                {t('progressDashboard.subtitle')}
                 <Button 
                   variant="link" 
                   className="h-auto p-0 ml-1 text-sm"
                   onClick={() => navigate('/goals?tab=challenges')}
                 >
-                  Изменить цели →
+                  {t('progressDashboard.changeGoals')}
                 </Button>
               </p>
             </div>
@@ -92,7 +92,7 @@ export function ChallengeProgressDashboard({ challengeId, onRefresh }: Challenge
             <div className="glass rounded-xl p-4 space-y-2">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Target className="h-4 w-4" />
-                <span className="text-sm">Overall Progress</span>
+                <span className="text-sm">{t('progressDashboard.overallProgress')}</span>
               </div>
               <div className="space-y-2">
                 <div className="text-3xl font-bold text-primary">
@@ -105,7 +105,7 @@ export function ChallengeProgressDashboard({ challengeId, onRefresh }: Challenge
             <div className="glass rounded-xl p-4 space-y-2">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <TrendingUp className="h-4 w-4" />
-                <span className="text-sm">Completed Goals</span>
+                <span className="text-sm">{t('progressDashboard.completedGoals')}</span>
               </div>
               <div className="text-3xl font-bold text-success">
                 {completedGoals} / {challengeGoals.length}
@@ -115,7 +115,7 @@ export function ChallengeProgressDashboard({ challengeId, onRefresh }: Challenge
             <div className="glass rounded-xl p-4 space-y-2">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Calendar className="h-4 w-4" />
-                <span className="text-sm">Active Goals</span>
+                <span className="text-sm">{t('progressDashboard.activeGoals')}</span>
               </div>
               <div className="text-3xl font-bold text-secondary">
                 {challengeGoals.length - completedGoals}
@@ -126,7 +126,7 @@ export function ChallengeProgressDashboard({ challengeId, onRefresh }: Challenge
               <div className="glass rounded-xl p-4 space-y-2 border-2 border-orange-500/50">
                 <div className="flex items-center gap-2">
                   <Flame className="h-4 w-4 text-orange-500" />
-                  <span className="text-sm font-bold text-orange-500">Difficulty Level</span>
+                  <span className="text-sm font-bold text-orange-500">{t('progressDashboard.difficultyLevel')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className={`text-3xl font-bold ${difficultyConfig[difficultyLevel as keyof typeof difficultyConfig]?.color || "text-primary"}`}>
@@ -148,17 +148,17 @@ export function ChallengeProgressDashboard({ challengeId, onRefresh }: Challenge
       <div>
         <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
           <Target className="h-5 w-5 text-primary" />
-          Challenge Goals
+          {t('progressDashboard.challengeGoals')}
         </h3>
         {challengeGoals.length === 0 ? (
           <div className="text-center py-12 bg-muted/30 rounded-lg border-2 border-dashed">
             <Target className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Цели не установлены</h3>
+            <h3 className="text-xl font-semibold mb-2">{t('progressDashboard.noGoals.title')}</h3>
             <p className="text-muted-foreground mb-6">
-              Перейдите в раздел Goals и установите персональные цели для челленджа
+              {t('progressDashboard.noGoals.description')}
             </p>
             <Button onClick={() => navigate('/goals?tab=challenges')}>
-              Установить цели
+              {t('progressDashboard.noGoals.action')}
             </Button>
           </div>
         ) : (

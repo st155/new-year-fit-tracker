@@ -118,7 +118,7 @@ export function DailyHabitRow({ habit, onComplete, isCompleting, userId }: Daily
   };
 
   const handleReset = async () => {
-    await resetHabit({ reason: 'Сброс через список' });
+    await resetHabit({ reason: t('resetHabit.reason') });
     setIsMenuOpen(false);
   };
 
@@ -216,7 +216,7 @@ export function DailyHabitRow({ habit, onComplete, isCompleting, userId }: Daily
             className="text-destructive focus:text-destructive"
           >
             <RotateCcw className="w-4 h-4 mr-2" />
-            {isResetting ? 'Сброс...' : 'Сбросить счётчик'}
+            {isResetting ? t('resetHabit.resetting') : t('resetHabit.resetCounter')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

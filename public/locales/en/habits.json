@@ -457,6 +457,46 @@
     "progress": "Progress: {{percent}}%",
     "untilGoal": "Until goal: {{days}}d"
   },
+  "socialView": {
+    "signInToView": "Sign in to see activity",
+    "joinTeamsDescription": "Join teams and follow friends' progress",
+    "title": "Social Activity",
+    "tabs": {
+      "all": "All events",
+      "myTeam": "My team"
+    },
+    "emptyState": {
+      "title": "Start your journey! 🚀",
+      "description": "Complete habits to see them in the activity feed. Create teams and follow friends' progress!",
+      "createTeam": "Create team",
+      "findTeam": "Find team"
+    },
+    "selectTeam": "Select team",
+    "noTeamActivity": "No activity in the team yet",
+    "selectTeamToView": "Select a team to view activity"
+  },
+  "createTeam": {
+    "title": "Create team",
+    "description": "Create a team for achieving goals together",
+    "teamName": "Team name",
+    "teamNamePlaceholder": "Enter name",
+    "descriptionLabel": "Description (optional)",
+    "descriptionPlaceholder": "Tell about your team",
+    "maxMembers": "Maximum members",
+    "isPublic": "Public team",
+    "publicHint": "Anyone can find and join",
+    "cancel": "Cancel",
+    "creating": "Creating...",
+    "create": "Create"
+  },
+  "legacy": {
+    "noHabits": "You don't have any habits yet. Create your first habit to start tracking progress!"
+  },
+  "resetHabit": {
+    "reason": "Reset via list",
+    "resetting": "Resetting...",
+    "resetCounter": "Reset counter"
+  },
   "intermittentFasting": {
     "title": "Intermittent Fasting",
     "active": "Fasting is active",
