@@ -92,7 +92,15 @@
     "share": "Share",
     "previewAlert": "This is a preview report. The challenge is still ongoing, final results will be available after completion.",
     "thankYou": "Thank you for participating in the challenge!",
-    "findNewChallenge": "Find New Challenge"
+    "findNewChallenge": "Find New Challenge",
+    "goalsProgress": "Goals Progress",
+    "achieved": "{{achieved}} / {{total}} achieved",
+    "noGoals": "No goals were set for this challenge",
+    "overachieved": "🎯 Overachieved!",
+    "start": "Start",
+    "current": "Current",
+    "target": "Target",
+    "progress": "Progress"
   },
   "info": {
     "notFound": "Challenge information not found",

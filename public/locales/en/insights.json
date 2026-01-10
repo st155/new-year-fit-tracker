@@ -73,5 +73,17 @@
     "afternoon": "in the afternoon",
     "evening": "in the evening",
     "night": "at night"
-  }
+  },
+  "types": {
+    "habit_pattern": "Pattern",
+    "habit_risk": "Risk",
+    "habit_optimization": "Optimization",
+    "achievement": "Achievement",
+    "recommendation": "Recommendation",
+    "habit_chain": "Chain",
+    "critical": "Critical",
+    "warning": "Warning",
+    "info": "Info"
+  },
+  "learnMore": "Learn more"
 }

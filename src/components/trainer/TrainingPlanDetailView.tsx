@@ -35,7 +35,8 @@ import {
 import { useState } from 'react';
 import { TrainingPlanCalendarView, WorkoutCard } from './training-plan';
 import { formatDistanceToNow } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 
 interface TrainingPlanDetailViewProps {
   planId: string | null;
@@ -46,7 +47,7 @@ interface TrainingPlanDetailViewProps {
   onDeleted?: () => void;
 }
 
-const DAYS = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
+const DAY_KEYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
 
 export const TrainingPlanDetailView = ({
   planId,
@@ -56,50 +57,52 @@ export const TrainingPlanDetailView = ({
   onAssign,
   onDeleted
 }: TrainingPlanDetailViewProps) => {
+  const { t, i18n } = useTranslation('trainingPlan');
   const { plan, loading, deletePlan, duplicatePlan, refetch } = useTrainingPlanDetail(isDemoMode ? null : planId);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
 
   // Demo plan data
   const demoWorkouts = [
     {
       id: 'demo-1',
       day_of_week: 0,
-      workout_name: 'Грудь + Трицепс',
-      description: 'Базовая тренировка на верх тела',
+      workout_name: t('demo.workouts.chestTriceps.name'),
+      description: t('demo.workouts.chestTriceps.description'),
       exercises: [
-        { exercise_id: '1', exercise_name: 'Жим штанги лежа', sets: 4, reps: '8-10', rest_seconds: 90, notes: '' },
-        { exercise_id: '2', exercise_name: 'Жим гантелей на наклонной', sets: 3, reps: '10-12', rest_seconds: 60, notes: '' },
-        { exercise_id: '3', exercise_name: 'Французский жим', sets: 3, reps: '12-15', rest_seconds: 60, notes: '' }
+        { exercise_id: '1', exercise_name: t('demo.exercises.benchPress'), sets: 4, reps: '8-10', rest_seconds: 90, notes: '' },
+        { exercise_id: '2', exercise_name: t('demo.exercises.inclineDumbbellPress'), sets: 3, reps: '10-12', rest_seconds: 60, notes: '' },
+        { exercise_id: '3', exercise_name: t('demo.exercises.frenchPress'), sets: 3, reps: '12-15', rest_seconds: 60, notes: '' }
       ]
     },
     {
       id: 'demo-2',
       day_of_week: 2,
-      workout_name: 'Спина + Бицепс',
-      description: 'Тяговые упражнения',
+      workout_name: t('demo.workouts.backBiceps.name'),
+      description: t('demo.workouts.backBiceps.description'),
       exercises: [
-        { exercise_id: '4', exercise_name: 'Становая тяга', sets: 4, reps: '6-8', rest_seconds: 120, notes: '' },
-        { exercise_id: '5', exercise_name: 'Подтягивания', sets: 3, reps: '8-12', rest_seconds: 90, notes: '' },
-        { exercise_id: '6', exercise_name: 'Подъем штанги на бицепс', sets: 3, reps: '10-12', rest_seconds: 60, notes: '' }
+        { exercise_id: '4', exercise_name: t('demo.exercises.deadlift'), sets: 4, reps: '6-8', rest_seconds: 120, notes: '' },
+        { exercise_id: '5', exercise_name: t('demo.exercises.pullups'), sets: 3, reps: '8-12', rest_seconds: 90, notes: '' },
+        { exercise_id: '6', exercise_name: t('demo.exercises.barbellCurl'), sets: 3, reps: '10-12', rest_seconds: 60, notes: '' }
       ]
     },
     {
       id: 'demo-3',
       day_of_week: 4,
-      workout_name: 'Ноги + Плечи',
-      description: 'День ног и дельт',
+      workout_name: t('demo.workouts.legsShoulders.name'),
+      description: t('demo.workouts.legsShoulders.description'),
       exercises: [
-        { exercise_id: '7', exercise_name: 'Приседания', sets: 4, reps: '8-10', rest_seconds: 120, notes: '' },
-        { exercise_id: '8', exercise_name: 'Жим ногами', sets: 3, reps: '12-15', rest_seconds: 90, notes: '' },
-        { exercise_id: '9', exercise_name: 'Жим гантелей сидя', sets: 3, reps: '10-12', rest_seconds: 60, notes: '' }
+        { exercise_id: '7', exercise_name: t('demo.exercises.squats'), sets: 4, reps: '8-10', rest_seconds: 120, notes: '' },
+        { exercise_id: '8', exercise_name: t('demo.exercises.legPress'), sets: 3, reps: '12-15', rest_seconds: 90, notes: '' },
+        { exercise_id: '9', exercise_name: t('demo.exercises.seatedDumbbellPress'), sets: 3, reps: '10-12', rest_seconds: 60, notes: '' }
       ]
     }
   ];
   
   const demoPlan = isDemoMode ? {
     id: 'demo-plan',
-    name: 'Демо-план: Набор массы',
-    description: 'Пример тренировочного плана на 3 раза в неделю. Это демонстрационный план для ознакомления.',
+    name: t('demo.name'),
+    description: t('demo.description'),
     duration_weeks: 8,
     created_at: new Date().toISOString(),
     trainer_id: 'demo',
@@ -131,7 +134,7 @@ export const TrainingPlanDetailView = ({
         <DialogContent className="max-w-6xl max-h-[90vh]">
           <div className="flex items-center justify-center py-8">
             <div className="text-center">
-              <p className="text-muted-foreground">Загрузка...</p>
+              <p className="text-muted-foreground">{t('loading')}</p>
             </div>
           </div>
         </DialogContent>
@@ -168,22 +171,22 @@ export const TrainingPlanDetailView = ({
                 </div>
               </div>
               {isDemoMode && (
-                <Badge variant="outline" className="ml-4">Демо</Badge>
+                <Badge variant="outline" className="ml-4">{t('detail.demo')}</Badge>
               )}
             </div>
 
             <div className="flex gap-3 mt-4">
               <Badge variant="secondary" className="flex items-center gap-1">
                 <Calendar className="h-3 w-3" />
-                {currentPlan.duration_weeks} {currentPlan.duration_weeks === 1 ? 'неделя' : 'недели'}
+                {t('detail.weeks', { count: currentPlan.duration_weeks })}
               </Badge>
               <Badge variant="secondary" className="flex items-center gap-1">
                 <User className="h-3 w-3" />
-                {currentPlan.assigned_training_plans.length} клиентов
+                {t('detail.clients', { count: currentPlan.assigned_training_plans.length })}
               </Badge>
               <Badge variant="secondary" className="flex items-center gap-1">
                 <Dumbbell className="h-3 w-3" />
-                {currentPlan.training_plan_workouts.length} тренировок
+                {t('detail.workouts', { count: currentPlan.training_plan_workouts.length })}
               </Badge>
             </div>
           </DialogHeader>
@@ -192,13 +195,13 @@ export const TrainingPlanDetailView = ({
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="calendar" className="flex items-center gap-1">
                 <CalendarDays className="h-4 w-4" />
-                Неделя
+                {t('detail.tabs.week')}
               </TabsTrigger>
-              <TabsTrigger value="schedule">Детали</TabsTrigger>
+              <TabsTrigger value="schedule">{t('detail.tabs.details')}</TabsTrigger>
               <TabsTrigger value="clients">
-                Клиенты ({currentPlan.assigned_training_plans.length})
+                {t('tabs.clients')} ({currentPlan.assigned_training_plans.length})
               </TabsTrigger>
-              <TabsTrigger value="settings">Настройки</TabsTrigger>
+              <TabsTrigger value="settings">{t('detail.tabs.settings')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="calendar" className="mt-4">
@@ -207,7 +210,7 @@ export const TrainingPlanDetailView = ({
 
             <TabsContent value="schedule" className="space-y-4 mt-4">
               <div className="grid gap-3">
-                {DAYS.map((day, index) => {
+                {DAY_KEYS.map((dayKey, index) => {
                   const workout = currentPlan.training_plan_workouts.find(
                     w => w.day_of_week === index
                   );
@@ -217,14 +220,14 @@ export const TrainingPlanDetailView = ({
                       <CardHeader className="pb-3">
                         <CardTitle className="text-base flex items-center gap-2">
                           <Calendar className="h-4 w-4" />
-                          {day}
+                          {t(`days.${dayKey}`)}
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
                         {workout ? (
                           <WorkoutCard workout={workout} />
                         ) : (
-                          <p className="text-sm text-muted-foreground">Отдых</p>
+                          <p className="text-sm text-muted-foreground">{t('detail.rest')}</p>
                         )}
                       </CardContent>
                     </Card>
@@ -255,10 +258,10 @@ export const TrainingPlanDetailView = ({
                           <Badge
                             variant={assignment.status === 'active' ? 'default' : 'secondary'}
                           >
-                            {assignment.status === 'active' ? 'Активен' : 'Завершен'}
+                            {assignment.status === 'active' ? t('detail.status.active') : t('detail.status.completed')}
                           </Badge>
                           <p className="text-xs text-muted-foreground mt-1">
-                            Начало: {new Date(assignment.start_date).toLocaleDateString('ru-RU')}
+                            {t('detail.startDate', { date: new Date(assignment.start_date).toLocaleDateString(i18n.language === 'ru' ? 'ru-RU' : 'en-US') })}
                           </p>
                         </div>
                       </CardContent>
@@ -268,14 +271,14 @@ export const TrainingPlanDetailView = ({
                   <Card>
                     <CardContent className="p-8 text-center">
                       <UserPlus className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                      <h3 className="text-lg font-medium mb-2">План не назначен</h3>
+                      <h3 className="text-lg font-medium mb-2">{t('detail.noPlan.title')}</h3>
                       <p className="text-muted-foreground mb-4">
-                        Назначьте этот план клиентам для начала тренировок
+                        {t('detail.noPlan.description')}
                       </p>
                       {!isDemoMode && onAssign && (
                         <Button onClick={() => onAssign(currentPlan.id)}>
                           <UserPlus className="h-4 w-4 mr-2" />
-                          Назначить клиенту
+                          {t('detail.assignToClient')}
                         </Button>
                       )}
                     </CardContent>
@@ -288,24 +291,24 @@ export const TrainingPlanDetailView = ({
               <div className="space-y-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Основная информация</CardTitle>
+                    <CardTitle>{t('detail.info.title')}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <span className="text-muted-foreground">Название:</span>
+                        <span className="text-muted-foreground">{t('detail.info.name')}</span>
                         <p className="font-medium">{currentPlan.name}</p>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">Длительность:</span>
-                        <p className="font-medium">{currentPlan.duration_weeks} недель</p>
+                        <span className="text-muted-foreground">{t('detail.info.duration')}</span>
+                        <p className="font-medium">{t('detail.weeks', { count: currentPlan.duration_weeks })}</p>
                       </div>
                       <div className="col-span-2">
-                        <span className="text-muted-foreground">Создан:</span>
+                        <span className="text-muted-foreground">{t('detail.info.created')}</span>
                         <p className="font-medium">
-                          {isDemoMode ? 'Демонстрационный план' : formatDistanceToNow(new Date(currentPlan.created_at), {
+                          {isDemoMode ? t('detail.demoDescription') : formatDistanceToNow(new Date(currentPlan.created_at), {
                             addSuffix: true,
-                            locale: ru
+                            locale: dateLocale
                           })}
                         </p>
                       </div>
@@ -316,7 +319,7 @@ export const TrainingPlanDetailView = ({
                 {!isDemoMode && (
                   <Card>
                     <CardHeader>
-                      <CardTitle>Действия</CardTitle>
+                      <CardTitle>{t('detail.actions.title')}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
                       {onEdit && (
@@ -326,7 +329,7 @@ export const TrainingPlanDetailView = ({
                           onClick={() => onEdit(currentPlan.id)}
                         >
                           <Edit className="h-4 w-4 mr-2" />
-                          Редактировать план
+                          {t('detail.actions.edit')}
                         </Button>
                       )}
                       <Button
@@ -335,7 +338,7 @@ export const TrainingPlanDetailView = ({
                         onClick={handleDuplicate}
                       >
                         <Copy className="h-4 w-4 mr-2" />
-                        Дублировать план
+                        {t('detail.actions.duplicate')}
                       </Button>
                       {onAssign && (
                         <Button
@@ -344,7 +347,7 @@ export const TrainingPlanDetailView = ({
                           onClick={() => onAssign(currentPlan.id)}
                         >
                           <UserPlus className="h-4 w-4 mr-2" />
-                          Назначить клиенту
+                          {t('detail.assignToClient')}
                         </Button>
                       )}
                       <Button
@@ -353,7 +356,7 @@ export const TrainingPlanDetailView = ({
                         onClick={() => setShowDeleteDialog(true)}
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
-                        Удалить план
+                        {t('detail.actions.delete')}
                       </Button>
                     </CardContent>
                   </Card>
@@ -368,20 +371,20 @@ export const TrainingPlanDetailView = ({
         <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Удалить тренировочный план?</AlertDialogTitle>
+              <AlertDialogTitle>{t('detail.deleteDialog.title')}</AlertDialogTitle>
               <AlertDialogDescription>
-                Это действие нельзя отменить. План будет удален навсегда вместе со всеми тренировками.
+                {t('detail.deleteDialog.description')}
                 {currentPlan.assigned_training_plans.length > 0 && (
                   <span className="block mt-2 text-destructive">
-                    Внимание: план назначен {currentPlan.assigned_training_plans.length} клиентам
+                    {t('detail.deleteDialog.warning', { count: currentPlan.assigned_training_plans.length })}
                   </span>
                 )}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Отмена</AlertDialogCancel>
+              <AlertDialogCancel>{t('detail.deleteDialog.cancel')}</AlertDialogCancel>
               <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
-                Удалить
+                {t('detail.deleteDialog.delete')}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

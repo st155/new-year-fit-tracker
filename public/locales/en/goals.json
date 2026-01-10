@@ -248,6 +248,17 @@
     "target": "Target",
     "forecastDate": "📅 Estimated completion:"
   },
+  "timeline": {
+    "title": "Progress for {{period}}",
+    "week": "week",
+    "month": "month",
+    "stable": "Stable",
+    "growth": "Growth",
+    "decline": "Decline",
+    "start": "Start",
+    "now": "Now",
+    "target": "Target"
+  },
   "units": {
     "min": "min",
     "reps": "reps",

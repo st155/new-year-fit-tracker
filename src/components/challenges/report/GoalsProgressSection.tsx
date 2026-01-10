@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import type { GoalReport } from "@/features/challenges/types";
 import { ResponsiveContainer, LineChart, Line, YAxis } from "recharts";
+import { useTranslation } from "react-i18next";
 
 interface GoalsProgressSectionProps {
   goals: GoalReport[];
@@ -13,6 +14,8 @@ interface GoalsProgressSectionProps {
 }
 
 export function GoalsProgressSection({ goals, goalsAchieved }: GoalsProgressSectionProps) {
+  const { t } = useTranslation('challenges');
+
   const getTrendIcon = (trend: GoalReport['trend']) => {
     switch (trend) {
       case 'improved':
@@ -40,11 +43,11 @@ export function GoalsProgressSection({ goals, goalsAchieved }: GoalsProgressSect
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5 text-primary" />
-              Прогресс по целям
+              {t('report.goalsProgress')}
             </CardTitle>
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="text-sm">
-                {goalsAchieved} / {goals.length} достигнуто
+                {t('report.achieved', { achieved: goalsAchieved, total: goals.length })}
               </Badge>
             </div>
           </div>
@@ -52,7 +55,7 @@ export function GoalsProgressSection({ goals, goalsAchieved }: GoalsProgressSect
         <CardContent className="space-y-4">
           {goals.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Цели не были установлены для этого челленджа
+              {t('report.noGoals')}
             </div>
           ) : (
             goals.map((goal, index) => (
@@ -80,18 +83,18 @@ export function GoalsProgressSection({ goals, goalsAchieved }: GoalsProgressSect
                       {getTrendIcon(goal.trend)}
                       {goal.progress > 100 && (
                         <Badge variant="default" className="text-xs bg-success/80 text-success-foreground">
-                          🎯 Перевыполнено!
+                          {t('report.overachieved')}
                         </Badge>
                       )}
                     </div>
 
                     <div className="grid grid-cols-3 gap-4 text-sm">
                       <div>
-                        <div className="text-muted-foreground text-xs">Старт</div>
+                        <div className="text-muted-foreground text-xs">{t('report.start')}</div>
                         <div className="font-medium">{formatValue(goal.baseline, goal.unit)}</div>
                       </div>
                       <div>
-                        <div className="text-muted-foreground text-xs">Текущее</div>
+                        <div className="text-muted-foreground text-xs">{t('report.current')}</div>
                         <div className={cn(
                           "font-medium",
                           goal.trend === 'improved' && "text-success",
@@ -101,14 +104,14 @@ export function GoalsProgressSection({ goals, goalsAchieved }: GoalsProgressSect
                         </div>
                       </div>
                       <div>
-                        <div className="text-muted-foreground text-xs">Цель</div>
+                        <div className="text-muted-foreground text-xs">{t('report.target')}</div>
                         <div className="font-medium text-primary">{formatValue(goal.target, goal.unit)}</div>
                       </div>
                     </div>
 
                     <div className="space-y-1">
                       <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">Прогресс</span>
+                        <span className="text-muted-foreground">{t('report.progress')}</span>
                         <span className={cn(
                           "font-medium",
                           goal.progress > 100 && "text-success"
