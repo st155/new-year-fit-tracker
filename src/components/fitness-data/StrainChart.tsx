@@ -1,17 +1,20 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
+import { useTranslation } from 'react-i18next';
 
 interface StrainChartProps {
   data: { date: string; value: number }[];
 }
 
 export function StrainChart({ data }: StrainChartProps) {
+  const { t } = useTranslation('fitnessData');
+  
   if (!data || data.length === 0) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>Day Strain</CardTitle>
-          <CardDescription>Нет данных для отображения</CardDescription>
+          <CardDescription>{t('strain.noData')}</CardDescription>
         </CardHeader>
       </Card>
     );
@@ -35,7 +38,7 @@ export function StrainChart({ data }: StrainChartProps) {
     <Card>
       <CardHeader>
         <CardTitle>Day Strain</CardTitle>
-        <CardDescription>Нагрузка по дням</CardDescription>
+        <CardDescription>{t('strain.subtitle')}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="h-[300px] w-full">
@@ -83,7 +86,7 @@ export function StrainChart({ data }: StrainChartProps) {
                 y={average}
                 stroke="hsl(var(--muted-foreground))"
                 strokeDasharray="3 3"
-                label={{ value: 'Среднее', position: 'right' }}
+                label={{ value: t('strain.average'), position: 'right' }}
               />
               <Bar dataKey="value" radius={[4, 4, 0, 0]} />
             </BarChart>
@@ -94,19 +97,19 @@ export function StrainChart({ data }: StrainChartProps) {
         <div className="mt-4 flex flex-wrap gap-4 text-sm">
           <div className="flex items-center gap-2">
             <div className="h-3 w-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-1))' }} />
-            <span className="text-muted-foreground">Низкая (&lt;10)</span>
+            <span className="text-muted-foreground">{t('strain.levels.low')}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="h-3 w-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-2))' }} />
-            <span className="text-muted-foreground">Средняя (10-14)</span>
+            <span className="text-muted-foreground">{t('strain.levels.moderate')}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="h-3 w-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-3))' }} />
-            <span className="text-muted-foreground">Высокая (14-18)</span>
+            <span className="text-muted-foreground">{t('strain.levels.high')}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="h-3 w-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-4))' }} />
-            <span className="text-muted-foreground">Экстрим (&gt;18)</span>
+            <span className="text-muted-foreground">{t('strain.levels.extreme')}</span>
           </div>
         </div>
       </CardContent>

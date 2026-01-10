@@ -35,6 +35,22 @@
   },
   "noConnections": "Нет подключений",
   "configure": "Настроить →",
+  "profile": {
+    "title": "Интеграции",
+    "noDevices": "Нет подключённых устройств",
+    "connect": "Подключить",
+    "attentionNeeded": "Некоторые подключения требуют внимания",
+    "activeOf": "{{count}}/{{total}} активно",
+    "status": {
+      "active": "Активно",
+      "stale": "Устарело",
+      "expired": "Истекло"
+    },
+    "lastSync": {
+      "never": "Никогда",
+      "unknown": "Неизвестно"
+    }
+  },
   "terra": {
     "deviceConnected": "Устройство подключено!",
     "successConnected": "{{provider}} успешно подключен.",

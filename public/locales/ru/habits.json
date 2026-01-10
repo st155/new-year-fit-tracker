@@ -400,5 +400,16 @@
     "teamsCreateError": "Ошибка создания демо команд",
     "eventsCreated": "✅ Демо события созданы!",
     "eventsCreateError": "Ошибка создания демо событий"
+  },
+  "pdf": {
+    "statistics": "Статистика",
+    "currentStreak": "Текущая серия",
+    "bestStreak": "Лучшая серия",
+    "totalCompletions": "Всего выполнений",
+    "completionRate": "Процент выполнения",
+    "days": "дней",
+    "historyTitle": "История выполнений (последние 30 дней)",
+    "streakLabel": "серия",
+    "created": "Создано"
   }
 }

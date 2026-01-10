@@ -66,5 +66,16 @@
   },
   "recovery": {
     "vsPrevious": "vs. previous period"
+  },
+  "strain": {
+    "noData": "No data to display",
+    "subtitle": "Daily strain",
+    "average": "Average",
+    "levels": {
+      "low": "Low (<10)",
+      "moderate": "Moderate (10-14)",
+      "high": "High (14-18)",
+      "extreme": "Extreme (>18)"
+    }
   }
 }

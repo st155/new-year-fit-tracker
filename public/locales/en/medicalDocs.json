@@ -336,5 +336,18 @@
     "noData": "No data to display",
     "hide": "Hide (processing will continue)",
     "close": "Close"
-  }
+  },
+  "status": {
+    "optimal": "Optimal",
+    "normal": "Normal",
+    "warning": "Warning",
+    "critical": "Critical"
+  },
+  "stats": {
+    "min": "Min",
+    "avg": "Avg",
+    "max": "Max"
+  },
+  "measurements": "{{count}} measurement",
+  "measurements_other": "{{count}} measurements"
 }

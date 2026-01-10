@@ -4,10 +4,12 @@ import { Plug, CheckCircle2, AlertCircle, XCircle, ExternalLink } from 'lucide-r
 import { motion } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { format, parseISO, formatDistanceToNow } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { formatDistanceToNow, parseISO } from 'date-fns';
+import { ru, enUS } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import type { Integration } from '@/hooks/profile/useProfileSummary';
+import { useTranslation } from 'react-i18next';
+import i18n from '@/i18n';
 
 interface IntegrationStatusProps {
   integrations: Integration[];
@@ -27,23 +29,27 @@ const providerConfig: Record<string, { name: string; color: string; bgColor: str
   'SUUNTO': { name: 'Suunto', color: 'text-indigo-600', bgColor: 'bg-indigo-500/10' },
 };
 
-const statusConfig = {
-  active: { icon: <CheckCircle2 className="h-3.5 w-3.5" />, color: 'text-green-500', label: 'Активно' },
-  stale: { icon: <AlertCircle className="h-3.5 w-3.5" />, color: 'text-yellow-500', label: 'Устарело' },
-  expired: { icon: <XCircle className="h-3.5 w-3.5" />, color: 'text-red-500', label: 'Истекло' },
-};
+const getDateLocale = () => i18n.language === 'ru' ? ru : enUS;
 
-function formatLastSync(dateStr: string | null): string {
-  if (!dateStr) return 'Никогда';
+const getStatusConfig = (t: (key: string) => string) => ({
+  active: { icon: <CheckCircle2 className="h-3.5 w-3.5" />, color: 'text-green-500', label: t('integrations:profile.status.active') },
+  stale: { icon: <AlertCircle className="h-3.5 w-3.5" />, color: 'text-yellow-500', label: t('integrations:profile.status.stale') },
+  expired: { icon: <XCircle className="h-3.5 w-3.5" />, color: 'text-red-500', label: t('integrations:profile.status.expired') },
+});
+
+function formatLastSync(dateStr: string | null, t: (key: string) => string): string {
+  if (!dateStr) return t('integrations:profile.lastSync.never');
   try {
-    return formatDistanceToNow(parseISO(dateStr), { addSuffix: true, locale: ru });
+    return formatDistanceToNow(parseISO(dateStr), { addSuffix: true, locale: getDateLocale() });
   } catch {
-    return 'Неизвестно';
+    return t('integrations:profile.lastSync.unknown');
   }
 }
 
 export function IntegrationStatus({ integrations, isLoading }: IntegrationStatusProps) {
+  const { t } = useTranslation('integrations');
   const navigate = useNavigate();
+  const statusConfig = getStatusConfig(t);
 
   if (isLoading) {
     return (
@@ -51,7 +57,7 @@ export function IntegrationStatus({ integrations, isLoading }: IntegrationStatus
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Plug className="h-5 w-5 text-purple-500" />
-            Интеграции
+            {t('profile.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -71,13 +77,13 @@ export function IntegrationStatus({ integrations, isLoading }: IntegrationStatus
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Plug className="h-5 w-5 text-purple-500" />
-            Интеграции
+            {t('profile.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-4">
             <Plug className="h-8 w-8 mx-auto mb-2 opacity-30 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">Нет подключённых устройств</p>
+            <p className="text-sm text-muted-foreground">{t('profile.noDevices')}</p>
             <Button 
               variant="outline" 
               size="sm" 
@@ -85,7 +91,7 @@ export function IntegrationStatus({ integrations, isLoading }: IntegrationStatus
               onClick={() => navigate('/integrations')}
             >
               <ExternalLink className="h-4 w-4 mr-1.5" />
-              Подключить
+              {t('profile.connect')}
             </Button>
           </div>
         </CardContent>
@@ -108,13 +114,13 @@ export function IntegrationStatus({ integrations, isLoading }: IntegrationStatus
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Plug className="h-5 w-5 text-purple-500" />
-            Интеграции
+            {t('profile.title')}
           </CardTitle>
           <Badge 
             variant={hasIssues ? "outline" : "default"} 
             className={hasIssues ? "border-yellow-500/50 text-yellow-600" : "bg-green-500/20 text-green-600 border-green-500/30"}
           >
-            {activeCount}/{integrations.length} активно
+            {t('profile.activeOf', { count: activeCount, total: integrations.length })}
           </Badge>
         </div>
       </CardHeader>
@@ -138,7 +144,7 @@ export function IntegrationStatus({ integrations, isLoading }: IntegrationStatus
                 <Badge
                   variant="outline"
                   className={`${provider.bgColor} border-transparent px-2.5 py-1 h-auto cursor-default`}
-                  title={`${provider.name}: ${formatLastSync(integration.lastSync)}`}
+                  title={`${provider.name}: ${formatLastSync(integration.lastSync, t)}`}
                 >
                   <span className={`${status.color} mr-1.5`}>{status.icon}</span>
                   <span className={`${provider.color} font-medium`}>{provider.name}</span>
@@ -157,7 +163,7 @@ export function IntegrationStatus({ integrations, isLoading }: IntegrationStatus
               onClick={() => navigate('/integrations')}
             >
               <AlertCircle className="h-3.5 w-3.5 mr-1.5 text-yellow-500" />
-              Некоторые подключения требуют внимания
+              {t('profile.attentionNeeded')}
             </Button>
           </div>
         )}

@@ -6,6 +6,7 @@ import { CategoryMetric } from '@/hooks/medical-documents/useCategoryDetail';
 import { cn } from '@/lib/utils';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 
 interface CategoryMetricCardProps {
   metric: CategoryMetric;
@@ -19,14 +20,15 @@ const statusColors = {
   critical: 'from-red-500/20 to-pink-500/20 border-red-500/50',
 };
 
-const statusBadges = {
-  optimal: { label: 'Оптимально', className: 'bg-blue-500/20 text-blue-500 border-blue-500/50' },
-  normal: { label: 'Норма', className: 'bg-green-500/20 text-green-500 border-green-500/50' },
-  warning: { label: 'Внимание', className: 'bg-yellow-500/20 text-yellow-500 border-yellow-500/50' },
-  critical: { label: 'Критично', className: 'bg-red-500/20 text-red-500 border-red-500/50' },
+const statusBadgeClasses = {
+  optimal: 'bg-blue-500/20 text-blue-500 border-blue-500/50',
+  normal: 'bg-green-500/20 text-green-500 border-green-500/50',
+  warning: 'bg-yellow-500/20 text-yellow-500 border-yellow-500/50',
+  critical: 'bg-red-500/20 text-red-500 border-red-500/50',
 };
 
 export function CategoryMetricCard({ metric, category }: CategoryMetricCardProps) {
+  const { t } = useTranslation('medicalDocs');
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -37,7 +39,8 @@ export function CategoryMetricCard({ metric, category }: CategoryMetricCardProps
   };
 
   const isQuantitative = typeof metric.currentValue === 'number' && metric.history.length > 0;
-  const statusBadge = statusBadges[metric.status];
+  const statusLabel = t(`status.${metric.status}`);
+  const statusBadgeClass = statusBadgeClasses[metric.status];
 
   // Calculate trend direction
   const trendDirection = isQuantitative && metric.history.length > 1
@@ -60,8 +63,8 @@ export function CategoryMetricCard({ metric, category }: CategoryMetricCardProps
             <span className="text-2xl">{metric.icon}</span>
             <CardTitle className="text-base">{metric.name}</CardTitle>
           </div>
-          <Badge variant="outline" className={statusBadge.className}>
-            {statusBadge.label}
+          <Badge variant="outline" className={statusBadgeClass}>
+            {statusLabel}
           </Badge>
         </div>
       </CardHeader>
@@ -112,15 +115,15 @@ export function CategoryMetricCard({ metric, category }: CategoryMetricCardProps
         {isQuantitative && (
           <div className="grid grid-cols-3 gap-2 text-xs">
             <div>
-              <p className="text-muted-foreground">Мин</p>
+              <p className="text-muted-foreground">{t('stats.min')}</p>
               <p className="font-semibold">{metric.trend.min.toFixed(1)}</p>
             </div>
             <div>
-              <p className="text-muted-foreground">Сред</p>
+              <p className="text-muted-foreground">{t('stats.avg')}</p>
               <p className="font-semibold">{metric.trend.avg.toFixed(1)}</p>
             </div>
             <div>
-              <p className="text-muted-foreground">Макс</p>
+              <p className="text-muted-foreground">{t('stats.max')}</p>
               <p className="font-semibold">{metric.trend.max.toFixed(1)}</p>
             </div>
           </div>
@@ -129,7 +132,7 @@ export function CategoryMetricCard({ metric, category }: CategoryMetricCardProps
         {/* Test Count */}
         <div className="pt-2 border-t border-border/50">
           <p className="text-xs text-muted-foreground">
-            {metric.testCount} измерени{metric.testCount === 1 ? 'е' : metric.testCount < 5 ? 'я' : 'й'}
+            {t('measurements', { count: metric.testCount })}
           </p>
         </div>
       </CardContent>

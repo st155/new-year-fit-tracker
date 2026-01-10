@@ -5,7 +5,10 @@
 
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
+import i18n from '@/i18n';
+
+const getDateLocale = () => i18n.language === 'ru' ? ru : enUS;
 
 interface HabitData {
   name: string;
@@ -77,7 +80,7 @@ export async function exportHabitToPDF(habit: HabitData): Promise<void> {
   currentY -= 20;
 
   // Stats Section
-  page.drawText('Статистика', {
+  page.drawText(i18n.t('habits:pdf.statistics'), {
     x: 50,
     y: currentY,
     size: 16,
@@ -89,10 +92,10 @@ export async function exportHabitToPDF(habit: HabitData): Promise<void> {
 
   // Stats boxes
   const stats = [
-    { label: 'Текущая серия', value: `${habit.stats.current_streak} дней` },
-    { label: 'Лучшая серия', value: `${habit.longestStreak} дней` },
-    { label: 'Всего выполнений', value: `${habit.stats.total_completions}` },
-    { label: 'Процент выполнения', value: `${Math.round(habit.stats.completion_rate)}%` },
+    { label: i18n.t('habits:pdf.currentStreak'), value: `${habit.stats.current_streak} ${i18n.t('habits:pdf.days')}` },
+    { label: i18n.t('habits:pdf.bestStreak'), value: `${habit.longestStreak} ${i18n.t('habits:pdf.days')}` },
+    { label: i18n.t('habits:pdf.totalCompletions'), value: `${habit.stats.total_completions}` },
+    { label: i18n.t('habits:pdf.completionRate'), value: `${Math.round(habit.stats.completion_rate)}%` },
   ];
 
   const boxWidth = 120;
@@ -140,7 +143,7 @@ export async function exportHabitToPDF(habit: HabitData): Promise<void> {
   currentY -= boxHeight + 40;
 
   // History Section
-  page.drawText('История выполнений (последние 30 дней)', {
+  page.drawText(i18n.t('habits:pdf.historyTitle'), {
     x: 50,
     y: currentY,
     size: 16,
@@ -157,8 +160,8 @@ export async function exportHabitToPDF(habit: HabitData): Promise<void> {
     .reverse();
 
   completedDays.slice(0, 20).forEach((day) => {
-    const dateStr = format(day.date, 'd MMMM yyyy', { locale: ru });
-    const streakStr = day.streak && day.streak > 1 ? ` (серия: ${day.streak})` : '';
+    const dateStr = format(day.date, 'd MMMM yyyy', { locale: getDateLocale() });
+    const streakStr = day.streak && day.streak > 1 ? ` (${i18n.t('habits:pdf.streakLabel')}: ${day.streak})` : '';
     
     page.drawText(`• ${dateStr}${streakStr}`, {
       x: 60,
@@ -175,7 +178,7 @@ export async function exportHabitToPDF(habit: HabitData): Promise<void> {
   });
 
   // Footer
-  page.drawText(`Создано: ${format(new Date(), 'd MMMM yyyy, HH:mm', { locale: ru })}`, {
+  page.drawText(`${i18n.t('habits:pdf.created')}: ${format(new Date(), 'd MMMM yyyy, HH:mm', { locale: getDateLocale() })}`, {
     x: 50,
     y: 50,
     size: 10,

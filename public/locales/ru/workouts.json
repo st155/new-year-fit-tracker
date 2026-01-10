@@ -148,7 +148,45 @@
     "minutes": "мин",
     "kcal": "ккал",
     "km": "км",
-    "prVolume": "PR: Объём {{value}} кг"
+    "prVolume": "PR: Объём {{value}} кг",
+    "empty": {
+      "manual": {
+        "title": "Нет записанных тренировок",
+        "description": "Начните записывать свои тренировки, чтобы отслеживать прогресс"
+      },
+      "tracker": {
+        "title": "Нет импортированных тренировок",
+        "description": "Подключите трекер активности, чтобы автоматически синхронизировать тренировки"
+      },
+      "all": {
+        "title": "Журнал пуст",
+        "description": "Начните тренироваться или подключите трекер активности"
+      }
+    }
+  },
+  "fallback": {
+    "workout": "Тренировка"
+  },
+  "source": {
+    "manual": "Вручную",
+    "manualTrainer": "От тренера",
+    "whoop": "Whoop",
+    "withings": "Withings",
+    "terra": "Terra",
+    "appleHealth": "Apple Health",
+    "garmin": "Garmin",
+    "ultrahuman": "Ultrahuman",
+    "linked": "WHOOP + Вручную"
+  },
+  "plan": {
+    "weekOf": "Неделя {{current}} из {{total}}",
+    "completed": "{{percent}}% выполнено",
+    "status": {
+      "completed": "Готово",
+      "today": "Сегодня",
+      "upcoming": "Ожидает",
+      "rest": "Отдых"
+    }
   },
   "categories": {
     "strength": "Силовые",

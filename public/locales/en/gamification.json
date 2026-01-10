@@ -14,5 +14,19 @@
       "oneDayTo": "1 more day to \"{{title}}\"!",
       "daysTo": "{{days}} more days to \"{{title}}\""
     }
+  },
+  "achievements": {
+    "title": "Achievements",
+    "unlocked": "Unlocked {{count}} of {{total}}",
+    "tabs": {
+      "all": "All ({{count}})",
+      "unlocked": "Unlocked ({{count}})",
+      "locked": "Locked ({{count}})"
+    },
+    "empty": {
+      "unlocked": "No achievements unlocked yet",
+      "locked": "All achievements unlocked! 🎉",
+      "all": "No achievements"
+    }
   }
 }

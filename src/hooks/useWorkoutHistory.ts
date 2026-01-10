@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getWorkoutTypeName } from '@/lib/workout-types';
 import { mapTerraActivityType } from '@/lib/terra-activity-types';
 import { translateWorkoutName } from '@/lib/workout-translations';
+import i18n from '@/i18n';
 
 export type WorkoutSource = 'manual' | 'tracker' | 'all';
 
@@ -65,7 +66,7 @@ export function useWorkoutHistory(filter: WorkoutSource = 'all') {
             }
 
             // Priority 1: Use source_data.name (original name from provider)
-            let workoutName = 'Тренировка';
+            let workoutName = i18n.t('workouts:fallback.workout');
             const sourceData = workout.source_data as Record<string, any> | null;
             const originalName = sourceData?.name;
             
@@ -132,14 +133,14 @@ export function useWorkoutHistory(filter: WorkoutSource = 'all') {
             allWorkouts.push({
               id: workout.id,
               date: new Date(workout.performed_at),
-              name: workout.workout_name || 'Тренировка',
+              name: workout.workout_name || i18n.t('workouts:fallback.workout'),
               duration: linkedData?.whoopDuration || workout.duration_minutes || 0,
               calories: linkedData?.whoopCalories || workout.estimated_calories || 0,
               volume: workout.total_volume ? Number(workout.total_volume) : undefined,
               sets: workout.total_sets ? Number(workout.total_sets) : undefined,
               exercises: workout.total_exercises ? Number(workout.total_exercises) : undefined,
               source: isLinked ? 'linked' : 'manual',
-              sourceLabel: isLinked ? 'WHOOP + Вручную' : 'Вручную',
+              sourceLabel: getSourceLabel(isLinked ? 'linked' : 'manual'),
               strain: linkedData?.whoopStrain,
               linkedWorkoutId: isLinked ? workout.id : undefined,
               linkedData,
@@ -159,16 +160,17 @@ export function useWorkoutHistory(filter: WorkoutSource = 'all') {
 }
 
 function getSourceLabel(source: string): string {
-  const labels: Record<string, string> = {
-    'manual': 'Вручную',
-    'manual_trainer': 'От тренера',
-    'whoop': 'Whoop',
-    'withings': 'Withings',
-    'terra': 'Terra',
-    'apple_health': 'Apple Health',
-    'garmin': 'Garmin',
-    'ultrahuman': 'Ultrahuman',
-    'linked': 'WHOOP + Вручную',
+  const labelKeys: Record<string, string> = {
+    'manual': 'workouts:source.manual',
+    'manual_trainer': 'workouts:source.manualTrainer',
+    'whoop': 'workouts:source.whoop',
+    'withings': 'workouts:source.withings',
+    'terra': 'workouts:source.terra',
+    'apple_health': 'workouts:source.appleHealth',
+    'garmin': 'workouts:source.garmin',
+    'ultrahuman': 'workouts:source.ultrahuman',
+    'linked': 'workouts:source.linked',
   };
-  return labels[source.toLowerCase()] || source;
+  const key = labelKeys[source.toLowerCase()];
+  return key ? i18n.t(key) : source;
 }
