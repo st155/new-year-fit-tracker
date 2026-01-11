@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Play, Zap, Activity, Timer, Weight, Sparkles } from "lucide-react";
 import { AdjustedExercise } from "@/hooks/useDailyWorkout";
+import { useTranslation } from 'react-i18next';
 
 interface ExerciseDetailDialogProps {
   exercise: AdjustedExercise | null;
@@ -23,6 +24,8 @@ export default function ExerciseDetailDialog({
   onClose,
   onStart
 }: ExerciseDetailDialogProps) {
+  const { t } = useTranslation('workouts');
+
   if (!exercise) return null;
 
   const handleStart = () => {
@@ -35,14 +38,14 @@ export default function ExerciseDetailDialog({
       <DialogContent className="sm:max-w-md backdrop-blur-xl bg-background/95">
         <DialogHeader>
           <DialogTitle className="text-2xl">{exercise.name}</DialogTitle>
-          <DialogDescription>Exercise Details</DialogDescription>
+          <DialogDescription>{t('exercise.details')}</DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4 py-4">
           {exercise.was_modified && (
             <Badge variant="secondary" className="w-fit">
               <Sparkles className="w-3 h-3 mr-1" />
-              AI Modified
+              {t('exercise.aiModified')}
             </Badge>
           )}
           
@@ -50,7 +53,7 @@ export default function ExerciseDetailDialog({
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Activity className="w-4 h-4" />
-                Sets × Reps
+                {t('exercise.setsReps')}
               </div>
               <p className="text-2xl font-bold">
                 {exercise.sets} × {exercise.reps}
@@ -61,9 +64,9 @@ export default function ExerciseDetailDialog({
               <div className="space-y-1">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Weight className="w-4 h-4" />
-                  Weight
+                  {t('exercise.weight')}
                 </div>
-                <p className="text-2xl font-bold">{exercise.weight} kg</p>
+                <p className="text-2xl font-bold">{exercise.weight} {t('detailUnits.kg')}</p>
               </div>
             )}
             
@@ -71,7 +74,7 @@ export default function ExerciseDetailDialog({
               <div className="space-y-1">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Zap className="w-4 h-4" />
-                  RIR
+                  {t('exercise.rir')}
                 </div>
                 <p className="text-2xl font-bold">{exercise.rir}</p>
               </div>
@@ -81,7 +84,7 @@ export default function ExerciseDetailDialog({
               <div className="space-y-1">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Activity className="w-4 h-4" />
-                  RPE
+                  {t('exercise.rpe')}
                 </div>
                 <p className="text-2xl font-bold">{exercise.rpe}</p>
               </div>
@@ -91,7 +94,7 @@ export default function ExerciseDetailDialog({
               <div className="space-y-1">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Timer className="w-4 h-4" />
-                  Rest Time
+                  {t('exercise.restTime')}
                 </div>
                 <p className="text-2xl font-bold">
                   {Math.floor(exercise.rest_seconds / 60)}:{(exercise.rest_seconds % 60).toString().padStart(2, '0')}
@@ -102,7 +105,7 @@ export default function ExerciseDetailDialog({
           
           {exercise.adjustment_reason && (
             <div className="p-4 rounded-lg bg-muted/50 border border-border">
-              <p className="text-sm font-medium mb-1">AI Adjustment:</p>
+              <p className="text-sm font-medium mb-1">{t('exercise.aiAdjustment')}</p>
               <p className="text-sm text-muted-foreground italic">
                 {exercise.adjustment_reason}
               </p>
@@ -116,7 +119,7 @@ export default function ExerciseDetailDialog({
           className="w-full bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-600 hover:to-cyan-600"
         >
           <Play className="w-5 h-5 mr-2" />
-          Start Exercise
+          {t('exercise.start')}
         </Button>
       </DialogContent>
     </Dialog>

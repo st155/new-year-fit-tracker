@@ -16,5 +16,20 @@
     "h": "h",
     "m": "m",
     "min": "min"
+  },
+  "gap": {
+    "today": "Today",
+    "daysShort": "d",
+    "weeklyAnalysis": "Weekly Analysis",
+    "workoutsForPeriod": "{{count}} workouts for {{days}} days",
+    "weekShort": "wk",
+    "muscleGroups": "Muscle Groups",
+    "wellness": "Wellness",
+    "recommendations": "Recommendations",
+    "generateWorkout": "Generate Workout",
+    "loadError": "Failed to load analysis",
+    "retry": "Retry",
+    "days": "days",
+    "noData": "no data"
   }
 }

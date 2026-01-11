@@ -56,6 +56,25 @@
   "priority": {
     "important": "{{count}} важных"
   },
+  "card": {
+    "mergedFrom": "Объединено из {{count}} протоколов",
+    "unknownDoctor": "Неизвестный врач",
+    "addToStack": "В стек",
+    "dismiss": "Отклонить",
+    "dismissAll": "Отклонить все ({{count}})"
+  },
+  "status": {
+    "pending": "Ожидает",
+    "active": "Активно",
+    "completed": "Выполнено",
+    "dismissed": "Отклонено"
+  },
+  "source": {
+    "doctor": "Врач",
+    "ai": "AI",
+    "device": "Устройство",
+    "manual": "Вручную"
+  },
   "protocols": {
     "actionTypes": {
       "supplement": "Добавки",

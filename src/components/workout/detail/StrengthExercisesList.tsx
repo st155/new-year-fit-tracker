@@ -8,20 +8,23 @@ import {
 } from "@/components/ui/accordion";
 import { Dumbbell, Link2 } from "lucide-react";
 import { GroupedExercise } from "@/hooks/useStrengthWorkoutLogs";
+import { useTranslation } from 'react-i18next';
 
 interface StrengthExercisesListProps {
   exercises: GroupedExercise[];
 }
 
 export default function StrengthExercisesList({ exercises }: StrengthExercisesListProps) {
+  const { t } = useTranslation('workouts');
+
   if (!exercises.length) {
     return (
       <Card className="bg-card/50 backdrop-blur border-border/50">
         <CardContent className="py-8 text-center">
           <Dumbbell className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
-          <p className="text-muted-foreground">Нет данных об упражнениях</p>
+          <p className="text-muted-foreground">{t('strengthList.empty')}</p>
           <p className="text-xs text-muted-foreground mt-1">
-            Упражнения появятся после синхронизации с журналом
+            {t('strengthList.emptyHint')}
           </p>
         </CardContent>
       </Card>
@@ -33,7 +36,7 @@ export default function StrengthExercisesList({ exercises }: StrengthExercisesLi
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center gap-2">
           <Dumbbell className="w-5 h-5 text-primary" />
-          Упражнения ({exercises.length})
+          {t('strengthList.title')} ({exercises.length})
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
@@ -54,7 +57,7 @@ export default function StrengthExercisesList({ exercises }: StrengthExercisesLi
                       {exercise.exerciseName}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {exercise.sets.length} подход(ов) · {(exercise.totalVolume / 1000).toFixed(1)}т
+                      {exercise.sets.length} {t('strengthList.sets')} · {(exercise.totalVolume / 1000).toFixed(1)}{t('detailUnits.ton')}
                     </p>
                   </div>
                   {exercise.isSuperset && (
@@ -73,10 +76,10 @@ export default function StrengthExercisesList({ exercises }: StrengthExercisesLi
                       className="flex items-center justify-between bg-secondary/30 rounded-md px-3 py-2"
                     >
                       <span className="text-sm text-muted-foreground">
-                        Подход {set.setNumber}
+                        {t('strengthList.set')} {set.setNumber}
                       </span>
                       <span className="font-medium text-foreground">
-                        {set.weight ? `${set.weight}кг` : '—'} × {set.reps || '—'}
+                        {set.weight ? `${set.weight}${t('detailUnits.kg')}` : '—'} × {set.reps || '—'}
                       </span>
                     </div>
                   ))}

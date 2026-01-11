@@ -651,5 +651,10 @@
   "common": {
     "anonymous": "Anonymous",
     "user": "User"
+  },
+  "timeSection": {
+    "remaining": "Remaining",
+    "allCompleted": "All completed",
+    "startAll": "Start all"
   }
 }

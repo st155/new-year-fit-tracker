@@ -844,5 +844,23 @@
     "kmPerH": "km/h",
     "ton": "t",
     "kg": "kg"
+  },
+  "exercise": {
+    "details": "Exercise Details",
+    "aiModified": "AI Modified",
+    "setsReps": "Sets × Reps",
+    "weight": "Weight",
+    "rir": "RIR",
+    "rpe": "RPE",
+    "restTime": "Rest Time",
+    "aiAdjustment": "AI Adjustment:",
+    "start": "Start Exercise"
+  },
+  "strengthList": {
+    "empty": "No exercise data",
+    "emptyHint": "Exercises will appear after syncing with the journal",
+    "title": "Exercises",
+    "sets": "set(s)",
+    "set": "Set"
   }
 }

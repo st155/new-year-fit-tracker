@@ -9,6 +9,7 @@ import { ChevronDown, ChevronUp, Clock, Play } from 'lucide-react';
 import { HabitCardV3 } from '../core/HabitCardV3';
 import { formatDuration } from '@/lib/habit-utils-v3';
 import { type HabitGroup } from '@/features/habits/hooks';
+import { useTranslation } from 'react-i18next';
 
 interface TimeSectionProps {
   group: HabitGroup;
@@ -35,6 +36,7 @@ export function TimeSection({
   variant = 'default',
   defaultExpanded = true
 }: TimeSectionProps) {
+  const { t } = useTranslation('habits');
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const { habits, title, completedCount, totalCount, estimatedDuration } = group;
 
@@ -90,13 +92,13 @@ export function TimeSection({
           
           {remainingDuration > 0 && !isAllCompleted && (
             <div className="flex items-center gap-1 text-primary">
-              <span>Осталось: {formatDuration(remainingDuration)}</span>
+              <span>{t('timeSection.remaining')}: {formatDuration(remainingDuration)}</span>
             </div>
           )}
 
           {isAllCompleted && (
             <div className="flex items-center gap-1 text-green-500">
-              <span>✓ Все выполнено</span>
+              <span>✓ {t('timeSection.allCompleted')}</span>
             </div>
           )}
 
@@ -111,7 +113,7 @@ export function TimeSection({
               }}
             >
               <Play className="w-3 h-3 mr-1" />
-              Начать все
+              {t('timeSection.startAll')}
             </Button>
           )}
         </div>
@@ -155,4 +157,3 @@ export default memo(TimeSection, (prev, next) => {
     prev.group.habits.length === next.group.habits.length
   );
 });
-
