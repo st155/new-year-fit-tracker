@@ -60,11 +60,11 @@ export function SupplementResearchCard({
   const getEvidenceBadge = (level: string) => {
     switch (level) {
       case 'high':
-        return <Badge className="bg-green-500/20 text-green-400 border-green-500/30">Высокий</Badge>;
+        return <Badge className="bg-green-500/20 text-green-400 border-green-500/30">{t('evidenceLevel.high')}</Badge>;
       case 'moderate':
-        return <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">Средний</Badge>;
+        return <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">{t('evidenceLevel.moderate')}</Badge>;
       default:
-        return <Badge className="bg-neutral-500/20 text-neutral-400 border-neutral-500/30">Низкий</Badge>;
+        return <Badge className="bg-neutral-500/20 text-neutral-400 border-neutral-500/30">{t('evidenceLevel.low')}</Badge>;
     }
   };
 

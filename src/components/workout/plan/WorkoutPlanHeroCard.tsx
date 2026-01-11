@@ -4,6 +4,7 @@ import { CircularProgress } from "@/components/ui/circular-progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, TrendingUp, Zap, Settings } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface WorkoutPlanHeroCardProps {
   planName: string;
@@ -30,6 +31,8 @@ export function WorkoutPlanHeroCard({
   onStartToday,
   onViewStats,
 }: WorkoutPlanHeroCardProps) {
+  const { t } = useTranslation('workouts');
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -55,7 +58,7 @@ export function WorkoutPlanHeroCard({
                   )}
                 </div>
                 <p className="text-muted-foreground">
-                  Неделя {currentWeek} из {totalWeeks}
+                  {t('planHero.weekOfTotal', { current: currentWeek, total: totalWeeks })}
                 </p>
               </div>
               
@@ -76,7 +79,7 @@ export function WorkoutPlanHeroCard({
               >
                 <div className="flex items-center gap-2 mb-1">
                   <Calendar className="w-4 h-4 text-primary" />
-                  <span className="text-xs text-muted-foreground">Тренировок</span>
+                  <span className="text-xs text-muted-foreground">{t('planHero.workouts')}</span>
                 </div>
                 <p className="text-2xl font-bold">
                   {completedWorkouts}/{totalWorkouts}
@@ -89,7 +92,7 @@ export function WorkoutPlanHeroCard({
               >
                 <div className="flex items-center gap-2 mb-1">
                   <TrendingUp className="w-4 h-4 text-success" />
-                  <span className="text-xs text-muted-foreground">Прогресс</span>
+                  <span className="text-xs text-muted-foreground">{t('planHero.progress')}</span>
                 </div>
                 <p className="text-2xl font-bold">{Math.round(completionPercentage)}%</p>
               </motion.div>
@@ -101,7 +104,7 @@ export function WorkoutPlanHeroCard({
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <Zap className="w-4 h-4 text-warning" />
-                    <span className="text-xs text-muted-foreground">Следующая</span>
+                    <span className="text-xs text-muted-foreground">{t('planHero.next')}</span>
                   </div>
                   <p className="text-sm font-semibold truncate">{nextWorkout}</p>
                 </motion.div>
@@ -117,7 +120,7 @@ export function WorkoutPlanHeroCard({
                   size="lg"
                 >
                   <Zap className="w-4 h-4 mr-2" />
-                  Начать сегодняшнюю
+                  {t('planHero.startToday')}
                 </Button>
               )}
               {onViewStats && (
@@ -127,7 +130,7 @@ export function WorkoutPlanHeroCard({
                   size="lg"
                 >
                   <TrendingUp className="w-4 h-4 mr-2" />
-                  Статистика
+                  {t('planHero.statistics')}
                 </Button>
               )}
             </div>

@@ -255,6 +255,14 @@
       "rest": "Rest"
     }
   },
+  "planHero": {
+    "weekOfTotal": "Week {{current}} of {{total}}",
+    "workouts": "Workouts",
+    "progress": "Progress",
+    "next": "Next",
+    "startToday": "Start Today's",
+    "statistics": "Statistics"
+  },
   "categories": {
     "strength": "Strength",
     "cardio": "Cardio",

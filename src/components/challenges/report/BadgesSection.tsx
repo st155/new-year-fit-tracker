@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Award, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { MetricsBadge } from "@/features/challenges/types";
+import { useTranslation } from "react-i18next";
 
 interface BadgesSectionProps {
   badges: MetricsBadge[];
@@ -9,6 +10,8 @@ interface BadgesSectionProps {
 }
 
 export function BadgesSection({ badges, streakDays }: BadgesSectionProps) {
+  const { t } = useTranslation('challenges');
+
   if (badges.length === 0) {
     return (
       <motion.div
@@ -20,14 +23,14 @@ export function BadgesSection({ badges, streakDays }: BadgesSectionProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Award className="h-5 w-5 text-primary" />
-              Достижения
+              {t('badges.title')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-center py-8 text-muted-foreground">
               <Sparkles className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p>Нет полученных достижений</p>
-              <p className="text-sm mt-1">Продолжайте участвовать в челленджах!</p>
+              <p>{t('badges.noAchievements')}</p>
+              <p className="text-sm mt-1">{t('badges.keepParticipating')}</p>
             </div>
           </CardContent>
         </Card>
@@ -45,9 +48,9 @@ export function BadgesSection({ badges, streakDays }: BadgesSectionProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Award className="h-5 w-5 text-primary" />
-            Достижения
+            {t('badges.title')}
             <span className="text-sm font-normal text-muted-foreground ml-2">
-              ({badges.length} получено)
+              {t('badges.earned', { count: badges.length })}
             </span>
           </CardTitle>
         </CardHeader>
@@ -89,9 +92,9 @@ export function BadgesSection({ badges, streakDays }: BadgesSectionProps) {
             >
               <div className="flex items-center justify-center gap-2 mb-1">
                 <span className="text-2xl">🔥</span>
-                <span className="font-bold text-xl">{streakDays} дней подряд</span>
+                <span className="font-bold text-xl">{t('badges.daysInRow', { count: streakDays })}</span>
               </div>
-              <p className="text-sm text-muted-foreground">Максимальная серия активности</p>
+              <p className="text-sm text-muted-foreground">{t('badges.maxStreak')}</p>
             </motion.div>
           )}
         </CardContent>

@@ -255,6 +255,14 @@
       "rest": "Отдых"
     }
   },
+  "planHero": {
+    "weekOfTotal": "Неделя {{current}} из {{total}}",
+    "workouts": "Тренировок",
+    "progress": "Прогресс",
+    "next": "Следующая",
+    "startToday": "Начать сегодняшнюю",
+    "statistics": "Статистика"
+  },
   "categories": {
     "strength": "Силовые",
     "cardio": "Кардио",

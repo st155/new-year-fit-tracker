@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useTranslation } from 'react-i18next';
 
 interface Exercise {
   name: string;
@@ -14,6 +15,7 @@ interface NumberInputFormProps {
 }
 
 export function NumberInputForm({ exercises, onSubmit }: NumberInputFormProps) {
+  const { t } = useTranslation('common');
   const [values, setValues] = useState<Record<string, string>>({});
 
   const handleChange = (name: string, value: string) => {
@@ -52,7 +54,7 @@ export function NumberInputForm({ exercises, onSubmit }: NumberInputFormProps) {
               className="pr-12 bg-background/50 backdrop-blur-sm border-border"
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-              кг
+              {t('units.kg')}
             </span>
           </div>
         </div>
@@ -64,13 +66,13 @@ export function NumberInputForm({ exercises, onSubmit }: NumberInputFormProps) {
           variant="outline"
           className="flex-1"
         >
-          Пропустить
+          {t('actions.skip')}
         </Button>
         <Button
           onClick={handleSubmit}
           className="flex-1 bg-gradient-to-r from-cyan-500 to-primary hover:from-cyan-600 hover:to-primary/90"
         >
-          Продолжить
+          {t('actions.continue')}
         </Button>
       </div>
     </div>

@@ -7,12 +7,14 @@ import { format, startOfWeek, addDays, isSameDay, isToday } from "date-fns";
 import { getDateLocale } from "@/lib/date-locale";
 import { CheckCircle, Circle, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 interface WellnessWeekViewProps {
   compact?: boolean;
 }
 
 export function WellnessWeekView({ compact = false }: WellnessWeekViewProps) {
+  const { t } = useTranslation('common');
   const { user } = useAuth();
   const { data: activities = [], isLoading } = useWeeklyActivities(user?.id);
   const toggleCompletion = useToggleActivityCompletion();
@@ -104,7 +106,7 @@ export function WellnessWeekView({ compact = false }: WellnessWeekViewProps) {
                     </div>
                   </div>
                   {isCurrentDay && (
-                    <Badge variant="secondary">Сегодня</Badge>
+                    <Badge variant="secondary">{t('time.today')}</Badge>
                   )}
                 </div>
               );
