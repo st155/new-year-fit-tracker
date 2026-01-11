@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { HabitMiniChart } from '../charts/HabitMiniChart';
@@ -23,6 +24,7 @@ type FilterType = 'all' | 'daily_check' | 'duration_counter' | 'numeric_counter'
 type GroupByOption = 'none' | 'category' | 'status';
 
 export function AllHabitsView({ habits, onHabitComplete, onHabitClick }: AllHabitsViewProps) {
+  const { t } = useTranslation('habits');
   const { user } = useAuth();
   const [sortBy, setSortBy] = useState<SortOption>('completion');
   const [filterCategory, setFilterCategory] = useState<string>('all');
@@ -89,7 +91,7 @@ export function AllHabitsView({ habits, onHabitComplete, onHabitClick }: AllHabi
     if (groupBy === 'category') {
       const groups: Record<string, any[]> = {};
       processedHabits.forEach(habit => {
-        const cat = habit.category || 'Без категории';
+        const cat = habit.category || t('groups.uncategorized');
         if (!groups[cat]) groups[cat] = [];
         groups[cat].push(habit);
       });
@@ -98,18 +100,18 @@ export function AllHabitsView({ habits, onHabitComplete, onHabitClick }: AllHabi
     
     if (groupBy === 'status') {
       return {
-        'Выполнено': processedHabits.filter(h => h.completed_today),
-        'Не выполнено': processedHabits.filter(h => !h.completed_today),
+        [t('groups.completed')]: processedHabits.filter(h => h.completed_today),
+        [t('groups.notCompleted')]: processedHabits.filter(h => !h.completed_today),
       };
     }
     
     return { all: processedHabits };
-  }, [processedHabits, groupBy]);
+  }, [processedHabits, groupBy, t]);
 
   if (processedHabits.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground">Нет активных привычек</p>
+        <p className="text-muted-foreground">{t('smartView.noHabits')}</p>
       </div>
     );
   }
@@ -124,12 +126,12 @@ export function AllHabitsView({ habits, onHabitComplete, onHabitClick }: AllHabi
           {/* Category Filter */}
           <Select value={filterCategory} onValueChange={setFilterCategory}>
             <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Категория" />
+              <SelectValue placeholder={t('filters.category')} />
             </SelectTrigger>
             <SelectContent>
               {categories.map(cat => (
                 <SelectItem key={cat} value={cat}>
-                  {cat === 'all' ? 'Все категории' : cat}
+                  {cat === 'all' ? t('filters.allCategories') : cat}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -138,22 +140,22 @@ export function AllHabitsView({ habits, onHabitComplete, onHabitClick }: AllHabi
           {/* Status Filter */}
           <Tabs value={filterStatus} onValueChange={(v) => setFilterStatus(v as FilterStatus)}>
             <TabsList className="h-9">
-              <TabsTrigger value="all" className="text-xs">Все</TabsTrigger>
-              <TabsTrigger value="completed" className="text-xs">✓ Готово</TabsTrigger>
-              <TabsTrigger value="not_completed" className="text-xs">⏳ Не готово</TabsTrigger>
+              <TabsTrigger value="all" className="text-xs">{t('filters.all')}</TabsTrigger>
+              <TabsTrigger value="completed" className="text-xs">{t('filters.done')}</TabsTrigger>
+              <TabsTrigger value="not_completed" className="text-xs">{t('filters.notDone')}</TabsTrigger>
             </TabsList>
           </Tabs>
 
           {/* Type Filter */}
           <Select value={filterType} onValueChange={(v) => setFilterType(v as FilterType)}>
             <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Тип" />
+              <SelectValue placeholder={t('filters.type')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Все типы</SelectItem>
-              <SelectItem value="daily_check">Ежедневные</SelectItem>
-              <SelectItem value="duration_counter">Счетчики</SelectItem>
-              <SelectItem value="numeric_counter">Числовые</SelectItem>
+              <SelectItem value="all">{t('filters.allTypes')}</SelectItem>
+              <SelectItem value="daily_check">{t('filters.daily')}</SelectItem>
+              <SelectItem value="duration_counter">{t('filters.counters')}</SelectItem>
+              <SelectItem value="numeric_counter">{t('filters.numeric')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -164,25 +166,25 @@ export function AllHabitsView({ habits, onHabitComplete, onHabitClick }: AllHabi
           {/* Sort Options */}
           <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
             <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Сортировка" />
+              <SelectValue placeholder={t('sort.title')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="completion">По % выполнения</SelectItem>
-              <SelectItem value="streak">По стрику</SelectItem>
-              <SelectItem value="created">По дате создания</SelectItem>
-              <SelectItem value="xp">По XP награде</SelectItem>
+              <SelectItem value="completion">{t('sort.byCompletion')}</SelectItem>
+              <SelectItem value="streak">{t('sort.byStreak')}</SelectItem>
+              <SelectItem value="created">{t('sort.byCreated')}</SelectItem>
+              <SelectItem value="xp">{t('sort.byXp')}</SelectItem>
             </SelectContent>
           </Select>
 
           {/* Group By */}
           <Select value={groupBy} onValueChange={(v) => setGroupBy(v as GroupByOption)}>
             <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Группировка" />
+              <SelectValue placeholder={t('groups.title')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">Без группировки</SelectItem>
-              <SelectItem value="category">По категориям</SelectItem>
-              <SelectItem value="status">По статусу</SelectItem>
+              <SelectItem value="none">{t('groups.none')}</SelectItem>
+              <SelectItem value="category">{t('groups.byCategory')}</SelectItem>
+              <SelectItem value="status">{t('groups.byStatus')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -206,6 +208,7 @@ export function AllHabitsView({ habits, onHabitComplete, onHabitClick }: AllHabi
                   onComplete={onHabitComplete}
                   onClick={onHabitClick}
                   userId={user?.id}
+                  t={t}
                 />
               ))}
             </div>
@@ -222,9 +225,10 @@ interface HabitCompactCardProps {
   onComplete?: (habitId: string) => void;
   onClick?: (habitId: string) => void;
   userId?: string;
+  t: (key: string, options?: any) => string;
 }
 
-function HabitCompactCard({ habit, index, onComplete, onClick, userId }: HabitCompactCardProps) {
+function HabitCompactCard({ habit, index, onComplete, onClick, userId, t }: HabitCompactCardProps) {
   const { resetHabit, isResetting } = useHabitAttemptsQuery(habit.id, userId);
   const [elapsedTime, setElapsedTime] = useState<{ days: number; hours: number; minutes: number } | null>(null);
   
@@ -252,10 +256,16 @@ function HabitCompactCard({ habit, index, onComplete, onClick, userId }: HabitCo
   const handleAction = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isDurationCounter) {
-      resetHabit({ reason: 'Сброс из списка всех привычек' });
+      resetHabit({ reason: t('card.resetReason', { defaultValue: 'Reset from all habits list' }) });
     } else if (!isCompleted && onComplete) {
       onComplete(habit.id);
     }
+  };
+
+  // Helper for days pluralization
+  const getDaysLabel = (days: number): string => {
+    if (days === 1) return t('streakDays_one', { count: 1 }).replace('1 ', '');
+    return t('streakDays_other', { count: days }).replace(`${days} `, '');
   };
 
   // Swipe gesture handling
@@ -306,25 +316,29 @@ function HabitCompactCard({ habit, index, onComplete, onClick, userId }: HabitCo
               <h3 className="font-semibold text-base truncate">
                 {habit.name}
               </h3>
-              {isDurationCounter && elapsedTime ? (
-                <p className="text-xs text-primary font-medium">
-                  {elapsedTime.days} {elapsedTime.days === 1 ? 'день' : elapsedTime.days < 5 ? 'дня' : 'дней'} без {habit.category || 'привычки'}
-                </p>
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  {habit.category || 'Привычка'}
-                </p>
-              )}
+            {isDurationCounter && elapsedTime ? (
+              <p className="text-xs text-primary font-medium">
+                {t('card.daysWithout', { 
+                  days: elapsedTime.days, 
+                  daysLabel: getDaysLabel(elapsedTime.days),
+                  category: habit.category || t('card.habit')
+                })}
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                {habit.category || t('card.habit')}
+              </p>
+            )}
             </div>
           </div>
           <div className="text-right flex-shrink-0 ml-3">
             <div className="text-2xl font-bold text-primary">
               {Math.round(habit.stats?.completion_rate || 0)}%
             </div>
-            <p className="text-xs text-muted-foreground">
-              {habit.stats?.total_completions || 0} раз
-            </p>
-          </div>
+          <p className="text-xs text-muted-foreground">
+            {habit.stats?.total_completions || 0} {t('card.times')}
+          </p>
+        </div>
         </div>
 
         {/* Mini chart */}
@@ -354,7 +368,7 @@ function HabitCompactCard({ habit, index, onComplete, onClick, userId }: HabitCo
               className="gap-1.5"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Сбросить</span>
+              <span className="hidden sm:inline">{t('card.reset')}</span>
             </Button>
           ) : isDailyCheck && !isCompleted ? (
             <Button
@@ -364,12 +378,12 @@ function HabitCompactCard({ habit, index, onComplete, onClick, userId }: HabitCo
               className="gap-1.5 bg-primary/90 hover:bg-primary"
             >
               <CheckCircle2 className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Выполнить</span>
+              <span className="hidden sm:inline">{t('card.complete')}</span>
             </Button>
           ) : isCompleted ? (
             <div className="text-xs text-success flex items-center gap-1">
               <CheckCircle2 className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Готово</span>
+              <span className="hidden sm:inline">{t('card.done')}</span>
             </div>
           ) : null}
 
@@ -385,7 +399,7 @@ function HabitCompactCard({ habit, index, onComplete, onClick, userId }: HabitCo
         
         {/* Swipe hint */}
         <div className="text-[10px] text-muted-foreground/60 text-center mt-2">
-          ← Свайп: детали | Свайп →: выполнить
+          {t('card.swipeHint')}
         </div>
       </Card>
     </motion.div>

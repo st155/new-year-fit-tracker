@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format, parseISO, isToday, isYesterday } from 'date-fns';
 import { getDateLocale, getIntlLocale } from '@/lib/date-locale';
+import { useTranslation } from 'react-i18next';
 import type { HealthMetric } from '@/hooks/profile/useProfileSummary';
 
 interface HealthSnapshotProps {
@@ -52,10 +53,10 @@ const metricConfig: Record<string, { icon: React.ReactNode; color: string; forma
 
 const priorityOrder = ['Weight', 'Resting Heart Rate', 'Sleep Duration', 'Recovery Score', 'Day Strain', 'Steps', 'HRV'];
 
-function formatDate(dateStr: string): string {
+function formatDateLabel(dateStr: string, t: (key: string) => string): string {
   const date = parseISO(dateStr);
-  if (isToday(date)) return 'Сегодня';
-  if (isYesterday(date)) return 'Вчера';
+  if (isToday(date)) return t('common:time.today');
+  if (isYesterday(date)) return t('common:time.yesterday');
   return format(date, 'd MMM', { locale: getDateLocale() });
 }
 
@@ -73,13 +74,15 @@ function getSourceBadge(source: string): string {
 }
 
 export function HealthSnapshot({ metrics, isLoading }: HealthSnapshotProps) {
+  const { t } = useTranslation(['profile', 'common']);
+
   if (isLoading) {
     return (
       <Card className="border-2 border-green-500/20 bg-gradient-to-br from-green-500/5 to-emerald-500/5">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Heart className="h-5 w-5 text-green-500" />
-            Здоровье
+            {t('profile:health.title')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -97,14 +100,14 @@ export function HealthSnapshot({ metrics, isLoading }: HealthSnapshotProps) {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Heart className="h-5 w-5 text-green-500" />
-            Здоровье
+            {t('profile:health.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-6 text-muted-foreground">
             <Heart className="h-10 w-10 mx-auto mb-2 opacity-30" />
-            <p className="text-sm">Нет данных о здоровье</p>
-            <p className="text-xs mt-1">Подключите трекер для отслеживания</p>
+            <p className="text-sm">{t('profile:health.noData')}</p>
+            <p className="text-xs mt-1">{t('profile:health.connectTracker')}</p>
           </div>
         </CardContent>
       </Card>
@@ -127,7 +130,7 @@ export function HealthSnapshot({ metrics, isLoading }: HealthSnapshotProps) {
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Heart className="h-5 w-5 text-green-500" />
-            Здоровье
+            {t('profile:health.title')}
           </CardTitle>
           <div className="flex gap-1">
             {sources.slice(0, 3).map(source => (
@@ -167,7 +170,7 @@ export function HealthSnapshot({ metrics, isLoading }: HealthSnapshotProps) {
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold">{config.format(metric.value)}</span>
                 <span className="text-xs text-muted-foreground">
-                  {formatDate(metric.date)}
+                  {formatDateLabel(metric.date, t)}
                 </span>
               </div>
             </motion.div>

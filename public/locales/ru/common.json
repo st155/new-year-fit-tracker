@@ -101,6 +101,7 @@
   },
   "time": {
     "today": "Сегодня",
+    "yesterday": "Вчера",
     "selectDate": "Выберите дату",
     "currentYear": "✓ Текущий год",
     "checkYear": "⚠️ Проверьте год!",

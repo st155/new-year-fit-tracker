@@ -71,6 +71,34 @@
     "days": "days",
     "completionRate": "Completion rate"
   },
+  "filters": {
+    "category": "Category",
+    "allCategories": "All categories",
+    "type": "Type",
+    "allTypes": "All types",
+    "daily": "Daily",
+    "counters": "Counters",
+    "numeric": "Numeric",
+    "all": "All",
+    "done": "✓ Done",
+    "notDone": "⏳ Not done"
+  },
+  "sort": {
+    "title": "Sort",
+    "byCompletion": "By completion %",
+    "byStreak": "By streak",
+    "byCreated": "By creation date",
+    "byXp": "By XP reward"
+  },
+  "groups": {
+    "title": "Grouping",
+    "none": "No grouping",
+    "byCategory": "By categories",
+    "byStatus": "By status",
+    "uncategorized": "Uncategorized",
+    "completed": "Completed",
+    "notCompleted": "Not completed"
+  },
   "archive": {
     "title": "Archive habit?",
     "description": "The habit will be hidden from active list, but all data will be preserved. You can restore it later.",
@@ -136,6 +164,15 @@
   "miniChart": {
     "completed": "Completed",
     "lastDays": "over last {{days}} days"
+  },
+  "calendar": {
+    "yearlyActivity": "Yearly Activity",
+    "less": "Less",
+    "more": "More",
+    "noCompletions": "No completions",
+    "completions_one": "{{count}} completion",
+    "completions_other": "{{count}} completions",
+    "maxCompletions": "Max completions per day"
   },
   "viewSwitcher": {
     "widgets": "Widgets",
@@ -331,7 +368,14 @@
     "resetting": "Resetting...",
     "startFresh": "Start fresh",
     "swipeRightHint": "Swipe right to mark complete",
-    "daysCount": "{{count}} days"
+    "daysCount": "{{count}} days",
+    "daysWithout": "{{days}} days without {{category}}",
+    "habit": "Habit",
+    "times": "times",
+    "reset": "Reset",
+    "complete": "Complete",
+    "done": "Done",
+    "swipeHint": "← Swipe: details | Swipe →: complete"
   },
   "menu": {
     "edit": "Edit",

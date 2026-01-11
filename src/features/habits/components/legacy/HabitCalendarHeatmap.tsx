@@ -4,6 +4,7 @@ import { getDateLocale } from '@/lib/date-locale';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useTranslation } from 'react-i18next';
 import {
   Tooltip,
   TooltipContent,
@@ -17,6 +18,8 @@ interface HabitCalendarHeatmapProps {
 }
 
 export function HabitCalendarHeatmap({ userId, habitIds }: HabitCalendarHeatmapProps) {
+  const { t } = useTranslation('habits');
+  
   const dateRange = useMemo(() => {
     const end = endOfDay(new Date());
     const start = startOfYear(end);
@@ -96,9 +99,9 @@ export function HabitCalendarHeatmap({ userId, habitIds }: HabitCalendarHeatmapP
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Годовая активность</h3>
+        <h3 className="text-lg font-semibold">{t('calendar.yearlyActivity')}</h3>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span>Меньше</span>
+          <span>{t('calendar.less')}</span>
           <div className="flex gap-1">
             <div className="w-3 h-3 rounded-sm bg-muted/20" />
             <div className="w-3 h-3 rounded-sm bg-gradient-to-br from-primary/30 to-primary/20" />
@@ -106,7 +109,7 @@ export function HabitCalendarHeatmap({ userId, habitIds }: HabitCalendarHeatmapP
             <div className="w-3 h-3 rounded-sm bg-gradient-to-br from-primary/70 to-primary/60" />
             <div className="w-3 h-3 rounded-sm bg-gradient-to-br from-primary to-primary/90" />
           </div>
-          <span>Больше</span>
+          <span>{t('calendar.more')}</span>
         </div>
       </div>
 
@@ -130,7 +133,9 @@ export function HabitCalendarHeatmap({ userId, habitIds }: HabitCalendarHeatmapP
                           {format(day.date, 'd MMMM yyyy', { locale: getDateLocale() })}
                         </div>
                         <div className="text-muted-foreground">
-                          {day.count === 0 ? 'Нет выполнений' : `${day.count} ${day.count === 1 ? 'выполнение' : 'выполнений'}`}
+                          {day.count === 0 
+                            ? t('calendar.noCompletions') 
+                            : t('calendar.completions', { count: day.count })}
                         </div>
                       </div>
                     </TooltipContent>
@@ -144,7 +149,7 @@ export function HabitCalendarHeatmap({ userId, habitIds }: HabitCalendarHeatmapP
 
       {maxCount > 0 && (
         <div className="text-sm text-muted-foreground">
-          Максимум выполнений в день: <span className="font-semibold text-foreground">{maxCount}</span>
+          {t('calendar.maxCompletions')}: <span className="font-semibold text-foreground">{maxCount}</span>
         </div>
       )}
     </div>
