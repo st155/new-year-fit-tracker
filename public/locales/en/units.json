@@ -8,7 +8,9 @@
     "m": "m",
     "percent": "%",
     "mlKgMin": "ml/kg/min",
-    "kgReps": "kg ({{reps}} reps)"
+    "kgReps": "{{value}} kg ({{reps}} reps)",
+    "cm": "cm",
+    "degrees": "degrees"
   },
   "format": {
     "strengthGoal1RM": "{{value}} kg (1RM)",

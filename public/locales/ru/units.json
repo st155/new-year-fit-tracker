@@ -8,7 +8,9 @@
     "m": "м",
     "percent": "%",
     "mlKgMin": "мл/кг/мин",
-    "kgReps": "кг ({{reps}} повторений)"
+    "kgReps": "{{value}} кг ({{reps}} повторений)",
+    "cm": "см",
+    "degrees": "градусы"
   },
   "format": {
     "strengthGoal1RM": "{{value}} кг (1RM)",
