@@ -155,5 +155,6 @@
   "combineHabits": "Combine habits into a group",
   "workTogether": "\"{{name1}}\" and \"{{name2}}\" work great together ({{score}}% synergy)",
   "addHabitAtTime": "Add a habit {{time}}",
-  "doingGreat": "You're doing great with \"{{name}}\" {{time}} - this is your best time!"
+  "doingGreat": "You're doing great with \"{{name}}\" {{time}} - this is your best time!",
+  "setReminder": "Try setting a reminder"
 }
