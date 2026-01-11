@@ -377,7 +377,7 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
               )}
               {requestId && (
                 <p className="text-xs text-muted-foreground/70 mt-1">
-                  {t('appleHealth.requestId', { defaultValue: 'ID запроса' })}: {requestId.slice(0, 8)}...
+                  {t('appleHealth.requestId')}: {requestId.slice(0, 8)}...
                 </p>
               )}
             </div>
@@ -417,11 +417,11 @@ export function AppleHealthUpload({ onUploadComplete }: AppleHealthUploadProps) 
             <Alert variant="destructive">
               <FileX className="h-4 w-4" />
               <AlertDescription>
-                {t('appleHealth.errorProcessing', { defaultValue: 'Не удалось обработать файл. Проверьте, что это корректный экспорт Apple Health, и попробуйте снова.' })}
+                {t('appleHealth.errorProcessing')}
               </AlertDescription>
             </Alert>
             <Button onClick={resetUpload} variant="outline" className="w-full">
-              {t('appleHealth.tryAgain', { defaultValue: 'Попробовать снова' })}
+              {t('appleHealth.tryAgain')}
             </Button>
           </div>
         )}
