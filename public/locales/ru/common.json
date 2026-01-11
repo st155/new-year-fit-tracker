@@ -625,5 +625,27 @@
     "actionError": "Ошибка при выполнении действия",
     "timeout": "AI не отвечает уже 30 секунд",
     "refreshPage": "Обновить страницу"
+  },
+  "dataQuality": {
+    "title": "Качество данных",
+    "excellent": "Отлично",
+    "good": "Хорошо",
+    "fair": "Средне",
+    "poor": "Плохо",
+    "factors": {
+      "sourceReliability": "Надежность источника данных",
+      "dataFreshness": "Актуальность данных",
+      "measurementFrequency": "Регулярность измерений",
+      "crossValidation": "Перекрестная проверка"
+    }
+  },
+  "theme": {
+    "toggle": "Переключить тему"
+  },
+  "comparison": {
+    "period1": "Период 1",
+    "period2": "Период 2",
+    "selectPeriod": "Выберите период",
+    "metricsComparison": "Сравнение метрик"
   }
 }

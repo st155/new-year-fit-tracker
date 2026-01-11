@@ -148,7 +148,7 @@ export function PeriodComparison({ clientId }: PeriodComparisonProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Период 1</CardTitle>
+            <CardTitle className="text-base">{t('comparison.period1')}</CardTitle>
           </CardHeader>
           <CardContent>
             <Popover>
@@ -192,7 +192,7 @@ export function PeriodComparison({ clientId }: PeriodComparisonProps) {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Период 2</CardTitle>
+            <CardTitle className="text-base">{t('comparison.period2')}</CardTitle>
           </CardHeader>
           <CardContent>
             <Popover>
@@ -215,7 +215,7 @@ export function PeriodComparison({ clientId }: PeriodComparisonProps) {
                       format(period2.from, 'd MMM yyyy', { locale: getDateLocale() })
                     )
                   ) : (
-                    <span>Выберите период</span>
+                    <span>{t('comparison.selectPeriod')}</span>
                   )}
                 </Button>
               </PopoverTrigger>
@@ -238,7 +238,7 @@ export function PeriodComparison({ clientId }: PeriodComparisonProps) {
       {/* Comparison Results */}
       <Card>
         <CardHeader>
-          <CardTitle>Сравнение метрик</CardTitle>
+          <CardTitle>{t('comparison.metricsComparison')}</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (

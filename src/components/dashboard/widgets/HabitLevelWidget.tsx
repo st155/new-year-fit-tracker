@@ -5,10 +5,12 @@ import { Trophy, TrendingUp } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { getLevelColor, getLevelTitle } from "@/lib/gamification/level-system";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export function HabitLevelWidget() {
   const { levelInfo, isLoading } = useUserLevel();
   const navigate = useNavigate();
+  const { t } = useTranslation('habits');
 
   if (isLoading) {
     return (
@@ -25,7 +27,7 @@ export function HabitLevelWidget() {
       <Card className="overflow-hidden">
         <CardContent className="p-4 text-center text-muted-foreground">
           <Trophy className="h-8 w-8 mx-auto mb-2 opacity-50" />
-          <p className="text-sm">Начните выполнять привычки для получения XP</p>
+          <p className="text-sm">{t('level.startHabits')}</p>
         </CardContent>
       </Card>
     );
@@ -53,8 +55,8 @@ export function HabitLevelWidget() {
               />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Уровень привычек</p>
-              <p className="text-sm font-semibold">Уровень {levelInfo.level}</p>
+              <p className="text-xs text-muted-foreground">{t('level.habitLevel')}</p>
+              <p className="text-sm font-semibold">{t('level.levelNumber', { level: levelInfo.level })}</p>
             </div>
           </div>
           <div className="text-right">
@@ -69,7 +71,7 @@ export function HabitLevelWidget() {
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground">{title}</span>
             <span className="font-medium">
-              {levelInfo.xpToNext} XP до след. уровня
+              {t('level.xpToNext', { xp: levelInfo.xpToNext })}
             </span>
           </div>
           <Progress 

@@ -810,19 +810,16 @@ export function TerraIntegration() {
         <CardContent className="pt-0 pb-2 space-y-2">
           <Alert className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800">
             <AlertCircle className="h-4 w-4 text-amber-600" />
-            <AlertDescription className="text-sm text-amber-800 dark:text-amber-200">
-              <strong>Важно:</strong> После нажатия кнопки подключения завершите авторизацию 
-              в приложении устройства в течение <strong>15 минут</strong>. 
-            </AlertDescription>
+            <AlertDescription className="text-sm text-amber-800 dark:text-amber-200" dangerouslySetInnerHTML={{ __html: t("terra.timeWarning") }} />
           </Alert>
           <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950/20 dark:border-blue-800">
             <Info className="h-4 w-4 text-blue-600" />
             <AlertDescription className="text-sm text-blue-800 dark:text-blue-200">
-              <strong>Проблемы с подключением?</strong> Если видите "Session expired":
+              <strong>{t("terra.connectionProblems")}</strong> {t("terra.sessionExpiredHint")}
               <ol className="list-decimal list-inside mt-1 space-y-1">
-                <li>Откройте приложение устройства (Whoop/Oura/etc)</li>
-                <li>Выйдите из аккаунта и войдите заново</li>
-                <li>Повторите подключение в Elite10</li>
+                <li>{t("terra.step1")}</li>
+                <li>{t("terra.step2")}</li>
+                <li>{t("terra.step3")}</li>
               </ol>
             </AlertDescription>
           </Alert>
@@ -830,7 +827,7 @@ export function TerraIntegration() {
         
         <CardHeader className="pt-2">
           <CardDescription>
-            Выберите ваш фитнес-трекер для подключения
+            {t("terra.selectTracker")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -858,11 +855,11 @@ export function TerraIntegration() {
                       <div className="flex-1 text-left">
                         <p className="font-medium">{PROVIDER_NAMES[provider]}</p>
                         {isConnected ? (
-                          <p className="text-xs text-muted-foreground">Подключено</p>
+                          <p className="text-xs text-muted-foreground">{t("terra.isConnected")}</p>
                         ) : isConnecting ? (
-                          <p className="text-xs text-muted-foreground">Открываем окно...</p>
+                          <p className="text-xs text-muted-foreground">{t("terra.openingWindow")}</p>
                         ) : isPurging ? (
-                          <p className="text-xs text-muted-foreground">Сброс...</p>
+                          <p className="text-xs text-muted-foreground">{t("terra.resetting")}</p>
                         ) : null}
                       </div>
                       {isConnected ? (
@@ -890,7 +887,7 @@ export function TerraIntegration() {
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent side="top" className="max-w-xs">
-                            <p>Полный сброс: очистить все застрявшие сессии перед подключением</p>
+                            <p>{t("terra.resetTooltip")}</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -903,7 +900,7 @@ export function TerraIntegration() {
                       onClick={() => connectViaRedirect(provider)}
                       className="w-full text-xs"
                     >
-                      Альтернативный метод (Redirect)
+                      {t("terra.alternativeMethod")}
                     </Button>
                   )}
                 </div>
@@ -914,7 +911,7 @@ export function TerraIntegration() {
           <Alert className="mt-4">
             <CheckCircle className="h-4 w-4" />
             <AlertDescription>
-              При подключении вы будете перенаправлены на страницу авторизации устройства. После успешного подключения данные будут автоматически синхронизироваться каждые 6 часов
+              {t("terra.autoSyncDesc")}
             </AlertDescription>
           </Alert>
         </CardContent>
@@ -926,37 +923,37 @@ export function TerraIntegration() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive">
               <AlertTriangle className="h-5 w-5" />
-              Полный сброс {purgeTargetProvider ? PROVIDER_NAMES[purgeTargetProvider] : ''}
+              {t('purge.dialogTitle', { provider: purgeTargetProvider ? PROVIDER_NAMES[purgeTargetProvider] : '' })}
             </DialogTitle>
             <DialogDescription className="space-y-4 pt-4">
               <p>
-                Эта операция полностью удалит все сессии авторизации для {purgeTargetProvider ? PROVIDER_NAMES[purgeTargetProvider] : 'устройства'} на стороне Terra API и в нашей базе.
+                {t('purge.dialogDescription', { provider: purgeTargetProvider ? PROVIDER_NAMES[purgeTargetProvider] : '' })}
               </p>
               
               <Alert className="border-amber-200 bg-amber-50 dark:bg-amber-950/20">
                 <AlertTriangle className="h-4 w-4 text-amber-600" />
                 <AlertDescription className="text-sm">
-                  <strong>После сброса выполните:</strong>
+                  <strong>{t('purge.afterResetTitle')}</strong>
                   <ol className="list-decimal list-inside mt-2 space-y-2">
                     <li>
-                      <strong>Очистите cookies в Safari</strong>
+                      <strong>{t('purge.step1Title')}</strong>
                       <br />
                       <span className="text-xs text-muted-foreground ml-4">
-                        Настройки → Safari → Очистить историю и данные сайтов
+                        {t('purge.step1Desc')}
                       </span>
                     </li>
                     <li>
-                      <strong>Перезайдите в приложение {purgeTargetProvider ? PROVIDER_NAMES[purgeTargetProvider] : ''}</strong>
+                      <strong>{t('purge.step2Title', { provider: purgeTargetProvider ? PROVIDER_NAMES[purgeTargetProvider] : '' })}</strong>
                       <br />
                       <span className="text-xs text-muted-foreground ml-4">
-                        Выйдите из аккаунта в приложении и войдите заново
+                        {t('purge.step2Desc')}
                       </span>
                     </li>
                     <li>
-                      <strong>Подключите устройство заново</strong>
+                      <strong>{t('purge.step3Title')}</strong>
                       <br />
                       <span className="text-xs text-muted-foreground ml-4">
-                        Вернитесь сюда и нажмите кнопку подключения
+                        {t('purge.step3Desc')}
                       </span>
                     </li>
                   </ol>

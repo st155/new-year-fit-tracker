@@ -564,6 +564,16 @@
   "purge": {
     "cancel": "Cancel",
     "resetting": "Resetting...",
-    "performReset": "Perform Reset"
-  }
+    "performReset": "Perform Reset",
+    "dialogTitle": "Full Reset {{provider}}",
+    "dialogDescription": "This operation will completely delete all authorization sessions for {{provider}} on Terra API side and in our database.",
+    "afterResetTitle": "After reset, perform:",
+    "step1Title": "Clear cookies in Safari",
+    "step1Desc": "Settings → Safari → Clear History and Website Data",
+    "step2Title": "Re-login to {{provider}} app",
+    "step2Desc": "Log out and log back in to the app",
+    "step3Title": "Reconnect device",
+    "step3Desc": "Return here and click the connect button"
+  },
+  "allMetrics": "All metrics"
 }

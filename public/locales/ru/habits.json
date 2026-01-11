@@ -805,5 +805,23 @@
     "since": "С {{date}}",
     "completed": "Выполнено!",
     "notCompleted": "Не выполнено сегодня"
+  },
+  "durationCounter": {
+    "days": "дней",
+    "hoursMinutes": "{{hours}}ч {{minutes}}м",
+    "bestResult": "Лучший результат: {{count}} дней",
+    "attemptHistory": "История попыток"
+  },
+  "level": {
+    "startHabits": "Начните выполнять привычки для получения XP",
+    "habitLevel": "Уровень привычек",
+    "levelNumber": "Уровень {{level}}",
+    "xpToNext": "{{xp}} XP до след. уровня"
+  },
+  "numericWidget": {
+    "units": "единиц",
+    "percentOfGoal": "{{percent}}% от цели",
+    "goalAchieved": "✓ Цель достигнута!",
+    "valuePlaceholder": "Значение"
   }
 }
