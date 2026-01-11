@@ -7,8 +7,9 @@ import { TrendingUp, TrendingDown, Plus } from "lucide-react";
 import { ChallengeGoal } from "@/features/goals/types";
 import { cn, formatTimeDisplay } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
-import { ru } from "date-fns/locale";
+import { ru, enUS } from "date-fns/locale";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { 
   goalThemes, 
   getGoalIcon, 
@@ -24,6 +25,9 @@ interface EnhancedProgressCardProps {
 }
 
 export function EnhancedProgressCard({ goal, onClick, onAddMeasurement }: EnhancedProgressCardProps) {
+  const { t, i18n } = useTranslation('progress');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
+  
   const theme = goalThemes[goal.goal_type] || goalThemes.strength;
   const Icon = getGoalIcon(goal.goal_name, goal.goal_type);
   const sourceBadge = getSourceBadge(goal.source);
@@ -104,7 +108,7 @@ export function EnhancedProgressCard({ goal, onClick, onAddMeasurement }: Enhanc
         
         <div className="flex items-center gap-2 mt-1">
           {goal.is_personal ? (
-            <Badge variant="outline" className="text-xs">Личная</Badge>
+            <Badge variant="outline" className="text-xs">{t('goal.personal')}</Badge>
           ) : (
             <Badge variant="secondary" className="text-xs">{goal.challenge_title}</Badge>
           )}
@@ -126,7 +130,7 @@ export function EnhancedProgressCard({ goal, onClick, onAddMeasurement }: Enhanc
             } {goal.target_unit}
           </div>
           <div className="text-xs text-muted-foreground">
-            Цель: {isTimeGoal 
+            {t('goal.target')} {isTimeGoal 
               ? formatTimeDisplay(goal.target_value)
               : goal.target_value.toFixed(1)
             } {goal.target_unit}
@@ -142,11 +146,11 @@ export function EnhancedProgressCard({ goal, onClick, onAddMeasurement }: Enhanc
           />
           <div className="flex items-center justify-between mt-1">
             <span className="text-xs text-muted-foreground">
-              {goal.progress_percentage.toFixed(0)}% выполнено
+              {t('goal.completed', { percent: goal.progress_percentage.toFixed(0) })}
             </span>
             {goal.progress_percentage > 100 && (
               <Badge variant="default" className="text-xs">
-                Перевыполнено! 🎉
+                {t('goal.overachieved')}
               </Badge>
             )}
           </div>
@@ -164,8 +168,8 @@ export function EnhancedProgressCard({ goal, onClick, onAddMeasurement }: Enhanc
                       const data = payload[0].payload;
                       return (
                         <div className="bg-background border rounded px-2 py-1 text-xs shadow-lg">
-                          <div className="font-medium text-primary">
-                            {format(parseISO(data.date), 'd MMM yyyy', { locale: ru })}
+                        <div className="font-medium text-primary">
+                          {format(parseISO(data.date), 'd MMM yyyy', { locale: dateLocale })}
                           </div>
                           <div className="text-muted-foreground">
                             {isTimeGoal 
@@ -195,7 +199,7 @@ export function EnhancedProgressCard({ goal, onClick, onAddMeasurement }: Enhanc
         {stats && (
           <div className="grid grid-cols-3 gap-2 text-xs">
             <div>
-              <div className="font-medium text-muted-foreground">Базовая</div>
+              <div className="font-medium text-muted-foreground">{t('stats.baseline')}</div>
               <div className="font-semibold">
                 {goal.baseline_value 
                   ? (isTimeGoal 
@@ -206,7 +210,7 @@ export function EnhancedProgressCard({ goal, onClick, onAddMeasurement }: Enhanc
               </div>
             </div>
             <div>
-              <div className="font-medium text-muted-foreground">Средняя</div>
+              <div className="font-medium text-muted-foreground">{t('stats.average')}</div>
               <div className="font-semibold">
                 {isTimeGoal 
                   ? formatTimeDisplay(stats.avg)
@@ -215,7 +219,7 @@ export function EnhancedProgressCard({ goal, onClick, onAddMeasurement }: Enhanc
               </div>
             </div>
             <div>
-              <div className="font-medium text-muted-foreground">Макс</div>
+              <div className="font-medium text-muted-foreground">{t('stats.max')}</div>
               <div className="font-semibold">
                 {isTimeGoal 
                   ? formatTimeDisplay(stats.max)
@@ -229,7 +233,7 @@ export function EnhancedProgressCard({ goal, onClick, onAddMeasurement }: Enhanc
         {/* No data state */}
         {!hasData && (
           <div className="text-xs text-muted-foreground/50 text-center py-4">
-            Нет истории замеров
+            {t('goal.noMeasurementHistory')}
           </div>
         )}
       </CardContent>

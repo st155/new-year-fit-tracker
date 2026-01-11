@@ -186,14 +186,20 @@
     "low": "low"
   },
   "goal": {
-    "completed": "completed",
-    "overachieved": "Overachieved!",
+    "completed": "{{percent}}% completed",
+    "overachieved": "Overachieved! 🎉",
     "needFirstMeasurement": "Need first measurement",
     "personal": "Personal",
-    "otherGoals": "other goals",
+    "otherGoals": "+{{count}} other goals",
     "noMeasurementHistory": "No measurement history",
     "progressOverview": "Progress Overview",
-    "noActiveGoals": "No active goals",
-    "createGoalsHint": "Create goals to track progress"
+    "noActiveGoals": "No active goals yet",
+    "createGoalsHint": "Create goals to track your progress",
+    "target": "Target:"
+  },
+  "stats": {
+    "baseline": "Baseline",
+    "average": "Average",
+    "max": "Max"
   }
 }
