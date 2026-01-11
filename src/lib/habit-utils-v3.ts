@@ -2,6 +2,8 @@
  * Habit 3.0 utilities - Time-based themes and card states
  */
 
+import i18n from '@/i18n';
+
 export type TimeOfDay = 'morning' | 'afternoon' | 'evening' | 'night' | 'anytime';
 
 export type CardState = 
@@ -172,10 +174,15 @@ export const getStateStyles = (state: CardState) => {
  */
 export const formatDuration = (minutes: number | null): string => {
   if (!minutes) return '';
-  if (minutes < 60) return `${minutes} мин`;
+  if (minutes < 60) {
+    return i18n.t('habits:duration.minutes', { minutes });
+  }
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
-  return mins > 0 ? `${hours} ч ${mins} мин` : `${hours} ч`;
+  if (mins > 0) {
+    return i18n.t('habits:duration.hoursMinutes', { hours, minutes: mins });
+  }
+  return i18n.t('habits:duration.hours', { hours });
 };
 
 /**
@@ -184,11 +191,11 @@ export const formatDuration = (minutes: number | null): string => {
 export const getDifficultyBadge = (level: string | null) => {
   switch (level) {
     case 'easy':
-      return { icon: '🟢', label: 'Легко' };
+      return { icon: '🟢', label: i18n.t('habits:difficulty.easy') };
     case 'medium':
-      return { icon: '🟡', label: 'Средне' };
+      return { icon: '🟡', label: i18n.t('habits:difficulty.medium') };
     case 'hard':
-      return { icon: '🔴', label: 'Сложно' };
+      return { icon: '🔴', label: i18n.t('habits:difficulty.hard') };
     default:
       return null;
   }

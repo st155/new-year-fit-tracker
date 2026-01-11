@@ -8,8 +8,10 @@ import { getDateLocale } from '@/lib/date-locale';
 import { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 
 export function MetricsComparison() {
+  const { t } = useTranslation('integrations');
   const { user } = useAuth();
   const [selectedMetric, setSelectedMetric] = useState<string>('');
   const startDate = new Date();
@@ -123,7 +125,7 @@ export function MetricsComparison() {
                         stroke={sourceColors[source] || '#8884d8'}
                         strokeWidth={source === 'unified' ? 3 : 2}
                         dot={source === 'unified'}
-                        name={source === 'unified' ? 'Агрегированное' : source.toUpperCase()}
+                        name={source === 'unified' ? t('aggregated') : source.toUpperCase()}
                       />
                     ))}
                 </LineChart>

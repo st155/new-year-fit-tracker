@@ -3,6 +3,7 @@
  * Generates AI-powered insights using data analysis
  */
 
+import i18n from '@/i18n';
 import type { SmartInsight, InsightGeneratorContext } from './types';
 import {
   calculateCorrelation,
@@ -76,7 +77,10 @@ export function generateCorrelationInsights(
             id: 'correlation-sleep-recovery',
             type: 'correlation',
             emoji: '💡',
-            message: `Когда сон >${Math.round(avgSleep)}ч, Recovery выше на ${Math.round(difference)}%`,
+            message: i18n.t('insights:correlations.sleepRecovery', { 
+              hours: Math.round(avgSleep), 
+              percent: Math.round(difference) 
+            }),
             priority: 60,
             action: { type: 'navigate', path: '/metrics' },
             timestamp: new Date(),
@@ -119,7 +123,7 @@ export function generateAnomalyInsights(
         id: 'anomaly-steps-low',
         type: 'anomaly',
         emoji: severity === 'severe' ? '🚨' : '⚠️',
-        message: `Необычно низкая активность: -${percentDiff}% от среднего`,
+        message: i18n.t('insights:anomalies.lowActivity', { percent: percentDiff }),
         priority: severity === 'severe' ? 90 : 75,
         action: { type: 'navigate', path: '/metrics' },
         timestamp: new Date(),
@@ -143,7 +147,10 @@ export function generateAnomalyInsights(
         id: 'anomaly-sleep-low',
         type: 'anomaly',
         emoji: '😴',
-        message: `Сон ниже обычного: ${todayMetrics.sleep.toFixed(1)}ч вместо ${stats.mean.toFixed(1)}ч`,
+        message: i18n.t('insights:anomalies.lowSleep', { 
+          actual: todayMetrics.sleep.toFixed(1), 
+          average: stats.mean.toFixed(1) 
+        }),
         priority: 80,
         action: { type: 'navigate', path: '/metrics' },
         timestamp: new Date(),
@@ -187,7 +194,7 @@ export function generatePredictionInsights(
         id: `prediction-goal-${goal.id}`,
         type: 'prediction',
         emoji: '🎯',
-        message: `"${goal.title}" будет достигнута через ${daysToGoal} ${daysToGoal === 1 ? 'день' : daysToGoal < 5 ? 'дня' : 'дней'}`,
+        message: i18n.t('insights:predictions.goalReached', { title: goal.title, days: daysToGoal, count: daysToGoal }),
         priority: 70,
         action: { type: 'navigate', path: `/goals/${goal.id}` },
         timestamp: new Date(),
@@ -200,7 +207,7 @@ export function generatePredictionInsights(
           id: `prediction-goal-progress-${goal.id}`,
           type: 'prediction',
           emoji: '📈',
-          message: `Хороший прогресс по цели "${goal.title}"`,
+          message: i18n.t('insights:predictions.goodProgress', { title: goal.title }),
           priority: 50,
           action: { type: 'navigate', path: `/goals/${goal.id}` },
           timestamp: new Date(),
@@ -231,7 +238,7 @@ export function generateSocialInsights(
         id: `social-top3-${challenge.challenge_id}`,
         type: 'social',
         emoji,
-        message: `Вы на ${challenge.userRank} месте в "${challenge.challenge?.title}"!`,
+        message: i18n.t('insights:social.topRank', { rank: challenge.userRank, title: challenge.challenge?.title }),
         priority: 75,
         action: { type: 'navigate', path: `/challenges/${challenge.challenge_id}` },
         timestamp: new Date(),
@@ -259,7 +266,7 @@ export function generateTrainerInsights(
       id: 'trainer-unread-messages',
       type: 'trainer',
       emoji: '💬',
-      message: `${trainerData.unreadMessages} непрочитанных сообщений от тренера`,
+      message: i18n.t('insights:trainer.unreadMessages', { count: trainerData.unreadMessages }),
       priority: 70,
       action: { type: 'navigate', path: '/messages' },
       timestamp: new Date(),
@@ -272,7 +279,7 @@ export function generateTrainerInsights(
       id: 'trainer-new-recommendations',
       type: 'trainer',
       emoji: '👨‍⚕️',
-      message: `Новая рекомендация от тренера`,
+      message: i18n.t('insights:trainer.newRecommendation'),
       priority: 75,
       action: { type: 'navigate', path: '/trainer' },
       timestamp: new Date(),
@@ -297,14 +304,19 @@ export function generateTemporalInsights(
   // Check weekend effect on activity
   const weekendEffect = detectWeekendEffect('Steps', metricsData.history);
   if (weekendEffect && Math.abs(weekendEffect.difference) > 20) {
-    const direction = weekendEffect.difference < 0 ? 'падает' : 'растёт';
+    const direction = weekendEffect.difference < 0 
+      ? i18n.t('insights:temporal.falls') 
+      : i18n.t('insights:temporal.rises');
     const emoji = weekendEffect.difference < 0 ? '📉' : '📈';
 
     insights.push({
       id: 'temporal-weekend-activity',
       type: 'temporal',
       emoji,
-      message: `В выходные активность ${direction} на ${Math.round(Math.abs(weekendEffect.difference))}%`,
+      message: i18n.t('insights:temporal.weekendActivity', { 
+        direction, 
+        percent: Math.round(Math.abs(weekendEffect.difference)) 
+      }),
       priority: 45,
       action: { type: 'navigate', path: '/analytics' },
       timestamp: new Date(),
@@ -315,18 +327,13 @@ export function generateTemporalInsights(
   // Find optimal time for workouts
   const optimalTime = findOptimalTime('Steps', metricsData.history);
   if (optimalTime) {
-    const timeLabels: Record<string, string> = {
-      morning: 'утром',
-      afternoon: 'днём',
-      evening: 'вечером',
-      night: 'ночью',
-    };
+    const timeLabel = i18n.t(`insights:timeLabels.${optimalTime}`);
 
     insights.push({
       id: 'temporal-optimal-activity',
       type: 'temporal',
       emoji: '⏰',
-      message: `Пик активности обычно ${timeLabels[optimalTime]}`,
+      message: i18n.t('insights:temporal.activityPeak', { time: timeLabel }),
       priority: 40,
       action: { type: 'navigate', path: '/analytics' },
       timestamp: new Date(),

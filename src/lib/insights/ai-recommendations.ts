@@ -2,6 +2,7 @@
  * AI-powered habit recommendations engine
  */
 
+import i18n from '@/i18n';
 import { findOptimalHabitTime, analyzeCompletionPatterns } from './analyzers/habit-analyzer';
 import { findHabitSynergies, detectTriggerHabits } from './analyzers/habit-correlation';
 import { getHabitsNeedingAttention } from './habit-quality';
@@ -90,38 +91,38 @@ export function generateHabitRecommendations(
     .slice(0, 10); // Top 10 recommendations
 }
 
-// Default text options (Russian)
+// Default text options using i18n
 function getDefaultTextOptions(): RecommendationTextOptions {
   return {
-    defaultName: 'Привычка',
+    defaultName: i18n.t('habits:defaultName'),
     timeLabels: {
-      morning: 'утром',
-      afternoon: 'днём',
-      evening: 'вечером',
-      night: 'ночью',
-      anytime: 'в любое время',
+      morning: i18n.t('common:time.morning'),
+      afternoon: i18n.t('common:time.afternoon'),
+      evening: i18n.t('common:time.evening'),
+      night: i18n.t('common:time.night'),
+      anytime: i18n.t('common:time.anytime'),
     },
     categoryLabels: {
-      health: 'Здоровье',
-      productivity: 'Продуктивность',
-      learning: 'Обучение',
-      mindfulness: 'Осознанность',
-      fitness: 'Фитнес',
+      health: i18n.t('habits:categories.health'),
+      productivity: i18n.t('habits:categories.productivity'),
+      learning: i18n.t('habits:categories.learning'),
+      mindfulness: i18n.t('habits:categories.mindfulness'),
+      fitness: i18n.t('habits:categories.fitness'),
     },
     texts: {
-      optimizeTime: (name) => `Оптимизируйте время для "${name}"`,
-      successRate: (rate, time) => `Привычка выполняется на ${rate}% успешнее ${time}`,
-      addTimeSlot: (time) => `Добавьте ${time} привычку`,
-      noHabitsAtTime: (time) => `У вас нет привычек ${time}. Это отличное время для новых привычек!`,
-      addCategory: (category) => `Добавьте привычку из категории "${category}"`,
-      diversityHelps: 'Разнообразие привычек помогает развиваться разносторонне',
-      simplify: (name) => `Упростите "${name}"`,
-      lowCompletion: (rate) => `Привычка выполняется только в ${rate}% случаев. Попробуйте уменьшить сложность`,
-      startSmaller: 'Начните с меньшей продолжительности или частоты',
-      combineHabits: 'Объедините привычки в группу',
-      workTogether: (name1, name2, score) => `"${name1}" и "${name2}" отлично работают вместе (${score}% синергия)`,
-      addHabitAtTime: (time) => `Добавьте привычку ${time}`,
-      doingGreat: (name, time) => `Вы отлично справляетесь с "${name}" ${time} - это ваше лучшее время!`,
+      optimizeTime: (name) => i18n.t('recommendations:optimizeTime', { name }),
+      successRate: (rate, time) => i18n.t('recommendations:successRate', { rate, time }),
+      addTimeSlot: (time) => i18n.t('recommendations:addTimeSlot', { time }),
+      noHabitsAtTime: (time) => i18n.t('recommendations:noHabitsAtTime', { time }),
+      addCategory: (category) => i18n.t('recommendations:addCategory', { category }),
+      diversityHelps: i18n.t('recommendations:diversityHelps'),
+      simplify: (name) => i18n.t('recommendations:simplify', { name }),
+      lowCompletion: (rate) => i18n.t('recommendations:lowCompletion', { rate }),
+      startSmaller: i18n.t('recommendations:startSmaller'),
+      combineHabits: i18n.t('recommendations:combineHabits'),
+      workTogether: (name1, name2, score) => i18n.t('recommendations:workTogether', { name1, name2, score }),
+      addHabitAtTime: (time) => i18n.t('recommendations:addHabitAtTime', { time }),
+      doingGreat: (name, time) => i18n.t('recommendations:doingGreat', { name, time }),
     },
   };
 }

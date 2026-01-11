@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { TrendingUp, TrendingDown, Minus, Target, Calendar } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { goalNameToRouteKey } from '@/lib/goal-detection';
 
 interface GoalProgress {
   id: string;
@@ -195,22 +196,9 @@ const ProgressOverview = ({ className }: ProgressOverviewProps) => {
         <div className="space-y-4">
           {goals.slice(0, 5).map((goal) => {
             const getClickHandler = () => {
-              const nameMap: Record<string, string> = {
-                'вес': 'weight',
-                'weight': 'weight',
-                'жир': 'body_fat',
-                'body fat': 'body_fat',
-                'процент жира': 'body_fat',
-                'vo2': 'vo2max',
-                'шаги': 'steps',
-                'steps': 'steps'
-              };
-              
-              const goalName = goal.goal_name.toLowerCase();
-              for (const [key, route] of Object.entries(nameMap)) {
-                if (goalName.includes(key)) {
-                  return () => navigate(`/metric/${route}`);
-                }
+              const route = goalNameToRouteKey(goal.goal_name);
+              if (route) {
+                return () => navigate(`/metric/${route}`);
               }
               return undefined;
             };

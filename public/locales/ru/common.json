@@ -99,13 +99,23 @@
     "enterHint": "Enter для отправки • Shift+Enter для новой строки",
     "user": "Пользователь"
   },
-  "time": {
+"time": {
     "today": "Сегодня",
     "yesterday": "Вчера",
     "selectDate": "Выберите дату",
     "currentYear": "✓ Текущий год",
     "checkYear": "⚠️ Проверьте год!",
-    "lastMeasurement": "за последнее измерение"
+    "lastMeasurement": "за последнее измерение",
+    "morning": "утром",
+    "afternoon": "днём",
+    "evening": "вечером",
+    "night": "ночью",
+    "anytime": "в любое время"
+  },
+  "plurals": {
+    "day_one": "день",
+    "day_few": "дня",
+    "day_many": "дней"
   },
   "units": {
     "kg": "кг",

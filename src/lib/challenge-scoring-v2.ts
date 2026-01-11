@@ -194,17 +194,5 @@ export function calculateParticipantScore(
   };
 }
 
-/**
- * Determine if a goal type uses "lower is better" logic
- */
-export function isLowerBetterGoal(goalName: string, goalType: string): boolean {
-  const lowerName = goalName.toLowerCase();
-  return (
-    goalType === 'body_composition' ||
-    lowerName.includes('жир') ||
-    lowerName.includes('fat') ||
-    lowerName.includes('бег') ||
-    lowerName.includes('running') ||
-    lowerName.includes('вес') && !lowerName.includes('лёжа') && !lowerName.includes('bench')
-  );
-}
+// Re-export from goal-detection for backwards compatibility
+export { isLowerBetterGoal } from '@/lib/goal-detection';
