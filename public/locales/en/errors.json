@@ -45,5 +45,24 @@
   },
   "server": {
     "detailed": "Server error. We're already working on it. Please try later."
+  },
+  "app": {
+    "updating": "App Update",
+    "newVersionAvailable": "A new version is available. Please reload the page to continue.",
+    "reload": "Reload",
+    "unexpectedError": "An unexpected error occurred. We've logged this issue and are working on a fix.",
+    "hideDetails": "Hide technical details",
+    "showDetails": "Show technical details",
+    "whatToDo": "What to do?",
+    "tryReload": "Try reloading the page",
+    "goHome": "Go to the home page",
+    "clearCache": "Clear browser cache",
+    "contactSupport": "If the problem persists, contact support",
+    "reloadPage": "Reload page",
+    "goToHome": "Go to Home"
+  },
+  "component": {
+    "loadError": "Component loading error",
+    "tryAgain": "Try again"
   }
 }

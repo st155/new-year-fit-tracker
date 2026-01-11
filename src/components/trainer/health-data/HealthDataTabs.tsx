@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HealthData } from "./types";
 import { HealthOverview } from "./HealthOverview";
@@ -15,14 +16,16 @@ interface HealthDataTabsProps {
 }
 
 export function HealthDataTabs({ healthData, loading }: HealthDataTabsProps) {
+  const { t } = useTranslation('trainerHealth');
+
   if (loading) {
-    return <div>Загрузка данных...</div>;
+    return <div>{t('loading')}</div>;
   }
 
   if (!healthData || healthData.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
-        Нет данных о здоровье
+        {t('noHealthData')}
       </div>
     );
   }
@@ -30,14 +33,14 @@ export function HealthDataTabs({ healthData, loading }: HealthDataTabsProps) {
   return (
     <Tabs defaultValue="overview" className="space-y-4">
       <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
-        <TabsTrigger value="overview">Обзор</TabsTrigger>
-        <TabsTrigger value="activity">Активность</TabsTrigger>
-        <TabsTrigger value="heart">Сердце</TabsTrigger>
-        <TabsTrigger value="sleep">Сон</TabsTrigger>
-        <TabsTrigger value="body">Тело</TabsTrigger>
-        <TabsTrigger value="recovery">Восстановление</TabsTrigger>
-        <TabsTrigger value="workouts">Тренировки</TabsTrigger>
-        <TabsTrigger value="health">Метрики</TabsTrigger>
+        <TabsTrigger value="overview">{t('tabs.overview')}</TabsTrigger>
+        <TabsTrigger value="activity">{t('tabs.activity')}</TabsTrigger>
+        <TabsTrigger value="heart">{t('tabs.heart')}</TabsTrigger>
+        <TabsTrigger value="sleep">{t('tabs.sleep')}</TabsTrigger>
+        <TabsTrigger value="body">{t('tabs.body')}</TabsTrigger>
+        <TabsTrigger value="recovery">{t('tabs.recovery')}</TabsTrigger>
+        <TabsTrigger value="workouts">{t('tabs.workouts')}</TabsTrigger>
+        <TabsTrigger value="health">{t('tabs.metrics')}</TabsTrigger>
       </TabsList>
 
       <TabsContent value="overview">

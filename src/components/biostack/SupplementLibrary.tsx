@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +18,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatDistanceToNow } from 'date-fns';
 
 export function SupplementLibrary() {
+  const { t } = useTranslation('supplements');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [sourceFilter, setSourceFilter] = useState<'scan' | 'protocol' | 'manual' | null>(null);
@@ -198,9 +200,9 @@ export function SupplementLibrary() {
             <Library className="h-8 w-8 text-green-500" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold mb-2">Библиотека пуста</h3>
+            <h3 className="text-lg font-semibold mb-2">{t('library.empty')}</h3>
             <p className="text-sm text-muted-foreground">
-              Сканируйте бутылочки добавок, чтобы создать персональную библиотеку
+              {t('library.scanToCreate')}
             </p>
           </div>
         </div>
@@ -356,7 +358,7 @@ export function SupplementLibrary() {
           {/* No Results */}
           {filteredLibrary?.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">Нет добавок, соответствующих вашим фильтрам</p>
+              <p className="text-muted-foreground">{t('library.noMatchingFilters')}</p>
             </div>
           )}
         </>

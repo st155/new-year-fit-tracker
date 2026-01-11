@@ -3,10 +3,9 @@
  * Quick access to actions and navigation (Cmd+K)
  */
 
-import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { 
-  Command, 
   CommandDialog,
   CommandEmpty, 
   CommandGroup, 
@@ -34,6 +33,7 @@ interface CommandPaletteProps {
 
 export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation('navigation');
 
   const runCommand = (command: () => void) => {
     command();
@@ -42,64 +42,64 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
-      <CommandInput placeholder="Поиск действий..." />
+      <CommandInput placeholder={t('command.searchPlaceholder')} />
       <CommandList>
-        <CommandEmpty>Ничего не найдено</CommandEmpty>
+        <CommandEmpty>{t('command.noResults')}</CommandEmpty>
         
-        <CommandGroup heading="Быстрые действия">
+        <CommandGroup heading={t('command.quickActions')}>
           <CommandItem onSelect={() => runCommand(() => navigate('/goals'))}>
             <Plus className="mr-2 h-4 w-4" />
-            Создать цель
+            {t('command.createGoal')}
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/habits'))}>
             <Plus className="mr-2 h-4 w-4" />
-            Создать привычку
+            {t('command.createHabit')}
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/challenges'))}>
             <Plus className="mr-2 h-4 w-4" />
-            Присоединиться к челленджу
+            {t('command.joinChallenge')}
           </CommandItem>
         </CommandGroup>
         
         <CommandSeparator />
         
-        <CommandGroup heading="Навигация">
+        <CommandGroup heading={t('command.navigation')}>
           <CommandItem onSelect={() => runCommand(() => navigate('/'))}>
             <Home className="mr-2 h-4 w-4" />
-            Главная
+            {t('home')}
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/goals'))}>
             <Target className="mr-2 h-4 w-4" />
-            Цели
+            {t('goals')}
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/habits'))}>
             <CheckCircle className="mr-2 h-4 w-4" />
-            Привычки
+            {t('habits')}
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/challenges'))}>
             <Trophy className="mr-2 h-4 w-4" />
-            Челленджи
+            {t('challenges')}
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/fitness-data'))}>
             <Activity className="mr-2 h-4 w-4" />
-            Фитнес данные
+            {t('fitnessData')}
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/analytics'))}>
             <BarChart3 className="mr-2 h-4 w-4" />
-            Аналитика
+            {t('analytics')}
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => navigate('/calendar'))}>
             <Calendar className="mr-2 h-4 w-4" />
-            Календарь
+            {t('calendar')}
           </CommandItem>
         </CommandGroup>
         
         <CommandSeparator />
         
-        <CommandGroup heading="Настройки">
+        <CommandGroup heading={t('settings')}>
           <CommandItem onSelect={() => runCommand(() => navigate('/profile'))}>
             <Settings className="mr-2 h-4 w-4" />
-            Профиль
+            {t('profile')}
           </CommandItem>
         </CommandGroup>
       </CommandList>

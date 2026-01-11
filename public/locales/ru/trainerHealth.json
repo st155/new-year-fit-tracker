@@ -17,5 +17,17 @@
     "averageRate": "Средний показатель"
   },
   "noData": "Нет данных",
-  "lastUpdated": "Обновлено: {{date}}"
+  "lastUpdated": "Обновлено: {{date}}",
+  "loading": "Загрузка данных...",
+  "noHealthData": "Нет данных о здоровье",
+  "tabs": {
+    "overview": "Обзор",
+    "activity": "Активность",
+    "heart": "Сердце",
+    "sleep": "Сон",
+    "body": "Тело",
+    "recovery": "Восстановление",
+    "workouts": "Тренировки",
+    "metrics": "Метрики"
+  }
 }

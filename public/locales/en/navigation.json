@@ -25,6 +25,8 @@
   "privacyPolicy": "Privacy Policy",
   "myPlan": "My Plan",
   "trends": "Trends",
+  "analytics": "Analytics",
+  "calendar": "Calendar",
   "groups": {
     "core": "Core",
     "actions": "Actions",
@@ -40,5 +42,14 @@
   "roles": {
     "trainer": "Trainer",
     "user": "User"
+  },
+  "command": {
+    "searchPlaceholder": "Search actions...",
+    "noResults": "Nothing found",
+    "quickActions": "Quick Actions",
+    "createGoal": "Create goal",
+    "createHabit": "Create habit",
+    "joinChallenge": "Join challenge",
+    "navigation": "Navigation"
   }
 }

@@ -112,7 +112,16 @@
     "reject": "Отклонить",
     "actionDetails": "Детали действия",
     "actionExecuted": "Действие выполнено",
-    "openClient": "Открыть клиента"
+    "openClient": "Открыть клиента",
+    "autoExecuted": "Автоматически выполнено",
+    "executionError": "Ошибка выполнения",
+    "partiallyExecuted": "Частично выполнено",
+    "success": "успешно",
+    "unknownError": "Неизвестная ошибка",
+    "viewPlan": "Посмотреть план",
+    "viewGoal": "Посмотреть цель",
+    "actionError": "Ошибка при выполнении действия",
+    "sendError": "Ошибка отправки. Попробуйте еще раз."
   },
   "aiToast": {
     "error": "Ошибка",
