@@ -1,0 +1,20 @@
+{
+  "completedToday": {
+    "title": "Completed Today",
+    "volume": "Volume",
+    "exercises": "Exercises",
+    "sets": "Sets",
+    "bestLift": "Best: {{exercise}} — {{weight}}kg × {{reps}}",
+    "cardio": "Cardio"
+  },
+  "units": {
+    "ton": "t",
+    "kg": "kg",
+    "km": "km",
+    "kcal": "kcal",
+    "bpm": "bpm",
+    "h": "h",
+    "m": "m",
+    "min": "min"
+  }
+}

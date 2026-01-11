@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Zap, Target, TrendingUp } from 'lucide-react';
@@ -17,13 +18,9 @@ interface PointsImpactCardProps {
   nextRankPoints: number;
 }
 
-const priorityLabels: Record<'high' | 'medium' | 'low', string> = {
-  high: 'высокий',
-  medium: 'средний',
-  low: 'низкий',
-};
-
 export const PointsImpactCard = ({ goals, currentRank, nextRankPoints }: PointsImpactCardProps) => {
+  const { t } = useTranslation('progress');
+
   const topOpportunities = [...goals]
     .sort((a, b) => (b.potentialPoints - b.currentPoints) - (a.potentialPoints - a.currentPoints))
     .slice(0, 3);
@@ -49,20 +46,23 @@ export const PointsImpactCard = ({ goals, currentRank, nextRankPoints }: PointsI
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Zap className="h-5 w-5 text-[hsl(var(--gold))]" />
-          Калькулятор очков
+          {t('pointsImpact.title')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Summary Card */}
         <div className="p-4 rounded-lg bg-gradient-to-br from-[hsl(var(--gold))]/10 to-secondary/10 border border-[hsl(var(--gold))]/20">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">Потенциальный прирост</span>
+            <span className="text-sm font-medium">{t('pointsImpact.potentialGain')}</span>
             <Badge className="bg-[hsl(var(--gold))] text-black">
-              +{totalPotentialGain} очков
+              {t('pointsImpact.points', { count: totalPotentialGain })}
             </Badge>
           </div>
           <div className="text-xs text-muted-foreground">
-            Сфокусируйтесь на возможностях, чтобы {nextRankPoints - totalPotentialGain > 0 ? 'приблизиться к' : 'обогнать'} место #{currentRank - 1}
+            {t('pointsImpact.focusHint', { 
+              action: nextRankPoints - totalPotentialGain > 0 ? t('pointsImpact.focusReach') : t('pointsImpact.focusOvertake'), 
+              rank: currentRank - 1 
+            })}
           </div>
         </div>
 
@@ -70,12 +70,12 @@ export const PointsImpactCard = ({ goals, currentRank, nextRankPoints }: PointsI
         <div className="space-y-3">
           <h4 className="text-sm font-semibold flex items-center gap-2">
             <Target className="h-4 w-4" />
-            Лучшие возможности
+            {t('pointsImpact.topOpportunities')}
           </h4>
           
           {topOpportunities.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground text-sm">
-              Выполните больше целей, чтобы увидеть возможности
+              {t('pointsImpact.emptyState')}
             </div>
           ) : (
             topOpportunities.map((goal) => {
@@ -90,12 +90,12 @@ export const PointsImpactCard = ({ goals, currentRank, nextRankPoints }: PointsI
                     <div className="flex-1 min-w-0">
                       <h5 className="font-medium text-sm truncate">{goal.goalName}</h5>
                       <div className="text-xs text-muted-foreground mt-1">
-                        {goal.currentPoints} → {goal.potentialPoints} очков
+                        {t('pointsImpact.pointsRange', { from: goal.currentPoints, to: goal.potentialPoints })}
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       <Badge className={getPriorityColor(goal.priority)}>
-                        {priorityLabels[goal.priority]}
+                        {t(`priority.${goal.priority}`)}
                       </Badge>
                       <div className="text-xs font-semibold text-[hsl(var(--gold))]">
                         +{potentialGain}
@@ -105,7 +105,7 @@ export const PointsImpactCard = ({ goals, currentRank, nextRankPoints }: PointsI
                   
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">Прогресс</span>
+                      <span className="text-muted-foreground">{t('pointsImpact.progress')}</span>
                       <span className="font-medium">{Math.round(goal.progressPercent)}%</span>
                     </div>
                     <Progress value={goal.progressPercent} className="h-1.5" />
@@ -121,13 +121,13 @@ export const PointsImpactCard = ({ goals, currentRank, nextRankPoints }: PointsI
           <div className="p-3 rounded-lg bg-muted/30 border">
             <div className="flex items-center gap-2 text-sm mb-2">
               <TrendingUp className="h-4 w-4 text-primary" />
-              <span className="font-medium">Сценарий роста</span>
+              <span className="font-medium">{t('pointsImpact.growthScenario')}</span>
             </div>
             <p className="text-xs text-muted-foreground">
-              Если вы выполните эти 3 цели, вы получите <span className="font-semibold text-[hsl(var(--gold))]">+{totalPotentialGain} очков</span>
+              {t('pointsImpact.ifComplete')} <span className="font-semibold text-[hsl(var(--gold))]">{t('pointsImpact.points', { count: totalPotentialGain })}</span>
               {nextRankPoints - totalPotentialGain <= 0 
-                ? ' и обгоните следующего соперника! 🔥'
-                : ` и вам нужно ещё ${nextRankPoints - totalPotentialGain}, чтобы достичь места #${currentRank - 1}.`
+                ? ` ${t('pointsImpact.andOvertake')}`
+                : ` ${t('pointsImpact.andNeedMore', { more: nextRankPoints - totalPotentialGain, rank: currentRank - 1 })}`
               }
             </p>
           </div>

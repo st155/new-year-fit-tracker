@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Flag, Zap } from "lucide-react";
 import { generateSplits } from "@/lib/workout-calculations";
@@ -8,6 +9,8 @@ interface WorkoutSplitsTableProps {
 }
 
 export default function WorkoutSplitsTable({ distanceKm, durationMin }: WorkoutSplitsTableProps) {
+  const { t } = useTranslation('workouts');
+
   if (!distanceKm || !durationMin || distanceKm < 1) {
     return null;
   }
@@ -23,7 +26,7 @@ export default function WorkoutSplitsTable({ distanceKm, durationMin }: WorkoutS
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Flag className="w-5 h-5 text-yellow-400" />
-          Сплиты по километрам
+          {t('splits.title')}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -37,16 +40,16 @@ export default function WorkoutSplitsTable({ distanceKm, durationMin }: WorkoutS
                 <div className="w-8 h-8 rounded-full bg-yellow-400/20 flex items-center justify-center">
                   <span className="text-sm font-bold text-yellow-400">{split.km}</span>
                 </div>
-                <span className="text-gray-300 font-medium">Километр {split.km}</span>
+                <span className="text-gray-300 font-medium">{t('splits.kilometer', { km: split.km })}</span>
               </div>
               
               <div className="flex items-center gap-6">
                 <div className="text-right">
-                  <p className="text-xs text-gray-400">Темп</p>
-                  <p className="text-sm font-semibold text-gray-200">{split.pace} /км</p>
+                  <p className="text-xs text-gray-400">{t('splits.pace')}</p>
+                  <p className="text-sm font-semibold text-gray-200">{split.pace} {t('detailUnits.perKm')}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs text-gray-400">Время</p>
+                  <p className="text-xs text-gray-400">{t('splits.time')}</p>
                   <p className="text-sm font-semibold text-gray-200">{split.time}</p>
                 </div>
               </div>
@@ -57,7 +60,7 @@ export default function WorkoutSplitsTable({ distanceKm, durationMin }: WorkoutS
         <div className="mt-4 flex items-center gap-2 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
           <Zap className="w-4 h-4 text-yellow-400" />
           <span className="text-xs text-gray-400">
-            Расчетные данные • Для точных сплитов требуется GPS-трек
+            {t('splits.estimatedNote')}
           </span>
         </div>
       </CardContent>

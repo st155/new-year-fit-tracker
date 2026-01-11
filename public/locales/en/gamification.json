@@ -28,5 +28,12 @@
       "locked": "All achievements unlocked! 🎉",
       "all": "No achievements"
     }
+  },
+  "levelUp": {
+    "level": "Level",
+    "title": "Level Up!",
+    "reached": "You've reached level:",
+    "rewardsUnlocked": "New rewards unlocked",
+    "continue": "Continue"
   }
 }

@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,7 @@ interface HabitsInsightBannerProps {
 }
 
 export function HabitsInsightBanner({ insights, onAction, onDismiss }: HabitsInsightBannerProps) {
+  const { t } = useTranslation('common');
   const [currentIndex, setCurrentIndex] = useState(0);
 
   // Show only top 3 critical insights
@@ -74,7 +76,7 @@ export function HabitsInsightBanner({ insights, onAction, onDismiss }: HabitsIns
                 className="h-auto p-0 mt-1 text-xs"
                 onClick={() => onAction(currentInsight)}
               >
-                Узнать больше →
+                {t('empty.noData')} →
               </Button>
             )}
           </div>

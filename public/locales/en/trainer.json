@@ -1071,5 +1071,9 @@
     "helpFetch": "Fetch Terra Users — get all active Terra connections from API",
     "helpDeauth": "Deauth — disconnect in Terra API and delete local token",
     "helpSupport": "If issue persists after Deauth — contact Terra support with Reference ID"
+  },
+  "calendar": {
+    "rest": "Rest",
+    "restDay": "Rest day"
   }
 }

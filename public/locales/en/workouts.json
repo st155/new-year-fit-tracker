@@ -818,5 +818,31 @@
   },
   "fallback": {
     "planName": "Workouts"
+  },
+  "splits": {
+    "title": "Kilometer Splits",
+    "kilometer": "Kilometer {{km}}",
+    "pace": "Pace",
+    "time": "Time",
+    "estimatedNote": "Estimated data • GPS track required for accurate splits"
+  },
+  "strengthSummary": {
+    "title": "Workout Summary",
+    "totalVolume": "Total Volume",
+    "exercises": "Exercises",
+    "sets": "Sets"
+  },
+  "paceMetrics": {
+    "title": "Pace & Speed",
+    "avgPace": "Average Pace",
+    "avgSpeed": "Average Speed",
+    "calculatedNote": "⚡ Calculated based on total distance and time"
+  },
+  "detailUnits": {
+    "perKm": "/km",
+    "minPerKm": "min/km",
+    "kmPerH": "km/h",
+    "ton": "t",
+    "kg": "kg"
   }
 }

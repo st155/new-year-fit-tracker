@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 
 interface SparklineChartProps {
@@ -14,6 +15,8 @@ export function SparklineChart({
   color = "hsl(var(--primary))",
   height = 40 
 }: SparklineChartProps) {
+  const { t } = useTranslation('common');
+
   const { path, max, min, lastPoint, gradientId } = useMemo(() => {
     if (data.length === 0) return { path: '', max: 0, min: 0, lastPoint: null, gradientId: '' };
     
@@ -40,7 +43,7 @@ export function SparklineChart({
   if (data.length === 0) {
     return (
       <div className={cn("flex items-center justify-center text-muted-foreground text-xs", className)}>
-        Нет данных
+        {t('states.noData')}
       </div>
     );
   }
