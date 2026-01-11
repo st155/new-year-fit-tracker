@@ -620,5 +620,31 @@
     "notFound": "Client data not found. The client may have been deleted.",
     "timeout": "Request timed out. Please try again.",
     "loadError": "Load error: {{message}}"
+  },
+  "recoveryMetrics": {
+    "recoveryScore": "Recovery Score",
+    "dayStrain": "Day Strain",
+    "workoutStrain": "Workout Strain",
+    "bodyBattery": "Body Battery",
+    "stressLevel": "Stress Level"
+  },
+  "healthCharts": {
+    "steps": "Steps",
+    "weight": "Weight",
+    "kg": "kg",
+    "heartRate": "Heart Rate",
+    "bpm": "bpm",
+    "strain": "Strain",
+    "sleepEfficiency": "Sleep Efficiency",
+    "efficiency": "Efficiency",
+    "sleepPhases": "Sleep Phases",
+    "deepSleep": "Deep Sleep",
+    "lightSleep": "Light Sleep",
+    "remSleep": "REM Sleep",
+    "hrvVariability": "HRV (Heart Rate Variability)",
+    "hrvRmssd": "HRV RMSSD",
+    "respiratoryRate": "Respiratory Rate",
+    "breathsPerMin": "breaths/min",
+    "rate": "Rate"
   }
 }

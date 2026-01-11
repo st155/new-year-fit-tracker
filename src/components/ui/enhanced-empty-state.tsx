@@ -1,4 +1,5 @@
 import { ReactNode } from "react"
+import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
@@ -75,6 +76,7 @@ export function EnhancedEmptyState({
   className,
   illustration = "motivational"
 }: EnhancedEmptyStateProps) {
+  const { t } = useTranslation('common')
   const displayIcon = icon || defaultIcons[variant]
   const gradientClass = variantColors[variant]
   const iconColorClass = iconColors[variant]
@@ -137,7 +139,7 @@ export function EnhancedEmptyState({
         {illustration === "motivational" && (
           <div className="mt-8 p-4 rounded-xl bg-primary/5 border border-primary/20 max-w-md">
             <p className="text-sm text-primary/80 italic">
-              💪 "Every champion was once a contender that refused to give up."
+              💪 "{t('emptyStates.motivationalQuote')}"
             </p>
           </div>
         )}
@@ -148,13 +150,14 @@ export function EnhancedEmptyState({
 
 // Специализированные empty states
 export function NoGoalsEmptyState({ onCreateGoal }: { onCreateGoal: () => void }) {
+  const { t } = useTranslation('common')
   return (
     <EnhancedEmptyState
       variant="goals"
-      title="No Goals Yet"
-      description="Start your fitness journey by setting your first goal. Track your progress and achieve greatness!"
+      title={t('emptyStates.noGoals.title')}
+      description={t('emptyStates.noGoals.description')}
       action={{
-        label: "Create Your First Goal",
+        label: t('emptyStates.noGoals.action'),
         onClick: onCreateGoal
       }}
       illustration="motivational"
@@ -166,17 +169,18 @@ export function NoChallengesEmptyState({ onCreateChallenge, onExplore }: {
   onCreateChallenge?: () => void
   onExplore?: () => void 
 }) {
+  const { t } = useTranslation('common')
   return (
     <EnhancedEmptyState
       variant="challenges"
-      title="No Active Challenges"
-      description="Join a challenge to compete with others or create your own to invite friends and teammates!"
+      title={t('emptyStates.noChallenges.title')}
+      description={t('emptyStates.noChallenges.description')}
       action={onCreateChallenge ? {
-        label: "Create Challenge",
+        label: t('emptyStates.noChallenges.createAction'),
         onClick: onCreateChallenge
       } : undefined}
       secondaryAction={onExplore ? {
-        label: "Explore Challenges",
+        label: t('emptyStates.noChallenges.exploreAction'),
         onClick: onExplore
       } : undefined}
       illustration="community"
@@ -185,13 +189,14 @@ export function NoChallengesEmptyState({ onCreateChallenge, onExplore }: {
 }
 
 export function NoActivityEmptyState({ onAddActivity }: { onAddActivity: () => void }) {
+  const { t } = useTranslation('common')
   return (
     <EnhancedEmptyState
       variant="activity"
-      title="No Activity Today"
-      description="Get moving! Log your first workout and start building your fitness streak."
+      title={t('emptyStates.noActivity.title')}
+      description={t('emptyStates.noActivity.description')}
       action={{
-        label: "Log Workout",
+        label: t('emptyStates.noActivity.action'),
         onClick: onAddActivity
       }}
       illustration="motivational"
@@ -200,22 +205,23 @@ export function NoActivityEmptyState({ onAddActivity }: { onAddActivity: () => v
 }
 
 export function NoDataEmptyState({ 
-  title = "No Data Available",
-  description = "Start tracking your progress to see analytics and insights here.",
+  title,
+  description,
   onAction
 }: { 
   title?: string
   description?: string
   onAction?: () => void 
 }) {
+  const { t } = useTranslation('common')
   return (
     <EnhancedEmptyState
       variant="default"
       icon={<TrendingUp className="h-12 w-12" />}
-      title={title}
-      description={description}
+      title={title || t('emptyStates.noData.title')}
+      description={description || t('emptyStates.noData.description')}
       action={onAction ? {
-        label: "Get Started",
+        label: t('emptyStates.noData.action'),
         onClick: onAction
       } : undefined}
       illustration="data"
@@ -224,11 +230,12 @@ export function NoDataEmptyState({
 }
 
 export function NoLeaderboardEmptyState() {
+  const { t } = useTranslation('common')
   return (
     <EnhancedEmptyState
       variant="leaderboard"
-      title="Leaderboard Coming Soon"
-      description="Complete workouts and log your progress to see your ranking among other participants!"
+      title={t('emptyStates.leaderboardComingSoon.title')}
+      description={t('emptyStates.leaderboardComingSoon.description')}
       illustration="community"
     />
   )

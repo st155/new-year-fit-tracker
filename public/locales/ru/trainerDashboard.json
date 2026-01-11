@@ -619,5 +619,31 @@
     "notFound": "Данные клиента не найдены. Возможно, клиент был удален.",
     "timeout": "Превышено время ожидания. Попробуйте снова.",
     "loadError": "Ошибка загрузки: {{message}}"
+  },
+  "recoveryMetrics": {
+    "recoveryScore": "Показатель восстановления",
+    "dayStrain": "Дневная нагрузка",
+    "workoutStrain": "Нагрузка тренировки",
+    "bodyBattery": "Энергия тела",
+    "stressLevel": "Уровень стресса"
+  },
+  "healthCharts": {
+    "steps": "Шаги",
+    "weight": "Вес",
+    "kg": "кг",
+    "heartRate": "Пульс",
+    "bpm": "уд/мин",
+    "strain": "Нагрузка",
+    "sleepEfficiency": "Эффективность сна",
+    "efficiency": "Эффективность",
+    "sleepPhases": "Фазы сна",
+    "deepSleep": "Глубокий сон",
+    "lightSleep": "Лёгкий сон",
+    "remSleep": "REM сон",
+    "hrvVariability": "HRV (вариабельность пульса)",
+    "hrvRmssd": "HRV RMSSD",
+    "respiratoryRate": "Частота дыхания",
+    "breathsPerMin": "вдохов/мин",
+    "rate": "Частота"
   }
 }
