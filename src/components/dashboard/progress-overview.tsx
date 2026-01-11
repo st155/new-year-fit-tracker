@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +26,7 @@ interface ProgressOverviewProps {
 }
 
 const ProgressOverview = ({ className }: ProgressOverviewProps) => {
+  const { t } = useTranslation('progress');
   const { user } = useAuth();
   const navigate = useNavigate();
   const [goals, setGoals] = useState<GoalProgress[]>([]);
@@ -140,10 +142,10 @@ const ProgressOverview = ({ className }: ProgressOverviewProps) => {
     return (
       <Card className={className}>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Target className="h-5 w-5" />
-            Обзор прогресса
-          </CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <Target className="h-5 w-5" />
+          {t('goal.progressOverview')}
+        </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -163,20 +165,20 @@ const ProgressOverview = ({ className }: ProgressOverviewProps) => {
     return (
       <Card className={className}>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Target className="h-5 w-5" />
-            Обзор прогресса
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-6">
-            <Target className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-            <p className="text-muted-foreground">Пока нет активных целей</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Создайте цели для отслеживания прогресса
-            </p>
-          </div>
-        </CardContent>
+        <CardTitle className="flex items-center gap-2">
+          <Target className="h-5 w-5" />
+          {t('goal.progressOverview')}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="text-center py-6">
+          <Target className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+          <p className="text-muted-foreground">{t('goal.noActiveGoals')}</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {t('goal.createGoalsHint')}
+          </p>
+        </div>
+      </CardContent>
       </Card>
     );
   }
@@ -186,7 +188,7 @@ const ProgressOverview = ({ className }: ProgressOverviewProps) => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Target className="h-5 w-5" />
-          Обзор прогресса
+          {t('goal.progressOverview')}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -228,7 +230,7 @@ const ProgressOverview = ({ className }: ProgressOverviewProps) => {
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant={goal.is_personal ? "secondary" : "default"} className="text-xs">
-                      {goal.is_personal ? "Личная" : goal.challenge_title}
+                      {goal.is_personal ? t('goal.personal') : goal.challenge_title}
                     </Badge>
                     <span className="text-sm text-muted-foreground">
                       {goal.current_value.toFixed(1)}/{goal.target_value} {goal.target_unit}
@@ -243,7 +245,7 @@ const ProgressOverview = ({ className }: ProgressOverviewProps) => {
                     color={getProgressColor(goal.progress_percentage)}
                   />
                   <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>{goal.progress_percentage.toFixed(1)}% выполнено</span>
+                    <span>{t('goal.completed', { percent: goal.progress_percentage.toFixed(1) })}</span>
                     <span className="capitalize">{goal.goal_type}</span>
                   </div>
                 </div>
@@ -254,7 +256,7 @@ const ProgressOverview = ({ className }: ProgressOverviewProps) => {
           {goals.length > 5 && (
             <div className="pt-2 border-t">
               <p className="text-sm text-muted-foreground text-center">
-                +{goals.length - 5} других целей
+                {t('goal.otherGoals', { count: goals.length - 5 })}
               </p>
             </div>
           )}

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { TrendingUp, TrendingDown, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ChallengeGoal } from "@/features/goals/types";
 import { useState } from "react";
 import { QuickMeasurementDialog } from "@/features/goals/components";
@@ -26,6 +27,7 @@ interface ChallengeGoalCardProps {
 }
 
 export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCardProps) {
+  const { t } = useTranslation('progress');
   const { user } = useAuth();
   const navigate = useNavigate();
   const [showQuickAdd, setShowQuickAdd] = useState(false);
@@ -106,12 +108,12 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
             <div className="flex items-center justify-between mt-1">
               <span className="text-xs text-muted-foreground">
                 {goal.progress_percentage === 0 
-                  ? (goal.current_value === 0 ? "Нужен первый замер" : "0% выполнено")
+                  ? (goal.current_value === 0 ? t('goal.needFirstMeasurement') : t('goal.completed', { percent: 0 }))
                   : goal.progress_percentage >= 100
-                    ? `${goal.progress_percentage.toFixed(0)}% выполнено ${
+                    ? `${t('goal.completed', { percent: goal.progress_percentage.toFixed(0) })} ${
                         goal.progress_percentage > 100 ? '⚡' : '✓'
                       }`
-                    : `${goal.progress_percentage.toFixed(0)}% выполнено`
+                    : t('goal.completed', { percent: goal.progress_percentage.toFixed(0) })
                 }
               </span>
               {goal.trend !== 'stable' && (
@@ -130,13 +132,13 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
           {/* Badges - Centered */}
           <div className="flex items-center justify-center gap-2 mb-2.5">
             {goal.is_personal ? (
-              <Badge variant="outline" className="text-xs">Личная</Badge>
+              <Badge variant="outline" className="text-xs">{t('goal.personal')}</Badge>
             ) : (
               <Badge variant="secondary" className="text-xs">{goal.challenge_title}</Badge>
             )}
             {goal.progress_percentage > 100 && (
               <Badge variant="success" className="text-xs">
-                Перевыполнено!
+                {t('goal.overachieved')}
               </Badge>
             )}
           </div>
@@ -187,7 +189,7 @@ export function ChallengeGoalCard({ goal, onMeasurementAdded }: ChallengeGoalCar
               })
             ) : (
               <div className="text-xs text-muted-foreground/50 text-center">
-                Нет истории замеров
+                {t('goal.noMeasurementHistory')}
               </div>
             )}
           </div>
