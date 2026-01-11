@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Activity } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface MetricSourcesProps {
   sources: string[];
@@ -31,17 +32,19 @@ const getSourceColor = (source: string): string => {
 };
 
 export function MetricSources({ sources }: MetricSourcesProps) {
+  const { t } = useTranslation('common');
+  
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Activity className="h-5 w-5" />
-          Источники данных
+          {t('dataSource.metrics', 'Data Sources')}
         </CardTitle>
       </CardHeader>
       <CardContent>
         {sources.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Нет данных об источниках</p>
+          <p className="text-sm text-muted-foreground">{t('integrations.noData')}</p>
         ) : (
           <div className="flex flex-wrap gap-2">
             {sources.map((source) => (

@@ -4,6 +4,7 @@ import { format, parseISO } from 'date-fns';
 import { getDateLocale } from '@/lib/date-locale';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { MetricRecord } from '@/hooks/useMetricDetail';
+import { useTranslation } from 'react-i18next';
 
 interface MetricChartProps {
   records: MetricRecord[];
@@ -12,6 +13,8 @@ interface MetricChartProps {
 }
 
 export function MetricChart({ records, metricName, color }: MetricChartProps) {
+  const { t } = useTranslation('common');
+  
   const chartData = useMemo(() => {
     // Group by date and take average if multiple values per day
     const groupedByDate = records.reduce((acc, record) => {
@@ -36,11 +39,11 @@ export function MetricChart({ records, metricName, color }: MetricChartProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>История</CardTitle>
+          <CardTitle>{t('history', 'History')}</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground text-center py-8">
-            Нет данных для отображения
+            {t('empty.noDataDesc')}
           </p>
         </CardContent>
       </Card>

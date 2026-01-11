@@ -223,6 +223,15 @@
     "core": "Кор",
     "cardio": "Кардио"
   },
+  "muscleGroups": {
+    "chest": "Грудь",
+    "back": "Спина",
+    "legs": "Ноги",
+    "shoulders": "Плечи",
+    "arms": "Руки",
+    "core": "Кор",
+    "cardio": "Кардио"
+  },
   "equipment": {
     "barbell": "Штанга",
     "dumbbell": "Гантели",

@@ -141,7 +141,7 @@ export function MetricsCarousel({ mappedMetrics, selectedMetrics, onMetricClick 
         </>
       ) : (
         <div className="h-[70vh] flex items-center justify-center">
-          <p className="text-muted-foreground">Нет данных для отображения</p>
+          <p className="text-muted-foreground">{t('common:empty.noDataDesc')}</p>
         </div>
       )}
 

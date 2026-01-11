@@ -11,6 +11,7 @@ import { DateRange } from 'react-day-picker';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 
 interface PeriodComparisonProps {
   clientId: string;
@@ -27,6 +28,8 @@ interface MetricComparison {
 }
 
 export function PeriodComparison({ clientId }: PeriodComparisonProps) {
+  const { t } = useTranslation('common');
+  
   const [period1, setPeriod1] = useState<DateRange | undefined>({
     from: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
     to: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
@@ -168,7 +171,7 @@ export function PeriodComparison({ clientId }: PeriodComparisonProps) {
                       format(period1.from, 'd MMM yyyy', { locale: getDateLocale() })
                     )
                   ) : (
-                    <span>Выберите период</span>
+                    <span>{t('time.selectPeriod')}</span>
                   )}
                 </Button>
               </PopoverTrigger>
@@ -244,7 +247,7 @@ export function PeriodComparison({ clientId }: PeriodComparisonProps) {
             </div>
           ) : !comparison || comparison.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Нет данных для сравнения в выбранных периодах
+              {t('empty.noComparisonData')}
             </div>
           ) : (
             <div className="space-y-4">

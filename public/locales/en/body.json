@@ -164,5 +164,8 @@
     "loadError": "Failed to load weight data",
     "enterWeight": "Enter weight value",
     "addError": "Failed to add weight"
-  }
+  },
+  
+  "noData3DModel": "No data for 3D model",
+  "uploadNewInbody": "Segment data is missing. Upload a new InBody report to display the 3D body model."
 }

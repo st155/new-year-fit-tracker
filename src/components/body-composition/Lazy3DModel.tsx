@@ -2,6 +2,7 @@ import { lazy, Suspense, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Box } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const HumanBodyModel = lazy(() => 
   import('./HumanBodyModel').then(m => ({ default: m.HumanBodyModel }))
@@ -23,6 +24,7 @@ interface Props {
 
 export function Lazy3DModel({ segmentData, interactive = true, showTooltips = true }: Props) {
   const [show3D, setShow3D] = useState(false);
+  const { t } = useTranslation('body');
 
   // Guard: Check if segmentData is valid
   const hasValidData = segmentData && (
@@ -37,9 +39,9 @@ export function Lazy3DModel({ segmentData, interactive = true, showTooltips = tr
     return (
       <div className="h-[500px] flex items-center justify-center border-2 border-destructive/20 rounded-xl bg-gradient-to-br from-slate-900/50 to-slate-800/50">
         <div className="text-center space-y-4 p-8">
-          <div className="text-destructive text-lg font-semibold">⚠️ Нет данных для 3D модели</div>
+          <div className="text-destructive text-lg font-semibold">⚠️ {t('noData3DModel')}</div>
           <p className="text-sm text-muted-foreground max-w-md">
-            Сегментные данные отсутствуют. Загрузите новый InBody отчет для отображения 3D модели тела.
+            {t('uploadNewInbody')}
           </p>
         </div>
       </div>

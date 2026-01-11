@@ -1,59 +1,63 @@
 import { EXERCISES, Exercise } from './exercises-database';
+import i18n from '@/i18n';
 
-// Основные группы мышц с метаданными
-export const MUSCLE_GROUPS = {
+// Base muscle group data without translated strings
+const MUSCLE_GROUPS_DATA = {
   chest: {
-    name: 'Грудь',
-    nameEn: 'Chest',
     icon: '💪',
     color: 'hsl(0, 70%, 50%)',
     keywords: ['chest', 'грудь', 'pec', 'bench', 'жим', 'push-up', 'отжимания', 'fly', 'разводка']
   },
   back: {
-    name: 'Спина',
-    nameEn: 'Back',
     icon: '🔙',
     color: 'hsl(200, 70%, 50%)',
     keywords: ['back', 'спина', 'lat', 'row', 'тяга', 'pull-up', 'подтягивания', 'deadlift', 'становая']
   },
   legs: {
-    name: 'Ноги',
-    nameEn: 'Legs',
     icon: '🦵',
     color: 'hsl(30, 70%, 50%)',
     keywords: ['leg', 'ноги', 'squat', 'присед', 'lunge', 'выпад', 'quad', 'hamstring', 'glute', 'ягодиц', 'бедр', 'икр', 'calf']
   },
   shoulders: {
-    name: 'Плечи',
-    nameEn: 'Shoulders',
     icon: '🎯',
     color: 'hsl(280, 70%, 50%)',
     keywords: ['shoulder', 'плеч', 'delt', 'overhead', 'press', 'lateral', 'raise', 'махи']
   },
   arms: {
-    name: 'Руки',
-    nameEn: 'Arms',
     icon: '💪',
     color: 'hsl(150, 70%, 50%)',
     keywords: ['arm', 'рук', 'bicep', 'бицепс', 'tricep', 'трицепс', 'curl', 'extension', 'французский']
   },
   core: {
-    name: 'Кор',
-    nameEn: 'Core',
     icon: '🔥',
     color: 'hsl(45, 70%, 50%)',
     keywords: ['core', 'кор', 'abs', 'пресс', 'plank', 'планка', 'crunch', 'скручивания', 'oblique']
   },
   cardio: {
-    name: 'Кардио',
-    nameEn: 'Cardio',
     icon: '❤️',
     color: 'hsl(350, 70%, 50%)',
     keywords: ['cardio', 'кардио', 'run', 'бег', 'cycle', 'велосипед', 'swim', 'плавание', 'hiit', 'interval']
   }
 } as const;
 
-export type MuscleGroupKey = keyof typeof MUSCLE_GROUPS;
+// Getter function with localization
+export function getMuscleGroups() {
+  return Object.fromEntries(
+    Object.entries(MUSCLE_GROUPS_DATA).map(([key, data]) => [
+      key,
+      {
+        ...data,
+        name: i18n.t(`workouts:muscleGroups.${key}`),
+        nameEn: i18n.t(`workouts:muscleGroups.${key}`, { lng: 'en' }),
+      }
+    ])
+  ) as Record<MuscleGroupKey, { name: string; nameEn: string; icon: string; color: string; keywords: readonly string[] }>;
+}
+
+// Legacy export for backward compatibility (will use current language)
+export const MUSCLE_GROUPS = getMuscleGroups();
+
+export type MuscleGroupKey = keyof typeof MUSCLE_GROUPS_DATA;
 
 // Дополнительный маппинг для неточных названий упражнений
 const EXERCISE_ALIASES: Record<string, MuscleGroupKey[]> = {

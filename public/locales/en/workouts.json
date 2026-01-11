@@ -223,6 +223,15 @@
     "core": "Core",
     "cardio": "Cardio"
   },
+  "muscleGroups": {
+    "chest": "Chest",
+    "back": "Back",
+    "legs": "Legs",
+    "shoulders": "Shoulders",
+    "arms": "Arms",
+    "core": "Core",
+    "cardio": "Cardio"
+  },
   "equipment": {
     "barbell": "Barbell",
     "dumbbell": "Dumbbell",

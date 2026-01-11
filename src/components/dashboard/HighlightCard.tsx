@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { LucideIcon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface MetricItem {
   label: string;
@@ -42,6 +43,7 @@ const variantStyles = {
 };
 
 export function HighlightCard({ title, icon: Icon, metrics, variant, className }: HighlightCardProps) {
+  const { t } = useTranslation('common');
   const styles = variantStyles[variant];
   
   // Find the primary metric (first one with a value)
@@ -97,7 +99,7 @@ export function HighlightCard({ title, icon: Icon, metrics, variant, className }
       {/* Empty state */}
       {!primaryMetric && secondaryMetrics.length === 0 && (
         <div className="flex-1 flex items-center justify-center">
-          <p className="text-muted-foreground text-sm">Нет данных</p>
+          <p className="text-muted-foreground text-sm">{t('states.noData')}</p>
         </div>
       )}
     </div>

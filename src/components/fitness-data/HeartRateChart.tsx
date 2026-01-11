@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
+import { useTranslation } from 'react-i18next';
 
 interface HeartRateChartProps {
   data: { date: string; value: number }[];
@@ -8,12 +9,14 @@ interface HeartRateChartProps {
 }
 
 export function HeartRateChart({ data, restingHR, maxHR }: HeartRateChartProps) {
+  const { t } = useTranslation('common');
+  
   if (!data || data.length === 0) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>Heart Rate</CardTitle>
-          <CardDescription>Нет данных для отображения</CardDescription>
+          <CardDescription>{t('empty.noDataDesc')}</CardDescription>
         </CardHeader>
       </Card>
     );
@@ -23,7 +26,7 @@ export function HeartRateChart({ data, restingHR, maxHR }: HeartRateChartProps) 
     <Card>
       <CardHeader>
         <CardTitle>Heart Rate</CardTitle>
-        <CardDescription>Пульс за период</CardDescription>
+        <CardDescription>{t('integrations.heartRateOverPeriod', 'Heart rate over period')}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="h-[300px] w-full">

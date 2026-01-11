@@ -106,6 +106,7 @@
     "today": "Today",
     "yesterday": "Yesterday",
     "selectDate": "Select date",
+    "selectPeriod": "Select period",
     "currentYear": "✓ Current year",
     "checkYear": "⚠️ Check the year!",
     "lastMeasurement": "since last measurement",
@@ -407,7 +408,10 @@
     "noPosts": "No posts yet",
     "noPostsDesc": "Be the first to share your progress",
     "noData": "No data",
-    "noDataDesc": "Data will appear after adding"
+    "noDataDesc": "Data will appear after adding",
+    "noDataToday": "No data for today",
+    "noComparisonData": "No data for comparison in selected periods",
+    "addMeasurements": "Add measurements to view progress"
   },
   "filters": {
     "category": "Category",

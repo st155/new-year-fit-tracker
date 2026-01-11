@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 interface MetricSource {
   value: string;
@@ -27,6 +28,7 @@ const CACHE_VERSION = 'v3'; // Increment on structure changes - no localStorage 
 
 export function UnifiedMetricsView() {
   const { user } = useAuth();
+  const { t } = useTranslation('common');
   const [loading, setLoading] = useState(true);
   const [initialLoad, setInitialLoad] = useState(true);
   const [metrics, setMetrics] = useState<UnifiedMetric[]>([]);
@@ -241,7 +243,7 @@ export function UnifiedMetricsView() {
   if (metrics.length === 0) {
     return (
       <Card className="p-8 text-center text-muted-foreground">
-        Нет данных за сегодня
+        {t('empty.noDataToday')}
       </Card>
     );
   }
@@ -251,7 +253,7 @@ export function UnifiedMetricsView() {
       <div className="flex items-center gap-2">
         <Badge variant="outline" className="bg-primary/10">
           <Activity className="h-3 w-3 mr-1" />
-          Показываются агрегированные данные со всех источников
+          {t('integrations:aggregated', 'Aggregated data from all sources')}
         </Badge>
       </div>
 
