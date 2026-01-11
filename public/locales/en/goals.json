@@ -269,5 +269,7 @@
   },
   "errors": {
     "loadingGoals": "Error loading goals"
-  }
+  },
+  "noPullUpsData": "No pull-ups data",
+  "addMeasurementsHint": "Add measurements to track progress"
 }

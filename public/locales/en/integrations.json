@@ -111,6 +111,7 @@
     "step2": "Log out and log in again",
     "step3": "Retry connection in Elite10",
     "selectTracker": "Select your fitness tracker to connect",
+    "selectMetric": "Select metric:",
     "isConnected": "Connected",
     "openingWindow": "Opening window...",
     "resetting": "Resetting...",

@@ -9,6 +9,7 @@ import { format, subDays } from 'date-fns';
 import { getDateLocale } from '@/lib/date-locale';
 import { QuickMeasurementDialog } from '@/features/goals/components';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 
 interface PullUpsData {
   date: string;
@@ -23,6 +24,7 @@ interface PullUpsProgressDetailProps {
 export function PullUpsProgressDetail({ onBack }: PullUpsProgressDetailProps) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { t } = useTranslation('goals');
   const [pullUpsData, setPullUpsData] = useState<PullUpsData[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPullUps, setCurrentPullUps] = useState<number | null>(null);
@@ -315,8 +317,8 @@ export function PullUpsProgressDetail({ onBack }: PullUpsProgressDetailProps) {
           }}
         >
           <Target className="w-12 h-12 mx-auto mb-4 opacity-30" />
-          <p className="text-muted-foreground">Нет данных о подтягиваниях</p>
-          <p className="text-sm text-muted-foreground">Добавьте измерения для отслеживания прогресса</p>
+          <p className="text-muted-foreground">{t('noPullUpsData')}</p>
+          <p className="text-sm text-muted-foreground">{t('addMeasurementsHint')}</p>
         </div>
       )}
 
