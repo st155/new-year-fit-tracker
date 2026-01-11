@@ -450,5 +450,18 @@
       "timeout": ["Document too large", "Try splitting into parts", "Try again later"],
       "unknown": ["Try processing again", "Contact support if persists"]
     }
+  },
+  "category": {
+    "noDescription": "No description available",
+    "analysisDate": "Analysis from {{date}}: ",
+    "improved": "✅ Improved: {{items}}",
+    "needsAttention": "⚠️ Need attention: {{items}}",
+    "trackingTotal": "📊 Tracking {{count}} indicators total",
+    "documentsInCategory_one": "{{count}} document in category",
+    "documentsInCategory_other": "{{count}} documents in category",
+    "noData": "No data",
+    "docTooLarge": "Document too large for automatic analysis. Please review manually.",
+    "processingFailed": "Failed to process document",
+    "processingError": "Processing error"
   }
 }

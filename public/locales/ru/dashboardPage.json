@@ -15,5 +15,19 @@
     "recordLabel": "Рекорд",
     "activityLabel": "Активность",
     "to": "До"
+  },
+  "aiInsights": {
+    "metricsSynced": "Сегодня синхронизировано {{count}} метрик",
+    "goalsNeedAttention_one": "{{count}} цель требует внимания",
+    "goalsNeedAttention_few": "{{count}} цели требуют внимания",
+    "goalsNeedAttention_many": "{{count}} целей требуют внимания",
+    "goalsNeedAttention_other": "{{count}} целей требуют внимания",
+    "metricsLast24h": "{{count}} записей метрик за последние 24 часа",
+    "habitsActive_one": "{{count}} привычка активна",
+    "habitsActive_few": "{{count}} привычки активны",
+    "habitsActive_many": "{{count}} привычек активны",
+    "habitsActive_other": "{{count}} привычек активны",
+    "metricsDaily": "{{count}} метрик за сутки - продолжайте!",
+    "startLogging": "Начните логировать метрики для получения AI инсайтов"
   }
 }

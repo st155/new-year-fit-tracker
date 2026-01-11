@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Sparkles } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface AIInsight {
   emoji: string;
@@ -9,6 +10,7 @@ interface AIInsight {
 }
 
 export const CompactAIInsights = () => {
+  const { t } = useTranslation('dashboardPage');
   const { user } = useAuth();
   const [insights, setInsights] = useState<AIInsight[]>([]);
 
@@ -48,7 +50,7 @@ export const CompactAIInsights = () => {
           if (todayMetrics.length > 0) {
             generatedInsights.push({
               emoji: '🔥',
-              message: `Сегодня синхронизировано ${todayMetrics.length} метрик`
+              message: t('aiInsights.metricsSynced', { count: todayMetrics.length })
             });
           }
         }
@@ -69,7 +71,7 @@ export const CompactAIInsights = () => {
           if (staleGoals.length > 0) {
             generatedInsights.push({
               emoji: '⚠️',
-              message: `${staleGoals.length} ${staleGoals.length === 1 ? 'цель требует' : 'целей требуют'} внимания`
+              message: t('aiInsights.goalsNeedAttention', { count: staleGoals.length })
             });
           }
         }
@@ -78,7 +80,7 @@ export const CompactAIInsights = () => {
         if (metricsData.data && metricsData.data.length > 0) {
           generatedInsights.push({
             emoji: '📊',
-            message: `${metricsData.data.length} записей метрик за последние 24 часа`
+            message: t('aiInsights.metricsLast24h', { count: metricsData.data.length })
           });
         }
 
@@ -91,7 +93,7 @@ export const CompactAIInsights = () => {
           if (activeHabits.length > 0) {
             generatedInsights.push({
               emoji: '✅',
-              message: `${activeHabits.length} ${activeHabits.length === 1 ? 'привычка активна' : 'привычек активны'}`
+              message: t('aiInsights.habitsActive', { count: activeHabits.length })
             });
           }
         }
@@ -100,7 +102,7 @@ export const CompactAIInsights = () => {
         if (metricsData.data && metricsData.data.length >= 10) {
           generatedInsights.push({
             emoji: '🏆',
-            message: `${metricsData.data.length} метрик за сутки - продолжайте!`
+            message: t('aiInsights.metricsDaily', { count: metricsData.data.length })
           });
         }
 
@@ -108,7 +110,7 @@ export const CompactAIInsights = () => {
         if (generatedInsights.length === 0) {
           generatedInsights.push({
             emoji: '🎯',
-            message: 'Начните логировать метрики для получения AI инсайтов'
+            message: t('aiInsights.startLogging')
           });
         }
 

@@ -31,5 +31,10 @@
     "retry": "Повторить",
     "days": "дней",
     "noData": "нет данных"
+  },
+  "weekView": {
+    "noActivities": "Нет запланированных активностей",
+    "weekTitle": "Неделя wellness",
+    "weekSchedule": "Расписание недели"
   }
 }

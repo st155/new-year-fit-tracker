@@ -271,4 +271,9 @@
     "empty": "Library is empty",
     "scanToCreate": "Scan supplement bottles to create your personal library",
     "noMatchingFilters": "No supplements matching your filters"
+  },
+  "dayProgress": {
+    "today": "Today",
+    "taken": "taken",
+    "allDone": "✓ All done!"
   }

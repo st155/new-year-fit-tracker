@@ -31,5 +31,10 @@
     "retry": "Retry",
     "days": "days",
     "noData": "no data"
+  },
+  "weekView": {
+    "noActivities": "No scheduled activities",
+    "weekTitle": "Wellness Week",
+    "weekSchedule": "Week Schedule"
   }
 }

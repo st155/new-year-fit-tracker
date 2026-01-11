@@ -14,7 +14,7 @@ interface WellnessWeekViewProps {
 }
 
 export function WellnessWeekView({ compact = false }: WellnessWeekViewProps) {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['wellness', 'common']);
   const { user } = useAuth();
   const { data: activities = [], isLoading } = useWeeklyActivities(user?.id);
   const toggleCompletion = useToggleActivityCompletion();
@@ -51,7 +51,7 @@ export function WellnessWeekView({ compact = false }: WellnessWeekViewProps) {
         <CardContent className="pt-6 text-center py-8">
           <Calendar className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
           <p className="text-sm text-muted-foreground">
-            Нет запланированных активностей
+            {t('wellness:weekView.noActivities')}
           </p>
         </CardContent>
       </Card>
@@ -62,7 +62,7 @@ export function WellnessWeekView({ compact = false }: WellnessWeekViewProps) {
     return (
       <Card className="bg-neutral-900 border-neutral-800">
         <CardContent className="pt-6">
-          <h3 className="text-lg font-semibold mb-4">Неделя wellness</h3>
+          <h3 className="text-lg font-semibold mb-4">{t('wellness:weekView.weekTitle')}</h3>
           <div className="space-y-3">
             {days.map((day) => {
               const dayActivities = getActivitiesForDay(day);
@@ -106,7 +106,7 @@ export function WellnessWeekView({ compact = false }: WellnessWeekViewProps) {
                     </div>
                   </div>
                   {isCurrentDay && (
-                    <Badge variant="secondary">{t('time.today')}</Badge>
+                    <Badge variant="secondary">{t('common:time.today')}</Badge>
                   )}
                 </div>
               );
@@ -122,7 +122,7 @@ export function WellnessWeekView({ compact = false }: WellnessWeekViewProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Calendar className="w-5 h-5 text-cyan-400" />
-          Расписание недели
+          {t('wellness:weekView.weekSchedule')}
         </CardTitle>
       </CardHeader>
       <CardContent>

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { healthApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 interface RecommendationHistory {
   id: string;
@@ -23,6 +24,7 @@ interface RecommendationHistory {
 
 export function useRecommendationsHistory() {
   const { toast } = useToast();
+  const { t } = useTranslation('recommendations');
   const queryClient = useQueryClient();
 
   const { data: history, isLoading, error } = useQuery({
@@ -50,13 +52,13 @@ export function useRecommendationsHistory() {
     },
     onSuccess: (data) => {
       toast({
-        title: 'Единицы пересчитаны',
-        description: `Обновлено ${data?.updated || 0} записей`
+        title: t('toast.unitsRecalculated'),
+        description: t('toast.unitsRecalculatedDesc', { count: data?.updated || 0 })
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Ошибка пересчёта',
+        title: t('toast.recalculationError'),
         description: error.message,
         variant: 'destructive'
       });
@@ -73,13 +75,13 @@ export function useRecommendationsHistory() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['recommendations-history'] });
       toast({
-        title: 'Рекомендации готовы',
-        description: 'AI проанализировал все ваши данные'
+        title: t('toast.recommendationsReady'),
+        description: t('toast.recommendationsReadyDesc')
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Ошибка генерации',
+        title: t('toast.generationError'),
         description: error.message,
         variant: 'destructive'
       });
