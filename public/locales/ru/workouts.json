@@ -72,6 +72,34 @@
     "avgHeartRate": "Средний пульс",
     "source": "Источник:"
   },
+  "statsModal": {
+    "title": "Подробная статистика",
+    "charts": "Графики",
+    "records": "Рекорды",
+    "achievements": "Достижения",
+    "volumeByWeek": "Объём нагрузки по неделям",
+    "frequency": "Частота тренировок",
+    "durationByWeek": "Продолжительность за неделю",
+    "personalRecords": "Личные рекорды",
+    "week": "Нед {{number}}",
+    "months": {
+      "aug": "Авг",
+      "sep": "Сен",
+      "oct": "Окт",
+      "nov": "Ноя"
+    },
+    "exercises": {
+      "squats": "Приседания",
+      "benchPress": "Жим лёжа",
+      "deadlift": "Становая тяга"
+    },
+    "achievementsList": {
+      "firstWorkout": "Первая тренировка",
+      "streak7": "Серия 7 дней",
+      "squatPR": "PR в приседе",
+      "workouts50": "50 тренировок"
+    }
+  },
   "generating": {
     "title": "Генерация твоего плана AI",
     "status": "ГЕНЕРИРУЮ ТВОЮ НОВУЮ ПРОГРАММУ..."

@@ -1,12 +1,15 @@
 import { Apple } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface ConnectHealthButtonsProps {
   onComplete: () => void;
 }
 
 export function ConnectHealthButtons({ onComplete }: ConnectHealthButtonsProps) {
+  const { t } = useTranslation('common');
+  
   const handleConnect = (provider: string) => {
     toast.info(`${provider} integration coming soon!`);
     // Auto-advance after showing toast
@@ -36,7 +39,7 @@ export function ConnectHealthButtons({ onComplete }: ConnectHealthButtonsProps) 
         variant="ghost"
         className="w-full text-muted-foreground hover:text-foreground"
       >
-        Пропустить
+        {t('skip')}
       </Button>
     </div>
   );

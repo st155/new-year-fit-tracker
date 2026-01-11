@@ -7,6 +7,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { rechartsTooltipStyle, rechartsTooltipLabelStyle, rechartsTooltipItemStyle } from '@/lib/chart-styles';
 import { chartColors } from '@/lib/chart-colors';
 import { Trophy, Target, Award, TrendingUp } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface StatsModalProps {
   open: boolean;
@@ -14,46 +15,47 @@ interface StatsModalProps {
 }
 
 export function StatsModal({ open, onOpenChange }: StatsModalProps) {
+  const { t } = useTranslation('workouts');
   const { data: statsWeek } = useWorkoutStats('week');
   const { data: statsMonth } = useWorkoutStats('month');
   const { data: statsAll } = useWorkoutStats('all');
 
-  // Mock data для графиков - в реальности нужно получать из базы
+  // Mock data for charts - in production would come from database
   const volumeData = [
-    { week: 'Нед 1', volume: 8500 },
-    { week: 'Нед 2', volume: 9200 },
-    { week: 'Нед 3', volume: 10100 },
-    { week: 'Нед 4', volume: 11500 },
+    { week: t('statsModal.week', { number: 1 }), volume: 8500 },
+    { week: t('statsModal.week', { number: 2 }), volume: 9200 },
+    { week: t('statsModal.week', { number: 3 }), volume: 10100 },
+    { week: t('statsModal.week', { number: 4 }), volume: 11500 },
   ];
 
   const frequencyData = [
-    { month: 'Авг', workouts: 12 },
-    { month: 'Сен', workouts: 15 },
-    { month: 'Окт', workouts: 18 },
-    { month: 'Ноя', workouts: 16 },
+    { month: t('statsModal.months.aug'), workouts: 12 },
+    { month: t('statsModal.months.sep'), workouts: 15 },
+    { month: t('statsModal.months.oct'), workouts: 18 },
+    { month: t('statsModal.months.nov'), workouts: 16 },
   ];
 
   const durationData = [
-    { day: 'Пн', minutes: 60 },
-    { day: 'Вт', minutes: 0 },
-    { day: 'Ср', minutes: 75 },
-    { day: 'Чт', minutes: 0 },
-    { day: 'Пт', minutes: 90 },
-    { day: 'Сб', minutes: 45 },
-    { day: 'Вс', minutes: 0 },
+    { day: t('dayNames.mon'), minutes: 60 },
+    { day: t('dayNames.tue'), minutes: 0 },
+    { day: t('dayNames.wed'), minutes: 75 },
+    { day: t('dayNames.thu'), minutes: 0 },
+    { day: t('dayNames.fri'), minutes: 90 },
+    { day: t('dayNames.sat'), minutes: 45 },
+    { day: t('dayNames.sun'), minutes: 0 },
   ];
 
   const personalRecords = [
-    { exercise: 'Приседания', weight: 140, date: '15.11.2025' },
-    { exercise: 'Жим лежа', weight: 100, date: '12.11.2025' },
-    { exercise: 'Становая тяга', weight: 160, date: '10.11.2025' },
+    { exerciseKey: 'squats', weight: 140, date: '15.11.2025' },
+    { exerciseKey: 'benchPress', weight: 100, date: '12.11.2025' },
+    { exerciseKey: 'deadlift', weight: 160, date: '10.11.2025' },
   ];
 
   const achievements = [
-    { name: 'Первая тренировка', icon: '🎯', date: '01.09.2025' },
-    { name: 'Серия 7 дней', icon: '🔥', date: '15.11.2025' },
-    { name: 'PR в приседе', icon: '🏆', date: '15.11.2025' },
-    { name: '50 тренировок', icon: '💪', date: '10.11.2025' },
+    { nameKey: 'firstWorkout', icon: '🎯', date: '01.09.2025' },
+    { nameKey: 'streak7', icon: '🔥', date: '15.11.2025' },
+    { nameKey: 'squatPR', icon: '🏆', date: '15.11.2025' },
+    { nameKey: 'workouts50', icon: '💪', date: '10.11.2025' },
   ];
 
   return (
@@ -61,15 +63,15 @@ export function StatsModal({ open, onOpenChange }: StatsModalProps) {
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-            Подробная статистика
+            {t('statsModal.title')}
           </DialogTitle>
         </DialogHeader>
 
         <Tabs defaultValue="charts" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="charts">Графики</TabsTrigger>
-            <TabsTrigger value="records">Рекорды</TabsTrigger>
-            <TabsTrigger value="achievements">Достижения</TabsTrigger>
+            <TabsTrigger value="charts">{t('statsModal.charts')}</TabsTrigger>
+            <TabsTrigger value="records">{t('statsModal.records')}</TabsTrigger>
+            <TabsTrigger value="achievements">{t('statsModal.achievements')}</TabsTrigger>
           </TabsList>
 
           {/* Charts Tab */}
@@ -79,7 +81,7 @@ export function StatsModal({ open, onOpenChange }: StatsModalProps) {
               <CardContent className="p-6 space-y-4">
                 <div className="flex items-center gap-2">
                   <TrendingUp className="w-5 h-5 text-purple-400" />
-                  <h3 className="text-lg font-semibold">Объем нагрузки по неделям</h3>
+                  <h3 className="text-lg font-semibold">{t('statsModal.volumeByWeek')}</h3>
                 </div>
                 <ResponsiveContainer width="100%" height={250}>
                   <BarChart data={volumeData}>
@@ -100,7 +102,7 @@ export function StatsModal({ open, onOpenChange }: StatsModalProps) {
             {/* Frequency Chart */}
             <Card className="glass-card border-border/50">
               <CardContent className="p-6 space-y-4">
-                <h3 className="text-lg font-semibold">Частота тренировок</h3>
+                <h3 className="text-lg font-semibold">{t('statsModal.frequency')}</h3>
                 <ResponsiveContainer width="100%" height={250}>
                   <LineChart data={frequencyData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -126,7 +128,7 @@ export function StatsModal({ open, onOpenChange }: StatsModalProps) {
             {/* Duration Chart */}
             <Card className="glass-card border-border/50">
               <CardContent className="p-6 space-y-4">
-                <h3 className="text-lg font-semibold">Продолжительность за неделю</h3>
+                <h3 className="text-lg font-semibold">{t('statsModal.durationByWeek')}</h3>
                 <ResponsiveContainer width="100%" height={250}>
                   <AreaChart data={durationData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -156,7 +158,7 @@ export function StatsModal({ open, onOpenChange }: StatsModalProps) {
               <CardContent className="p-6 space-y-4">
                 <div className="flex items-center gap-2 mb-4">
                   <Trophy className="w-5 h-5 text-yellow-400" />
-                  <h3 className="text-lg font-semibold">Личные рекорды</h3>
+                  <h3 className="text-lg font-semibold">{t('statsModal.personalRecords')}</h3>
                 </div>
                 <div className="space-y-3">
                   {personalRecords.map((record, index) => (
@@ -167,12 +169,12 @@ export function StatsModal({ open, onOpenChange }: StatsModalProps) {
                       <div className="flex items-center gap-3">
                         <Trophy className="w-5 h-5 text-yellow-400" />
                         <div>
-                          <p className="font-semibold">{record.exercise}</p>
+                          <p className="font-semibold">{t(`statsModal.exercises.${record.exerciseKey}`)}</p>
                           <p className="text-sm text-muted-foreground">{record.date}</p>
                         </div>
                       </div>
                       <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500">
-                        {record.weight} кг
+                        {record.weight} {t('units.kg')}
                       </Badge>
                     </div>
                   ))}
@@ -190,7 +192,7 @@ export function StatsModal({ open, onOpenChange }: StatsModalProps) {
                     <div className="flex items-center gap-4">
                       <div className="text-4xl">{achievement.icon}</div>
                       <div className="flex-1">
-                        <p className="font-semibold">{achievement.name}</p>
+                        <p className="font-semibold">{t(`statsModal.achievementsList.${achievement.nameKey}`)}</p>
                         <p className="text-sm text-muted-foreground">{achievement.date}</p>
                       </div>
                       <Award className="w-6 h-6 text-purple-400" />

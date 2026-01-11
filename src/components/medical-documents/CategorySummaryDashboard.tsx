@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { Droplet, FileText, Microscope, Stethoscope, Folder, ArrowRight, Pill, Activity, User, Camera } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useTranslation } from 'react-i18next';
 
 const categoryIcons: Record<string, any> = {
   blood_test: Droplet,
@@ -17,18 +18,6 @@ const categoryIcons: Record<string, any> = {
   inbody: User,
   progress_photo: Camera,
   other: Folder,
-};
-
-const categoryLabels: Record<string, string> = {
-  blood_test: 'Анализы крови',
-  lab_urine: 'Анализы мочи',
-  imaging_report: 'МРТ/УЗИ',
-  clinical_note: 'Заключения',
-  prescription: 'Рецепты',
-  fitness_report: 'Фитнес-отчёты',
-  inbody: 'Состав тела',
-  progress_photo: 'Прогресс-фото',
-  other: 'Другие',
 };
 
 const categoryColors: Record<string, string> = {
@@ -48,6 +37,7 @@ interface CategorySummaryDashboardProps {
 }
 
 export const CategorySummaryDashboard = ({ onCategorySelect }: CategorySummaryDashboardProps) => {
+  const { t } = useTranslation('medicalDocs');
   const navigate = useNavigate();
   const { data: summaries, isLoading } = useCategorySummaries();
 
@@ -72,9 +62,9 @@ export const CategorySummaryDashboard = ({ onCategorySelect }: CategorySummaryDa
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold mb-2">Сводка по категориям</h2>
+        <h2 className="text-2xl font-bold mb-2">{t('dashboard.categoryTitle')}</h2>
         <p className="text-muted-foreground">
-          Быстрый обзор ваших медицинских документов
+          {t('dashboard.categorySubtitle')}
         </p>
       </div>
 
@@ -110,7 +100,7 @@ export const CategorySummaryDashboard = ({ onCategorySelect }: CategorySummaryDa
                       )}
                       <Icon className="h-5 w-5" />
                       <CardTitle className="text-lg">
-                        {categoryLabels[summary.category]}
+                        {t(`categories.${summary.category}`)}
                       </CardTitle>
                     </div>
                     <Badge variant="secondary" className="ml-auto">
@@ -118,7 +108,7 @@ export const CategorySummaryDashboard = ({ onCategorySelect }: CategorySummaryDa
                     </Badge>
                   </div>
                   <CardDescription>
-                    Последний: {new Date(summary.lastDate).toLocaleDateString('ru-RU')}
+                    {t('dashboard.lastDate')} {new Date(summary.lastDate).toLocaleDateString()}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -132,7 +122,7 @@ export const CategorySummaryDashboard = ({ onCategorySelect }: CategorySummaryDa
                       </Badge>
                     )}
                     <div className="flex items-center gap-1 text-sm text-muted-foreground ml-auto group">
-                      <span>Подробнее</span>
+                      <span>{t('common.details', 'Details')}</span>
                       <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>

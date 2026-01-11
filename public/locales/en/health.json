@@ -12,14 +12,17 @@
   "overallStatus": "Overall Status",
   "rerun": "Re-run",
   "runRecovery": "Run Recovery",
-  "recovery": {
+"recovery": {
     "title": "System Recovery",
     "description": "If the app doesn't load (black screen), use the recovery link to fully clear caches and Service Worker:",
     "copyLink": "Copy recovery link",
     "linkCopied": "Recovery link copied",
     "linkCopyError": "Failed to copy link",
     "openRecovery": "Open /?recover=1",
-    "alsoWorks": "Also works"
+    "alsoWorks": "Also works",
+    "bannerTitle": "Recovery mode active",
+    "bannerSubtitle": "We recommend resting today",
+    "dismiss": "Disable"
   },
   "checks": {
     "buildInfo": "Build Info",
