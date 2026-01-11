@@ -17,5 +17,17 @@
     "averageRate": "Average rate"
   },
   "noData": "No data",
-  "lastUpdated": "Updated: {{date}}"
+  "lastUpdated": "Updated: {{date}}",
+  "loading": "Loading data...",
+  "noHealthData": "No health data",
+  "tabs": {
+    "overview": "Overview",
+    "activity": "Activity",
+    "heart": "Heart",
+    "sleep": "Sleep",
+    "body": "Body",
+    "recovery": "Recovery",
+    "workouts": "Workouts",
+    "metrics": "Metrics"
+  }
 }

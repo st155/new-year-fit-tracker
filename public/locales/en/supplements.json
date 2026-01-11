@@ -266,5 +266,9 @@
     "addedToInventory": "Added to inventory",
     "inventoryUpdated": "Inventory updated",
     "removedFromInventory": "Removed from inventory"
+  },
+  "library": {
+    "empty": "Library is empty",
+    "scanToCreate": "Scan supplement bottles to create your personal library",
+    "noMatchingFilters": "No supplements matching your filters"
   }
-}

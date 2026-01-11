@@ -727,19 +727,19 @@ export const AIChatWindow = ({
                         : 'text-amber-900 dark:text-amber-100'
                   }`}>
                     {failCount === 0 && successCount > 0
-                      ? 'Автоматически выполнено'
+                      ? t('ai.autoExecuted')
                       : failCount > 0 && successCount === 0
-                        ? 'Ошибка выполнения'
-                        : 'Частично выполнено'
+                        ? t('ai.executionError')
+                        : t('ai.partiallyExecuted')
                     }
                   </span>
                   {successCount === totalCount && totalCount > 0 ? (
                     <Badge variant="secondary" className="bg-green-600 text-white text-xs">
-                      {successCount}/{totalCount} успешно
+                      {successCount}/{totalCount} {t('ai.success')}
                     </Badge>
                   ) : totalCount > 0 ? (
                     <Badge variant="destructive" className="text-xs">
-                      {successCount}/{totalCount} успешно
+                      {successCount}/{totalCount} {t('ai.success')}
                     </Badge>
                   ) : null}
                 </div>
@@ -768,7 +768,7 @@ export const AIChatWindow = ({
                             <span className={result.success ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'}>
                               {result.success 
                                 ? (result.message || result.action_type)
-                                : `${result.action || result.action_type}: ${result.error || 'Неизвестная ошибка'}`
+                                : `${result.action || result.action_type}: ${result.error || t('ai.unknownError')}`
                               }
                             </span>
                             
@@ -781,7 +781,7 @@ export const AIChatWindow = ({
                                 onClick={() => navigate(`/trainer-dashboard?tab=plans&plan=${result.data.plan_id}`)}
                               >
                                 <ExternalLink className="h-3 w-3 mr-1" />
-                                Посмотреть план
+                                {t('ai.viewPlan')}
                               </Button>
                             )}
                             
@@ -794,7 +794,7 @@ export const AIChatWindow = ({
                                 onClick={() => navigate(`/trainer-dashboard?tab=goals&goal=${result.data.goal_id}`)}
                               >
                                 <ExternalLink className="h-3 w-3 mr-1" />
-                                Посмотреть цель
+                                {t('ai.viewGoal')}
                               </Button>
                             )}
                           </div>

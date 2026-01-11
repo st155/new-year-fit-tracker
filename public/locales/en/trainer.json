@@ -112,7 +112,16 @@
     "reject": "Reject",
     "actionDetails": "Action details",
     "actionExecuted": "Action executed",
-    "openClient": "Open client"
+    "openClient": "Open client",
+    "autoExecuted": "Automatically executed",
+    "executionError": "Execution error",
+    "partiallyExecuted": "Partially executed",
+    "success": "successful",
+    "unknownError": "Unknown error",
+    "viewPlan": "View plan",
+    "viewGoal": "View goal",
+    "actionError": "Error executing action",
+    "sendError": "Send failed. Please try again."
   },
   "aiToast": {
     "error": "Error",

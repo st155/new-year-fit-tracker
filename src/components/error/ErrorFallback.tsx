@@ -3,6 +3,7 @@ import { AlertTriangle, RefreshCw, Home, Bug, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import i18n from '@/i18n';
 
 interface ErrorFallbackProps {
   error: Error | null;
@@ -51,9 +52,9 @@ export class ErrorFallback extends Component<ErrorFallbackProps, ErrorFallbackSt
               <div className="mx-auto w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center animate-bounce-in">
                 <RefreshCw className="h-10 w-10 text-primary" />
               </div>
-              <CardTitle className="text-2xl font-bold">Обновление приложения</CardTitle>
+              <CardTitle className="text-2xl font-bold">{i18n.t('errors:app.updating')}</CardTitle>
               <CardDescription className="text-base">
-                Доступна новая версия приложения. Пожалуйста, перезагрузите страницу для продолжения работы.
+                {i18n.t('errors:app.newVersionAvailable')}
               </CardDescription>
             </CardHeader>
 
@@ -71,7 +72,7 @@ export class ErrorFallback extends Component<ErrorFallbackProps, ErrorFallbackSt
                 className="flex-1"
               >
                 <RefreshCw className="mr-2 h-4 w-4" />
-                Перезагрузить
+                {i18n.t('errors:app.reload')}
               </Button>
             </CardFooter>
           </Card>
@@ -86,9 +87,9 @@ export class ErrorFallback extends Component<ErrorFallbackProps, ErrorFallbackSt
             <div className="mx-auto w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center animate-bounce-in">
               <AlertTriangle className="h-10 w-10 text-destructive" />
             </div>
-            <CardTitle className="text-3xl font-bold">Что-то пошло не так</CardTitle>
+            <CardTitle className="text-3xl font-bold">{i18n.t('errors:generic.somethingWrong')}</CardTitle>
             <CardDescription className="text-base">
-              Произошла непредвиденная ошибка. Мы уже зафиксировали эту проблему и работаем над её исправлением.
+              {i18n.t('errors:app.unexpectedError')}
             </CardDescription>
           </CardHeader>
 
@@ -113,7 +114,7 @@ export class ErrorFallback extends Component<ErrorFallbackProps, ErrorFallbackSt
                 >
                   <Bug className="h-4 w-4 mr-2" />
                   <ChevronDown className={`h-4 w-4 ml-auto transition-transform ${showDetails ? 'rotate-180' : ''}`} />
-                  {showDetails ? 'Скрыть технические детали' : 'Показать технические детали'}
+                  {showDetails ? i18n.t('errors:app.hideDetails') : i18n.t('errors:app.showDetails')}
                 </Button>
                 
                 {showDetails && (
@@ -140,12 +141,12 @@ export class ErrorFallback extends Component<ErrorFallbackProps, ErrorFallbackSt
             )}
 
             <div className="bg-muted/50 p-4 rounded-lg space-y-2">
-              <h4 className="font-semibold text-sm">Что делать?</h4>
+              <h4 className="font-semibold text-sm">{i18n.t('errors:app.whatToDo')}</h4>
               <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-                <li>Попробуйте перезагрузить страницу</li>
-                <li>Вернитесь на главную страницу</li>
-                <li>Очистите кеш браузера</li>
-                <li>Если проблема повторяется, свяжитесь с поддержкой</li>
+                <li>{i18n.t('errors:app.tryReload')}</li>
+                <li>{i18n.t('errors:app.goHome')}</li>
+                <li>{i18n.t('errors:app.clearCache')}</li>
+                <li>{i18n.t('errors:app.contactSupport')}</li>
               </ul>
             </div>
 
@@ -166,7 +167,7 @@ export class ErrorFallback extends Component<ErrorFallbackProps, ErrorFallbackSt
               className="w-full sm:w-auto ripple"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
-              Перезагрузить страницу
+              {i18n.t('errors:app.reloadPage')}
             </Button>
             <Button
               onClick={this.handleGoHome}
@@ -174,7 +175,7 @@ export class ErrorFallback extends Component<ErrorFallbackProps, ErrorFallbackSt
               className="w-full sm:w-auto"
             >
               <Home className="h-4 w-4 mr-2" />
-              На главную
+              {i18n.t('errors:app.goToHome')}
             </Button>
           </CardFooter>
         </Card>
@@ -193,7 +194,7 @@ export class MiniErrorFallback extends Component<Pick<ErrorFallbackProps, 'error
         <div className="flex items-start gap-4">
           <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
           <div className="flex-1 space-y-2">
-            <h3 className="font-semibold text-sm">Ошибка загрузки компонента</h3>
+            <h3 className="font-semibold text-sm">{i18n.t('errors:component.loadError')}</h3>
             {error && (
               <p className="text-xs text-muted-foreground font-mono">{error.message}</p>
             )}
@@ -204,7 +205,7 @@ export class MiniErrorFallback extends Component<Pick<ErrorFallbackProps, 'error
               className="mt-2"
             >
               <RefreshCw className="h-3 w-3 mr-2" />
-              Попробовать снова
+              {i18n.t('errors:component.tryAgain')}
             </Button>
           </div>
         </div>

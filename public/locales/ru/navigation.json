@@ -25,6 +25,8 @@
   "privacyPolicy": "Политика конфиденциальности",
   "myPlan": "Мой план",
   "trends": "Тренды",
+  "analytics": "Аналитика",
+  "calendar": "Календарь",
   "groups": {
     "core": "Основное",
     "actions": "Действия",
@@ -40,5 +42,14 @@
   "roles": {
     "trainer": "Тренер",
     "user": "Пользователь"
+  },
+  "command": {
+    "searchPlaceholder": "Поиск действий...",
+    "noResults": "Ничего не найдено",
+    "quickActions": "Быстрые действия",
+    "createGoal": "Создать цель",
+    "createHabit": "Создать привычку",
+    "joinChallenge": "Присоединиться к челленджу",
+    "navigation": "Навигация"
   }
 }
