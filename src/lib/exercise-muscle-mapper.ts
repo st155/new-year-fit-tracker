@@ -40,24 +40,37 @@ const MUSCLE_GROUPS_DATA = {
   }
 } as const;
 
+export type MuscleGroupKey = keyof typeof MUSCLE_GROUPS_DATA;
+
+export interface MuscleGroupData {
+  name: string;
+  nameEn: string;
+  icon: string;
+  color: string;
+  keywords: readonly string[];
+}
+
 // Getter function with localization
-export function getMuscleGroups() {
-  return Object.fromEntries(
-    Object.entries(MUSCLE_GROUPS_DATA).map(([key, data]) => [
-      key,
-      {
-        ...data,
-        name: i18n.t(`workouts:muscleGroups.${key}`),
-        nameEn: i18n.t(`workouts:muscleGroups.${key}`, { lng: 'en' }),
-      }
-    ])
-  ) as Record<MuscleGroupKey, { name: string; nameEn: string; icon: string; color: string; keywords: readonly string[] }>;
+export function getMuscleGroups(): Record<MuscleGroupKey, MuscleGroupData> {
+  const keys = Object.keys(MUSCLE_GROUPS_DATA) as MuscleGroupKey[];
+  const result = {} as Record<MuscleGroupKey, MuscleGroupData>;
+  
+  for (const key of keys) {
+    const data = MUSCLE_GROUPS_DATA[key];
+    result[key] = {
+      icon: data.icon,
+      color: data.color,
+      keywords: data.keywords,
+      name: i18n.t(`workouts:muscleGroups.${key}`),
+      nameEn: i18n.t(`workouts:muscleGroups.${key}`, { lng: 'en' }),
+    };
+  }
+  
+  return result;
 }
 
 // Legacy export for backward compatibility (will use current language)
 export const MUSCLE_GROUPS = getMuscleGroups();
-
-export type MuscleGroupKey = keyof typeof MUSCLE_GROUPS_DATA;
 
 // Дополнительный маппинг для неточных названий упражнений
 const EXERCISE_ALIASES: Record<string, MuscleGroupKey[]> = {
