@@ -338,6 +338,17 @@
     "runDataSync": "Run data synchronization",
     "productionApproval": "<strong>Important:</strong> After successful testing, you need to apply for Production Approval in Whoop Developer Portal. The process may take 1-2 weeks."
   },
+  "echo11": {
+    "description": "Send sleep and recovery data to Echo11 for personalized AI recommendations",
+    "period": "Period:",
+    "days": "{{count}} days",
+    "dayShort": "{{count}}d",
+    "moreErrors": "and {{count}} more errors...",
+    "reset": "Reset",
+    "retry": "Retry",
+    "syncing": "Syncing...",
+    "syncDays": "Sync {{count}} days"
+  },
   "dataMonitor": {
     "error": "Error",
     "terraUserIdNotFound": "Terra User ID not found",

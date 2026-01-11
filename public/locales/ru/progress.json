@@ -96,6 +96,12 @@
   "chart": {
     "progress": "Прогресс",
     "selectMetric": "Выберите метрику",
+    "insufficientData": "Недостаточно данных для отображения графика",
+    "addMeasurementsForProgress": "Добавьте измерения для просмотра прогресса",
+    "measurementsLast": "{{count}} измерений • Последнее: {{value}} {{unit}}",
+    "goalLabel": "Цель: {{value}} {{unit}}",
+    "goalAchieved": "Достигнута!",
+    "remaining": "Осталось: {{value}} {{unit}}",
     "connectWellness": "Подключите Whoop/Garmin для данных о сне и восстановлении",
     "addBodyMeasurements": "Добавьте замеры тела для отслеживания прогресса",
     "noDataCategory": "Нет данных в этой категории",

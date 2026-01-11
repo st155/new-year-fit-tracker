@@ -173,6 +173,9 @@
       "seatedDumbbellPress": "Seated Dumbbell Press"
     }
   },
+  "errors": {
+    "switchFailed": "An error occurred while switching the plan"
+  },
   "toast": {
     "planNotFound": "Plan not found",
     "planNotFoundOrDeleted": "Plan not found or was deleted",
