@@ -35,5 +35,15 @@
     "reached": "You've reached level:",
     "rewardsUnlocked": "New rewards unlocked",
     "continue": "Continue"
+  },
+  "levelProgress": {
+    "levelWithTitle": "Level {{level}}: {{title}}",
+    "xpToNextLevel": "{{xp}} XP to next level",
+    "level": "Level {{level}}",
+    "totalXP": "{{xp}} total XP",
+    "toNext": "To next",
+    "xp": "{{xp}} XP",
+    "progress": "Progress",
+    "unlockedRewards": "Unlocked rewards"
   }
 }

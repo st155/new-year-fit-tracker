@@ -239,7 +239,10 @@
     "optimized": "Оптимизировано"
   },
   "research": {
-    "linkBiomarkersHint": "Нажмите \"Привязать биомаркеры\" для поиска научных данных"
+    "linkBiomarkersHint": "Нажмите \"Привязать биомаркеры\" для поиска научных данных",
+    "biomarkersCount": "{{count}} биомаркеров",
+    "linkBiomarkers": "Привязать биомаркеры",
+    "more": "+{{count}} ещё"
   },
   "evidenceLevel": {
     "high": "Высокий",

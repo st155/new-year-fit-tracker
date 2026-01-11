@@ -93,7 +93,7 @@ export function SupplementResearchCard({
             {hasLinkedBiomarkers ? (
               <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
                 <Link2 className="h-3 w-3 mr-1" />
-                {correlations.length || linkedBiomarkerIds.length} биомаркеров
+                {t('research.biomarkersCount', { count: correlations.length || linkedBiomarkerIds.length })}
               </Badge>
             ) : (
               <Button 
@@ -108,7 +108,7 @@ export function SupplementResearchCard({
                 ) : (
                   <Beaker className="h-4 w-4 mr-1" />
                 )}
-                Привязать биомаркеры
+                {t('research.linkBiomarkers')}
               </Button>
             )}
           </div>
@@ -135,7 +135,7 @@ export function SupplementResearchCard({
               ))}
               {correlations.length > 3 && (
                 <span className="text-xs text-muted-foreground">
-                  +{correlations.length - 3} ещё
+                  {t('research.more', { count: correlations.length - 3 })}
                 </span>
               )}
             </div>

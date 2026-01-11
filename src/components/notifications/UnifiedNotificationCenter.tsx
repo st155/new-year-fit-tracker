@@ -13,8 +13,10 @@ import { Bell, CheckCheck } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
 import { NotificationItem } from './NotificationItem';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 export function UnifiedNotificationCenter() {
+  const { t } = useTranslation('notifications');
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
@@ -45,7 +47,7 @@ export function UnifiedNotificationCenter() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">
         <DropdownMenuLabel className="flex items-center justify-between">
-          <span>Уведомления</span>
+          <span>{t('title')}</span>
           {unreadCount > 0 && (
             <Button 
               variant="ghost" 
@@ -54,7 +56,7 @@ export function UnifiedNotificationCenter() {
               className="h-auto p-1 text-xs"
             >
               <CheckCheck className="h-3 w-3 mr-1" />
-              Прочитать все
+              {t('markAllRead')}
             </Button>
           )}
         </DropdownMenuLabel>
@@ -72,7 +74,7 @@ export function UnifiedNotificationCenter() {
           ) : (
             <div className="p-8 text-center">
               <Bell className="h-12 w-12 mx-auto mb-2 text-muted-foreground opacity-50" />
-              <p className="text-sm text-muted-foreground">Нет уведомлений</p>
+              <p className="text-sm text-muted-foreground">{t('empty')}</p>
             </div>
           )}
         </ScrollArea>

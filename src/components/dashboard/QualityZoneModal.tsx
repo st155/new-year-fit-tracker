@@ -7,6 +7,7 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { DataQualityBadge } from '@/components/data-quality';
+import { useTranslation } from 'react-i18next';
 
 interface QualityZoneModalProps {
   isOpen: boolean;
@@ -28,15 +29,17 @@ interface QualityZoneModalProps {
 }
 
 export function QualityZoneModal({ isOpen, onClose, zone }: QualityZoneModalProps) {
+  const { t } = useTranslation('common');
+  
   if (!zone) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{zone.label} качество данных</DialogTitle>
+          <DialogTitle>{t('dataQuality.zoneTitle', { zone: zone.label })}</DialogTitle>
           <DialogDescription>
-            Метрики с уровнем качества "{zone.label.toLowerCase()}"
+            {t('dataQuality.zoneDescription', { zone: zone.label.toLowerCase() })}
           </DialogDescription>
         </DialogHeader>
         
@@ -65,7 +68,7 @@ export function QualityZoneModal({ isOpen, onClose, zone }: QualityZoneModalProp
           
           {zone.metrics.length === 0 && (
             <p className="text-center text-muted-foreground py-8">
-              Нет метрик в этой категории
+              {t('dataQuality.noMetrics')}
             </p>
           )}
         </div>
