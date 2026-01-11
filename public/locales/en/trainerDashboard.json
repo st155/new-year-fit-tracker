@@ -206,6 +206,16 @@
     "pending": "Pending",
     "result": "📋 Result"
   },
+  "aiChat": {
+    "execute": "Execute",
+    "reconsider": "Reconsider",
+    "think": "Think",
+    "approvePlan": "Yes, execute the plan",
+    "planAwaitingConfirmation": "Plan awaiting confirmation",
+    "preparingPlan": "⏳ Preparing plan...",
+    "preparingStructured": "Preparing structured plan...",
+    "actionsCount": "Actions: {{count}}"
+  },
   "common": {
     "cancel": "Cancel",
     "add": "Add",

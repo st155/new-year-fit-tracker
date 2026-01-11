@@ -7,6 +7,7 @@ import { FastingControlButton } from "./FastingControlButton";
 import { HabitHistory } from "./HabitHistory";
 import { Badge } from "@/components/ui/badge";
 import { getHabitSentiment, getHabitCardClass } from "@/lib/habit-utils";
+import { useTranslation } from "react-i18next";
 
 interface FastingTrackerProps {
   habit: any;
@@ -15,6 +16,7 @@ interface FastingTrackerProps {
 }
 
 export function FastingTracker({ habit, userId, onCompleted }: FastingTrackerProps) {
+  const { t } = useTranslation('habits');
   const { status, startEating, startFasting, endEating, isStarting, isFastingStarting, isEnding, windows } = useFastingWindow(habit.id, userId);
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -30,11 +32,11 @@ export function FastingTracker({ habit, userId, onCompleted }: FastingTrackerPro
   const formatDuration = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    if (hours === 0) return `${mins}м`;
-    if (hours < 24) return `${hours}ч ${mins}м`;
+    if (hours === 0) return t('fasting.duration.minutes', { mins });
+    if (hours < 24) return t('fasting.duration.hours', { hours, mins });
     const days = Math.floor(hours / 24);
     const remainingHours = hours % 24;
-    return `${days}д ${remainingHours}ч ${mins}м`;
+    return t('fasting.duration.days', { days, hours: remainingHours });
   };
 
   const targetWindow = habit.custom_settings?.default_window || 16;
@@ -87,7 +89,7 @@ export function FastingTracker({ habit, userId, onCompleted }: FastingTrackerPro
           </h3>
         </div>
         <p className="text-sm text-muted-foreground">
-          Цель: {targetWindow}:8 часов
+          {t('fasting.targetGoal', { hours: targetWindow })}
         </p>
       </div>
 
@@ -119,7 +121,7 @@ export function FastingTracker({ habit, userId, onCompleted }: FastingTrackerPro
             <Badge 
               className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-2 text-sm font-semibold shadow-lg shadow-orange-500/30"
             >
-              Окно питания
+              {t('fasting.eatingWindowBadge')}
             </Badge>
           </div>
         )}
@@ -138,8 +140,8 @@ export function FastingTracker({ habit, userId, onCompleted }: FastingTrackerPro
           <div className="w-full p-3 rounded-lg bg-muted/50 border border-border/50">
             <p className="text-xs text-center text-muted-foreground">
               {elapsedMinutes < targetMinutes 
-                ? `⏱️ Еще ${formatDuration(targetMinutes - elapsedMinutes)} до цели`
-                : `🎉 Цель достигнута! +${formatDuration(elapsedMinutes - targetMinutes)} сверх нормы`
+                ? t('fasting.moreToGoal', { time: formatDuration(targetMinutes - elapsedMinutes) })
+                : t('fasting.goalAchievedExtra', { time: formatDuration(elapsedMinutes - targetMinutes) })
               }
             </p>
           </div>
@@ -155,7 +157,7 @@ export function FastingTracker({ habit, userId, onCompleted }: FastingTrackerPro
         {/* History */}
         {recentWindows.length > 0 && (
           <div className="w-full pt-4 border-t border-white/10 space-y-2">
-            <div className="text-xs text-muted-foreground">Последние окна голодания</div>
+            <div className="text-xs text-muted-foreground">{t('fasting.recentWindows')}</div>
             <HabitHistory 
               windows={recentWindows}
               type="windows"

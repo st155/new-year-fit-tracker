@@ -1,5 +1,6 @@
 {
   "aggregated": "Aggregated",
+  "allMetrics": "All metrics",
   "title": "Integrations",
   "callback": {
     "processing": "Processing connection...",

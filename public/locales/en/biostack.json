@@ -311,7 +311,8 @@
     "needIntakeAndBloodTests": "We need consistent intake logs and at least 2 blood tests in the selected period",
     "biomarkerChange": "Biomarker Change",
     "intakeConsistency": "Intake Consistency",
-    "overMonths": "Over {{count}} months"
+    "overMonths": "Over {{count}} months",
+    "consistencyPercent": "Consistency (%)"
   },
   "aiGenerator": {
     "subtitle": "Personalized recommendations based on your blood tests",

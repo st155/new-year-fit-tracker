@@ -198,7 +198,33 @@
     },
     "average": "Average",
     "record": "Record",
-    "recentWindows": "Recent fasting windows"
+    "recentWindows": "Recent fasting windows",
+    "moreToGoal": "⏱️ {{time}} more to goal",
+    "goalAchievedExtra": "🎉 Goal achieved! +{{time}} extra",
+    "targetGoal": "Goal: {{hours}}:8 hours",
+    "eatingWindowBadge": "Eating Window"
+  },
+  "motivation": {
+    "moreToProgress": "{{time}} more to progress!",
+    "achieved": "Achieved! 🎉"
+  },
+  "history": {
+    "recentMeasurements": "Recent measurements",
+    "last7days": "Last 7 days",
+    "recentEntries": "Recent entries",
+    "weekTrend": "Week trend"
+  },
+  "numericWidget": {
+    "units": "units",
+    "percentOfGoal": "{{percent}}% of goal",
+    "goalAchieved": "✓ Goal achieved!",
+    "valuePlaceholder": "Value"
+  },
+  "level": {
+    "startHabits": "Start completing habits to earn XP",
+    "habitLevel": "Habit Level",
+    "levelNumber": "Level {{level}}",
+    "xpToNext": "{{xp}} XP to next level"
   },
   "miniChart": {
     "completed": "Completed",

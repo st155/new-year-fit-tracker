@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Plus, Minus, Target } from "lucide-react";
 import { useHabitMeasurements } from "@/hooks/useHabitMeasurements";
 import { Badge } from "@/components/ui/badge";
+import { useTranslation } from "react-i18next";
 
 interface NumericCounterInlineWidgetProps {
   habit: any;
@@ -12,6 +13,7 @@ interface NumericCounterInlineWidgetProps {
 }
 
 export function NumericCounterInlineWidget({ habit, compact }: NumericCounterInlineWidgetProps) {
+  const { t } = useTranslation('habits');
   const [customValue, setCustomValue] = useState("");
   const [showCustomInput, setShowCustomInput] = useState(false);
   const { measurements, addMeasurement, isAdding } = useHabitMeasurements(habit.id, habit.user_id);
@@ -56,11 +58,11 @@ export function NumericCounterInlineWidget({ habit, compact }: NumericCounterInl
             )}
           </div>
           <div className="space-y-0.5">
-            <div className="text-sm font-medium">{habit.measurement_unit || "единиц"}</div>
+            <div className="text-sm font-medium">{habit.measurement_unit || t('numericWidget.units')}</div>
             {targetValue > 0 && (
               <div className="text-xs text-muted-foreground flex items-center gap-1">
                 <Target className="h-3 w-3" />
-                {progress.toFixed(0)}% от цели
+                {t('numericWidget.percentOfGoal', { percent: progress.toFixed(0) })}
               </div>
             )}
           </div>
@@ -68,7 +70,7 @@ export function NumericCounterInlineWidget({ habit, compact }: NumericCounterInl
 
         {currentValue >= targetValue && targetValue > 0 && (
           <Badge variant="secondary" className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-green-500/30 animate-pulse-slow">
-            ✓ Цель достигнута!
+            {t('numericWidget.goalAchieved')}
           </Badge>
         )}
       </div>
@@ -123,7 +125,7 @@ export function NumericCounterInlineWidget({ habit, compact }: NumericCounterInl
         <div className="flex gap-2">
           <Input
             type="number"
-            placeholder="Значение"
+            placeholder={t('numericWidget.valuePlaceholder')}
             value={customValue}
             onChange={(e) => setCustomValue(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleCustomSubmit()}
