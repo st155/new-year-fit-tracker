@@ -52,7 +52,7 @@ export const AIChatWindow = ({
   onRejectAction,
   executing
 }: AIChatWindowProps) => {
-  const { t } = useTranslation('trainer');
+  const { t } = useTranslation(['trainer', 'common']);
   const navigate = useNavigate();
   const { setSelectedClient } = useClientContext();
   const isMobile = useIsMobile();
@@ -1055,7 +1055,7 @@ export const AIChatWindow = ({
                         onExecuteAction(action.id, action.conversation_id, actionData.actions || []);
                       } catch (error) {
                         console.error('Error parsing action data:', error);
-                        toast.error('Ошибка при выполнении действия');
+                        toast.error(t('common:ai.actionError'));
                       }
                     }}
                     onReject={() => onRejectAction(action.id)}
@@ -1075,7 +1075,7 @@ export const AIChatWindow = ({
                     <div className="flex items-center gap-2 text-sm">
                       <Loader2 className="h-4 w-4 animate-spin text-primary" />
                       <span className="text-muted-foreground">
-                        {sendingState === 'sending' ? 'Отправка' : 'AI генерирует ответ'}
+                        {sendingState === 'sending' ? t('common:ai.sending') : t('common:ai.generating')}
                         {elapsedTime > 0 && ` (${elapsedTime}s)`}
                         <span className="inline-block w-3 text-left ml-0.5">
                           <span className="animate-[pulse_1.5s_ease-in-out_infinite]">.</span>
@@ -1093,7 +1093,7 @@ export const AIChatWindow = ({
                 <Card className="bg-destructive/10 border-destructive/50 p-3">
                   <div className="flex items-center gap-2">
                     <AlertCircle className="h-5 w-5 text-destructive" />
-                    <span className="text-sm">Ошибка отправки. Попробуйте еще раз.</span>
+                    <span className="text-sm">{t('common:ai.sendError')}</span>
                   </div>
                 </Card>
               )}
@@ -1104,14 +1104,14 @@ export const AIChatWindow = ({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <AlertCircle className="h-5 w-5 text-amber-600" />
-                      <span className="text-sm">AI не отвечает уже 30 секунд</span>
+                      <span className="text-sm">{t('common:ai.timeout')}</span>
                     </div>
                     <Button 
                       size="sm" 
                       variant="outline"
                       onClick={() => window.location.reload()}
                     >
-                      Обновить страницу
+                      {t('common:ai.refreshPage')}
                     </Button>
                   </div>
                 </Card>

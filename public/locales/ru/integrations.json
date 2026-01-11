@@ -349,6 +349,17 @@
     "syncing": "Синхронизация...",
     "syncDays": "Синхронизировать {{count}} дней"
   },
+  "sync": {
+    "userNotAuthorized": "Пользователь не авторизован",
+    "loadingData": "Загрузка данных...",
+    "errorLoadingMetrics": "Ошибка загрузки метрик",
+    "noDataToSync": "Нет данных для синхронизации",
+    "syncing": "Синхронизация...",
+    "syncingProgress": "Синхронизация {{current}}/{{total}}...",
+    "successDays": "Успешно синхронизировано {{count}} дней",
+    "successWithErrors": "Синхронизировано {{success}}, ошибок: {{failed}}",
+    "unknownError": "Неизвестная ошибка"
+  },
   "dataMonitor": {
     "error": "Ошибка",
     "terraUserIdNotFound": "Terra User ID не найден",

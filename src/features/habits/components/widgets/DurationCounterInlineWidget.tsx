@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, DollarSign, TrendingUp } from "lucide-react";
@@ -23,6 +24,7 @@ interface DurationCounterInlineWidgetProps {
 }
 
 export function DurationCounterInlineWidget({ habit, compact }: DurationCounterInlineWidgetProps) {
+  const { t } = useTranslation('habits');
   const [elapsed, setElapsed] = useState({ days: 0, hours: 0, minutes: 0 });
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [resetReason, setResetReason] = useState("");
@@ -62,7 +64,7 @@ export function DurationCounterInlineWidget({ habit, compact }: DurationCounterI
           <div className="flex items-center gap-3">
             <div className="flex flex-col items-center justify-center w-16 h-16 rounded-lg bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-500/30">
               <div className="text-2xl font-bold text-blue-500">{elapsed.days}</div>
-              <div className="text-[10px] text-muted-foreground">дней</div>
+              <div className="text-[10px] text-muted-foreground">{t('durationWidget.days')}</div>
             </div>
             <div className="space-y-0.5">
               <div className="text-sm font-medium text-muted-foreground">
@@ -71,7 +73,7 @@ export function DurationCounterInlineWidget({ habit, compact }: DurationCounterI
               {longestStreak > 0 && (
                 <div className="text-xs text-muted-foreground flex items-center gap-1">
                   <TrendingUp className="h-3 w-3" />
-                  Лучший: {longestStreak}д
+                  {t('durationWidget.best', { days: longestStreak })}
                 </div>
               )}
             </div>
@@ -89,7 +91,7 @@ export function DurationCounterInlineWidget({ habit, compact }: DurationCounterI
         {milestone && (
           <div className="space-y-1.5">
             <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">До {milestone.label}</span>
+              <span className="text-muted-foreground">{t('durationWidget.until', { milestone: milestone.label })}</span>
               <span className="text-muted-foreground">{elapsed.days} / {milestone.next}</span>
             </div>
             <Progress value={milestone.progress} className="h-1.5" />
@@ -104,31 +106,31 @@ export function DurationCounterInlineWidget({ habit, compact }: DurationCounterI
           onClick={() => setShowResetDialog(true)}
         >
           <AlertCircle className="h-3.5 w-3.5 mr-1.5" />
-          Сбросить
+          {t('durationWidget.reset')}
         </Button>
       </div>
 
       <AlertDialog open={showResetDialog} onOpenChange={setShowResetDialog}>
         <AlertDialogContent className="glass-strong">
           <AlertDialogHeader>
-            <AlertDialogTitle>Сбросить счетчик?</AlertDialogTitle>
+            <AlertDialogTitle>{t('durationWidget.resetTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Вы продержались {elapsed.days} дней! Не волнуйтесь, прогресс сохранится в истории.
-              {longestStreak > 0 && ` Ваш лучший результат: ${longestStreak} дней.`}
+              {t('durationWidget.resetDescription', { days: elapsed.days })}
+              {longestStreak > 0 && ` ${t('durationWidget.resetDescriptionWithBest', { best: longestStreak })}`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           
           <Textarea
-            placeholder="Что произошло? (опционально)"
+            placeholder={t('durationWidget.whatHappened')}
             value={resetReason}
             onChange={(e) => setResetReason(e.target.value)}
             className="min-h-[60px] glass-strong"
           />
 
           <AlertDialogFooter>
-            <AlertDialogCancel>Отмена</AlertDialogCancel>
+            <AlertDialogCancel>{t('durationWidget.cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={handleReset} disabled={isResetting}>
-              {isResetting ? "Сброс..." : "Начать заново"}
+              {isResetting ? t('durationWidget.resetting') : t('durationWidget.startFresh')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

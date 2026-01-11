@@ -510,5 +510,13 @@
     "metricsConflicts_other": "{{count}} metrics with conflicts",
     "activeChallenges_one": "{{count}} active challenge",
     "activeChallenges_other": "{{count}} active challenges"
+  },
+  "ai": {
+    "sending": "Sending",
+    "generating": "AI is generating a response",
+    "sendError": "Failed to send. Please try again.",
+    "actionError": "Error executing action",
+    "timeout": "AI is not responding for 30 seconds",
+    "refreshPage": "Refresh page"
   }
 }

@@ -550,5 +550,13 @@
     "activeChallenges_one": "{{count}} активный челлендж",
     "activeChallenges_few": "{{count}} активных челленджа",
     "activeChallenges_many": "{{count}} активных челленджей"
+  },
+  "ai": {
+    "sending": "Отправка",
+    "generating": "AI генерирует ответ",
+    "sendError": "Ошибка отправки. Попробуйте ещё раз.",
+    "actionError": "Ошибка при выполнении действия",
+    "timeout": "AI не отвечает уже 30 секунд",
+    "refreshPage": "Обновить страницу"
   }
 }
