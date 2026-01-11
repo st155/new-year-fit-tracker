@@ -21,5 +21,16 @@
     "cardio": "Cardio",
     "endurance": "Endurance",
     "bodyComposition": "Body composition"
-  }
+  },
+  "pullups": {
+    "title": "Pull-ups Progress",
+    "currentMax": "Current Max",
+    "weeklyChange": "Weekly Change",
+    "progress": "Progress",
+    "pullUps": "Pull-ups",
+    "pullUpsCount": "{{count}} pull-ups",
+    "trainingHistory": "Training History"
+  },
+  "noPullUpsData": "No pull-ups data",
+  "addMeasurementsHint": "Add measurements to see the progress chart"
 }

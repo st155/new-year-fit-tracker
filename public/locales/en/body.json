@@ -70,7 +70,10 @@
     "analysisError": "Analysis error",
     "cannotGetPdfAccess": "Cannot get access to PDF file",
     "cannotConvertPdf": "Cannot convert PDF to images",
-    "measurementHistory": "Measurement History"
+    "measurementHistory": "Measurement History",
+    "loadingErrorTitle": "Loading error",
+    "failedToLoadInBody": "Failed to load InBody data. Try refreshing the page.",
+    "refresh": "Refresh"
   },
   
   "detail": {

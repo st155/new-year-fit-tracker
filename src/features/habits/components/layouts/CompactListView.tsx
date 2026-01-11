@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +20,7 @@ type FilterType = 'all' | 'today' | 'active' | 'at-risk';
 type GroupType = 'not-started' | 'in-progress' | 'completed';
 
 export function CompactListView({ habits, onHabitComplete, onHabitTap }: CompactListViewProps) {
+  const { t } = useTranslation('habits');
   const [filter, setFilter] = useState<FilterType>('all');
 
   // Filter habits based on selected filter
@@ -142,20 +144,20 @@ export function CompactListView({ habits, onHabitComplete, onHabitTap }: Compact
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg flex items-center gap-2">
               <Filter className="w-5 h-5" />
-              Компактный список
+              {t('compactList.title')}
             </CardTitle>
             <Badge variant="secondary">
-              {filteredHabits.length} привычек
+              {t('compactList.habitsCount', { count: filteredHabits.length })}
             </Badge>
           </div>
         </CardHeader>
         <CardContent>
           <Tabs value={filter} onValueChange={(v) => setFilter(v as FilterType)}>
             <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="all">Все</TabsTrigger>
-              <TabsTrigger value="today">Сегодня</TabsTrigger>
-              <TabsTrigger value="active">Активные</TabsTrigger>
-              <TabsTrigger value="at-risk">В опасности</TabsTrigger>
+              <TabsTrigger value="all">{t('compactList.filters.all')}</TabsTrigger>
+              <TabsTrigger value="today">{t('compactList.filters.today')}</TabsTrigger>
+              <TabsTrigger value="active">{t('compactList.filters.active')}</TabsTrigger>
+              <TabsTrigger value="at-risk">{t('compactList.filters.atRisk')}</TabsTrigger>
             </TabsList>
           </Tabs>
         </CardContent>
@@ -168,7 +170,7 @@ export function CompactListView({ habits, onHabitComplete, onHabitTap }: Compact
             <div className="flex items-center gap-2">
               <AlertCircle className="w-5 h-5 text-muted-foreground" />
               <CardTitle className="text-base">
-                Не начато ({groupedHabits['not-started'].length})
+                {t('groups.notStarted', { count: groupedHabits['not-started'].length })}
               </CardTitle>
             </div>
           </CardHeader>
@@ -189,7 +191,7 @@ export function CompactListView({ habits, onHabitComplete, onHabitTap }: Compact
             <div className="flex items-center gap-2">
               <Clock className="w-5 h-5 text-blue-500" />
               <CardTitle className="text-base">
-                В процессе ({groupedHabits['in-progress'].length})
+                {t('groups.inProgress', { count: groupedHabits['in-progress'].length })}
               </CardTitle>
             </div>
           </CardHeader>
@@ -210,7 +212,7 @@ export function CompactListView({ habits, onHabitComplete, onHabitTap }: Compact
             <div className="flex items-center gap-2">
               <Check className="w-5 h-5 text-primary" />
               <CardTitle className="text-base">
-                Завершено ({groupedHabits['completed'].length})
+                {t('groups.completed', { count: groupedHabits['completed'].length })}
               </CardTitle>
             </div>
           </CardHeader>
@@ -229,10 +231,10 @@ export function CompactListView({ habits, onHabitComplete, onHabitTap }: Compact
         <Card>
           <CardContent className="py-12 text-center">
             <p className="text-muted-foreground">
-              Нет привычек для отображения
+              {t('empty.noHabitsToDisplay')}
             </p>
             <Button variant="outline" className="mt-4">
-              Добавить привычку
+              {t('empty.addHabit')}
             </Button>
           </CardContent>
         </Card>

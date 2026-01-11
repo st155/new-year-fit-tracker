@@ -2,6 +2,7 @@ import { Suspense, SuspenseProps } from 'react';
 import { ErrorBoundary } from './ErrorBoundary';
 import { PageLoader } from '@/components/ui/page-loader';
 import { MiniErrorFallback } from './ErrorFallback';
+import i18n from '@/i18n';
 
 interface AsyncErrorBoundaryProps {
   children: React.ReactNode;
@@ -16,7 +17,7 @@ interface AsyncErrorBoundaryProps {
  */
 export function AsyncErrorBoundary({
   children,
-  fallback = <PageLoader message="Загрузка..." />,
+  fallback = <PageLoader message={i18n.t('loader:loading')} />,
   errorFallback,
   onError,
 }: AsyncErrorBoundaryProps) {
@@ -48,7 +49,7 @@ export function MiniAsyncErrorBoundary({
         />
       }
     >
-      <Suspense fallback={fallback || <div className="animate-pulse">Загрузка...</div>}>
+      <Suspense fallback={fallback || <div className="animate-pulse">{i18n.t('loader:loading')}</div>}>
         {children}
       </Suspense>
     </ErrorBoundary>

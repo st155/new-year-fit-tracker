@@ -21,5 +21,16 @@
     "cardio": "Кардио",
     "endurance": "Выносливость",
     "bodyComposition": "Состав тела"
-  }
+  },
+  "pullups": {
+    "title": "Прогресс подтягиваний",
+    "currentMax": "Текущий максимум",
+    "weeklyChange": "За неделю",
+    "progress": "Прогресс",
+    "pullUps": "Подтягивания",
+    "pullUpsCount": "{{count}} подтягиваний",
+    "trainingHistory": "История тренировок"
+  },
+  "noPullUpsData": "Нет данных о подтягиваниях",
+  "addMeasurementsHint": "Добавьте измерения, чтобы увидеть график прогресса"
 }

@@ -966,7 +966,7 @@ export function TerraIntegration() {
           </DialogHeader>
           <DialogFooter className="flex gap-2">
             <Button variant="outline" onClick={() => setShowPurgeDialog(false)}>
-              Отмена
+              {t('purge.cancel')}
             </Button>
             <Button 
               variant="destructive" 
@@ -976,12 +976,12 @@ export function TerraIntegration() {
               {purgingProvider ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Сброс...
+                  {t('purge.resetting')}
                 </>
               ) : (
                 <>
                   <RotateCcw className="h-4 w-4 mr-2" />
-                  Выполнить сброс
+                  {t('purge.performReset')}
                 </>
               )}
             </Button>

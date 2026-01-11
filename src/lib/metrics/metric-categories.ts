@@ -2,6 +2,8 @@
  * Metric categories and freshness rules
  */
 
+import i18n from '@/i18n';
+
 export type MetricDataType = 'automatic' | 'manual';
 export type DeviceType = 'automatic' | 'manual';
 
@@ -140,7 +142,7 @@ export function getDataAge(measurementDate: string): string {
   const date = new Date(measurementDate);
   const ageDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
   
-  if (ageDays === 0) return 'Сегодня';
-  if (ageDays === 1) return 'Вчера';
-  return `${ageDays}д назад`;
+  if (ageDays === 0) return i18n.t('common:dates.today');
+  if (ageDays === 1) return i18n.t('common:dates.yesterday');
+  return i18n.t('common:dates.daysAgo', { count: ageDays });
 }

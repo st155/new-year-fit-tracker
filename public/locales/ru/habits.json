@@ -107,8 +107,24 @@
     "byCategory": "По категориям",
     "byStatus": "По статусу",
     "uncategorized": "Без категории",
-    "completed": "Выполнено",
-    "notCompleted": "Не выполнено"
+    "completed": "Завершено ({{count}})",
+    "notCompleted": "Не выполнено",
+    "notStarted": "Не начато ({{count}})",
+    "inProgress": "В процессе ({{count}})"
+  },
+  "empty": {
+    "noHabitsToDisplay": "Нет привычек для отображения",
+    "addHabit": "Добавить привычку"
+  },
+  "compactList": {
+    "title": "Компактный список",
+    "habitsCount": "{{count}} привычек",
+    "filters": {
+      "all": "Все",
+      "today": "Сегодня",
+      "active": "Активные",
+      "atRisk": "В опасности"
+    }
   },
   "archive": {
     "title": "Архивировать привычку?",

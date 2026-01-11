@@ -612,5 +612,13 @@
     "noMeasurementsMonth": "No measurements in the last month",
     "noHealthData30": "No health data for last 30 days",
     "steps": "Steps"
+  },
+  "clientErrors": {
+    "unknown": "Unknown error while loading data",
+    "accessDenied": "You don't have access to this client's data. Check permissions.",
+    "networkError": "Server connection problem. Check your internet connection.",
+    "notFound": "Client data not found. The client may have been deleted.",
+    "timeout": "Request timed out. Please try again.",
+    "loadError": "Load error: {{message}}"
   }
 }
