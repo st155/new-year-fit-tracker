@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { getDateLocale } from '@/lib/date-locale';
 
 // Локализация известных английских сообщений об ошибках
 function localizeAiSummary(summary: string | null): string | null {
@@ -70,8 +70,8 @@ async function fetchCategoryDetail(categoryId: string, userId: string): Promise<
     
     if (dates.length > 0) {
       dateRange = {
-        from: format(new Date(dates[0]), 'dd MMM yyyy', { locale: ru }),
-        to: format(new Date(dates[dates.length - 1]), 'dd MMM yyyy', { locale: ru }),
+        from: format(new Date(dates[0]), 'dd MMM yyyy', { locale: getDateLocale() }),
+        to: format(new Date(dates[dates.length - 1]), 'dd MMM yyyy', { locale: getDateLocale() }),
       };
     }
   }
@@ -136,7 +136,7 @@ async function fetchCategoryDetail(categoryId: string, userId: string): Promise<
       const worsened = changes.filter(c => c && Math.abs(c.change) > 5 && c.change > 0).slice(0, 3);
 
       // Generate summary
-      const dateStr = format(new Date(latestDate), 'dd MMMM yyyy', { locale: ru });
+      const dateStr = format(new Date(latestDate), 'dd MMMM yyyy', { locale: getDateLocale() });
       let summary = `По данным анализа от ${dateStr}: `;
       
       if (improved.length > 0) {

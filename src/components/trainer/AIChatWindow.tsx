@@ -11,7 +11,7 @@ import { Send, Loader2, Bot, User, ExternalLink, MessageSquare, Sparkles, CheckC
 import { AIMessage, AIConversation } from '@/types/trainer';
 import { AIPendingAction } from '@/hooks/useAIPendingActions';
 import { formatDistanceToNow } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { getDateLocale } from '@/lib/date-locale';
 import { useNavigate } from 'react-router-dom';
 import { useClientContext } from '@/contexts/ClientContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -1025,7 +1025,7 @@ export const AIChatWindow = ({
                       <div className="text-xs opacity-70">
                         {formatDistanceToNow(new Date(message.created_at), {
                           addSuffix: true,
-                          locale: ru
+                          locale: getDateLocale()
                         })}
                       </div>
                     </div>

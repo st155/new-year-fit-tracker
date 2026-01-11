@@ -2,7 +2,7 @@ import { ParsedWorkout, formatSet } from "@/lib/workout-text-parser";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { ru } from "date-fns/locale";
+import { getDateLocale } from "@/lib/date-locale";
 import { Dumbbell, Clock, Layers, Zap } from "lucide-react";
 
 interface ParsedWorkoutPreviewProps {
@@ -18,7 +18,7 @@ export function ParsedWorkoutPreview({
   date,
   duration,
 }: ParsedWorkoutPreviewProps) {
-  const formattedDate = format(new Date(date), "d MMMM yyyy", { locale: ru });
+  const formattedDate = format(new Date(date), "d MMMM yyyy", { locale: getDateLocale() });
   
   // Group exercises by superset
   const groupedExercises: { supersetGroup?: number; exercises: typeof workout.exercises }[] = [];

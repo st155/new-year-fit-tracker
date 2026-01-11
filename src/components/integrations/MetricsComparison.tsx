@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { getDateLocale } from '@/lib/date-locale';
 import { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
@@ -98,12 +98,12 @@ export function MetricsComparison() {
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis 
                     dataKey="date" 
-                    tickFormatter={(date) => format(new Date(date), 'dd MMM', { locale: ru })}
+                    tickFormatter={(date) => format(new Date(date), 'dd MMM', { locale: getDateLocale() })}
                     className="text-xs"
                   />
                   <YAxis className="text-xs" />
                   <Tooltip 
-                    labelFormatter={(date) => format(new Date(date), 'dd MMMM yyyy', { locale: ru })}
+                    labelFormatter={(date) => format(new Date(date), 'dd MMMM yyyy', { locale: getDateLocale() })}
                     contentStyle={{ 
                       backgroundColor: 'hsl(var(--background))',
                       border: '1px solid hsl(var(--border))',
@@ -149,7 +149,7 @@ export function MetricsComparison() {
                   <div>
                     <h4 className="font-semibold">{metric.metric_name}</h4>
                     <p className="text-sm text-muted-foreground">
-                      {format(new Date(metric.measurement_date), 'dd MMMM yyyy', { locale: ru })}
+                      {format(new Date(metric.measurement_date), 'dd MMMM yyyy', { locale: getDateLocale() })}
                     </p>
                   </div>
                   <Badge variant="secondary">

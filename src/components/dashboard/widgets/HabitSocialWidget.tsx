@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
-import { ru } from "date-fns/locale";
+import { getDateLocale } from "@/lib/date-locale";
 import { useHabitNotificationsRealtime } from "@/hooks/composite/realtime";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -120,7 +120,7 @@ export function HabitSocialWidget() {
                 <span className="text-xs text-muted-foreground flex-shrink-0">
                   {formatDistanceToNow(new Date(event.created_at), { 
                     addSuffix: true,
-                    locale: ru 
+                    locale: getDateLocale() 
                   })}
                 </span>
                   </div>

@@ -20,7 +20,7 @@ import type { MultiSourceWidgetData } from '@/hooks/metrics/useMultiSourceWidget
 import type { WidgetHistoryData } from '@/hooks/metrics/useWidgetHistory';
 import { logger } from '@/lib/logger';
 import { format, parseISO } from 'date-fns';
-import { ru, enUS } from 'date-fns/locale';
+import { getDateLocale } from '@/lib/date-locale';
 import { HabitLevelWidget } from './widgets/HabitLevelWidget';
 import { HabitStreakWidget } from './widgets/HabitStreakWidget';
 import { HabitSocialWidget } from './widgets/HabitSocialWidget';
@@ -395,8 +395,8 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { t, i18n } = useTranslation('widgets');
-  const dateLocale = i18n.language === 'ru' ? ru : enUS;
+  const { t } = useTranslation('widgets');
+  const dateLocale = getDateLocale();
   
   // Load personal baselines for personalized quality assessment
   const { data: personalBaselines } = usePersonalBaselines();
@@ -678,7 +678,7 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
     } else if (isYesterday) {
       return 'Данные за вчера';
     } else {
-      return format(measurementDate, 'd MMM', { locale: ru });
+      return format(measurementDate, 'd MMM', { locale: getDateLocale() });
     }
   };
   

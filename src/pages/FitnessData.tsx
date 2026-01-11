@@ -11,7 +11,7 @@ import {
   Activity, Heart, Zap, Moon, Footprints, Flame, Clock
 } from 'lucide-react';
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { getDateLocale } from '@/lib/date-locale';
 import { MetricCard } from '@/components/fitness-data/MetricCard';
 import { FitnessCard } from '@/components/ui/fitness-card';
 import { cn } from '@/lib/utils';
@@ -167,7 +167,7 @@ export default function FitnessData() {
     if (grouped['Recovery Score']) {
       metrics.recovery = grouped['Recovery Score'].map(m => ({
         value: m.value,
-        date: format(new Date(m.measurement_date), 'dd MMM', { locale: ru }),
+        date: format(new Date(m.measurement_date), 'dd MMM', { locale: getDateLocale() }),
       }));
     }
 
@@ -175,7 +175,7 @@ export default function FitnessData() {
     if (grouped['Day Strain']) {
       metrics.strain = grouped['Day Strain'].map(m => ({
         value: m.value,
-        date: format(new Date(m.measurement_date), 'dd MMM', { locale: ru }),
+        date: format(new Date(m.measurement_date), 'dd MMM', { locale: getDateLocale() }),
       }));
     }
 
@@ -184,7 +184,7 @@ export default function FitnessData() {
     if (heartRateData) {
       metrics.heartRate = heartRateData.map(m => ({
         value: m.value,
-        date: format(new Date(m.measurement_date), 'HH:mm', { locale: ru }),
+        date: format(new Date(m.measurement_date), 'HH:mm', { locale: getDateLocale() }),
       }));
     }
 
@@ -200,7 +200,7 @@ export default function FitnessData() {
     sleepDates.forEach(date => {
       const dayMetrics = metricsData.filter(m => m.measurement_date.startsWith(date));
       const sleepData: any = {
-        date: format(new Date(date), 'dd MMM', { locale: ru }),
+        date: format(new Date(date), 'dd MMM', { locale: getDateLocale() }),
       };
 
       dayMetrics.forEach(m => {
@@ -378,10 +378,10 @@ export default function FitnessData() {
     const { start, end } = calculateDateRange;
     
     if (timeFilter === 'today') {
-      return format(start, 'd MMMM yyyy', { locale: ru });
+      return format(start, 'd MMMM yyyy', { locale: getDateLocale() });
     }
     
-    return `${format(start, 'd MMM', { locale: ru })} - ${format(end, 'd MMM yyyy', { locale: ru })}`;
+    return `${format(start, 'd MMM', { locale: getDateLocale() })} - ${format(end, 'd MMM yyyy', { locale: getDateLocale() })}`;
   };
 
   const handlePreviousPeriod = () => setDateOffset(prev => prev + 1);

@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { format, parseISO } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { getDateLocale } from '@/lib/date-locale';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { MetricRecord } from '@/hooks/useMetricDetail';
 
@@ -27,7 +27,7 @@ export function MetricChart({ records, metricName, color }: MetricChartProps) {
       .map(({ date, values }) => ({
         date,
         value: values.reduce((sum, v) => sum + v, 0) / values.length,
-        displayDate: format(parseISO(date), 'd MMM', { locale: ru }),
+        displayDate: format(parseISO(date), 'd MMM', { locale: getDateLocale() }),
       }))
       .reverse(); // Oldest to newest for chart
   }, [records]);

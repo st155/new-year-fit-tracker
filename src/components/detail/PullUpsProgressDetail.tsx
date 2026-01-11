@@ -6,7 +6,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { format, subDays } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { getDateLocale } from '@/lib/date-locale';
 import { QuickMeasurementDialog } from '@/features/goals/components';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -112,7 +112,7 @@ export function PullUpsProgressDetail({ onBack }: PullUpsProgressDetailProps) {
   };
 
   const formatTooltipDate = (dateStr: string) => {
-    return format(new Date(dateStr), 'd MMM', { locale: ru });
+    return format(new Date(dateStr), 'd MMM', { locale: getDateLocale() });
   };
 
   const getProgressColor = (current: number, target: number) => {
@@ -338,7 +338,7 @@ export function PullUpsProgressDetail({ onBack }: PullUpsProgressDetailProps) {
                   {item.pullUps} подтягиваний
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  {format(new Date(item.date), 'd MMMM yyyy', { locale: ru })}
+                  {format(new Date(item.date), 'd MMMM yyyy', { locale: getDateLocale() })}
                 </div>
               </div>
               {item.change !== 0 && (

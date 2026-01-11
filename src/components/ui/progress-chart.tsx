@@ -2,7 +2,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { format, parseISO } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { getDateLocale } from '@/lib/date-locale';
 
 interface ProgressChartProps {
   data: Array<{ value: number; date: string; notes?: string }>;
@@ -33,8 +33,8 @@ export function ProgressChart({ data, title, unit, goalType, targetValue }: Prog
   // Форматируем данные для графика
   const chartData = sortedData.map(item => ({
     ...item,
-    displayDate: format(parseISO(item.date), 'd MMM', { locale: ru }),
-    fullDate: format(parseISO(item.date), 'dd MMMM yyyy', { locale: ru })
+    displayDate: format(parseISO(item.date), 'd MMM', { locale: getDateLocale() }),
+    fullDate: format(parseISO(item.date), 'dd MMMM yyyy', { locale: getDateLocale() })
   }));
 
   // Определяем тренд

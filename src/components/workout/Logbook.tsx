@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { StatsDashboardCard } from "./stats/StatsDashboardCard";
 import { motion } from "framer-motion";
 import { format, isSameMonth } from "date-fns";
-import { ru } from "date-fns/locale";
+import { getDateLocale } from "@/lib/date-locale";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -31,7 +31,7 @@ export default function Logbook() {
 
   // Группировка тренировок по месяцам
   const groupedWorkouts = workouts.reduce((groups, workout) => {
-    const month = format(new Date(workout.date), 'LLLL yyyy', { locale: ru });
+    const month = format(new Date(workout.date), 'LLLL yyyy', { locale: getDateLocale() });
     if (!groups[month]) {
       groups[month] = [];
     }
