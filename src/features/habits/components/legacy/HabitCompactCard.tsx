@@ -259,8 +259,8 @@ export function HabitCompactCard({ habit, userId, onCompleted }: HabitCompactCar
           {/* Big Timer */}
           <div className="text-center py-3">
             <div className="text-6xl md:text-7xl font-black bg-gradient-to-r from-rose-400 via-pink-400 to-rose-500 bg-clip-text text-transparent leading-none tracking-tight">
-              {elapsedTime.days > 0 && `${elapsedTime.days}д `}
-              {elapsedTime.hours}ч
+              {elapsedTime.days > 0 && `${t('dashboardCard.daysShort', { days: elapsedTime.days })} `}
+              {t('dashboardCard.hoursShort', { hours: elapsedTime.hours })}
             </div>
             <div className="text-xs text-muted-foreground mt-2">
               {t('dashboardCard.withoutSlips')}
@@ -389,7 +389,7 @@ export function HabitCompactCard({ habit, userId, onCompleted }: HabitCompactCar
                 {currentValue}
               </div>
               <div className="text-sm text-muted-foreground mt-1">
-                из <span className="font-semibold">{targetValue}</span>
+                {t('dashboardCard.outOf')} <span className="font-semibold">{targetValue}</span>
               </div>
             </div>
             <Progress 
@@ -398,7 +398,7 @@ export function HabitCompactCard({ habit, userId, onCompleted }: HabitCompactCar
               autoColor
             />
             <div className="text-center text-xs text-muted-foreground">
-              {Math.round(progress)}% выполнено
+              {t('dashboardCard.percentComplete', { percent: Math.round(progress) })}
             </div>
           </div>
         ) : (
@@ -438,18 +438,17 @@ export function HabitCompactCard({ habit, userId, onCompleted }: HabitCompactCar
     <AlertDialog open={showArchiveDialog} onOpenChange={setShowArchiveDialog}>
       <AlertDialogContent className="glass-strong border-white/20">
         <AlertDialogHeader>
-          <AlertDialogTitle>Архивировать привычку?</AlertDialogTitle>
+          <AlertDialogTitle>{t('archive.title')}</AlertDialogTitle>
           <AlertDialogDescription>
-            Привычка будет скрыта из списка активных, но все данные сохранятся.
-            Вы сможете восстановить её позже.
+            {t('archive.description')}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel className="glass-card border-white/20">
-            Отмена
+            {t('delete.cancel')}
           </AlertDialogCancel>
           <AlertDialogAction onClick={handleArchiveConfirm}>
-            Архивировать
+            {t('archive.confirm')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -458,30 +457,20 @@ export function HabitCompactCard({ habit, userId, onCompleted }: HabitCompactCar
     <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
       <AlertDialogContent className="glass-strong border-white/20">
         <AlertDialogHeader>
-          <AlertDialogTitle>Удалить привычку навсегда?</AlertDialogTitle>
+          <AlertDialogTitle>{t('delete.title')}</AlertDialogTitle>
           <AlertDialogDescription>
-            Это действие нельзя отменить. Будут удалены:
-            <ul className="mt-2 list-disc list-inside text-sm">
-              <li>Все логи выполнения</li>
-              <li>Вся статистика и история</li>
-              <li>Все измерения и попытки</li>
-            </ul>
-            <div className="mt-3 p-3 bg-destructive/10 rounded-md border border-destructive/30">
-              <p className="text-sm font-semibold text-destructive">
-                ⚠️ Если вы хотите временно скрыть привычку, используйте "Архивировать"
-              </p>
-            </div>
+            {t('delete.description')}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel className="glass-card border-white/20">
-            Отмена
+            {t('delete.cancel')}
           </AlertDialogCancel>
           <AlertDialogAction 
             onClick={handleDeleteConfirm}
             className="bg-destructive hover:bg-destructive/90"
           >
-            Удалить навсегда
+            {t('delete.confirm')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

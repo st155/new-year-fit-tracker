@@ -41,5 +41,13 @@
     "startTracking": "Start tracking habits",
     "createFirst": "Create your first habit and start the journey to a better version of yourself",
     "createFirstButton": "Create first habit"
+  },
+  "quickReplies": {
+    "label": "Quick replies:",
+    "greatWork": "Great work! 💪",
+    "keepItUp": "Keep it up! 🔥",
+    "wellDone": "Well done! 👏",
+    "stayStrong": "Stay strong! 🎯",
+    "inspiring": "Inspiring! ✨"
   }
 }

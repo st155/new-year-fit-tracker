@@ -349,6 +349,17 @@
     "syncing": "Syncing...",
     "syncDays": "Sync {{count}} days"
   },
+  "sync": {
+    "userNotAuthorized": "User not authorized",
+    "loadingData": "Loading data...",
+    "errorLoadingMetrics": "Error loading metrics",
+    "noDataToSync": "No data to sync",
+    "syncing": "Syncing...",
+    "syncingProgress": "Syncing {{current}}/{{total}}...",
+    "successDays": "Successfully synced {{count}} days",
+    "successWithErrors": "Synced {{success}}, errors: {{failed}}",
+    "unknownError": "Unknown error"
+  },
   "dataMonitor": {
     "error": "Error",
     "terraUserIdNotFound": "Terra User ID not found",

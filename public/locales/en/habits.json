@@ -739,5 +739,31 @@
     "eating": "🍽️ Eating",
     "withoutSlips": "Without slips",
     "since": "Since {{date}}"
+  },
+  "durationWidget": {
+    "days": "days",
+    "best": "Best: {{days}}d",
+    "until": "Until {{milestone}}",
+    "reset": "Reset",
+    "resetTitle": "Reset counter?",
+    "resetDescription": "You've held on for {{days}} days! Don't worry, progress is saved in history.",
+    "resetDescriptionWithBest": "Your best result: {{best}} days.",
+    "whatHappened": "What happened? (optional)",
+    "cancel": "Cancel",
+    "resetting": "Resetting...",
+    "startFresh": "Start fresh"
+  },
+  "dashboardCard": {
+    "daysShort": "{{days}}d",
+    "hoursShort": "{{hours}}h",
+    "outOf": "out of",
+    "percentComplete": "{{percent}}% complete",
+    "percentToGoal": "{{percent}}% of goal",
+    "fasting": "Fasting",
+    "eating": "Eating Window",
+    "withoutSlips": "without slips",
+    "since": "Since {{date}}",
+    "completed": "Completed!",
+    "notCompleted": "Not completed today"
   }
 }

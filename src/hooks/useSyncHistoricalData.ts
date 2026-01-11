@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 import { 
   syncHistoricalToEcho11, 
   HistoricalDayData 
@@ -21,6 +22,7 @@ interface SyncResult {
 
 export function useSyncHistoricalData() {
   const { user } = useAuth();
+  const { t } = useTranslation('integrations');
   const [progress, setProgress] = useState<SyncProgress>({
     current: 0,
     total: 0,
@@ -31,11 +33,11 @@ export function useSyncHistoricalData() {
 
   const syncLastNDays = useCallback(async (days: number = 7) => {
     if (!user?.id) {
-      setProgress({ current: 0, total: 0, status: 'error', message: 'Пользователь не авторизован' });
+      setProgress({ current: 0, total: 0, status: 'error', message: t('sync.userNotAuthorized') });
       return;
     }
 
-    setProgress({ current: 0, total: days, status: 'loading', message: 'Загрузка данных...' });
+    setProgress({ current: 0, total: days, status: 'loading', message: t('sync.loadingData') });
     setResult(null);
 
     try {
@@ -59,7 +61,7 @@ export function useSyncHistoricalData() {
 
       if (metricsError) {
         console.error('Error fetching metrics:', metricsError);
-        setProgress({ current: 0, total: days, status: 'error', message: 'Ошибка загрузки метрик' });
+        setProgress({ current: 0, total: days, status: 'error', message: t('sync.errorLoadingMetrics') });
         return;
       }
 
@@ -177,7 +179,7 @@ export function useSyncHistoricalData() {
       });
 
       if (historicalData.length === 0) {
-        setProgress({ current: 0, total: 0, status: 'error', message: 'Нет данных для синхронизации' });
+        setProgress({ current: 0, total: 0, status: 'error', message: t('sync.noDataToSync') });
         return;
       }
 
@@ -186,7 +188,7 @@ export function useSyncHistoricalData() {
         current: 0, 
         total: historicalData.length, 
         status: 'syncing', 
-        message: `Синхронизация...` 
+        message: t('sync.syncing')
       });
 
       const syncResult = await syncHistoricalToEcho11(
@@ -196,7 +198,7 @@ export function useSyncHistoricalData() {
             current,
             total,
             status: 'syncing',
-            message: `Синхронизация ${current}/${total}...`
+            message: t('sync.syncingProgress', { current, total })
           });
         }
       );
@@ -212,8 +214,8 @@ export function useSyncHistoricalData() {
         total: historicalData.length,
         status: 'done',
         message: syncResult.failed === 0 
-          ? `Успешно синхронизировано ${syncResult.success} дней`
-          : `Синхронизировано ${syncResult.success}, ошибок: ${syncResult.failed}`
+          ? t('sync.successDays', { count: syncResult.success })
+          : t('sync.successWithErrors', { success: syncResult.success, failed: syncResult.failed })
       });
 
     } catch (error) {
@@ -222,10 +224,10 @@ export function useSyncHistoricalData() {
         current: 0,
         total: 0,
         status: 'error',
-        message: error instanceof Error ? error.message : 'Неизвестная ошибка'
+        message: error instanceof Error ? error.message : t('sync.unknownError')
       });
     }
-  }, [user?.id]);
+  }, [user?.id, t]);
 
   const reset = useCallback(() => {
     setProgress({ current: 0, total: 0, status: 'idle', message: '' });
