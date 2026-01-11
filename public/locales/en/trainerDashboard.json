@@ -214,7 +214,12 @@
     "planAwaitingConfirmation": "Plan awaiting confirmation",
     "preparingPlan": "⏳ Preparing plan...",
     "preparingStructured": "Preparing structured plan...",
-    "actionsCount": "Actions: {{count}}"
+    "actionsCount": "Actions: {{count}}",
+    "needToThink": "Need to think",
+    "mentions_one": "{{count}} mention",
+    "mentions_other": "{{count}} mentions",
+    "requireConfirmation": "Require confirmation",
+    "newMessage": "New"
   },
   "common": {
     "cancel": "Cancel",

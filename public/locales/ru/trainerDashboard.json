@@ -213,7 +213,14 @@
     "planAwaitingConfirmation": "План ожидает подтверждения",
     "preparingPlan": "⏳ Подготовка плана...",
     "preparingStructured": "Готовлю структурированный план...",
-    "actionsCount": "Действий: {{count}}"
+    "actionsCount": "Действий: {{count}}",
+    "needToThink": "Нужно подумать",
+    "mentions_one": "{{count}} упоминание",
+    "mentions_few": "{{count}} упоминания",
+    "mentions_many": "{{count}} упоминаний",
+    "mentions_other": "{{count}} упоминаний",
+    "requireConfirmation": "Требовать подтверждение",
+    "newMessage": "Новое"
   },
   "common": {
     "cancel": "Отмена",

@@ -1,13 +1,14 @@
 import { HealthData } from "./types";
 import { HealthMetricCard } from "./HealthMetricCard";
 import { useTranslation } from "react-i18next";
+import { Trans } from "react-i18next";
 
 interface BodyMetricsProps {
   healthData: HealthData[];
 }
 
 export function BodyMetrics({ healthData }: BodyMetricsProps) {
-  const { t } = useTranslation('trainerHealth');
+  const { t } = useTranslation(['trainerHealth', 'common']);
   const getLatestValue = (key: keyof HealthData) => {
     const latestData = healthData.find(d => d[key] !== undefined && d[key] !== null);
     return latestData?.[key] as number | undefined;
@@ -50,7 +51,7 @@ export function BodyMetrics({ healthData }: BodyMetricsProps) {
         title={t('metrics.weight')}
         icon="⚖️"
         value={getLatestValue('weight') || 0}
-        unit="кг"
+        unit={t('common:units.kg')}
         source={getLatestSource('weight_source')}
         data={getChartData('weight')}
         trend={getTrend('weight')}
@@ -70,7 +71,7 @@ export function BodyMetrics({ healthData }: BodyMetricsProps) {
         title={t('metrics.muscleMass')}
         icon="💪"
         value={getLatestValue('muscle_mass') || 0}
-        unit="кг"
+        unit={t('common:units.kg')}
         source={getLatestSource('muscle_mass_source')}
         data={getChartData('muscle_mass')}
         trend={getTrend('muscle_mass')}

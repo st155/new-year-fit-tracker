@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { Check, X, AlertCircle } from "lucide-react";
+import i18n from '@/i18n';
 
 interface ValidationRule {
   test: (value: any) => boolean;
@@ -66,57 +67,57 @@ export function FormValidation({ value, rules, showValidation = true, className 
 
 // Готовые правила валидации
 export const validationRules = {
-  required: (message = "Поле обязательно для заполнения"): ValidationRule => ({
+  required: (message?: string): ValidationRule => ({
     test: (value) => value !== null && value !== undefined && value !== '',
-    message,
+    message: message || i18n.t('common:validation.required'),
     type: 'error'
   }),
 
   minLength: (min: number, message?: string): ValidationRule => ({
     test: (value) => !value || value.length >= min,
-    message: message || `Минимум ${min} символов`,
+    message: message || i18n.t('common:validation.minLength', { min }),
     type: 'error'
   }),
 
   maxLength: (max: number, message?: string): ValidationRule => ({
     test: (value) => !value || value.length <= max,
-    message: message || `Максимум ${max} символов`,
+    message: message || i18n.t('common:validation.maxLength', { max }),
     type: 'error'
   }),
 
   minValue: (min: number, message?: string): ValidationRule => ({
     test: (value) => !value || Number(value) >= min,
-    message: message || `Минимальное значение: ${min}`,
+    message: message || i18n.t('common:validation.minValue', { min }),
     type: 'error'
   }),
 
   maxValue: (max: number, message?: string): ValidationRule => ({
     test: (value) => !value || Number(value) <= max,
-    message: message || `Максимальное значение: ${max}`,
+    message: message || i18n.t('common:validation.maxValue', { max }),
     type: 'error'
   }),
 
-  email: (message = "Некорректный email адрес"): ValidationRule => ({
+  email: (message?: string): ValidationRule => ({
     test: (value) => !value || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
-    message,
+    message: message || i18n.t('common:validation.invalidEmail'),
     type: 'error'
   }),
 
-  positiveNumber: (message = "Значение должно быть положительным"): ValidationRule => ({
+  positiveNumber: (message?: string): ValidationRule => ({
     test: (value) => !value || Number(value) > 0,
-    message,
+    message: message || i18n.t('common:validation.positiveNumber'),
     type: 'error'
   }),
 
-  futureDate: (message = "Дата должна быть в будущем"): ValidationRule => ({
+  futureDate: (message?: string): ValidationRule => ({
     test: (value) => !value || new Date(value) > new Date(),
-    message,
+    message: message || i18n.t('common:validation.futureDate'),
     type: 'warning'
   }),
 
-  pastDate: (message = "Дата должна быть в прошлом"): ValidationRule => ({
+  pastDate: (message?: string): ValidationRule => ({
     test: (value) => !value || new Date(value) <= new Date(),
-    message,
+    message: message || i18n.t('common:validation.pastDate'),
     type: 'warning'
   })
 };

@@ -1016,7 +1016,7 @@ export const AIChatWindow = ({
                           <ActionPlanCard 
                             message={message}
                             onApprove={handleApprovePlan}
-                            onReconsider={() => setInput("Нужно подумать")}
+                            onReconsider={() => setInput(t('trainerDashboard:aiChat.needToThink'))}
                             sending={sending}
                           />
                         )}
@@ -1132,7 +1132,7 @@ export const AIChatWindow = ({
             <div className="flex flex-col items-center">
               <ArrowDown className="h-4 w-4" />
               {messages.length > 0 && isUserScrolling && (
-                <span className="text-[10px] mt-0.5">Новое</span>
+                <span className="text-[10px] mt-0.5">{t('trainerDashboard:aiChat.newMessage')}</span>
               )}
             </div>
           </Button>
@@ -1161,7 +1161,7 @@ export const AIChatWindow = ({
             />
             {mentions.size > 0 && (
               <Badge variant="secondary" className="absolute top-2 right-2 text-xs pointer-events-none">
-                {mentions.size} {mentions.size === 1 ? 'упоминание' : 'упоминаний'}
+                {t('trainerDashboard:aiChat.mentions', { count: mentions.size })}
               </Badge>
             )}
           </div>
@@ -1177,7 +1177,7 @@ export const AIChatWindow = ({
               htmlFor="require-confirmation-chat" 
               className="text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
             >
-              Требовать подтверждение
+              {t('trainerDashboard:aiChat.requireConfirmation')}
             </Label>
           </div>
           <Button
