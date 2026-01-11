@@ -184,5 +184,16 @@
     "high": "high",
     "medium": "medium",
     "low": "low"
+  },
+  "goal": {
+    "completed": "completed",
+    "overachieved": "Overachieved!",
+    "needFirstMeasurement": "Need first measurement",
+    "personal": "Personal",
+    "otherGoals": "other goals",
+    "noMeasurementHistory": "No measurement history",
+    "progressOverview": "Progress Overview",
+    "noActiveGoals": "No active goals",
+    "createGoalsHint": "Create goals to track progress"
   }
 }

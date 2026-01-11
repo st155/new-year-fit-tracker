@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useTrainingGaps, MuscleAnalysis, WellnessAnalysis } from '@/hooks/useTrainingGaps';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 interface WeeklyGapAnalysisProps {
   onGenerateWorkout?: () => void;
@@ -29,22 +30,22 @@ const STATUS_COLORS = {
   never: 'bg-muted'
 } as const;
 
-function StatusBadge({ status, daysSince }: { status: string; daysSince: number | null }) {
+function StatusBadge({ status, daysSince, t }: { status: string; daysSince: number | null; t: (key: string) => string }) {
   const config = {
     recent: { 
-      label: daysSince === 0 ? 'Сегодня' : `${daysSince}д`, 
+      label: daysSince === 0 ? t('gap.today') : `${daysSince}${t('gap.daysShort')}`, 
       className: 'bg-green-500/20 text-green-400 border-green-500/30'
     },
     due_soon: { 
-      label: `${daysSince}д`, 
+      label: `${daysSince}${t('gap.daysShort')}`, 
       className: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
     },
     neglected: { 
-      label: `${daysSince}д!`, 
+      label: `${daysSince}${t('gap.daysShort')}!`, 
       className: 'bg-red-500/20 text-red-400 border-red-500/30'
     },
     overdue: { 
-      label: `${daysSince}д`, 
+      label: `${daysSince}${t('gap.daysShort')}`, 
       className: 'bg-red-500/20 text-red-400 border-red-500/30'
     },
     never: { 
@@ -73,7 +74,7 @@ function HeatmapDot({ status }: { status: string }) {
   );
 }
 
-function MuscleRow({ group, analysis }: { group: string; analysis: MuscleAnalysis }) {
+function MuscleRow({ group, analysis, t }: { group: string; analysis: MuscleAnalysis; t: (key: string) => string }) {
   return (
     <motion.div 
       initial={{ opacity: 0, x: -10 }}
@@ -94,12 +95,12 @@ function MuscleRow({ group, analysis }: { group: string; analysis: MuscleAnalysi
           </span>
         )}
       </div>
-      <StatusBadge status={analysis.status} daysSince={analysis.daysSince} />
+      <StatusBadge status={analysis.status} daysSince={analysis.daysSince} t={t} />
     </motion.div>
   );
 }
 
-function WellnessRow({ activity, analysis }: { activity: string; analysis: WellnessAnalysis }) {
+function WellnessRow({ activity, analysis, t }: { activity: string; analysis: WellnessAnalysis; t: (key: string) => string }) {
   if (analysis.completedCount === 0 && analysis.status === 'never') {
     return null;
   }
@@ -123,12 +124,12 @@ function WellnessRow({ activity, analysis }: { activity: string; analysis: Welln
           </span>
         )}
       </div>
-      <StatusBadge status={analysis.status} daysSince={analysis.daysSince} />
+      <StatusBadge status={analysis.status} daysSince={analysis.daysSince} t={t} />
     </motion.div>
   );
 }
 
-function MuscleHeatmapGrid({ muscleAnalysis }: { muscleAnalysis: Record<string, MuscleAnalysis> }) {
+function MuscleHeatmapGrid({ muscleAnalysis, t }: { muscleAnalysis: Record<string, MuscleAnalysis>; t: (key: string) => string }) {
   const entries = Object.entries(muscleAnalysis);
   
   return (
@@ -143,7 +144,7 @@ function MuscleHeatmapGrid({ muscleAnalysis }: { muscleAnalysis: Record<string, 
             analysis.status === 'neglected' && "bg-red-500/20 text-red-400 animate-pulse",
             analysis.status === 'never' && "bg-muted/30 text-muted-foreground"
           )}
-          title={`${analysis.name}: ${analysis.daysSince !== null ? `${analysis.daysSince} дней` : 'нет данных'}`}
+          title={`${analysis.name}: ${analysis.daysSince !== null ? `${analysis.daysSince} ${t('gap.days')}` : t('gap.noData')}`}
         >
           <span>{analysis.icon}</span>
           <span className="hidden sm:inline">{analysis.name}</span>
@@ -154,6 +155,7 @@ function MuscleHeatmapGrid({ muscleAnalysis }: { muscleAnalysis: Record<string, 
 }
 
 export function WeeklyGapAnalysis({ onGenerateWorkout, compact = false }: WeeklyGapAnalysisProps) {
+  const { t } = useTranslation('wellness');
   const { data, isLoading, error, refetch, isRefetching } = useTrainingGaps();
 
   if (isLoading) {
@@ -162,7 +164,7 @@ export function WeeklyGapAnalysis({ onGenerateWorkout, compact = false }: Weekly
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
-            Анализ недели
+            {t('gap.weeklyAnalysis')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -178,10 +180,10 @@ export function WeeklyGapAnalysis({ onGenerateWorkout, compact = false }: Weekly
     return (
       <Card className="bg-card/50 backdrop-blur-sm border-border/50">
         <CardContent className="py-6 text-center text-muted-foreground">
-          <p>Не удалось загрузить анализ</p>
+          <p>{t('gap.loadError')}</p>
           <Button variant="ghost" size="sm" onClick={() => refetch()} className="mt-2">
             <RefreshCw className="h-4 w-4 mr-1" />
-            Повторить
+            {t('gap.retry')}
           </Button>
         </CardContent>
       </Card>
@@ -209,7 +211,7 @@ export function WeeklyGapAnalysis({ onGenerateWorkout, compact = false }: Weekly
           <div className="flex items-center justify-between">
             <CardTitle className="text-base flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-primary" />
-              Анализ недели
+              {t('gap.weeklyAnalysis')}
               {hasWarnings && (
                 <AlertTriangle className="h-4 w-4 text-yellow-500" />
               )}
@@ -226,15 +228,15 @@ export function WeeklyGapAnalysis({ onGenerateWorkout, compact = false }: Weekly
           </div>
           {data.stats && (
             <p className="text-xs text-muted-foreground">
-              {data.stats.totalWorkouts} тренировок за {data.stats.periodDays} дней 
-              (~{data.stats.avgWorkoutsPerWeek.toFixed(1)}/нед)
+              {t('gap.workoutsForPeriod', { count: data.stats.totalWorkouts, days: data.stats.periodDays })} 
+              (~{data.stats.avgWorkoutsPerWeek.toFixed(1)}/{t('gap.weekShort')})
             </p>
           )}
         </CardHeader>
 
         <CardContent className="space-y-4">
           {/* Тепловая карта мышц */}
-          {compact && <MuscleHeatmapGrid muscleAnalysis={data.muscleAnalysis} />}
+          {compact && <MuscleHeatmapGrid muscleAnalysis={data.muscleAnalysis} t={t} />}
           
           {/* Группы мышц - детальный вид */}
           {!compact && (
@@ -242,7 +244,7 @@ export function WeeklyGapAnalysis({ onGenerateWorkout, compact = false }: Weekly
               <div className="flex items-center gap-1.5 mb-2">
                 <Dumbbell className="h-3.5 w-3.5 text-muted-foreground" />
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Группы мышц
+                  {t('gap.muscleGroups')}
                 </span>
               </div>
               <div className="space-y-0.5">
@@ -259,7 +261,7 @@ export function WeeklyGapAnalysis({ onGenerateWorkout, compact = false }: Weekly
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: idx * 0.05 }}
                     >
-                      <MuscleRow group={group} analysis={analysis} />
+                      <MuscleRow group={group} analysis={analysis} t={t} />
                     </motion.div>
                   ))}
               </div>
@@ -272,7 +274,7 @@ export function WeeklyGapAnalysis({ onGenerateWorkout, compact = false }: Weekly
               <div className="flex items-center gap-1.5 mb-2">
                 <Sparkles className="h-3.5 w-3.5 text-muted-foreground" />
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Wellness
+                  {t('gap.wellness')}
                 </span>
               </div>
               <div className="space-y-0.5">
@@ -289,7 +291,7 @@ export function WeeklyGapAnalysis({ onGenerateWorkout, compact = false }: Weekly
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: idx * 0.05 }}
                     >
-                      <WellnessRow activity={activity} analysis={analysis} />
+                      <WellnessRow activity={activity} analysis={analysis} t={t} />
                     </motion.div>
                   ))}
               </div>
@@ -300,7 +302,7 @@ export function WeeklyGapAnalysis({ onGenerateWorkout, compact = false }: Weekly
           {data.recommendations.length > 0 && !compact && (
             <div className="pt-2 border-t border-border/50">
               <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                Рекомендации
+                {t('gap.recommendations')}
               </div>
               <div className="space-y-1.5">
                 {data.recommendations.slice(0, 3).map((rec, idx) => (
@@ -332,7 +334,7 @@ export function WeeklyGapAnalysis({ onGenerateWorkout, compact = false }: Weekly
               size="sm"
             >
               <Dumbbell className="h-4 w-4 mr-2" />
-              Сгенерировать тренировку
+              {t('gap.generateWorkout')}
             </Button>
           )}
         </CardContent>

@@ -16,5 +16,20 @@
     "h": "ч",
     "m": "м",
     "min": "мин"
+  },
+  "gap": {
+    "today": "Сегодня",
+    "daysShort": "д",
+    "weeklyAnalysis": "Анализ недели",
+    "workoutsForPeriod": "{{count}} тренировок за {{days}} дней",
+    "weekShort": "нед",
+    "muscleGroups": "Группы мышц",
+    "wellness": "Wellness",
+    "recommendations": "Рекомендации",
+    "generateWorkout": "Сгенерировать тренировку",
+    "loadError": "Не удалось загрузить анализ",
+    "retry": "Повторить",
+    "days": "дней",
+    "noData": "нет данных"
   }
 }

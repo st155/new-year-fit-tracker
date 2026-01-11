@@ -56,6 +56,25 @@
   "priority": {
     "important": "{{count}} important"
   },
+  "card": {
+    "mergedFrom": "Merged from {{count}} protocols",
+    "unknownDoctor": "Unknown doctor",
+    "addToStack": "Add to Stack",
+    "dismiss": "Dismiss",
+    "dismissAll": "Dismiss all ({{count}})"
+  },
+  "status": {
+    "pending": "Pending",
+    "active": "Active",
+    "completed": "Completed",
+    "dismissed": "Dismissed"
+  },
+  "source": {
+    "doctor": "Doctor",
+    "ai": "AI",
+    "device": "Device",
+    "manual": "Manual"
+  },
   "protocols": {
     "actionTypes": {
       "supplement": "Supplements",

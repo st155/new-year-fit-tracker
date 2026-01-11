@@ -185,5 +185,16 @@
     "high": "высокий",
     "medium": "средний",
     "low": "низкий"
+  },
+  "goal": {
+    "completed": "выполнено",
+    "overachieved": "Перевыполнено!",
+    "needFirstMeasurement": "Нужен первый замер",
+    "personal": "Личная",
+    "otherGoals": "других целей",
+    "noMeasurementHistory": "Нет истории замеров",
+    "progressOverview": "Обзор прогресса",
+    "noActiveGoals": "Пока нет активных целей",
+    "createGoalsHint": "Создайте цели для отслеживания прогресса"
   }
 }
