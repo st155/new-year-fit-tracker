@@ -5,6 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 
 interface Goal {
   id: string;
@@ -13,6 +14,7 @@ interface Goal {
 }
 
 export function WeeklyGoalsMiniCard() {
+  const { t } = useTranslation('goals');
   const { user } = useAuth();
 
   const { data: goals = [], isLoading } = useQuery({
@@ -61,7 +63,7 @@ export function WeeklyGoalsMiniCard() {
           <div className="w-7 h-7 rounded-lg bg-amber-500/20 flex items-center justify-center">
             <Target className="w-4 h-4 text-amber-500" />
           </div>
-          <span className="text-xs font-medium text-foreground">Цели</span>
+          <span className="text-xs font-medium text-foreground">{t('section.title')}</span>
         </div>
         
         <div className="flex-1 flex flex-col gap-2">
@@ -83,11 +85,11 @@ export function WeeklyGoalsMiniCard() {
               </div>
             ))
           ) : (
-            <p className="text-[11px] text-muted-foreground">Нет активных целей</p>
+            <p className="text-[11px] text-muted-foreground">{t('empty.noGoals')}</p>
           )}
         </div>
         
-        <div className="text-[10px] text-primary mt-auto">Подробнее →</div>
+        <div className="text-[10px] text-primary mt-auto">{t('actions.addMeasurement')} →</div>
       </Link>
     </motion.div>
   );

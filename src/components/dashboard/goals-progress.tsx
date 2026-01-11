@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { GoalsProgressSkeleton } from "@/components/ui/dashboard-skeleton";
 import { Trophy, Droplets, Activity, Target, Dumbbell, Scale, Timer, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 // Map goal types to icons
 const goalIconMap: Record<string, React.ReactNode> = {
@@ -31,6 +32,7 @@ function getGoalIcon(goalName: string, goalType?: string): React.ReactNode {
 }
 
 export function GoalsProgress() {
+  const { t } = useTranslation('goals');
   const { user } = useAuth();
   const navigate = useNavigate();
   const { data: challengeGoals, isLoading } = useChallengeGoalsQuery(user?.id);
@@ -59,13 +61,13 @@ export function GoalsProgress() {
   if (goals.length === 0) {
     return (
       <div className="space-y-3 animate-fade-in">
-        <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wide px-1">Цели</h2>
+        <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wide px-1">{t('section.title')}</h2>
         <button 
           className="w-full bg-card/40 hover:bg-card/60 rounded-xl p-4 border border-border/30 hover:border-border/50 transition-all duration-500 text-center"
           onClick={() => navigate('/goals/create')}
         >
           <Target className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">Создайте первую цель</p>
+          <p className="text-sm text-muted-foreground">{t('section.createFirst')}</p>
         </button>
       </div>
     );
@@ -73,7 +75,7 @@ export function GoalsProgress() {
 
   return (
     <div className="space-y-3 animate-fade-in">
-      <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wide px-1">Цели</h2>
+      <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wide px-1">{t('section.title')}</h2>
       
       <div className="space-y-2 stagger-fade-in">
         {goals.map((goal) => (

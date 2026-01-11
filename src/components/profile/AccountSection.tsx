@@ -5,6 +5,7 @@ import { Copy, LogOut, RotateCcw, Shield, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useTranslation } from 'react-i18next';
 
 interface AccountSectionProps {
   email: string;
@@ -21,6 +22,7 @@ export function AccountSection({
   onSignOut,
   isLoading
 }: AccountSectionProps) {
+  const { t } = useTranslation('profile');
   const [copied, setCopied] = useState(false);
 
   const copyUserId = async () => {
@@ -54,7 +56,7 @@ export function AccountSection({
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center gap-2">
           <Shield className="h-5 w-5 text-muted-foreground" />
-          Аккаунт
+          {t('account.title')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -70,7 +72,7 @@ export function AccountSection({
             <p className="font-medium text-sm truncate">{email}</p>
           </div>
           <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/30 shrink-0 ml-2">
-            Активен
+            {t('account.active')}
           </Badge>
         </motion.div>
 
@@ -108,7 +110,7 @@ export function AccountSection({
             className="flex-1 gap-2"
           >
             <RotateCcw className="h-4 w-4" />
-            Сбросить онбординг
+            {t('hero.resetOnboarding')}
           </Button>
           <Button
             variant="destructive"
@@ -117,7 +119,7 @@ export function AccountSection({
             className="flex-1 gap-2"
           >
             <LogOut className="h-4 w-4" />
-            Выйти
+            {t('hero.signOut')}
           </Button>
         </div>
       </CardContent>

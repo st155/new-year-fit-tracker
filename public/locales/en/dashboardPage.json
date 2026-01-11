@@ -1,4 +1,22 @@
 {
+  "dailyOverview": {
+    "title": "Daily Overview",
+    "dayProgress": "Day Progress",
+    "goals": "Goals",
+    "achieved": "achieved",
+    "quickActions": "Quick actions:",
+    "supplements": "Supplements",
+    "scheduled": "scheduled",
+    "metrics": "Metrics",
+    "recordedToday": "recorded today",
+    "dailyHabits": "Daily habits",
+    "noActiveGoals": "No active goals",
+    "moreDetails": "More details →",
+    "greatWork": "Great work! 🎉",
+    "allSupplementsTaken": "All supplements taken today",
+    "takeSupplements": "Take supplements",
+    "recordMetric": "Record metric"
+  },
   "streak": {
     "title": "Streaks",
     "titleFull": "Execution Streaks",
