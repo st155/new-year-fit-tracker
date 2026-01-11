@@ -1,4 +1,5 @@
 {
+  "aggregated": "Aggregated",
   "title": "Integrations",
   "callback": {
     "processing": "Processing connection...",

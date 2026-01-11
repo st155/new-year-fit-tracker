@@ -142,5 +142,18 @@
       "title": "Excellent recovery!",
       "description": "Recovery {{value}}% — perfect day for intense training or PR."
     }
-  }
+  },
+  "optimizeTime": "Optimize time for \"{{name}}\"",
+  "successRate": "Habit is {{rate}}% more successful {{time}}",
+  "addTimeSlot": "Add a {{time}} habit",
+  "noHabitsAtTime": "You have no habits {{time}}. This is a great time for new habits!",
+  "addCategory": "Add a habit from \"{{category}}\" category",
+  "diversityHelps": "Variety in habits helps develop comprehensively",
+  "simplify": "Simplify \"{{name}}\"",
+  "lowCompletion": "Habit is completed only {{rate}}% of the time. Try reducing difficulty",
+  "startSmaller": "Start with shorter duration or frequency",
+  "combineHabits": "Combine habits into a group",
+  "workTogether": "\"{{name1}}\" and \"{{name2}}\" work great together ({{score}}% synergy)",
+  "addHabitAtTime": "Add a habit {{time}}",
+  "doingGreat": "You're doing great with \"{{name}}\" {{time}} - this is your best time!"
 }

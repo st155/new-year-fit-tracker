@@ -49,6 +49,17 @@
     "social": "Social",
     "custom": "Other"
   },
+  "difficulty": {
+    "easy": "Easy",
+    "medium": "Medium",
+    "hard": "Hard"
+  },
+  "defaultName": "Habit",
+  "duration": {
+    "minutes": "{{minutes}} min",
+    "hoursMinutes": "{{hours}} h {{minutes}} min",
+    "hours": "{{hours}} h"
+  },
   "types": {
     "daily_check": { "label": "Daily check", "description": "Simple completion every day" },
     "duration_counter": { "label": "Duration counter", "description": "Time since start (quit smoking, etc.)" },

@@ -102,13 +102,22 @@
     "enterHint": "Enter to send • Shift+Enter for new line",
     "user": "User"
   },
-  "time": {
+"time": {
     "today": "Today",
     "yesterday": "Yesterday",
     "selectDate": "Select date",
     "currentYear": "✓ Current year",
     "checkYear": "⚠️ Check the year!",
-    "lastMeasurement": "since last measurement"
+    "lastMeasurement": "since last measurement",
+    "morning": "in the morning",
+    "afternoon": "in the afternoon",
+    "evening": "in the evening",
+    "night": "at night",
+    "anytime": "anytime"
+  },
+  "plurals": {
+    "day_one": "day",
+    "day_other": "days"
   },
   "units": {
     "kg": "kg",

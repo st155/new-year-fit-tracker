@@ -49,6 +49,17 @@
     "social": "Социальное",
     "custom": "Другое"
   },
+  "difficulty": {
+    "easy": "Легко",
+    "medium": "Средне",
+    "hard": "Сложно"
+  },
+  "defaultName": "Привычка",
+  "duration": {
+    "minutes": "{{minutes}} мин",
+    "hoursMinutes": "{{hours}} ч {{minutes}} мин",
+    "hours": "{{hours}} ч"
+  },
   "types": {
     "daily_check": { "label": "Ежедневная галочка", "description": "Простое выполнение каждый день" },
     "duration_counter": { "label": "Счётчик времени", "description": "Время с начала (бросить курить и т.д.)" },
