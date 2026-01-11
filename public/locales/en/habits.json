@@ -656,5 +656,24 @@
     "remaining": "Remaining",
     "allCompleted": "All completed",
     "startAll": "Start all"
+  },
+  "dashboardCard": {
+    "intermittentFasting": "Intermittent fasting",
+    "percentToGoal": "{{percent}}% to goal",
+    "targetHours": "Goal: {{hours}}h",
+    "window": "Window",
+    "recentWindows": "Recent windows",
+    "durationCounter": "Duration counter",
+    "elapsedClean": "Elapsed without slips",
+    "saved": "Saved",
+    "cleanSince": "Clean since {{date}}",
+    "bestDays": "Best: {{days}} d.",
+    "attemptHistory": "Attempt history",
+    "notCompleted": "Not completed",
+    "completed": "✓ Completed",
+    "fasting": "🔥 Fasting",
+    "eating": "🍽️ Eating",
+    "withoutSlips": "Without slips",
+    "since": "Since {{date}}"
   }
 }

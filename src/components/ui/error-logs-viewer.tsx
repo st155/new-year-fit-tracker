@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
+import { getIntlLocale } from '@/lib/date-locale';
 
 interface ErrorLog {
   id: string;
@@ -127,7 +128,7 @@ export function ErrorLogsViewer() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('ru-RU', {
+    return new Date(dateString).toLocaleString(getIntlLocale(), {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
