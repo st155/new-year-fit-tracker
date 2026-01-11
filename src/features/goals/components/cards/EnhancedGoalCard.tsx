@@ -66,9 +66,7 @@ export function EnhancedGoalCard({ goal, onMeasurementAdded, readonly = false }:
   const Icon = getGoalIcon(goal.goal_name, goal.goal_type);
   const sourceBadge = getSourceBadge(goal.source);
 
-  const isLowerBetter = goal.goal_name.toLowerCase().includes('жир') || 
-                        goal.goal_name.toLowerCase().includes('fat') ||
-                        goal.goal_name.toLowerCase().includes('вес') && goal.goal_type === 'body_composition';
+  const isLowerBetter = isLowerBetterGoal(goal.goal_name);
 
   const getTrendColor = () => {
     if (Math.abs(goal.trend_percentage) < 0.5) return 'hsl(var(--muted-foreground))';
@@ -255,15 +253,15 @@ export function EnhancedGoalCard({ goal, onMeasurementAdded, readonly = false }:
               {/* Current Value */}
               <div className="mb-3">
                 <div className="text-3xl font-bold" style={{ color: theme.color }}>
-                  {goal.target_reps && (goal.target_unit === 'кг' || goal.target_unit === 'kg')
-                    ? `${goal.current_value.toFixed(1)} кг${goal.target_reps === 1 ? '' : ` × ${goal.target_reps}`}`
+                  {goal.target_reps && (goal.target_unit?.toLowerCase() === 'кг' || goal.target_unit?.toLowerCase() === 'kg')
+                    ? `${goal.current_value.toFixed(1)} ${t('units.kg')}${goal.target_reps === 1 ? '' : ` × ${goal.target_reps}`}`
                     : `${goal.current_value.toFixed(1)} ${goal.target_unit}`}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  {t('card.target')}: {goal.target_reps && (goal.target_unit === 'кг' || goal.target_unit === 'kg')
+                  {t('card.target')}: {goal.target_reps && (goal.target_unit?.toLowerCase() === 'кг' || goal.target_unit?.toLowerCase() === 'kg')
                     ? (goal.target_reps === 1 
-                        ? `${goal.target_value} кг (1RM)` 
-                        : `${goal.target_value} кг × ${goal.target_reps}`)
+                        ? `${goal.target_value} ${t('units.kg')} (1RM)` 
+                        : `${goal.target_value} ${t('units.kg')} × ${goal.target_reps}`)
                     : `${goal.target_value} ${goal.target_unit}`}
                 </div>
               </div>

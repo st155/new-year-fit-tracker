@@ -104,6 +104,15 @@
     "description": "The habit will be hidden from active list, but all data will be preserved. You can restore it later.",
     "confirm": "Archive"
   },
+  "aria": {
+    "habitLabel": "Habit: {{name}}. {{status}}",
+    "completed": "Completed",
+    "notCompleted": "Not completed. Streak: {{streak}} days",
+    "category": "Category: {{category}}. ",
+    "reward": "Reward: {{xp}} XP. ",
+    "duration": "Duration: {{duration}}. ",
+    "instructions": "Press Enter or Space to complete, E to edit, left/right arrows for gestures."
+  },
   "actions": {
     "newHabit": "New Habit",
     "quickComplete": "Quick Complete",

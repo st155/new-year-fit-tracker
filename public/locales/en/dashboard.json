@@ -472,7 +472,11 @@
     "current": "Current",
     "target": "Target",
     "errorTitle": "Error",
-    "errorLoading": "Failed to load goals"
+    "errorLoading": "Failed to load goals",
+    "demoUser1": "User A.",
+    "demoUser2": "User B.",
+    "demoUser3": "User C.",
+    "demoUser4": "User D."
   },
   "recovery": {
     "noData": "No data",
