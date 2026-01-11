@@ -82,5 +82,10 @@
       "min": "{{value}} min",
       "streak": "🔥 {{days}} days in a row"
     }
+  },
+  "health": {
+    "title": "Health",
+    "noData": "No health data",
+    "connectTracker": "Connect a tracker to start monitoring"
   }
 }

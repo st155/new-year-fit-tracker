@@ -104,6 +104,7 @@
   },
   "time": {
     "today": "Today",
+    "yesterday": "Yesterday",
     "selectDate": "Select date",
     "currentYear": "✓ Current year",
     "checkYear": "⚠️ Check the year!",

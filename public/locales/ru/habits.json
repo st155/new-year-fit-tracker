@@ -71,6 +71,34 @@
     "days": "дней",
     "completionRate": "Процент выполнения"
   },
+  "filters": {
+    "category": "Категория",
+    "allCategories": "Все категории",
+    "type": "Тип",
+    "allTypes": "Все типы",
+    "daily": "Ежедневные",
+    "counters": "Счётчики",
+    "numeric": "Числовые",
+    "all": "Все",
+    "done": "✓ Готово",
+    "notDone": "⏳ Не готово"
+  },
+  "sort": {
+    "title": "Сортировка",
+    "byCompletion": "По % выполнения",
+    "byStreak": "По стрику",
+    "byCreated": "По дате создания",
+    "byXp": "По XP награде"
+  },
+  "groups": {
+    "title": "Группировка",
+    "none": "Без группировки",
+    "byCategory": "По категориям",
+    "byStatus": "По статусу",
+    "uncategorized": "Без категории",
+    "completed": "Выполнено",
+    "notCompleted": "Не выполнено"
+  },
   "archive": {
     "title": "Архивировать привычку?",
     "description": "Привычка будет скрыта из списка активных, но все данные сохранятся. Вы сможете восстановить её позже.",
@@ -136,6 +164,16 @@
   "miniChart": {
     "completed": "Выполнено",
     "lastDays": "за последние {{days}} дней"
+  },
+  "calendar": {
+    "yearlyActivity": "Годовая активность",
+    "less": "Меньше",
+    "more": "Больше",
+    "noCompletions": "Нет выполнений",
+    "completions_one": "{{count}} выполнение",
+    "completions_few": "{{count}} выполнения",
+    "completions_many": "{{count}} выполнений",
+    "maxCompletions": "Максимум выполнений в день"
   },
   "viewSwitcher": {
     "widgets": "Виджеты",
@@ -333,7 +371,14 @@
     "resetting": "Сброс...",
     "startFresh": "Начать заново",
     "swipeRightHint": "Свайпните вправо для отметки выполнения",
-    "daysCount": "{{count}} дней"
+    "daysCount": "{{count}} дней",
+    "daysWithout": "{{days}} {{daysLabel}} без {{category}}",
+    "habit": "Привычка",
+    "times": "раз",
+    "reset": "Сбросить",
+    "complete": "Выполнить",
+    "done": "Готово",
+    "swipeHint": "← Свайп: детали | Свайп →: выполнить"
   },
   "menu": {
     "edit": "Редактировать",
