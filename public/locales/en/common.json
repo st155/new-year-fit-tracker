@@ -597,7 +597,10 @@
       "dataFreshness": "Data Freshness",
       "measurementFrequency": "Measurement Frequency",
       "crossValidation": "Cross Validation"
-    }
+    },
+    "zoneTitle": "{{zone}} Data Quality",
+    "zoneDescription": "Metrics with \"{{zone}}\" quality level",
+    "noMetrics": "No metrics in this category"
   },
   "theme": {
     "toggle": "Toggle theme"

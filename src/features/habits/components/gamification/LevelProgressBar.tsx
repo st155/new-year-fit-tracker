@@ -9,6 +9,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { useTranslation } from 'react-i18next';
 
 interface LevelProgressBarProps {
   level: number;
@@ -25,6 +26,7 @@ export function LevelProgressBar({
   progressPercent,
   compact = false,
 }: LevelProgressBarProps) {
+  const { t } = useTranslation('gamification');
   const levelTitle = getLevelTitle(level);
   const levelGradient = getLevelColor(level);
   const rewards = getLevelRewards(level);
@@ -49,9 +51,9 @@ export function LevelProgressBar({
           </TooltipTrigger>
           <TooltipContent>
             <div className="space-y-1">
-              <p className="font-medium">Уровень {level}: {levelTitle}</p>
+              <p className="font-medium">{t('levelProgress.levelWithTitle', { level, title: levelTitle })}</p>
               <p className="text-xs text-muted-foreground">
-                {xpToNext} XP до следующего уровня
+                {t('levelProgress.xpToNextLevel', { xp: xpToNext })}
               </p>
             </div>
           </TooltipContent>
@@ -74,26 +76,26 @@ export function LevelProgressBar({
             <div className="flex items-center gap-2">
               <h3 className="text-lg font-bold text-foreground">{levelTitle}</h3>
               <Badge variant="outline" className="text-xs">
-                Уровень {level}
+                {t('levelProgress.level', { level })}
               </Badge>
             </div>
             <p className="text-sm text-muted-foreground">
-              {totalXP.toLocaleString()} общего XP
+              {t('levelProgress.totalXP', { xp: totalXP.toLocaleString() })}
             </p>
           </div>
         </div>
         
         <div className="text-right">
-          <div className="text-sm text-muted-foreground">До следующего</div>
+          <div className="text-sm text-muted-foreground">{t('levelProgress.toNext')}</div>
           <div className="text-xl font-bold text-primary">
-            {xpToNext.toLocaleString()} XP
+            {t('levelProgress.xp', { xp: xpToNext.toLocaleString() })}
           </div>
         </div>
       </div>
 
       <div className="space-y-2">
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>Прогресс</span>
+          <span>{t('levelProgress.progress')}</span>
           <span>{progressPercent}%</span>
         </div>
         <Progress value={progressPercent} className="h-3" />
@@ -103,7 +105,7 @@ export function LevelProgressBar({
         <div className="pt-2 border-t border-border">
           <div className="flex items-center gap-2 mb-2">
             <Sparkles className="h-4 w-4 text-amber-500" />
-            <span className="text-sm font-medium text-foreground">Разблокированные награды</span>
+            <span className="text-sm font-medium text-foreground">{t('levelProgress.unlockedRewards')}</span>
           </div>
           <div className="space-y-1">
             {rewards.map((reward, index) => (

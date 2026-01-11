@@ -637,7 +637,10 @@
       "dataFreshness": "Актуальность данных",
       "measurementFrequency": "Регулярность измерений",
       "crossValidation": "Перекрестная проверка"
-    }
+    },
+    "zoneTitle": "{{zone}} качество данных",
+    "zoneDescription": "Метрики с уровнем качества \"{{zone}}\"",
+    "noMetrics": "Нет метрик в этой категории"
   },
   "theme": {
     "toggle": "Переключить тему"

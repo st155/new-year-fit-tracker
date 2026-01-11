@@ -240,7 +240,10 @@
     "optimized": "Optimized"
   },
   "research": {
-    "linkBiomarkersHint": "Click \"Link Biomarkers\" to search for scientific data"
+    "linkBiomarkersHint": "Click \"Link Biomarkers\" to search for scientific data",
+    "biomarkersCount": "{{count}} biomarkers",
+    "linkBiomarkers": "Link Biomarkers",
+    "more": "+{{count}} more"
   },
   "evidenceLevel": {
     "high": "High",

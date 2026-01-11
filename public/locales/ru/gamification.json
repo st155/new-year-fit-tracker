@@ -35,5 +35,15 @@
     "reached": "Вы достигли уровня:",
     "rewardsUnlocked": "Новые награды разблокированы",
     "continue": "Продолжить"
+  },
+  "levelProgress": {
+    "levelWithTitle": "Уровень {{level}}: {{title}}",
+    "xpToNextLevel": "{{xp}} XP до следующего уровня",
+    "level": "Уровень {{level}}",
+    "totalXP": "{{xp}} общего XP",
+    "toNext": "До следующего",
+    "xp": "{{xp}} XP",
+    "progress": "Прогресс",
+    "unlockedRewards": "Разблокированные награды"
   }
 }
