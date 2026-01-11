@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { format, parseISO } from 'date-fns';
 import { getDateLocale } from '@/lib/date-locale';
+import { useTranslation } from 'react-i18next';
 
 interface ProgressChartProps {
   data: Array<{ value: number; date: string; notes?: string }>;
@@ -13,15 +14,17 @@ interface ProgressChartProps {
 }
 
 export function ProgressChart({ data, title, unit, goalType, targetValue }: ProgressChartProps) {
+  const { t } = useTranslation('progress');
+  
   if (!data || data.length === 0) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>{title}</CardTitle>
-          <CardDescription>Недостаточно данных для отображения графика</CardDescription>
+          <CardDescription>{t('chart.insufficientData')}</CardDescription>
         </CardHeader>
         <CardContent className="h-64 flex items-center justify-center text-muted-foreground">
-          Добавьте измерения для просмотра прогресса
+          {t('chart.addMeasurementsForProgress')}
         </CardContent>
       </Card>
     );
@@ -79,7 +82,7 @@ export function ProgressChart({ data, title, unit, goalType, targetValue }: Prog
           <div>
             <CardTitle className="text-lg">{title}</CardTitle>
             <CardDescription>
-              {chartData.length} измерений • Последнее: {chartData[chartData.length - 1]?.value} {unit}
+              {t('chart.measurementsLast', { count: chartData.length, value: chartData[chartData.length - 1]?.value, unit })}
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
@@ -164,11 +167,11 @@ export function ProgressChart({ data, title, unit, goalType, targetValue }: Prog
         {targetValue && (
           <div className="mt-4 p-3 bg-muted/50 rounded-lg">
             <div className="flex items-center justify-between text-sm">
-              <span>Цель: {targetValue} {unit}</span>
+              <span>{t('chart.goalLabel', { value: targetValue, unit })}</span>
               <span className={`font-medium ${
                 lastValue >= targetValue ? 'text-success' : 'text-muted-foreground'
               }`}>
-                {lastValue >= targetValue ? 'Достигнута!' : `Осталось: ${(targetValue - lastValue).toFixed(1)} ${unit}`}
+                {lastValue >= targetValue ? t('chart.goalAchieved') : t('chart.remaining', { value: (targetValue - lastValue).toFixed(1), unit })}
               </span>
             </div>
           </div>

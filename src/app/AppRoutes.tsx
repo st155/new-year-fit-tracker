@@ -16,6 +16,7 @@ import { DevDebugBar } from "@/components/dev/DevDebugBar";
 import { AsyncErrorBoundary } from "@/components/error/AsyncErrorBoundary";
 import { ROUTE_SMOKE } from "@/lib/safe-flags";
 import { AutoBaselineCalculator } from "@/components/metrics/AutoBaselineCalculator";
+import { useTranslation } from 'react-i18next';
 
 import Auth from "@/pages/Auth";
 import DebugPage from "@/pages/DebugPage";
@@ -79,6 +80,7 @@ const I18nAnalyzer = lazy(() => import("@/pages/dev/I18nAnalyzer"));
 export const AppRoutes = () => {
   const { user } = useAuth();
   const location = useLocation();
+  const { t } = useTranslation('errors');
 
   // 🔍 Diagnostic: Route changes logging
   useEffect(() => {
@@ -269,7 +271,7 @@ export const AppRoutes = () => {
           <ProtectedRoute>
             <ModernAppLayout>
               <AsyncErrorBoundary 
-                errorFallback={<div className="p-8 text-center">Ошибка загрузки страницы Фитнес дата</div>}
+                errorFallback={<div className="p-8 text-center">{t('pageLoadError', { page: 'Fitness Data' })}</div>}
               >
                 <FitnessData />
               </AsyncErrorBoundary>

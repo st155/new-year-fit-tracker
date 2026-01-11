@@ -95,6 +95,12 @@
   "chart": {
     "progress": "Progress",
     "selectMetric": "Select metric",
+    "insufficientData": "Insufficient data to display chart",
+    "addMeasurementsForProgress": "Add measurements to view progress",
+    "measurementsLast": "{{count}} measurements • Last: {{value}} {{unit}}",
+    "goalLabel": "Goal: {{value}} {{unit}}",
+    "goalAchieved": "Achieved!",
+    "remaining": "Remaining: {{value}} {{unit}}",
     "connectWellness": "Connect Whoop/Garmin for sleep and recovery data",
     "addBodyMeasurements": "Add body measurements to track progress",
     "noDataCategory": "No data in this category",

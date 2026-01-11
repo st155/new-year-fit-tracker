@@ -67,16 +67,16 @@ interface NavigationItemExtended {
 
 const biostackItems: NavigationItemExtended[] = [
   {
-    title: "Supplements",
+    title: "supplements",
     href: "/supplements",
     iconType: "activity",
-    description: "Supplement protocols & inventory management",
+    description: "descriptions.supplements",
   },
   {
-    title: "Medical Documents",
+    title: "medicalDocuments",
     href: "/medical-documents",
     iconType: "activity",
-    description: "Medical records, lab results & health data",
+    description: "descriptions.medicalDocuments",
   },
 ];
 
@@ -94,28 +94,28 @@ const navigationItems: NavigationItemExtended[] = [
     description: "descriptions.progress",
   },
   {
-    title: "Leaderboard",
+    title: "leaderboard",
     href: "/leaderboard",
     iconType: "stats",
-    description: "Top performers & achievements",
+    description: "descriptions.leaderboard",
   },
   {
-    title: "Goals",
+    title: "goals",
     href: "/goals",
     iconType: "stats",
-    description: "Track your fitness goals",
+    description: "descriptions.goals",
   },
   {
-    title: "Body",
+    title: "body",
     href: "/body",
     iconType: "stats",
-    description: "Body composition tracking",
+    description: "descriptions.body",
   },
   {
-    title: "Тренировки",
+    title: "workouts",
     href: "/workouts",
     iconType: "activity",
-    description: "AI-powered training plans",
+    description: "descriptions.workouts",
   },
   {
     title: "navigation.challenges",
@@ -124,10 +124,10 @@ const navigationItems: NavigationItemExtended[] = [
     description: "descriptions.challenges",
   },
   {
-    title: "Habits",
+    title: "habits",
     href: "/habits",
     iconType: "activity",
-    description: "Daily habits tracking",
+    description: "descriptions.habits",
   },
   {
     title: "navigation.feed",
@@ -151,7 +151,7 @@ const navigationItems: NavigationItemExtended[] = [
 
 const trainerItems: NavigationItemExtended[] = [
   {
-    title: "navigation.clients",
+    title: "clients",
     href: "/trainer-dashboard", 
     iconType: "trainer",
     description: "descriptions.clients",
@@ -258,7 +258,7 @@ export function MainNavigation() {
                                 className="scale-75"
                               />
                               <div className="flex items-center gap-2 text-sm font-medium leading-none">
-                                <span>{item.title}</span>
+                                <span>{t(item.title)}</span>
                                 {item.href === "/supplements" && unreadCount > 0 && (
                                   <Badge variant="destructive" className="h-5 min-w-5 px-1.5 text-xs">
                                     {unreadCount}
@@ -267,7 +267,7 @@ export function MainNavigation() {
                               </div>
                             </div>
                             <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                              {item.description}
+                              {t(item.description)}
                             </p>
                           </Link>
                         </NavigationMenuLink>
@@ -402,7 +402,7 @@ export function MainNavigation() {
                         />
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <span>{item.title}</span>
+                            <span>{t(item.title)}</span>
                             {item.href === "/supplements" && unreadCount > 0 && (
                               <Badge variant="destructive" className="h-5 min-w-5 px-1.5 text-xs">
                                 {unreadCount}
@@ -411,7 +411,7 @@ export function MainNavigation() {
                           </div>
                           {item.description && (
                             <div className="text-xs text-muted-foreground">
-                              {item.description}
+                              {t(item.description)}
                             </div>
                           )}
                         </div>

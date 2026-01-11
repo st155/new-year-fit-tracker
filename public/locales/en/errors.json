@@ -64,5 +64,6 @@
   "component": {
     "loadError": "Component loading error",
     "tryAgain": "Try again"
-  }
+  },
+  "pageLoadError": "Error loading {{page}} page"
 }

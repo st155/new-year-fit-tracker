@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import i18n from '@/i18n';
 
 export async function switchActivePlan(
   userId: string,
@@ -35,7 +36,7 @@ export async function switchActivePlan(
     console.error('[switchActivePlan] Unexpected error:', error);
     return { 
       success: false, 
-      error: error.message || 'Произошла ошибка при переключении плана' 
+      error: error.message || i18n.t('trainingPlan:errors.switchFailed') 
     };
   }
 }

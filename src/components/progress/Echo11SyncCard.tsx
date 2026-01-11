@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -7,6 +8,7 @@ import { CloudUpload, Check, AlertCircle, Loader2, RefreshCw } from 'lucide-reac
 import { cn } from '@/lib/utils';
 
 export function Echo11SyncCard() {
+  const { t } = useTranslation('integrations');
   const { syncLastNDays, progress, result, reset, isLoading } = useSyncHistoricalData();
   const [days, setDays] = useState(7);
 
@@ -26,13 +28,13 @@ export function Echo11SyncCard() {
           <CardTitle className="text-base">Echo11 AI Sync</CardTitle>
         </div>
         <CardDescription className="text-xs">
-          Отправить данные сна и восстановления в Echo11 для персонализации AI-рекомендаций
+          {t('echo11.description')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Day selector */}
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Период:</span>
+          <span className="text-sm text-muted-foreground">{t('echo11.period')}</span>
           <div className="flex gap-1">
             {[3, 7, 14, 30].map((d) => (
               <Button
@@ -43,7 +45,7 @@ export function Echo11SyncCard() {
                 onClick={() => setDays(d)}
                 disabled={isLoading}
               >
-                {d} дн
+                {t('echo11.dayShort', { count: d })}
               </Button>
             ))}
           </div>
@@ -82,7 +84,7 @@ export function Echo11SyncCard() {
                   <li key={i}>• {err}</li>
                 ))}
                 {result.errors.length > 3 && (
-                  <li>• и ещё {result.errors.length - 3} ошибок...</li>
+                  <li>• {t('echo11.moreErrors', { count: result.errors.length - 3 })}</li>
                 )}
               </ul>
             )}
@@ -110,7 +112,7 @@ export function Echo11SyncCard() {
                 className="flex-1"
               >
                 <RefreshCw className="h-4 w-4 mr-1" />
-                Сбросить
+                {t('echo11.reset')}
               </Button>
               <Button
                 size="sm"
@@ -118,7 +120,7 @@ export function Echo11SyncCard() {
                 className="flex-1"
               >
                 <CloudUpload className="h-4 w-4 mr-1" />
-                Повторить
+                {t('echo11.retry')}
               </Button>
             </>
           ) : (
@@ -131,12 +133,12 @@ export function Echo11SyncCard() {
               {isLoading ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                  Синхронизация...
+                  {t('echo11.syncing')}
                 </>
               ) : (
                 <>
                   <CloudUpload className="h-4 w-4 mr-1" />
-                  Синхронизировать {days} дней
+                  {t('echo11.syncDays', { count: days })}
                 </>
               )}
             </Button>

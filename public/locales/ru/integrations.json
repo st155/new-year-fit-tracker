@@ -338,6 +338,17 @@
     "runDataSync": "Запустите синхронизацию данных",
     "productionApproval": "<strong>Важно:</strong> После успешного тестирования вам нужно подать заявку на Production Approval в Whoop Developer Portal. Процесс может занять 1-2 недели."
   },
+  "echo11": {
+    "description": "Отправить данные сна и восстановления в Echo11 для персонализации AI-рекомендаций",
+    "period": "Период:",
+    "days": "{{count}} дней",
+    "dayShort": "{{count}} дн",
+    "moreErrors": "и ещё {{count}} ошибок...",
+    "reset": "Сбросить",
+    "retry": "Повторить",
+    "syncing": "Синхронизация...",
+    "syncDays": "Синхронизировать {{count}} дней"
+  },
   "dataMonitor": {
     "error": "Ошибка",
     "terraUserIdNotFound": "Terra User ID не найден",

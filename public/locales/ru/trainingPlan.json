@@ -173,6 +173,9 @@
       "seatedDumbbellPress": "Жим гантелей сидя"
     }
   },
+  "errors": {
+    "switchFailed": "Произошла ошибка при переключении плана"
+  },
   "toast": {
     "planNotFound": "План не найден",
     "planNotFoundOrDeleted": "План не найден или был удален",
