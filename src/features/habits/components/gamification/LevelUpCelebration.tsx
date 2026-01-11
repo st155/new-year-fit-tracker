@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Sparkles, Trophy } from 'lucide-react';
@@ -13,6 +14,8 @@ interface LevelUpCelebrationProps {
 }
 
 export function LevelUpCelebration({ open, onOpenChange, newLevel }: LevelUpCelebrationProps) {
+  const { t } = useTranslation('gamification');
+
   useEffect(() => {
     if (open) {
       // Trigger confetti
@@ -68,7 +71,7 @@ export function LevelUpCelebration({ open, onOpenChange, newLevel }: LevelUpCele
             )}>
               <div>
                 <div className="text-4xl font-bold">{newLevel}</div>
-                <div className="text-xs font-medium uppercase">Уровень</div>
+                <div className="text-xs font-medium uppercase">{t('levelUp.level')}</div>
               </div>
             </div>
           </div>
@@ -77,11 +80,11 @@ export function LevelUpCelebration({ open, onOpenChange, newLevel }: LevelUpCele
           <div className="space-y-2">
             <div className="flex items-center justify-center gap-2">
               <Sparkles className="h-6 w-6 text-amber-500" />
-              <h2 className="text-3xl font-bold text-foreground">Повышение уровня!</h2>
+              <h2 className="text-3xl font-bold text-foreground">{t('levelUp.title')}</h2>
               <Sparkles className="h-6 w-6 text-amber-500" />
             </div>
             <p className="text-xl font-medium text-muted-foreground">
-              Вы достигли уровня: <span className="text-primary font-bold">{levelTitle}</span>
+              {t('levelUp.reached')} <span className="text-primary font-bold">{levelTitle}</span>
             </p>
           </div>
 
@@ -90,7 +93,7 @@ export function LevelUpCelebration({ open, onOpenChange, newLevel }: LevelUpCele
             <div className="space-y-3 p-4 rounded-lg bg-muted/50 border border-border">
               <div className="flex items-center justify-center gap-2 text-sm font-semibold text-foreground">
                 <Trophy className="h-4 w-4 text-amber-500" />
-                <span>Новые награды разблокированы</span>
+                <span>{t('levelUp.rewardsUnlocked')}</span>
               </div>
               <div className="space-y-1">
                 {rewards.map((reward, index) => (
@@ -112,7 +115,7 @@ export function LevelUpCelebration({ open, onOpenChange, newLevel }: LevelUpCele
             size="lg"
             className="w-full"
           >
-            Продолжить
+            {t('levelUp.continue')}
           </Button>
         </div>
       </DialogContent>

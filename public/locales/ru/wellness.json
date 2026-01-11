@@ -1,0 +1,20 @@
+{
+  "completedToday": {
+    "title": "Выполнено сегодня",
+    "volume": "Объём",
+    "exercises": "Упражнений",
+    "sets": "Сетов",
+    "bestLift": "Лучший: {{exercise}} — {{weight}}кг × {{reps}}",
+    "cardio": "Кардио"
+  },
+  "units": {
+    "ton": "т",
+    "kg": "кг",
+    "km": "км",
+    "kcal": "ккал",
+    "bpm": "уд/мин",
+    "h": "ч",
+    "m": "м",
+    "min": "мин"
+  }
+}

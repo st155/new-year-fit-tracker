@@ -1,29 +1,33 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { useTodayCompletedWorkouts, CompletedWorkoutSummary } from "@/hooks/useTodayCompletedWorkouts";
 import { CheckCircle2, Dumbbell, Activity, Timer, Flame, Heart, MapPin, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { ru } from "date-fns/locale";
+import { ru, enUS } from "date-fns/locale";
 import { motion } from "framer-motion";
 
-function formatVolume(kg: number): string {
-  if (kg >= 1000) {
-    return `${(kg / 1000).toFixed(1)}т`;
-  }
-  return `${Math.round(kg)}кг`;
-}
-
-function formatDuration(minutes: number): string {
-  if (minutes >= 60) {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return mins > 0 ? `${hours}ч ${mins}м` : `${hours}ч`;
-  }
-  return `${minutes} мин`;
-}
-
 function StrengthWorkoutCard({ workout }: { workout: CompletedWorkoutSummary }) {
+  const { t, i18n } = useTranslation('wellness');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
+
+  const formatVolume = (kg: number): string => {
+    if (kg >= 1000) {
+      return `${(kg / 1000).toFixed(1)}${t('units.ton')}`;
+    }
+    return `${Math.round(kg)}${t('units.kg')}`;
+  };
+
+  const formatDuration = (minutes: number): string => {
+    if (minutes >= 60) {
+      const hours = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+      return mins > 0 ? `${hours}${t('units.h')} ${mins}${t('units.m')}` : `${hours}${t('units.h')}`;
+    }
+    return `${minutes} ${t('units.min')}`;
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -38,7 +42,7 @@ function StrengthWorkoutCard({ workout }: { workout: CompletedWorkoutSummary }) 
           <div>
             <p className="font-medium text-sm">{workout.workout_type}</p>
             <p className="text-xs text-muted-foreground">
-              {format(new Date(workout.start_time), 'HH:mm', { locale: ru })}
+              {format(new Date(workout.start_time), 'HH:mm', { locale: dateLocale })}
             </p>
           </div>
         </div>
@@ -56,7 +60,7 @@ function StrengthWorkoutCard({ workout }: { workout: CompletedWorkoutSummary }) 
             <p className="text-lg font-bold text-orange-400">
               {formatVolume(workout.total_volume)}
             </p>
-            <p className="text-[10px] text-muted-foreground">Объём</p>
+            <p className="text-[10px] text-muted-foreground">{t('completedToday.volume')}</p>
           </div>
         )}
         {workout.total_exercises !== undefined && (
@@ -64,7 +68,7 @@ function StrengthWorkoutCard({ workout }: { workout: CompletedWorkoutSummary }) 
             <p className="text-lg font-bold text-cyan-400">
               {workout.total_exercises}
             </p>
-            <p className="text-[10px] text-muted-foreground">Упражнений</p>
+            <p className="text-[10px] text-muted-foreground">{t('completedToday.exercises')}</p>
           </div>
         )}
         {workout.total_sets !== undefined && (
@@ -72,7 +76,7 @@ function StrengthWorkoutCard({ workout }: { workout: CompletedWorkoutSummary }) 
             <p className="text-lg font-bold text-purple-400">
               {workout.total_sets}
             </p>
-            <p className="text-[10px] text-muted-foreground">Сетов</p>
+            <p className="text-[10px] text-muted-foreground">{t('completedToday.sets')}</p>
           </div>
         )}
       </div>
@@ -81,7 +85,11 @@ function StrengthWorkoutCard({ workout }: { workout: CompletedWorkoutSummary }) 
         <div className="mt-3 flex items-center gap-2 text-xs text-amber-400 bg-amber-500/10 rounded-lg px-3 py-2">
           <Trophy className="w-3.5 h-3.5" />
           <span>
-            Лучший: {workout.best_lift.exercise} — {workout.best_lift.weight}кг × {workout.best_lift.reps}
+            {t('completedToday.bestLift', { 
+              exercise: workout.best_lift.exercise, 
+              weight: workout.best_lift.weight, 
+              reps: workout.best_lift.reps 
+            })}
           </span>
         </div>
       )}
@@ -90,7 +98,19 @@ function StrengthWorkoutCard({ workout }: { workout: CompletedWorkoutSummary }) 
 }
 
 function CardioWorkoutCard({ workout }: { workout: CompletedWorkoutSummary }) {
-  const workoutTypeLabel = workout.workout_type || 'Кардио';
+  const { t, i18n } = useTranslation('wellness');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
+
+  const formatDuration = (minutes: number): string => {
+    if (minutes >= 60) {
+      const hours = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+      return mins > 0 ? `${hours}${t('units.h')} ${mins}${t('units.m')}` : `${hours}${t('units.h')}`;
+    }
+    return `${minutes} ${t('units.min')}`;
+  };
+
+  const workoutTypeLabel = workout.workout_type || t('completedToday.cardio');
   
   return (
     <motion.div
@@ -106,7 +126,7 @@ function CardioWorkoutCard({ workout }: { workout: CompletedWorkoutSummary }) {
           <div>
             <p className="font-medium text-sm">{workoutTypeLabel}</p>
             <p className="text-xs text-muted-foreground">
-              {format(new Date(workout.start_time), 'HH:mm', { locale: ru })}
+              {format(new Date(workout.start_time), 'HH:mm', { locale: dateLocale })}
               {workout.source && ` • ${workout.source}`}
             </p>
           </div>
@@ -125,7 +145,7 @@ function CardioWorkoutCard({ workout }: { workout: CompletedWorkoutSummary }) {
             <p className="text-lg font-bold text-green-400">
               {workout.distance_km.toFixed(1)}
             </p>
-            <p className="text-[10px] text-muted-foreground">км</p>
+            <p className="text-[10px] text-muted-foreground">{t('units.km')}</p>
           </div>
         )}
         {workout.calories !== undefined && workout.calories > 0 && (
@@ -133,7 +153,7 @@ function CardioWorkoutCard({ workout }: { workout: CompletedWorkoutSummary }) {
             <p className="text-lg font-bold text-orange-400">
               {Math.round(workout.calories)}
             </p>
-            <p className="text-[10px] text-muted-foreground">ккал</p>
+            <p className="text-[10px] text-muted-foreground">{t('units.kcal')}</p>
           </div>
         )}
         {workout.avg_heart_rate !== undefined && workout.avg_heart_rate > 0 && (
@@ -141,7 +161,7 @@ function CardioWorkoutCard({ workout }: { workout: CompletedWorkoutSummary }) {
             <p className="text-lg font-bold text-red-400">
               {Math.round(workout.avg_heart_rate)}
             </p>
-            <p className="text-[10px] text-muted-foreground">уд/мин</p>
+            <p className="text-[10px] text-muted-foreground">{t('units.bpm')}</p>
           </div>
         )}
       </div>
@@ -150,6 +170,7 @@ function CardioWorkoutCard({ workout }: { workout: CompletedWorkoutSummary }) {
 }
 
 export function TodayCompletedWorkoutsCard() {
+  const { t } = useTranslation('wellness');
   const { user } = useAuth();
   const { data: workouts = [], isLoading } = useTodayCompletedWorkouts(user?.id);
 
@@ -173,7 +194,7 @@ export function TodayCompletedWorkoutsCard() {
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <CheckCircle2 className="w-4 h-4 text-green-400" />
-          Выполнено сегодня
+          {t('completedToday.title')}
           <span className="text-sm font-normal text-muted-foreground ml-auto">
             {workouts.length}
           </span>

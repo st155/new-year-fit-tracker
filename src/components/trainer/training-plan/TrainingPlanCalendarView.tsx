@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { WorkoutCard } from './WorkoutCard';
@@ -23,10 +24,29 @@ interface TrainingPlanCalendarViewProps {
   workouts: TrainingPlanWorkout[];
 }
 
-const DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-const DAYS_FULL = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
-
 export const TrainingPlanCalendarView = ({ workouts }: TrainingPlanCalendarViewProps) => {
+  const { t } = useTranslation('trainer');
+
+  const DAYS = [
+    t('trainingPlans.days.mon'),
+    t('trainingPlans.days.tue'),
+    t('trainingPlans.days.wed'),
+    t('trainingPlans.days.thu'),
+    t('trainingPlans.days.fri'),
+    t('trainingPlans.days.sat'),
+    t('trainingPlans.days.sun')
+  ];
+
+  const DAYS_FULL = [
+    t('trainingPlans.daysFull.monday'),
+    t('trainingPlans.daysFull.tuesday'),
+    t('trainingPlans.daysFull.wednesday'),
+    t('trainingPlans.daysFull.thursday'),
+    t('trainingPlans.daysFull.friday'),
+    t('trainingPlans.daysFull.saturday'),
+    t('trainingPlans.daysFull.sunday')
+  ];
+
   return (
     <div className="space-y-4">
       {/* Desktop grid view */}
@@ -46,7 +66,7 @@ export const TrainingPlanCalendarView = ({ workouts }: TrainingPlanCalendarViewP
                 ) : (
                   <Card className="h-full border-dashed border-muted-foreground/30">
                     <CardContent className="flex flex-col items-center justify-center h-full py-8">
-                      <Badge variant="outline" className="mb-2">Отдых</Badge>
+                      <Badge variant="outline" className="mb-2">{t('calendar.rest')}</Badge>
                       <Calendar className="h-6 w-6 text-muted-foreground/50" />
                     </CardContent>
                   </Card>
@@ -67,7 +87,7 @@ export const TrainingPlanCalendarView = ({ workouts }: TrainingPlanCalendarViewP
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-sm">{day}</h3>
                 {!workout && (
-                  <Badge variant="outline">Отдых</Badge>
+                  <Badge variant="outline">{t('calendar.rest')}</Badge>
                 )}
               </div>
               {workout ? (
@@ -77,7 +97,7 @@ export const TrainingPlanCalendarView = ({ workouts }: TrainingPlanCalendarViewP
                   <CardContent className="flex items-center justify-center py-6">
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Calendar className="h-5 w-5" />
-                      <span className="text-sm">Выходной день</span>
+                      <span className="text-sm">{t('calendar.restDay')}</span>
                     </div>
                   </CardContent>
                 </Card>

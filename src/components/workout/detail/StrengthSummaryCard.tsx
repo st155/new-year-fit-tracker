@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dumbbell, Target, Layers, Trophy } from "lucide-react";
 
@@ -14,11 +15,13 @@ export default function StrengthSummaryCard({
   totalSets,
   bestLift,
 }: StrengthSummaryProps) {
+  const { t } = useTranslation('workouts');
+
   const formatVolume = (kg: number) => {
     if (kg >= 1000) {
-      return `${(kg / 1000).toFixed(1)}т`;
+      return `${(kg / 1000).toFixed(1)}${t('detailUnits.ton')}`;
     }
-    return `${kg.toFixed(0)}кг`;
+    return `${kg.toFixed(0)}${t('detailUnits.kg')}`;
   };
 
   return (
@@ -26,7 +29,7 @@ export default function StrengthSummaryCard({
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center gap-2">
           <Dumbbell className="w-5 h-5 text-primary" />
-          Итоги тренировки
+          {t('strengthSummary.title')}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -37,21 +40,21 @@ export default function StrengthSummaryCard({
             <p className="text-2xl font-bold text-foreground">
               {formatVolume(totalVolume)}
             </p>
-            <p className="text-xs text-muted-foreground">Общий объём</p>
+            <p className="text-xs text-muted-foreground">{t('strengthSummary.totalVolume')}</p>
           </div>
 
           {/* Total Exercises */}
           <div className="bg-secondary/50 rounded-lg p-4 text-center">
             <Target className="w-5 h-5 mx-auto mb-2 text-secondary-foreground" />
             <p className="text-2xl font-bold text-foreground">{totalExercises}</p>
-            <p className="text-xs text-muted-foreground">Упражнений</p>
+            <p className="text-xs text-muted-foreground">{t('strengthSummary.exercises')}</p>
           </div>
 
           {/* Total Sets */}
           <div className="bg-secondary/50 rounded-lg p-4 text-center">
             <Dumbbell className="w-5 h-5 mx-auto mb-2 text-secondary-foreground" />
             <p className="text-2xl font-bold text-foreground">{totalSets}</p>
-            <p className="text-xs text-muted-foreground">Подходов</p>
+            <p className="text-xs text-muted-foreground">{t('strengthSummary.sets')}</p>
           </div>
 
           {/* Best Lift */}
@@ -59,7 +62,7 @@ export default function StrengthSummaryCard({
             <div className="bg-amber-500/10 rounded-lg p-4 text-center">
               <Trophy className="w-5 h-5 mx-auto mb-2 text-amber-500" />
               <p className="text-2xl font-bold text-foreground">
-                {bestLift.weight}кг
+                {bestLift.weight}{t('detailUnits.kg')}
               </p>
               <p className="text-xs text-muted-foreground truncate">
                 {bestLift.exercise}

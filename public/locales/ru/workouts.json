@@ -817,5 +817,31 @@
   },
   "fallback": {
     "planName": "Тренировки"
+  },
+  "splits": {
+    "title": "Сплиты по километрам",
+    "kilometer": "Километр {{km}}",
+    "pace": "Темп",
+    "time": "Время",
+    "estimatedNote": "Расчетные данные • Для точных сплитов требуется GPS-трек"
+  },
+  "strengthSummary": {
+    "title": "Итоги тренировки",
+    "totalVolume": "Общий объём",
+    "exercises": "Упражнений",
+    "sets": "Подходов"
+  },
+  "paceMetrics": {
+    "title": "Темп и скорость",
+    "avgPace": "Средний темп",
+    "avgSpeed": "Средняя скорость",
+    "calculatedNote": "⚡ Рассчитано на основе общей дистанции и времени"
+  },
+  "detailUnits": {
+    "perKm": "/км",
+    "minPerKm": "мин/км",
+    "kmPerH": "км/ч",
+    "ton": "т",
+    "kg": "кг"
   }
 }

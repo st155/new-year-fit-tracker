@@ -16,7 +16,7 @@ i18n
       loadPath: '/locales/{{lng}}/{{ns}}.json',
     },
     
-    ns: ['common', 'navigation', 'dashboard', 'auth', 'landing', 'leaderboard', 'fitnessData', 'body', 'trainer', 'goals', 'habits', 'home', 'challenges', 'progress', 'feed', 'supplements', 'workouts', 'mobileGoals', 'challengeDetail', 'goalDetail', 'habitDetail', 'workoutDetail', 'admin', 'health', 'notFound', 'profile', 'landingAI', 'trainerDashboard', 'habitTeams', 'recommendations', 'medicalDocs', 'trainingPlan', 'privacy', 'biomarkerDetail', 'metricDetail', 'habitTeamDetail', 'integrations', 'insights', 'units', 'errors', 'activity', 'dashboardPage', 'categoryDetail', 'loader', 'statsGrid', 'healthScore', 'trainerHealth', 'widgets', 'biostack', 'terraDiagnostics', 'gamification', 'testing', 'notifications'],
+    ns: ['common', 'navigation', 'dashboard', 'auth', 'landing', 'leaderboard', 'fitnessData', 'body', 'trainer', 'goals', 'habits', 'home', 'challenges', 'progress', 'feed', 'supplements', 'workouts', 'mobileGoals', 'challengeDetail', 'goalDetail', 'habitDetail', 'workoutDetail', 'admin', 'health', 'notFound', 'profile', 'landingAI', 'trainerDashboard', 'habitTeams', 'recommendations', 'medicalDocs', 'trainingPlan', 'privacy', 'biomarkerDetail', 'metricDetail', 'habitTeamDetail', 'integrations', 'insights', 'units', 'errors', 'activity', 'dashboardPage', 'categoryDetail', 'loader', 'statsGrid', 'healthScore', 'trainerHealth', 'widgets', 'biostack', 'terraDiagnostics', 'gamification', 'testing', 'notifications', 'wellness'],
     defaultNS: 'common',
     
     interpolation: {

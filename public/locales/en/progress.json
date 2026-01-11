@@ -163,5 +163,26 @@
     "completed": "completed",
     "inProgress": "in progress",
     "pts": "pts"
+  },
+  "pointsImpact": {
+    "title": "Points Calculator",
+    "potentialGain": "Potential Gain",
+    "points": "+{{count}} points",
+    "focusHint": "Focus on opportunities to {{action}} rank #{{rank}}",
+    "focusReach": "reach",
+    "focusOvertake": "overtake",
+    "topOpportunities": "Top Opportunities",
+    "emptyState": "Complete more goals to see opportunities",
+    "pointsRange": "{{from}} → {{to}} points",
+    "progress": "Progress",
+    "growthScenario": "Growth Scenario",
+    "ifComplete": "If you complete these 3 goals, you'll earn",
+    "andOvertake": "and overtake the next competitor! 🔥",
+    "andNeedMore": "and you'll need {{more}} more to reach rank #{{rank}}."
+  },
+  "priority": {
+    "high": "high",
+    "medium": "medium",
+    "low": "low"
   }
 }

@@ -1073,5 +1073,9 @@
     "helpFetch": "Fetch Terra Users — получить все активные Terra соединения из API",
     "helpDeauth": "Deauth — отключить соединение в Terra API и удалить локальный токен",
     "helpSupport": "Если после Deauth проблема остаётся — обратитесь в поддержку Terra с Reference ID"
+  },
+  "calendar": {
+    "rest": "Отдых",
+    "restDay": "Выходной день"
   }
 }
