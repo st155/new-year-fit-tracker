@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { TrainerClientCard } from '@/components/trainer/ui';
 import { Users, Plus } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { AddClientToPlanDialog } from './AddClientToPlanDialog';
 import { getIntlLocale } from '@/lib/date-locale';
 
@@ -35,6 +36,7 @@ export function TrainingPlanClientsTab({
   onViewClient,
   onRefresh,
 }: TrainingPlanClientsTabProps) {
+  const { t } = useTranslation('trainingPlan');
   const [showAddClientDialog, setShowAddClientDialog] = useState(false);
   
   const existingClientIds = assignedClients.map((a) => a.client_id);
@@ -45,11 +47,11 @@ export function TrainingPlanClientsTab({
         {/* Header with Add Button */}
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-medium">
-            Клиенты ({assignedClients.length})
+            {t('clients.title', { count: assignedClients.length })}
           </h3>
           <Button onClick={() => setShowAddClientDialog(true)} size="sm">
             <Plus className="h-4 w-4 mr-2" />
-            Добавить клиента
+            {t('clients.add')}
           </Button>
         </div>
 
@@ -57,13 +59,13 @@ export function TrainingPlanClientsTab({
           <Card>
             <CardContent className="py-12 text-center">
               <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-medium mb-2">Нет назначенных клиентов</h3>
+              <h3 className="text-lg font-medium mb-2">{t('clients.empty')}</h3>
               <p className="text-muted-foreground mb-4">
-                Этот план еще не назначен ни одному клиенту
+                {t('clients.emptyDesc')}
               </p>
               <Button onClick={() => setShowAddClientDialog(true)}>
                 <Plus className="h-4 w-4 mr-2" />
-                Добавить первого клиента
+                {t('clients.addFirst')}
               </Button>
             </CardContent>
           </Card>
@@ -75,7 +77,7 @@ export function TrainingPlanClientsTab({
                   <Card key={assignment.id}>
                     <CardContent className="py-6">
                       <p className="text-sm text-muted-foreground">
-                        Профиль клиента не найден
+                        {t('clients.profileNotFound')}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
                         ID: {assignment.client_id}
@@ -97,7 +99,7 @@ export function TrainingPlanClientsTab({
                   }}
                   healthScore={75}
                   isActive={assignment.status === 'active'}
-                  lastActivity={`Начал ${new Date(assignment.start_date).toLocaleDateString(getIntlLocale())}`}
+                  lastActivity={`${t('clients.started')} ${new Date(assignment.start_date).toLocaleDateString(getIntlLocale())}`}
                   onViewDetails={() => onViewClient(assignment.client_id)}
                 />
               );

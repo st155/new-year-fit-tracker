@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from "react-i18next";
 import { getIntlLocale } from '@/lib/date-locale';
 
 export interface UnifiedSupplementItem {
@@ -105,6 +106,7 @@ export function CompactSupplementChip({
   isToggling, 
   onAddPhoto 
 }: CompactSupplementChipProps) {
+  const { t } = useTranslation('biostack');
   const { data: linkedBiomarkers } = useLinkedBiomarkers(item.linkedBiomarkerIds);
 
   const getTrendIcon = (trend: 'up' | 'down' | 'stable' | null) => {
@@ -209,7 +211,7 @@ export function CompactSupplementChip({
                     }}
                     disabled={isToggling}
                     className="p-1 rounded-full bg-blue-500/20 hover:bg-blue-500/30 transition-colors disabled:opacity-50"
-                    title="Добавить ещё приём"
+                    title={t('intake.addMore')}
                   >
                     <Plus className="h-4 w-4 text-blue-400" />
                   </button>
@@ -221,7 +223,7 @@ export function CompactSupplementChip({
                     }}
                     disabled={isToggling}
                     className="p-1 rounded-full bg-green-500/20 hover:bg-green-500/30 transition-colors disabled:opacity-50"
-                    title="Отменить приём"
+                    title={t('intake.cancel')}
                   >
                     <CheckCircle2 className="h-5 w-5 text-green-500" />
                   </button>
@@ -249,25 +251,25 @@ export function CompactSupplementChip({
             
             <div className="space-y-1 text-xs">
               <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">Дозировка:</span>
+                <span className="text-muted-foreground">{t('tooltip.dosage')}</span>
                 <span className="text-foreground">{item.dosage}</span>
               </div>
               {item.form && (
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Форма:</span>
+                  <span className="text-muted-foreground">{t('tooltip.form')}</span>
                   <span className="text-foreground">{item.form}</span>
                 </div>
               )}
               {item.protocolName && (
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Протокол:</span>
+                  <span className="text-muted-foreground">{t('tooltip.protocol')}</span>
                   <span className="text-blue-400">📋 {item.protocolName}</span>
                 </div>
               )}
               {item.source === 'manual' && (
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Источник:</span>
-                  <span className="text-foreground">🏷️ Ручной ввод</span>
+                  <span className="text-muted-foreground">{t('tooltip.source')}</span>
+                  <span className="text-foreground">{t('tooltip.manualEntry')}</span>
                 </div>
               )}
             </div>
@@ -275,7 +277,7 @@ export function CompactSupplementChip({
             {item.takenToday && item.takenAt && (
               <div className="pt-2 border-t border-border/30">
                 <p className="text-xs text-green-500">
-                  ✅ Принято {item.todayIntakeCount > 1 ? `${item.todayIntakeCount} раз(а)` : ''} в {item.takenAt.toLocaleTimeString(getIntlLocale(), { hour: '2-digit', minute: '2-digit' })}
+                  {t('tooltip.taken')} {item.todayIntakeCount > 1 ? `${item.todayIntakeCount} ${t('tooltip.times')}` : ''} {t('tooltip.at')} {item.takenAt.toLocaleTimeString(getIntlLocale(), { hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
             )}
@@ -283,7 +285,7 @@ export function CompactSupplementChip({
             {/* Linked Biomarkers */}
             {linkedBiomarkers && linkedBiomarkers.length > 0 && (
               <div className="pt-2 border-t border-border/30 space-y-2">
-                <p className="text-xs font-semibold text-muted-foreground">Связанные биомаркеры:</p>
+                <p className="text-xs font-semibold text-muted-foreground">{t('tooltip.linkedBiomarkers')}</p>
                 <div className="space-y-1.5">
                   {linkedBiomarkers.map((biomarker) => (
                     <Link

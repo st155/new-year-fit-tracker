@@ -246,6 +246,18 @@
     "addMore": "Add another intake",
     "cancel": "Cancel intake"
   },
+  "tooltip": {
+    "dosage": "Dosage:",
+    "form": "Form:",
+    "protocol": "Protocol:",
+    "source": "Source:",
+    "manualEntry": "🏷️ Manual entry",
+    "taken": "✅ Taken",
+    "times": "time(s)",
+    "at": "at",
+    "addMoreHint": "Click + to add another",
+    "linkedBiomarkers": "Linked biomarkers:"
+  },
   "bulkUpload": {
     "title": "📷 Bulk Supplement Upload",
     "dropHint": "Drop 10-20 photos here or click to browse",

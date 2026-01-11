@@ -1,4 +1,24 @@
 {
+  "overview": {
+    "planInfo": "Plan Information",
+    "created": "Created:",
+    "duration": "Duration:",
+    "weeks": "weeks",
+    "totalWorkouts": "Total workouts:",
+    "activeClients": "Active clients:",
+    "efficiency": "Efficiency",
+    "averageProgress": "Average progress",
+    "goodResults": "The plan shows good results among assigned clients"
+  },
+  "clients": {
+    "title": "Clients ({{count}})",
+    "add": "Add client",
+    "empty": "No assigned clients",
+    "emptyDesc": "This plan has not been assigned to any clients yet",
+    "addFirst": "Add first client",
+    "profileNotFound": "Client profile not found",
+    "started": "Started"
+  },
   "noIdProvided": "Plan ID not provided",
   "backToPlans": "Back to plans",
   "loading": "Loading plan...",
