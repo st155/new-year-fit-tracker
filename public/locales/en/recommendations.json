@@ -156,5 +156,13 @@
   "workTogether": "\"{{name1}}\" and \"{{name2}}\" work great together ({{score}}% synergy)",
   "addHabitAtTime": "Add a habit {{time}}",
   "doingGreat": "You're doing great with \"{{name}}\" {{time}} - this is your best time!",
-  "setReminder": "Try setting a reminder"
+  "setReminder": "Try setting a reminder",
+  "toast": {
+    "unitsRecalculated": "Units recalculated",
+    "unitsRecalculatedDesc": "Updated {{count}} records",
+    "recalculationError": "Recalculation error",
+    "recommendationsReady": "Recommendations ready",
+    "recommendationsReadyDesc": "AI analyzed all your data",
+    "generationError": "Generation error"
+  }
 }

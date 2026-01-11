@@ -15,5 +15,15 @@
     "recordLabel": "Record",
     "activityLabel": "Activity",
     "to": "To"
+  },
+  "aiInsights": {
+    "metricsSynced": "{{count}} metrics synced today",
+    "goalsNeedAttention_one": "{{count}} goal needs attention",
+    "goalsNeedAttention_other": "{{count}} goals need attention",
+    "metricsLast24h": "{{count}} metric entries in last 24 hours",
+    "habitsActive_one": "{{count}} habit active",
+    "habitsActive_other": "{{count}} habits active",
+    "metricsDaily": "{{count}} metrics today - keep going!",
+    "startLogging": "Start logging metrics to get AI insights"
   }
 }

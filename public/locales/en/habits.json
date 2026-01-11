@@ -828,5 +828,75 @@
     "percentOfGoal": "{{percent}}% of goal",
     "goalAchieved": "✓ Goal achieved!",
     "valuePlaceholder": "Value"
+  },
+  "templates": {
+    "noSmoking": {
+      "name": "No Smoking",
+      "description": "Tracking time without smoking",
+      "milestones": {
+        "20": "🫁 After 20 minutes pulse and blood pressure normalize",
+        "480": "🩸 After 8 hours blood oxygen level increases",
+        "1440": "❤️ After 24 hours heart attack risk decreases",
+        "2880": "👃 After 2 days smell and taste improve",
+        "4320": "🫁 After 3 days breathing becomes easier",
+        "10080": "✨ After a week nicotine completely leaves the body",
+        "20160": "🩸 After 2 weeks blood circulation improves",
+        "43200": "💪 After a month lung function improves by 30%",
+        "525600": "🏆 After a year heart disease risk is halved"
+      }
+    },
+    "noAlcohol": {
+      "name": "Sober",
+      "description": "Sobriety and health recovery",
+      "milestones": {
+        "360": "🫀 After 6 hours liver begins to recover",
+        "1440": "😴 After 24 hours sleep improves, anxiety decreases",
+        "10080": "✨ After a week sleep quality is significantly better",
+        "43200": "💪 After a month immunity strengthens, skin glows",
+        "525600": "🏆 After a year liver disease risk is almost zero"
+      }
+    },
+    "intermittentFasting": {
+      "name": "Intermittent Fasting",
+      "description": "Intermittent fasting for health and energy",
+      "milestones": {
+        "720": "🔥 After 12h fat burning activates",
+        "960": "♻️ After 16h autophagy begins",
+        "1080": "💪 After 18h maximum fat burning",
+        "1440": "📈 After 24h growth hormone increases by 2000%"
+      }
+    },
+    "noSugar": {
+      "name": "No Sugar",
+      "description": "Giving up sugar for health and energy",
+      "milestones": {
+        "4320": "✨ After 3 days sugar cravings decrease",
+        "10080": "⚡ After a week energy stabilizes",
+        "43200": "✨ After a month skin noticeably improves",
+        "129600": "🏆 After 3 months weight stabilizes"
+      }
+    },
+    "noJunkFood": {
+      "name": "No Junk Food",
+      "description": "Healthy eating without junk food",
+      "milestones": {
+        "10080": "💪 After a week the body cleanses",
+        "43200": "✨ After a month energy increases",
+        "129600": "🏆 After 3 months weight normalizes"
+      }
+    },
+    "noWeed": {
+      "name": "No Cannabis",
+      "description": "Mental clarity and health",
+      "milestones": {
+        "1440": "🧠 After 24 hours mental clarity returns",
+        "4320": "💤 After 3 days sleep normalizes",
+        "10080": "💪 After a week memory improves",
+        "20160": "🎯 After 2 weeks focus is at peak",
+        "43200": "🌟 After a month lungs are cleansed",
+        "129600": "🏆 After 3 months cognitive functions are restored",
+        "259200": "🎉 After 6 months full recovery"
+      }
+    }
   }
 }

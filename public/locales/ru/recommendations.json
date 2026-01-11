@@ -156,5 +156,13 @@
   "workTogether": "\"{{name1}}\" и \"{{name2}}\" отлично работают вместе ({{score}}% синергия)",
   "addHabitAtTime": "Добавьте привычку {{time}}",
   "doingGreat": "Вы отлично справляетесь с \"{{name}}\" {{time}} - это ваше лучшее время!",
-  "setReminder": "Попробуйте установить напоминание"
+  "setReminder": "Попробуйте установить напоминание",
+  "toast": {
+    "unitsRecalculated": "Единицы пересчитаны",
+    "unitsRecalculatedDesc": "Обновлено {{count}} записей",
+    "recalculationError": "Ошибка пересчёта",
+    "recommendationsReady": "Рекомендации готовы",
+    "recommendationsReadyDesc": "AI проанализировал все ваши данные",
+    "generationError": "Ошибка генерации"
+  }
 }

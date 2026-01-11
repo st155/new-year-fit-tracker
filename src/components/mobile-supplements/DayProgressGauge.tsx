@@ -5,6 +5,7 @@
 import { motion } from 'framer-motion';
 import { CircularProgress } from '@/components/ui/circular-progress';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 interface DayProgressGaugeProps {
   taken: number;
@@ -12,6 +13,7 @@ interface DayProgressGaugeProps {
 }
 
 export function DayProgressGauge({ taken, total }: DayProgressGaugeProps) {
+  const { t } = useTranslation('supplements');
   const percentage = total > 0 ? Math.round((taken / total) * 100) : 0;
   
   // Color based on percentage
@@ -60,13 +62,13 @@ export function DayProgressGauge({ taken, total }: DayProgressGaugeProps) {
         {/* Stats */}
         <div className="space-y-1">
           <h2 className="text-lg font-semibold text-foreground">
-            Сегодня
+            {t('dayProgress.today')}
           </h2>
           <p className="text-muted-foreground text-sm">
             <span className="text-xl font-bold text-foreground">{taken}</span>
             {' / '}
             <span className="text-lg">{total}</span>
-            {' '}принято
+            {' '}{t('dayProgress.taken')}
           </p>
           {percentage === 100 && (
             <motion.p 
@@ -77,7 +79,7 @@ export function DayProgressGauge({ taken, total }: DayProgressGaugeProps) {
                 "text-green-500"
               )}
             >
-              ✓ Всё выполнено!
+              {t('dayProgress.allDone')}
             </motion.p>
           )}
         </div>

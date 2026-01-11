@@ -2,18 +2,21 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { getDateLocale } from '@/lib/date-locale';
+import i18n from '@/i18n';
 
 // Локализация известных английских сообщений об ошибках
 function localizeAiSummary(summary: string | null): string | null {
   if (!summary) return null;
   
+  const t = i18n.t.bind(i18n);
+  
   const translations: Record<string, string> = {
     'Document too large for automatic AI analysis. Please review manually or use specialized processing for large files.': 
-      'Документ слишком большой для автоматического анализа. Пожалуйста, просмотрите вручную.',
+      t('medicalDocs:category.docTooLarge'),
     'Failed to process document':
-      'Не удалось обработать документ',
+      t('medicalDocs:category.processingFailed'),
     'Processing error':
-      'Ошибка обработки',
+      t('medicalDocs:category.processingError'),
   };
   
   return translations[summary] || summary;
@@ -76,8 +79,10 @@ async function fetchCategoryDetail(categoryId: string, userId: string): Promise<
     }
   }
 
+  const t = i18n.t.bind(i18n);
+
   // Generate AI summary based on biomarker changes
-  let aiSummary = 'Нет доступного описания';
+  let aiSummary = t('medicalDocs:category.noDescription');
   
   if (categoryId === 'blood_test' || categoryId === 'lab_urine') {
     // Fetch latest biomarker data for intelligent summary
@@ -137,15 +142,15 @@ async function fetchCategoryDetail(categoryId: string, userId: string): Promise<
 
       // Generate summary
       const dateStr = format(new Date(latestDate), 'dd MMMM yyyy', { locale: getDateLocale() });
-      let summary = `По данным анализа от ${dateStr}: `;
+      let summary = t('medicalDocs:category.analysisDate', { date: dateStr });
       
       if (improved.length > 0) {
-        summary += `\n✅ Улучшились: ${improved.map(c => c!.name).join(', ')}`;
+        summary += `\n${t('medicalDocs:category.improved', { items: improved.map(c => c!.name).join(', ') })}`;
       }
       if (worsened.length > 0) {
-        summary += `\n⚠️ Требуют внимания: ${worsened.map(c => c!.name).join(', ')}`;
+        summary += `\n${t('medicalDocs:category.needsAttention', { items: worsened.map(c => c!.name).join(', ') })}`;
       }
-      summary += `\n\n📊 Всего отслеживается ${biomarkerMap.size} показателей`;
+      summary += `\n\n${t('medicalDocs:category.trackingTotal', { count: biomarkerMap.size })}`;
       
       aiSummary = summary;
     }
@@ -170,10 +175,10 @@ async function fetchCategoryDetail(categoryId: string, userId: string): Promise<
       if (hasRealContent) {
         aiSummary = uniqueSummaries.join('\n\n');
       } else {
-        aiSummary = `В категории ${documentCount} документ${documentCount === 1 ? '' : documentCount < 5 ? 'а' : 'ов'}. ${uniqueSummaries[0]}`;
+        aiSummary = `${t('medicalDocs:category.documentsInCategory', { count: documentCount })}. ${uniqueSummaries[0]}`;
       }
     } else {
-      aiSummary = 'Нет доступного описания';
+      aiSummary = t('medicalDocs:category.noDescription');
     }
   }
 
@@ -331,7 +336,7 @@ async function fetchCategoryDetail(categoryId: string, userId: string): Promise<
         biomarkerId: bodyPart, // For imaging, use body part as identifier
         name: bodyPart,
         icon: '🔬',
-        currentValue: latest.finding_text || 'Нет данных',
+        currentValue: latest.finding_text || t('medicalDocs:category.noData'),
         unit: '',
         history: [],
         trend: { min: 0, avg: 0, max: 0 },
