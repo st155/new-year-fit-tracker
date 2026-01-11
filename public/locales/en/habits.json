@@ -107,8 +107,24 @@
     "byCategory": "By categories",
     "byStatus": "By status",
     "uncategorized": "Uncategorized",
-    "completed": "Completed",
-    "notCompleted": "Not completed"
+    "completed": "Completed ({{count}})",
+    "notCompleted": "Not completed",
+    "notStarted": "Not started ({{count}})",
+    "inProgress": "In progress ({{count}})"
+  },
+  "empty": {
+    "noHabitsToDisplay": "No habits to display",
+    "addHabit": "Add habit"
+  },
+  "compactList": {
+    "title": "Compact list",
+    "habitsCount": "{{count}} habits",
+    "filters": {
+      "all": "All",
+      "today": "Today",
+      "active": "Active",
+      "atRisk": "At risk"
+    }
   },
   "archive": {
     "title": "Archive habit?",

@@ -102,7 +102,20 @@
     "enterHint": "Enter to send • Shift+Enter for new line",
     "user": "User"
   },
-"time": {
+  "dates": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "daysAgo": "{{count}}d ago"
+  },
+  "ai": {
+    "sending": "Sending",
+    "generating": "AI is generating a response",
+    "sendError": "Failed to send. Please try again.",
+    "actionError": "Error executing action",
+    "timeout": "Request timed out",
+    "refreshPage": "Try refreshing the page"
+  },
+  "time": {
     "today": "Today",
     "yesterday": "Yesterday",
     "selectDate": "Select date",

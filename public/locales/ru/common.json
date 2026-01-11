@@ -99,7 +99,20 @@
     "enterHint": "Enter для отправки • Shift+Enter для новой строки",
     "user": "Пользователь"
   },
-"time": {
+"dates": {
+    "today": "Сегодня",
+    "yesterday": "Вчера",
+    "daysAgo": "{{count}}д назад"
+  },
+  "ai": {
+    "sending": "Отправка",
+    "generating": "AI генерирует ответ",
+    "sendError": "Ошибка отправки. Попробуйте ещё раз.",
+    "actionError": "Ошибка при выполнении действия",
+    "timeout": "Время ожидания истекло",
+    "refreshPage": "Попробуйте обновить страницу"
+  },
+  "time": {
     "today": "Сегодня",
     "yesterday": "Вчера",
     "selectDate": "Выберите дату",

@@ -70,7 +70,10 @@
     "analysisError": "Ошибка анализа",
     "cannotGetPdfAccess": "Не удалось получить доступ к PDF файлу",
     "cannotConvertPdf": "Не удалось конвертировать PDF в изображения",
-    "measurementHistory": "История измерений"
+    "measurementHistory": "История измерений",
+    "loadingErrorTitle": "Ошибка загрузки",
+    "failedToLoadInBody": "Не удалось загрузить данные InBody. Попробуйте обновить страницу.",
+    "refresh": "Обновить"
   },
   
   "detail": {

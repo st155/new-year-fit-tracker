@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { HealthData } from "@/components/trainer/health-data/types";
+import i18n from "@/i18n";
 
 interface Goal {
   id: string;
@@ -476,22 +477,22 @@ export function useClientDetailData(clientUserId?: string) {
     } catch (err) {
       console.error('Error loading client data:', err);
       
-      // Создаем более информативные сообщения об ошибках
-      let errorMessage = 'Неизвестная ошибка при загрузке данных';
+      // Create more informative error messages using i18n
+      let errorMessage = i18n.t('trainerDashboard:clientErrors.unknown');
       
       if (err instanceof Error) {
         const message = err.message.toLowerCase();
         
         if (message.includes('permission') || message.includes('access denied') || message.includes('unauthorized')) {
-          errorMessage = 'У вас нет доступа к данным этого клиента. Проверьте права доступа.';
+          errorMessage = i18n.t('trainerDashboard:clientErrors.accessDenied');
         } else if (message.includes('network') || message.includes('fetch') || message.includes('connection')) {
-          errorMessage = 'Проблема с подключением к серверу. Проверьте интернет-соединение.';
+          errorMessage = i18n.t('trainerDashboard:clientErrors.networkError');
         } else if (message.includes('not found') || message.includes('no rows')) {
-          errorMessage = 'Данные клиента не найдены. Возможно, клиент был удален.';
+          errorMessage = i18n.t('trainerDashboard:clientErrors.notFound');
         } else if (message.includes('timeout')) {
-          errorMessage = 'Превышено время ожидания. Попробуйте снова.';
+          errorMessage = i18n.t('trainerDashboard:clientErrors.timeout');
         } else {
-          errorMessage = `Ошибка загрузки: ${err.message}`;
+          errorMessage = i18n.t('trainerDashboard:clientErrors.loadError', { message: err.message });
         }
         
         setError(new Error(errorMessage));

@@ -24,7 +24,7 @@ interface PullUpsProgressDetailProps {
 export function PullUpsProgressDetail({ onBack }: PullUpsProgressDetailProps) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { t } = useTranslation('goals');
+  const { t } = useTranslation(['goals', 'goalDetail']);
   const [pullUpsData, setPullUpsData] = useState<PullUpsData[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPullUps, setCurrentPullUps] = useState<number | null>(null);
@@ -136,7 +136,7 @@ export function PullUpsProgressDetail({ onBack }: PullUpsProgressDetailProps) {
         <CardHeader>
           <Button variant="ghost" onClick={onBack} className="w-fit">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Назад
+            {t('goalDetail:back')}
           </Button>
         </CardHeader>
         <CardContent>
@@ -162,7 +162,7 @@ export function PullUpsProgressDetail({ onBack }: PullUpsProgressDetailProps) {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Прогресс подтягиваний</h1>
+            <h1 className="text-2xl font-bold text-foreground">{t('goalDetail:pullups.title')}</h1>
           </div>
         </div>
         {pullUpGoal && (
@@ -187,7 +187,7 @@ export function PullUpsProgressDetail({ onBack }: PullUpsProgressDetailProps) {
             boxShadow: "0 0 20px rgba(168, 85, 247, 0.3)",
           }}
         >
-          <div className="text-sm text-muted-foreground mb-1">Текущий максимум</div>
+          <div className="text-sm text-muted-foreground mb-1">{t('goalDetail:pullups.currentMax')}</div>
           <div className="text-4xl font-bold text-[#A855F7]">
             {currentPullUps || '—'}
           </div>
@@ -201,7 +201,7 @@ export function PullUpsProgressDetail({ onBack }: PullUpsProgressDetailProps) {
             borderColor: "rgba(255, 255, 255, 0.1)",
           }}
         >
-          <div className="text-sm text-muted-foreground mb-1">За неделю</div>
+          <div className="text-sm text-muted-foreground mb-1">{t('goalDetail:pullups.weeklyChange')}</div>
           <div className="flex items-center gap-2 text-2xl font-bold">
             {weeklyChange !== null ? (
               <>
@@ -222,7 +222,7 @@ export function PullUpsProgressDetail({ onBack }: PullUpsProgressDetailProps) {
             borderColor: "rgba(255, 255, 255, 0.1)",
           }}
         >
-          <div className="text-sm text-muted-foreground mb-1">Цель</div>
+          <div className="text-sm text-muted-foreground mb-1">{t('goalDetail:goal')}</div>
           <div className="text-3xl font-bold text-foreground">{targetPullUps}</div>
         </div>
 
@@ -235,7 +235,7 @@ export function PullUpsProgressDetail({ onBack }: PullUpsProgressDetailProps) {
             boxShadow: "0 0 20px rgba(255, 107, 44, 0.3)",
           }}
         >
-          <div className="text-sm text-muted-foreground mb-1">Прогресс</div>
+          <div className="text-sm text-muted-foreground mb-1">{t('goalDetail:pullups.progress')}</div>
           <div className="text-3xl font-bold text-[#FF6B2C]">
             {getProgressPercentage().toFixed(0)}%
           </div>
@@ -288,7 +288,7 @@ export function PullUpsProgressDetail({ onBack }: PullUpsProgressDetailProps) {
                   labelStyle={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 12 }}
                   itemStyle={{ color: '#06B6D4', fontSize: 14, fontWeight: 'bold' }}
                   labelFormatter={(value) => formatTooltipDate(value as string)}
-                  formatter={(value: number) => [value, 'Подтягивания']}
+                  formatter={(value: number) => [value, t('goalDetail:pullups.pullUps')]}
                 />
                 <Bar 
                   dataKey="pullUps" 
@@ -317,14 +317,14 @@ export function PullUpsProgressDetail({ onBack }: PullUpsProgressDetailProps) {
           }}
         >
           <Target className="w-12 h-12 mx-auto mb-4 opacity-30" />
-          <p className="text-muted-foreground">{t('noPullUpsData')}</p>
-          <p className="text-sm text-muted-foreground">{t('addMeasurementsHint')}</p>
+          <p className="text-muted-foreground">{t('goalDetail:noPullUpsData')}</p>
+          <p className="text-sm text-muted-foreground">{t('goalDetail:addMeasurementsHint')}</p>
         </div>
       )}
 
       {/* History */}
       <div>
-        <h3 className="text-lg font-semibold mb-3 text-foreground">История тренировок</h3>
+        <h3 className="text-lg font-semibold mb-3 text-foreground">{t('goalDetail:pullups.trainingHistory')}</h3>
         <div className="space-y-2">
           {pullUpsData.slice(-10).reverse().map((item) => (
             <div 
@@ -337,7 +337,7 @@ export function PullUpsProgressDetail({ onBack }: PullUpsProgressDetailProps) {
             >
               <div>
                 <div className="font-semibold text-foreground text-lg">
-                  {item.pullUps} подтягиваний
+                  {t('goalDetail:pullups.pullUpsCount', { count: item.pullUps })}
                 </div>
                 <div className="text-sm text-muted-foreground">
                   {format(new Date(item.date), 'd MMMM yyyy', { locale: getDateLocale() })}

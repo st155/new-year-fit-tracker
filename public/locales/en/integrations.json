@@ -560,5 +560,10 @@
     "description": "Compare metrics from different devices and see how they differ",
     "tableTitle": "Comparison Table",
     "tableDescription": "Detailed value comparison from different sources"
+  },
+  "purge": {
+    "cancel": "Cancel",
+    "resetting": "Resetting...",
+    "performReset": "Perform Reset"
   }
 }
