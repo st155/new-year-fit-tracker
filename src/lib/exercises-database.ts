@@ -203,23 +203,5 @@ export const getEquipmentTypes = () => [
   { value: 'cable', label: i18n.t('workouts:equipment.cable') },
   { value: 'other', label: i18n.t('workouts:equipment.other') },
 ];
-
-// Legacy exports for backward compatibility (note: will use language at import time)
-export const EXERCISE_CATEGORIES = [
-  { value: 'chest', label: 'Грудь' },
-  { value: 'back', label: 'Спина' },
-  { value: 'legs', label: 'Ноги' },
-  { value: 'shoulders', label: 'Плечи' },
-  { value: 'arms', label: 'Руки' },
-  { value: 'core', label: 'Кор' },
-  { value: 'cardio', label: 'Кардио' }
-] as const;
-
-export const EQUIPMENT_TYPES = [
-  { value: 'barbell', label: 'Штанга' },
-  { value: 'dumbbell', label: 'Гантели' },
-  { value: 'machine', label: 'Тренажер' },
-  { value: 'bodyweight', label: 'Собственный вес' },
-  { value: 'cable', label: 'Кроссовер' },
-  { value: 'other', label: 'Другое' }
-] as const;
+// Legacy exports removed - use getExerciseCategories() and getEquipmentTypes() instead
+// These getter functions return localized labels based on current language
