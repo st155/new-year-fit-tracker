@@ -1,8 +1,9 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { format, parseISO } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru, enUS } from 'date-fns/locale';
 import type { MetricRecord } from '@/hooks/useMetricDetail';
 
 interface MetricHistoryProps {
@@ -10,61 +11,60 @@ interface MetricHistoryProps {
   metricName: string;
 }
 
-const getSourceDisplayName = (source: string): string => {
-  const nameMap: Record<string, string> = {
-    whoop: 'Whoop',
-    ultrahuman: 'Ultrahuman',
-    garmin: 'Garmin',
-    withings: 'Withings',
-    manual: 'Ручной ввод',
-  };
-  return nameMap[source.toLowerCase()] || source;
-};
-
-const formatValue = (value: number, metricName: string): string => {
-  if (metricName.toLowerCase().includes('sleep') && metricName.toLowerCase().includes('duration')) {
-    const hours = Math.floor(value);
-    const minutes = Math.round((value - hours) * 60);
-    return `${hours}:${minutes.toString().padStart(2, '0')}`;
-  }
-  
-  if (metricName === 'Steps') {
-    return Math.round(value).toLocaleString();
-  }
-  
-  return value % 1 === 0 ? value.toString() : value.toFixed(1);
-};
-
 export function MetricHistory({ records, metricName }: MetricHistoryProps) {
+  const { t, i18n } = useTranslation('metricDetail');
+  const dateLocale = i18n.language === 'ru' ? ru : enUS;
+
+  const getSourceDisplayName = (source: string): string => {
+    const key = `history.sources.${source.toLowerCase()}`;
+    const translated = t(key);
+    // If no translation found, return capitalized source name
+    return translated !== key ? translated : source.charAt(0).toUpperCase() + source.slice(1);
+  };
+
+  const formatValue = (value: number, name: string): string => {
+    if (name.toLowerCase().includes('sleep') && name.toLowerCase().includes('duration')) {
+      const hours = Math.floor(value);
+      const minutes = Math.round((value - hours) * 60);
+      return `${hours}:${minutes.toString().padStart(2, '0')}`;
+    }
+    
+    if (name === 'Steps') {
+      return Math.round(value).toLocaleString();
+    }
+    
+    return value % 1 === 0 ? value.toString() : value.toFixed(1);
+  };
+
   // Show only last 30 records in table
   const displayRecords = records.slice(0, 30);
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>История записей</CardTitle>
+        <CardTitle>{t('history.title')}</CardTitle>
       </CardHeader>
       <CardContent>
         {displayRecords.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">
-            Нет записей для отображения
+            {t('history.empty')}
           </p>
         ) : (
           <div className="rounded-md border overflow-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Дата</TableHead>
-                  <TableHead>Значение</TableHead>
-                  <TableHead>Источник</TableHead>
-                  <TableHead className="text-right">Качество</TableHead>
+                  <TableHead>{t('history.date')}</TableHead>
+                  <TableHead>{t('history.value')}</TableHead>
+                  <TableHead>{t('history.source')}</TableHead>
+                  <TableHead className="text-right">{t('history.quality')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {displayRecords.map((record) => (
                   <TableRow key={record.id}>
                     <TableCell className="font-medium">
-                      {format(parseISO(record.measurement_date), 'd MMM yyyy', { locale: ru })}
+                      {format(parseISO(record.measurement_date), 'd MMM yyyy', { locale: dateLocale })}
                     </TableCell>
                     <TableCell>
                       {formatValue(record.value, metricName)} {record.unit}

@@ -1,4 +1,11 @@
 {
+  "disciplines": {
+    "title": "Discipline Breakdown",
+    "noData": "No discipline data",
+    "focus": "Focus",
+    "goal_one": "{{count}} goal",
+    "goal_other": "{{count}} goals"
+  },
   "bodyMetrics": {
     "weight": { "label": "Weight", "unit": "kg" },
     "body_fat_percentage": { "label": "Body Fat %", "unit": "%" },

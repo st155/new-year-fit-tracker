@@ -1,0 +1,19 @@
+{
+  "streak": {
+    "title": "Streaks",
+    "titleFull": "Execution Streaks",
+    "subtitle": "Track your goal achievement consistency",
+    "current": "Current streak",
+    "best": "Best streak",
+    "milestone": "{{days}} days",
+    "daysLeft": "days",
+    "topGoals": "Top goals",
+    "totalDays": "days total",
+    "max": "(max: {{value}})",
+    "emptyState": "Start tracking goals to build a streak!",
+    "totalLabel": "Total days",
+    "recordLabel": "Record",
+    "activityLabel": "Activity",
+    "to": "To"
+  }
+}

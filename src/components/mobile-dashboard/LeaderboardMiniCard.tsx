@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Trophy, Crown, Medal } from 'lucide-react';
 import { useLeaderboard } from '@/hooks/useLeaderboard';
@@ -6,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 
 export function LeaderboardMiniCard() {
+  const { t } = useTranslation('leaderboard');
   const { user } = useAuth();
   const { leaderboard, loading: isLoading, userEntry } = useLeaderboard();
 
@@ -38,7 +40,7 @@ export function LeaderboardMiniCard() {
           <div className="w-7 h-7 rounded-lg bg-yellow-500/20 flex items-center justify-center">
             <Trophy className="w-4 h-4 text-yellow-500" />
           </div>
-          <span className="text-xs font-medium text-foreground">Рейтинг</span>
+          <span className="text-xs font-medium text-foreground">{t('miniCard.rating')}</span>
         </div>
 
         <div className="flex flex-col items-center py-1 flex-1 justify-center">
@@ -56,22 +58,22 @@ export function LeaderboardMiniCard() {
                 </span>
               </div>
               <span className="text-[10px] text-muted-foreground">
-                из {totalParticipants}
+                {t('miniCard.outOf', { total: totalParticipants })}
               </span>
               {userPoints > 0 && (
                 <span className="text-[10px] text-primary font-medium mt-1">
-                  {userPoints.toLocaleString()} очков
+                  {t('miniCard.points', { points: userPoints.toLocaleString() })}
                 </span>
               )}
             </>
           ) : (
             <span className="text-[11px] text-muted-foreground text-center">
-              Присоединитесь к челленджу
+              {t('miniCard.joinChallenge')}
             </span>
           )}
         </div>
 
-        <div className="text-[10px] text-primary mt-auto text-center">Таблица →</div>
+        <div className="text-[10px] text-primary mt-auto text-center">{t('miniCard.viewTable')}</div>
       </Link>
     </motion.div>
   );

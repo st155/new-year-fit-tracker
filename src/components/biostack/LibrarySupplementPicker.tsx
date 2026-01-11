@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +21,7 @@ export function LibrarySupplementPicker({
   onOpenChange,
   onSelect,
 }: LibrarySupplementPickerProps) {
+  const { t } = useTranslation('biostack');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
 
@@ -52,7 +54,7 @@ export function LibrarySupplementPicker({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Package className="h-5 w-5 text-green-500" />
-            Add from Library
+            {t('library.addFromLibrary')}
           </DialogTitle>
         </DialogHeader>
 
@@ -60,7 +62,7 @@ export function LibrarySupplementPicker({
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search your library..."
+            placeholder={t('library.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -107,14 +109,14 @@ export function LibrarySupplementPicker({
                           {entry.supplement_products.name}
                         </h4>
                         <p className="text-xs text-muted-foreground mb-2">
-                          {entry.supplement_products.brand || 'Unknown brand'}
+                          {entry.supplement_products.brand || t('library.unknownBrand')}
                         </p>
                         
                         <div className="flex flex-wrap gap-1 mt-1">
                           {isDisabled && (
                             <Badge className="bg-green-500/20 text-green-500 border-green-500/50 text-xs">
                               <CheckCircle2 className="h-3 w-3 mr-1" />
-                              In Stack
+                              {t('library.inStack')}
                             </Badge>
                           )}
 
@@ -125,7 +127,7 @@ export function LibrarySupplementPicker({
                           )}
 
                           <Badge variant="outline" className="text-xs text-muted-foreground">
-                            Сканировано {entry.scan_count}x
+                            {t('library.scannedCount', { count: entry.scan_count })}
                           </Badge>
                         </div>
                       </div>
@@ -137,7 +139,7 @@ export function LibrarySupplementPicker({
           ) : (
             <div className="text-center py-12 text-muted-foreground">
               <Package className="h-12 w-12 mx-auto mb-2 opacity-50" />
-              <p>В вашей библиотеке нет добавок</p>
+              <p>{t('library.empty')}</p>
             </div>
           )}
         </ScrollArea>
@@ -145,11 +147,11 @@ export function LibrarySupplementPicker({
         {/* Actions */}
         <div className="flex items-center justify-between pt-4 border-t border-neutral-800">
           <div className="text-sm text-muted-foreground">
-            Selected: {selectedProducts.size}
+            {t('library.selected', { count: selectedProducts.size })}
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t('library.cancel')}
             </Button>
             <Button
               onClick={handleAdd}
@@ -157,7 +159,7 @@ export function LibrarySupplementPicker({
               className="bg-green-600 hover:bg-green-700"
             >
               <Package className="mr-2 h-4 w-4" />
-              Add to Stack ({selectedProducts.size})
+              {t('library.addToStack', { count: selectedProducts.size })}
             </Button>
           </div>
         </div>

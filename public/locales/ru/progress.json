@@ -1,4 +1,12 @@
 {
+  "disciplines": {
+    "title": "Разбивка по дисциплинам",
+    "noData": "Нет данных по дисциплинам",
+    "focus": "Фокус",
+    "goal_one": "{{count}} цель",
+    "goal_few": "{{count}} цели",
+    "goal_many": "{{count}} целей"
+  },
   "bodyMetrics": {
     "weight": { "label": "Вес", "unit": "кг" },
     "body_fat_percentage": { "label": "Процент жира", "unit": "%" },

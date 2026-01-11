@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,10 +21,13 @@ interface Notification {
 }
 
 export function NotificationBell() {
+  const { t, i18n } = useTranslation('notifications');
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
+
+  const dateLocale = i18n.language === 'ru' ? 'ru-RU' : 'en-US';
 
   useEffect(() => {
     if (user) {
@@ -178,7 +182,7 @@ export function NotificationBell() {
         <Card className="border-0 shadow-none">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Уведомления</CardTitle>
+              <CardTitle className="text-lg">{t('title')}</CardTitle>
               {unreadCount > 0 && (
                 <Button 
                   variant="ghost" 
@@ -187,13 +191,13 @@ export function NotificationBell() {
                   className="text-xs"
                 >
                   <Check className="h-3 w-3 mr-1" />
-                  Прочитать все
+                  {t('markAllRead')}
                 </Button>
               )}
             </div>
             {unreadCount > 0 && (
               <CardDescription>
-                У вас {unreadCount} непрочитанных уведомлений
+                {t('unreadCount', { count: unreadCount })}
               </CardDescription>
             )}
           </CardHeader>
@@ -216,7 +220,7 @@ export function NotificationBell() {
               ) : notifications.length === 0 ? (
                 <div className="text-center py-8">
                   <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">Нет уведомлений</p>
+                  <p className="text-muted-foreground">{t('empty')}</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -250,7 +254,7 @@ export function NotificationBell() {
                           {notification.message}
                         </p>
                         <p className="text-xs text-muted-foreground mt-2">
-                          {new Date(notification.created_at).toLocaleDateString('ru-RU', {
+                          {new Date(notification.created_at).toLocaleDateString(dateLocale, {
                             day: 'numeric',
                             month: 'short',
                             hour: '2-digit',

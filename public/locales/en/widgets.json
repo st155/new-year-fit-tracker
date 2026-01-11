@@ -1,4 +1,14 @@
 {
+  "habitStreak": {
+    "title": "Habit Streaks",
+    "activeStreaks_one": "{{count}} active streak",
+    "activeStreaks_other": "{{count}} active streaks",
+    "days": "days",
+    "emptyState": "Start a streak - complete habits every day!",
+    "today": "Today",
+    "completed": "{{done}}/{{total}} completed",
+    "keepItUp": "Keep it up! 🔥"
+  },
   "myMetrics": "My Metrics:",
   "stats": {
     "metrics": "metrics",

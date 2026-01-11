@@ -1,5 +1,12 @@
 {
   "title": "Рейтинг",
+  "miniCard": {
+    "rating": "Рейтинг",
+    "outOf": "из {{total}}",
+    "points": "{{points}} очков",
+    "joinChallenge": "Присоединитесь к челленджу",
+    "viewTable": "Таблица →"
+  },
   "team": "Командный",
   "rank": "Место",
   "points": "очков",

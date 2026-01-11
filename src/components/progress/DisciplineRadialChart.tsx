@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -15,13 +16,9 @@ interface DisciplineRadialChartProps {
   disciplines: DisciplineData[];
 }
 
-const getPluralGoals = (count: number): string => {
-  if (count === 1) return 'цель';
-  if (count >= 2 && count <= 4) return 'цели';
-  return 'целей';
-};
-
 export const DisciplineRadialChart = ({ disciplines }: DisciplineRadialChartProps) => {
+  const { t } = useTranslation('progress');
+
   const getProgressColor = (progress: number) => {
     if (progress >= 80) return 'bg-success';
     if (progress >= 50) return 'bg-accent';
@@ -48,10 +45,10 @@ export const DisciplineRadialChart = ({ disciplines }: DisciplineRadialChartProp
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <span>Разбивка по дисциплинам</span>
+          <span>{t('disciplines.title')}</span>
           {weakestDiscipline && (
             <Badge variant="outline" className="text-xs">
-              🎯 Фокус: {weakestDiscipline.name}
+              🎯 {t('disciplines.focus')}: {weakestDiscipline.name}
             </Badge>
           )}
         </CardTitle>
@@ -59,7 +56,7 @@ export const DisciplineRadialChart = ({ disciplines }: DisciplineRadialChartProp
       <CardContent className="space-y-4">
         {disciplines.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
-            Нет данных по дисциплинам
+            {t('disciplines.noData')}
           </div>
         ) : (
           disciplines.map((discipline) => (
@@ -68,7 +65,7 @@ export const DisciplineRadialChart = ({ disciplines }: DisciplineRadialChartProp
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-sm">{discipline.name}</span>
                   <Badge variant="secondary" className="text-xs">
-                    {discipline.goals} {getPluralGoals(discipline.goals)}
+                    {t('disciplines.goal', { count: discipline.goals })}
                   </Badge>
                 </div>
                 <div className="flex items-center gap-2">
