@@ -330,7 +330,33 @@
     "whatHappened": "What happened? (optional)",
     "resetting": "Resetting...",
     "startFresh": "Start fresh",
-    "swipeRightHint": "Swipe right to mark complete"
+    "swipeRightHint": "Swipe right to mark complete",
+    "daysCount": "{{count}} days"
+  },
+  "menu": {
+    "edit": "Edit",
+    "history": "History",
+    "archive": "Archive",
+    "deletePermanently": "Delete permanently"
+  },
+  "chart": {
+    "completion": "Completion",
+    "trendPeriod": "{{trend}}% for period",
+    "excellent": "Great work! Keep it up! 🎉",
+    "good": "Good! A little more effort and it will be perfect 💪",
+    "needsImprovement": "There's room for improvement. You can do better! 🚀"
+  },
+  "streak": {
+    "resetReason": "Reset via widget",
+    "day": "day",
+    "day_one": "day",
+    "day_other": "days",
+    "resetting": "Resetting...",
+    "resetCounter": "Reset counter"
+  },
+  "team": {
+    "avgStreak": "~{{streak}} days",
+    "open": "Open"
   },
 "fastingControl": {
     "startFasting": "Start fasting",

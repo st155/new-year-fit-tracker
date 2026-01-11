@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Users, Flame } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 interface TeamHabitCardProps {
   team: {
@@ -16,6 +17,7 @@ interface TeamHabitCardProps {
 }
 
 export function TeamHabitCard({ team }: TeamHabitCardProps) {
+  const { t } = useTranslation('habits');
   const navigate = useNavigate();
 
   return (
@@ -35,7 +37,7 @@ export function TeamHabitCard({ team }: TeamHabitCardProps) {
             </Badge>
             <Badge variant="secondary" className="gap-1 text-xs">
               <Flame className="h-3 w-3 text-orange-500" />
-              ~{team.avg_streak} дней
+              {t('team.avgStreak', '~{{streak}} days', { streak: team.avg_streak })}
             </Badge>
           </div>
         </div>
@@ -45,7 +47,7 @@ export function TeamHabitCard({ team }: TeamHabitCardProps) {
           variant="outline"
           onClick={() => navigate('/habits-v3?tab=social')}
         >
-          Открыть
+          {t('team.open', 'Open')}
         </Button>
       </div>
     </Card>

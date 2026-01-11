@@ -500,5 +500,6 @@
     "daysSinceSync": "{{days}} days since last sync. Update data.",
     "quickSync": "Quick sync",
     "load30Days": "Load 30 days"
-  }
+  },
+  "autoRefresh": "Auto-refresh"
 }
