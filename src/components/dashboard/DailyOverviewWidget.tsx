@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 interface DailyStats {
   supplementsTaken: number;
@@ -18,6 +19,7 @@ interface DailyStats {
 }
 
 export function DailyOverviewWidget() {
+  const { t } = useTranslation('dashboardPage');
   const { user } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState<DailyStats>({
@@ -97,7 +99,7 @@ export function DailyOverviewWidget() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Activity className="h-5 w-5" />
-            Обзор дня
+            {t('dailyOverview.title')}
           </CardTitle>
         </CardHeader>
         <CardContent className="flex items-center justify-center py-8">
@@ -113,7 +115,7 @@ export function DailyOverviewWidget() {
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Activity className="h-5 w-5 text-primary" />
-            Обзор дня
+            {t('dailyOverview.title')}
           </div>
           <Badge variant={progressPercentage === 100 ? 'default' : 'secondary'}>
             {progressPercentage}%
@@ -124,7 +126,7 @@ export function DailyOverviewWidget() {
         {/* Progress Bar */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Прогресс дня</span>
+            <span className="text-muted-foreground">{t('dailyOverview.dayProgress')}</span>
             <span className="font-medium">
               {stats.supplementsTaken} / {stats.supplementsScheduled}
             </span>
@@ -142,13 +144,13 @@ export function DailyOverviewWidget() {
           >
             <div className="flex items-center gap-2 mb-2">
               <Pill className="h-4 w-4 text-green-500" />
-              <span className="text-xs font-medium text-muted-foreground">Добавки</span>
+              <span className="text-xs font-medium text-muted-foreground">{t('dailyOverview.supplements')}</span>
             </div>
             <div className="text-2xl font-bold text-green-500">
               {stats.supplementsTaken}
             </div>
             <div className="text-xs text-muted-foreground mt-1">
-              из {stats.supplementsScheduled} запланировано
+              {stats.supplementsScheduled} {t('dailyOverview.scheduled')}
             </div>
           </motion.div>
 
@@ -161,13 +163,13 @@ export function DailyOverviewWidget() {
           >
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="h-4 w-4 text-blue-500" />
-              <span className="text-xs font-medium text-muted-foreground">Метрики</span>
+              <span className="text-xs font-medium text-muted-foreground">{t('dailyOverview.metrics')}</span>
             </div>
             <div className="text-2xl font-bold text-blue-500">
               {stats.metricsLogged}
             </div>
             <div className="text-xs text-muted-foreground mt-1">
-              записано сегодня
+              {t('dailyOverview.recordedToday')}
             </div>
           </motion.div>
 
@@ -181,7 +183,7 @@ export function DailyOverviewWidget() {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <Target className="h-4 w-4 text-purple-500" />
-                <span className="text-xs font-medium text-muted-foreground">Цели</span>
+                <span className="text-xs font-medium text-muted-foreground">{t('dailyOverview.goals')}</span>
               </div>
               <CheckCircle2 className="h-5 w-5 text-purple-500" />
             </div>
@@ -190,7 +192,7 @@ export function DailyOverviewWidget() {
                 {stats.goalsAchieved}
               </div>
               <div className="text-sm text-muted-foreground">
-                / {stats.totalGoals} достигнуто
+                / {stats.totalGoals} {t('dailyOverview.achieved')}
               </div>
             </div>
           </motion.div>
@@ -200,7 +202,7 @@ export function DailyOverviewWidget() {
         {progressPercentage < 100 && (
           <div className="space-y-2 pt-2 border-t">
             <p className="text-xs font-medium text-muted-foreground mb-2">
-              Быстрые действия:
+              {t('dailyOverview.quickActions')}
             </p>
             <div className="flex gap-2">
               {stats.supplementsTaken < stats.supplementsScheduled && (
@@ -211,7 +213,7 @@ export function DailyOverviewWidget() {
                   className="flex-1 text-xs"
                 >
                   <Pill className="h-3 w-3 mr-1" />
-                  Принять добавки
+                  {t('dailyOverview.takeSupplements')}
                 </Button>
               )}
               {stats.metricsLogged === 0 && (
@@ -222,7 +224,7 @@ export function DailyOverviewWidget() {
                   className="flex-1 text-xs"
                 >
                   <TrendingUp className="h-3 w-3 mr-1" />
-                  Записать метрику
+                  {t('dailyOverview.recordMetric')}
                 </Button>
               )}
             </div>
@@ -238,10 +240,10 @@ export function DailyOverviewWidget() {
           >
             <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto mb-2" />
             <p className="text-sm font-medium text-green-500">
-              Отличная работа! 🎉
+              {t('dailyOverview.greatWork')}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Все добавки приняты сегодня
+              {t('dailyOverview.allSupplementsTaken')}
             </p>
           </motion.div>
         )}

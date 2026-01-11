@@ -10,6 +10,7 @@ import { FastingBentoWidget } from './FastingBentoWidget';
 import { StreakCard } from './StreakCard';
 import { DailyHabitRow } from './DailyHabitRow';
 import { useUserLevel } from '@/hooks/useUserLevel';
+import { useTranslation } from 'react-i18next';
 
 interface HabitsDashboardV4Props {
   habits: any[];
@@ -24,6 +25,7 @@ export function HabitsDashboardV4({
   onHabitComplete,
   isCompleting 
 }: HabitsDashboardV4Props) {
+  const { t } = useTranslation('habits');
   const { levelInfo } = useUserLevel();
 
   // Categorize habits
@@ -121,7 +123,7 @@ export function HabitsDashboardV4({
       {sortedDailyHabits.length > 0 && (
         <div className="space-y-2">
           <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider px-1">
-            Ежедневные привычки
+            {t('types.daily_check.label')}
           </h3>
           <motion.div className="space-y-2" layout>
             <AnimatePresence mode="popLayout">
@@ -146,8 +148,8 @@ export function HabitsDashboardV4({
           animate={{ opacity: 1, y: 0 }}
           className="text-center py-12 text-muted-foreground"
         >
-          <p className="text-lg mb-2">Нет привычек</p>
-          <p className="text-sm">Создайте первую привычку, чтобы начать</p>
+          <p className="text-lg mb-2">{t('smartView.noHabits')}</p>
+          <p className="text-sm">{t('smartView.noHabitsDesc')}</p>
         </motion.div>
       )}
     </div>

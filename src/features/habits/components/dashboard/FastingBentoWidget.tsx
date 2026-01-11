@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select';
 import { useFastingWindow } from '@/hooks/useFastingWindow';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 interface FastingBentoWidgetProps {
   habit: any;
@@ -29,6 +30,7 @@ const FASTING_MODES = [
 ];
 
 export function FastingBentoWidget({ habit, userId }: FastingBentoWidgetProps) {
+  const { t } = useTranslation('habits');
   const {
     status,
     startEating,
@@ -149,14 +151,14 @@ export function FastingBentoWidget({ habit, userId }: FastingBentoWidgetProps) {
           {/* Status text */}
           <div>
             <h3 className="font-semibold text-sm">
-              {status.isFasting ? '🔥 Голодание' : status.isEating ? '🍽️ Окно питания' : 'Интервальное голодание'}
+              {status.isFasting ? t('fasting.statusFasting') : status.isEating ? t('fasting.statusEating') : t('fasting.intermittentFasting')}
             </h3>
             <p className="text-xs text-muted-foreground">
               {status.isFasting 
-                ? `Цель: ${mode.fastingHours}ч голодания`
+                ? t('fasting.goalHours', { hours: mode.fastingHours })
                 : status.isEating
-                ? `Осталось: ${Math.max(0, mode.eatingHours - elapsedHours).toFixed(1)}ч`
-                : 'Нажмите для старта'}
+                ? t('fasting.remainingHours', { hours: Math.max(0, mode.eatingHours - elapsedHours).toFixed(1) })
+                : t('fasting.pressToStart')}
             </p>
           </div>
 
@@ -188,17 +190,17 @@ export function FastingBentoWidget({ habit, userId }: FastingBentoWidgetProps) {
             {status.isFasting ? (
               <>
                 <Utensils className="w-4 h-4" />
-                Окно питания
+                {t('fastingControl.eatingWindow')}
               </>
             ) : status.isEating ? (
               <>
                 <Pause className="w-4 h-4" />
-                Закончить есть
+                {t('fastingControl.endEating')}
               </>
             ) : (
               <>
                 <Play className="w-4 h-4" />
-                Начать голодание
+                {t('fastingControl.startFasting')}
               </>
             )}
           </Button>

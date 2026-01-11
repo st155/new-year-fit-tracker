@@ -1,5 +1,9 @@
 {
   "title": "Profile",
+  "account": {
+    "title": "Account",
+    "active": "Active"
+  },
   "subtitle": "Account management and settings",
   "updated": "Profile updated",
   "updatedDesc": "Data saved successfully",

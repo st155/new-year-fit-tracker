@@ -1,6 +1,10 @@
 {
   "title": "Goals",
   "subtitle": "Track your personal and challenge goals",
+  "section": {
+    "title": "Goals",
+    "createFirst": "Create your first goal"
+  },
   "newGoal": "New Goal",
   "refresh": "Refresh",
   "filters": {
