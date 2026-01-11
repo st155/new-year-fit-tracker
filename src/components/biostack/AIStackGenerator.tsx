@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -18,6 +19,7 @@ interface AIStackGeneratorProps {
 }
 
 export function AIStackGenerator({ open, onOpenChange, onSuccess }: AIStackGeneratorProps) {
+  const { t } = useTranslation('biostack');
   const [selectedRecommendations, setSelectedRecommendations] = useState<Set<number>>(new Set());
   const [showDeficiencies, setShowDeficiencies] = useState(true);
 
@@ -88,6 +90,15 @@ export function AIStackGenerator({ open, onOpenChange, onSuccess }: AIStackGener
     return 'border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.3)]';
   };
 
+  const getTimeSlotLabel = (slot: string) => {
+    switch (slot) {
+      case 'morning': return t('aiGenerator.timeSlots.morning');
+      case 'afternoon': return t('aiGenerator.timeSlots.afternoon');
+      case 'evening': return t('aiGenerator.timeSlots.evening');
+      default: return t('aiGenerator.timeSlots.asNeeded');
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] bg-neutral-950 border-neutral-800">
@@ -97,7 +108,7 @@ export function AIStackGenerator({ open, onOpenChange, onSuccess }: AIStackGener
             AI Stack Generator
           </DialogTitle>
           <p className="text-sm text-muted-foreground">
-            Персонализированные рекомендации на основе ваших анализов крови
+            {t('aiGenerator.subtitle')}
           </p>
         </DialogHeader>
 
@@ -109,9 +120,9 @@ export function AIStackGenerator({ open, onOpenChange, onSuccess }: AIStackGener
                 <Sparkles className="h-10 w-10 text-green-500" />
               </div>
               <div className="text-center space-y-2">
-                <h3 className="text-xl font-semibold">Готовы к персонализированным рекомендациям?</h3>
+                <h3 className="text-xl font-semibold">{t('aiGenerator.ready')}</h3>
                 <p className="text-sm text-muted-foreground max-w-md">
-                  Наш AI проанализирует ваши последние анализы крови и подберет добавки для устранения дефицитов
+                  {t('aiGenerator.description')}
                 </p>
               </div>
               <Button
@@ -120,7 +131,7 @@ export function AIStackGenerator({ open, onOpenChange, onSuccess }: AIStackGener
                 className="bg-green-600 hover:bg-green-700"
               >
                 <Sparkles className="mr-2 h-5 w-5" />
-                Анализировать мои анализы
+                {t('aiGenerator.analyzeButton')}
               </Button>
             </div>
           )}
@@ -133,8 +144,8 @@ export function AIStackGenerator({ open, onOpenChange, onSuccess }: AIStackGener
                   <Sparkles className="h-8 w-8 text-green-500 animate-spin" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold">Анализируем ваши анализы крови...</h3>
-                  <p className="text-sm text-muted-foreground">Это может занять 10-15 секунд</p>
+                  <h3 className="text-lg font-semibold">{t('aiGenerator.analyzing')}</h3>
+                  <p className="text-sm text-muted-foreground">{t('aiGenerator.analyzingTime')}</p>
                 </div>
               </div>
               <div className="space-y-4">
@@ -150,13 +161,13 @@ export function AIStackGenerator({ open, onOpenChange, onSuccess }: AIStackGener
             <div className="flex flex-col items-center justify-center py-12 space-y-4">
               <AlertCircle className="h-12 w-12 text-yellow-500" />
               <div className="text-center space-y-2">
-                <h3 className="text-lg font-semibold">Анализы крови не найдены</h3>
+                <h3 className="text-lg font-semibold">{t('aiGenerator.noBloodWork')}</h3>
                 <p className="text-sm text-muted-foreground">
-                  Загрузите анализы крови в раздел Мед.Док., чтобы получить персонализированные рекомендации
+                  {t('aiGenerator.uploadBloodWork')}
                 </p>
               </div>
               <Button onClick={() => onOpenChange(false)} variant="outline">
-                Перейти к Мед.Док.
+                {t('aiGenerator.goToMedDocs')}
               </Button>
             </div>
           )}
@@ -165,12 +176,12 @@ export function AIStackGenerator({ open, onOpenChange, onSuccess }: AIStackGener
             <div className="flex flex-col items-center justify-center py-12 space-y-4">
               <CheckCircle2 className="h-12 w-12 text-green-500" />
               <div className="text-center space-y-2">
-                <h3 className="text-lg font-semibold">Отличные результаты!</h3>
+                <h3 className="text-lg font-semibold">{t('aiGenerator.greatResults')}</h3>
                 <p className="text-sm text-muted-foreground">
-                  Все ваши биомаркеры в оптимальном диапазоне. Продолжайте в том же духе!
+                  {t('aiGenerator.allOptimal')}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Проанализировано биомаркеров: {analysis?.total_biomarkers}
+                  {t('aiGenerator.analyzed')}: {analysis?.total_biomarkers}
                 </p>
               </div>
             </div>
@@ -180,9 +191,9 @@ export function AIStackGenerator({ open, onOpenChange, onSuccess }: AIStackGener
             <div className="flex flex-col items-center justify-center py-12 space-y-4">
               <Package className="h-12 w-12 text-yellow-500" />
               <div className="text-center space-y-2">
-                <h3 className="text-lg font-semibold">База данных не заполнена</h3>
+                <h3 className="text-lg font-semibold">{t('aiGenerator.noDatabase')}</h3>
                 <p className="text-sm text-muted-foreground">
-                  Необходимо заполнить базу корреляций добавок с биомаркерами
+                  {t('aiGenerator.noDatabaseDesc')}
                 </p>
               </div>
             </div>
@@ -196,21 +207,21 @@ export function AIStackGenerator({ open, onOpenChange, onSuccess }: AIStackGener
                 <div className="p-4 rounded-lg border border-neutral-800 bg-neutral-900/50">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
                     <Activity className="h-4 w-4" />
-                    Проанализировано
+                    {t('aiGenerator.analyzed')}
                   </div>
                   <div className="text-2xl font-bold">{analysis?.total_biomarkers}</div>
                 </div>
                 <div className="p-4 rounded-lg border border-red-500/50 bg-red-500/5">
                   <div className="flex items-center gap-2 text-sm text-red-400 mb-1">
                     <TrendingDown className="h-4 w-4" />
-                    Дефициты
+                    {t('aiGenerator.deficiencies')}
                   </div>
                   <div className="text-2xl font-bold text-red-500">{analysis?.deficiencies_count}</div>
                 </div>
                 <div className="p-4 rounded-lg border border-green-500/50 bg-green-500/5">
                   <div className="flex items-center gap-2 text-sm text-green-400 mb-1">
                     <Sparkles className="h-4 w-4" />
-                    Рекомендации
+                    {t('aiGenerator.recommendations')}
                   </div>
                   <div className="text-2xl font-bold text-green-500">{analysis?.recommendations_count}</div>
                 </div>
@@ -222,7 +233,7 @@ export function AIStackGenerator({ open, onOpenChange, onSuccess }: AIStackGener
                   <CollapsibleTrigger className="flex items-center justify-between w-full p-4 rounded-lg border border-red-500/30 bg-red-500/5 hover:bg-red-500/10 transition-colors">
                     <div className="flex items-center gap-2">
                       <TrendingDown className="h-5 w-5 text-red-500" />
-                      <span className="font-semibold">Обнаруженные дефициты</span>
+                      <span className="font-semibold">{t('aiGenerator.detectedDeficiencies')}</span>
                       <Badge variant="destructive" className="ml-2">{deficiencies.length}</Badge>
                     </div>
                     <ChevronDown className={`h-5 w-5 transition-transform ${showDeficiencies ? 'rotate-180' : ''}`} />
@@ -241,7 +252,7 @@ export function AIStackGenerator({ open, onOpenChange, onSuccess }: AIStackGener
                             </div>
                           </div>
                           <Badge variant={def.status === 'low' ? 'destructive' : 'secondary'}>
-                            {def.status === 'low' ? 'Низкий' : 'Субоптимальный'}
+                            {def.status === 'low' ? t('aiGenerator.low') : t('aiGenerator.suboptimal')}
                           </Badge>
                         </div>
                       </div>
@@ -253,13 +264,15 @@ export function AIStackGenerator({ open, onOpenChange, onSuccess }: AIStackGener
               {/* Recommendations */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Персонализированные рекомендации</h3>
+                  <h3 className="text-lg font-semibold">{t('aiGenerator.personalizedRecs')}</h3>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handleSelectAll}
                   >
-                    {selectedRecommendations.size === recommendations.length ? 'Снять все' : 'Выбрать все'}
+                    {selectedRecommendations.size === recommendations.length 
+                      ? t('aiGenerator.deselectAll') 
+                      : t('aiGenerator.selectAll')}
                   </Button>
                 </div>
 
@@ -290,11 +303,11 @@ export function AIStackGenerator({ open, onOpenChange, onSuccess }: AIStackGener
                                 {isInLibrary ? (
                                   <Badge className="bg-green-500/20 text-green-500 border-green-500/50 text-xs">
                                     <Library className="h-3 w-3 mr-1" />
-                                    📚 В библиотеке
+                                    📚 {t('aiGenerator.inLibrary')}
                                   </Badge>
                                 ) : (
                                   <Badge variant="outline" className="text-xs border-blue-500 text-blue-500">
-                                    🆕 Новое
+                                    🆕 {t('aiGenerator.new')}
                                   </Badge>
                                 )}
                               </div>
@@ -307,9 +320,7 @@ export function AIStackGenerator({ open, onOpenChange, onSuccess }: AIStackGener
                             <span>•</span>
                             <span className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
-                              {rec.intake_times.map(t => 
-                                t === 'morning' ? 'Утро' : t === 'afternoon' ? 'День' : t === 'evening' ? 'Вечер' : 'По необходимости'
-                              ).join(', ')}
+                              {rec.intake_times.map(t => getTimeSlotLabel(t)).join(', ')}
                             </span>
                           </div>
                         </div>
@@ -329,7 +340,7 @@ export function AIStackGenerator({ open, onOpenChange, onSuccess }: AIStackGener
 
                         {rec.synergies && rec.synergies.length > 0 && (
                           <div className="pt-2 border-t border-neutral-800">
-                            <div className="text-xs text-muted-foreground mb-1">Синергия с:</div>
+                            <div className="text-xs text-muted-foreground mb-1">{t('aiGenerator.synergyWith')}</div>
                             <div className="flex flex-wrap gap-2">
                               {rec.synergies.map((syn, i) => (
                                 <Badge key={i} variant="secondary" className="text-xs">
@@ -353,14 +364,17 @@ export function AIStackGenerator({ open, onOpenChange, onSuccess }: AIStackGener
         {data?.success && recommendations.length > 0 && (
           <div className="flex items-center justify-between pt-4 border-t border-neutral-800">
             <div className="text-sm text-muted-foreground">
-              Выбрано: {selectedRecommendations.size} из {recommendations.length}
+              {t('aiGenerator.selectedCount', { 
+                selected: selectedRecommendations.size, 
+                total: recommendations.length 
+              })}
             </div>
             <div className="flex gap-2">
               <Button
                 variant="outline"
                 onClick={() => onOpenChange(false)}
               >
-                Отмена
+                {t('common:cancel')}
               </Button>
               <Button
                 onClick={handleAddToStack}
@@ -368,7 +382,9 @@ export function AIStackGenerator({ open, onOpenChange, onSuccess }: AIStackGener
                 className="bg-green-600 hover:bg-green-700"
               >
                 <Package className="mr-2 h-4 w-4" />
-                Добавить в стек ({selectedRecommendations.size})
+                {addToStackMutation.isPending 
+                  ? t('aiGenerator.adding') 
+                  : `${t('aiGenerator.addToStack')} (${selectedRecommendations.size})`}
               </Button>
             </div>
           </div>
