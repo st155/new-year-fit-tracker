@@ -107,6 +107,39 @@
     "yesterday": "Yesterday",
     "daysAgo": "{{count}}d ago"
   },
+  "stats": {
+    "min": "Min",
+    "avg": "Avg",
+    "max": "Max"
+  },
+  "emptyStates": {
+    "motivationalQuote": "Every champion was once a contender that refused to give up.",
+    "noGoals": {
+      "title": "No Goals Yet",
+      "description": "Start your fitness journey by setting your first goal. Track your progress and achieve greatness!",
+      "action": "Create Your First Goal"
+    },
+    "noChallenges": {
+      "title": "No Active Challenges",
+      "description": "Join a challenge to compete with others or create your own to invite friends and teammates!",
+      "createAction": "Create Challenge",
+      "exploreAction": "Explore Challenges"
+    },
+    "noActivity": {
+      "title": "No Activity Today",
+      "description": "Get moving! Log your first workout and start building your fitness streak.",
+      "action": "Log Workout"
+    },
+    "noData": {
+      "title": "No Data Available",
+      "description": "Start tracking your progress to see analytics and insights here.",
+      "action": "Get Started"
+    },
+    "leaderboardComingSoon": {
+      "title": "Leaderboard Coming Soon",
+      "description": "Complete workouts and log your progress to see your ranking among other participants!"
+    }
+  },
   "ai": {
     "sending": "Sending",
     "generating": "AI is generating a response",

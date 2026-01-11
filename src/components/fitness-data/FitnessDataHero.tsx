@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Link as LinkIcon, Activity, Clock, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -44,28 +45,30 @@ export function FitnessDataHero({
   lastSync,
   healthScore,
 }: FitnessDataHeroProps) {
+  const { t } = useTranslation('fitnessData');
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <StatCard
-        title="Активные интеграции"
+        title={t('hero.activeIntegrations')}
         value={activeIntegrations}
         icon={LinkIcon}
         gradient="from-blue-500 to-cyan-500"
       />
       <StatCard
-        title="Метрик собрано"
+        title={t('hero.metricsCollected')}
         value={totalMetrics}
         icon={Activity}
         gradient="from-purple-500 to-pink-500"
       />
       <StatCard
-        title="Последний sync"
+        title={t('hero.lastSync')}
         value={lastSync}
         icon={Clock}
         gradient="from-orange-500 to-red-500"
       />
       <StatCard
-        title="Health Score"
+        title={t('hero.healthScore')}
         value={`${healthScore}%`}
         icon={Heart}
         gradient="from-green-500 to-emerald-500"

@@ -79,5 +79,33 @@
       "high": "Высокая (14-18)",
       "extreme": "Экстрим (>18)"
     }
+  },
+  
+  "metricDescriptions": {
+    "bodyFat": "Процент жира в теле",
+    "weight": "Измерения веса",
+    "vo2max": "Кардиореспираторная выносливость",
+    "row2km": "Показатели гребли",
+    "recovery": "Дневное восстановление",
+    "steps": "Количество шагов",
+    "maxHr": "Максимальный пульс",
+    "dayStrain": "Дневная нагрузка"
+  },
+  "metricTitles": {
+    "row2km": "Гребля 2 км",
+    "maxHr": "Макс. ЧСС",
+    "dayStrain": "Дневная нагрузка"
+  },
+  "metricUnits": {
+    "mlKgMin": "мл/кг/мин",
+    "min": "мин",
+    "bpm": "уд/мин",
+    "strain": "нагрузка"
+  },
+  "hero": {
+    "activeIntegrations": "Активные интеграции",
+    "metricsCollected": "Метрик собрано",
+    "lastSync": "Последний sync",
+    "healthScore": "Health Score"
   }
 }

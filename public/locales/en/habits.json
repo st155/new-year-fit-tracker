@@ -195,7 +195,10 @@
       "days": "{{days}}d {{hours}}h",
       "hours": "{{hours}}h {{mins}}m",
       "minutes": "{{mins}}m"
-    }
+    },
+    "average": "Average",
+    "record": "Record",
+    "recentWindows": "Recent fasting windows"
   },
   "miniChart": {
     "completed": "Completed",

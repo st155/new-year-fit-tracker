@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { HealthData } from "./types";
 import { HealthMetricCard } from "./HealthMetricCard";
 
@@ -6,6 +7,8 @@ interface RecoveryMetricsProps {
 }
 
 export function RecoveryMetrics({ healthData }: RecoveryMetricsProps) {
+  const { t } = useTranslation('trainerDashboard');
+
   const getLatestValue = (key: keyof HealthData) => {
     const latestData = healthData.find(d => d[key] !== undefined && d[key] !== null);
     return latestData?.[key] as number | undefined;
@@ -45,7 +48,7 @@ export function RecoveryMetrics({ healthData }: RecoveryMetricsProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <HealthMetricCard
-        title="Recovery Score"
+        title={t('recoveryMetrics.recoveryScore')}
         icon="⚡"
         value={getLatestValue('recovery_score') || 0}
         unit="%"
@@ -55,7 +58,7 @@ export function RecoveryMetrics({ healthData }: RecoveryMetricsProps) {
       />
       
       <HealthMetricCard
-        title="Day Strain"
+        title={t('recoveryMetrics.dayStrain')}
         icon="💥"
         value={getLatestValue('day_strain') || 0}
         unit=""
@@ -65,7 +68,7 @@ export function RecoveryMetrics({ healthData }: RecoveryMetricsProps) {
       />
       
       <HealthMetricCard
-        title="Workout Strain"
+        title={t('recoveryMetrics.workoutStrain')}
         icon="🏋️"
         value={getLatestValue('workout_strain') || 0}
         unit=""
@@ -75,7 +78,7 @@ export function RecoveryMetrics({ healthData }: RecoveryMetricsProps) {
       />
       
       <HealthMetricCard
-        title="Body Battery"
+        title={t('recoveryMetrics.bodyBattery')}
         icon="🔋"
         value={getLatestValue('body_battery') || 0}
         unit=""
@@ -85,7 +88,7 @@ export function RecoveryMetrics({ healthData }: RecoveryMetricsProps) {
       />
       
       <HealthMetricCard
-        title="Stress Level"
+        title={t('recoveryMetrics.stressLevel')}
         icon="😰"
         value={getLatestValue('stress_level') || 0}
         unit=""

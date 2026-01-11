@@ -195,7 +195,10 @@
       "days": "{{days}}д {{hours}}ч",
       "hours": "{{hours}}ч {{mins}}м",
       "minutes": "{{mins}}м"
-    }
+    },
+    "average": "Среднее",
+    "record": "Рекорд",
+    "recentWindows": "Последние окна голодания"
   },
   "miniChart": {
     "completed": "Выполнено",

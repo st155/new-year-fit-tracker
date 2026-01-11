@@ -79,5 +79,33 @@
       "high": "High (14-18)",
       "extreme": "Extreme (>18)"
     }
+  },
+  
+  "metricDescriptions": {
+    "bodyFat": "Body fat percentage",
+    "weight": "Weight measurements",
+    "vo2max": "Cardiovascular fitness",
+    "row2km": "Rowing performance",
+    "recovery": "Daily recovery",
+    "steps": "Step count",
+    "maxHr": "Maximum heart rate",
+    "dayStrain": "Daily strain"
+  },
+  "metricTitles": {
+    "row2km": "2KM ROW",
+    "maxHr": "Max HR",
+    "dayStrain": "Day Strain"
+  },
+  "metricUnits": {
+    "mlKgMin": "ML/KG/MIN",
+    "min": "MIN",
+    "bpm": "BPM",
+    "strain": "STRAIN"
+  },
+  "hero": {
+    "activeIntegrations": "Active Integrations",
+    "metricsCollected": "Metrics Collected",
+    "lastSync": "Last Sync",
+    "healthScore": "Health Score"
   }
 }

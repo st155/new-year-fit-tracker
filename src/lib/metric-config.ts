@@ -33,7 +33,7 @@ export const createMetricConfig = (t: any): Record<MetricKey, MetricConfig> => (
     title: t('metrics.bodyFat'), 
     unit: t('metrics.units.percent'), 
     color: "body-fat", 
-    description: "Body fat percentage", 
+    description: t('fitnessData:metricDescriptions.bodyFat'), 
     category: "body",
     route: 'body_fat'
   },
@@ -42,25 +42,25 @@ export const createMetricConfig = (t: any): Record<MetricKey, MetricConfig> => (
     title: t('metrics.weight'), 
     unit: t('metrics.units.kg'), 
     color: "weight", 
-    description: "Weight measurements", 
+    description: t('fitnessData:metricDescriptions.weight'), 
     category: "body",
     route: 'weight'
   },
   vo2max: { 
     key: "vo2max", 
     title: t('metrics.vo2max'), 
-    unit: "ML/KG/MIN", 
+    unit: t('fitnessData:metricUnits.mlKgMin'), 
     color: "vo2max", 
-    description: "Cardiovascular fitness", 
+    description: t('fitnessData:metricDescriptions.vo2max'), 
     category: "performance",
     route: 'vo2max'
   },
   row_2km: { 
     key: "row_2km", 
-    title: "2KM ROW", 
-    unit: "MIN", 
+    title: t('fitnessData:metricTitles.row2km'), 
+    unit: t('fitnessData:metricUnits.min'), 
     color: "row", 
-    description: "Rowing performance", 
+    description: t('fitnessData:metricDescriptions.row2km'), 
     category: "performance",
     route: 'row_2km'
   },
@@ -69,7 +69,7 @@ export const createMetricConfig = (t: any): Record<MetricKey, MetricConfig> => (
     title: t('metrics.recovery'), 
     unit: t('metrics.units.percent'), 
     color: "recovery", 
-    description: "Daily recovery", 
+    description: t('fitnessData:metricDescriptions.recovery'), 
     category: "health",
     route: 'recovery'
   },
@@ -78,24 +78,24 @@ export const createMetricConfig = (t: any): Record<MetricKey, MetricConfig> => (
     title: t('metrics.steps'), 
     unit: t('metrics.units.steps'), 
     color: "steps", 
-    description: "Step count", 
+    description: t('fitnessData:metricDescriptions.steps'), 
     category: "health",
     route: 'steps'
   },
   max_hr: { 
     key: "max_hr", 
-    title: "Max HR", 
-    unit: "BPM", 
+    title: t('fitnessData:metricTitles.maxHr'), 
+    unit: t('fitnessData:metricUnits.bpm'), 
     color: "recovery", 
-    description: "Maximum heart rate", 
+    description: t('fitnessData:metricDescriptions.maxHr'), 
     category: "health"
   },
   day_strain: { 
     key: "day_strain", 
-    title: "Day Strain", 
-    unit: "STRAIN", 
+    title: t('fitnessData:metricTitles.dayStrain'), 
+    unit: t('fitnessData:metricUnits.strain'), 
     color: "vo2max", 
-    description: "Daily strain", 
+    description: t('fitnessData:metricDescriptions.dayStrain'), 
     category: "health"
   }
 });

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LineChart, Line, ResponsiveContainer, Tooltip } from "recharts";
@@ -20,6 +21,7 @@ interface HealthMetricCardProps {
 }
 
 export function HealthMetricCard({ title, icon, value, unit, source, data, trend }: HealthMetricCardProps) {
+  const { t } = useTranslation('common');
   const hasData = value !== undefined && value !== null && value !== 0;
   
   if (!hasData) return null;
@@ -82,15 +84,15 @@ export function HealthMetricCard({ title, icon, value, unit, source, data, trend
           {trend && (
             <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground">
               <div>
-                <div className="font-medium">Мин</div>
+                <div className="font-medium">{t('stats.min')}</div>
                 <div>{trend.min.toLocaleString()} {unit}</div>
               </div>
               <div>
-                <div className="font-medium">Сред</div>
+                <div className="font-medium">{t('stats.avg')}</div>
                 <div>{trend.avg.toLocaleString()} {unit}</div>
               </div>
               <div>
-                <div className="font-medium">Макс</div>
+                <div className="font-medium">{t('stats.max')}</div>
                 <div>{trend.max.toLocaleString()} {unit}</div>
               </div>
             </div>

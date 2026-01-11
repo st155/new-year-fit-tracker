@@ -1,4 +1,5 @@
 import { Clock, TrendingUp, Award } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { getIntlLocale } from '@/lib/date-locale';
 
@@ -15,6 +16,8 @@ interface FastingHistoryProps {
 }
 
 export function FastingHistory({ windows, className }: FastingHistoryProps) {
+  const { t } = useTranslation('habits');
+
   const formatDuration = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
@@ -34,7 +37,7 @@ export function FastingHistory({ windows, className }: FastingHistoryProps) {
         <div className="p-3 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
           <div className="flex items-center gap-2 mb-1">
             <TrendingUp className="h-4 w-4 text-primary" />
-            <span className="text-xs font-medium text-muted-foreground">Среднее</span>
+            <span className="text-xs font-medium text-muted-foreground">{t('fasting.average')}</span>
           </div>
           <div className="text-lg font-bold text-primary">
             {formatDuration(averageFasting)}
@@ -44,7 +47,7 @@ export function FastingHistory({ windows, className }: FastingHistoryProps) {
         <div className="p-3 rounded-lg bg-gradient-to-br from-amber-500/10 to-yellow-500/5 border border-amber-500/20">
           <div className="flex items-center gap-2 mb-1">
             <Award className="h-4 w-4 text-amber-500" />
-            <span className="text-xs font-medium text-muted-foreground">Рекорд</span>
+            <span className="text-xs font-medium text-muted-foreground">{t('fasting.record')}</span>
           </div>
           <div className="text-lg font-bold text-amber-600 dark:text-amber-400">
             {formatDuration(bestFasting)}
@@ -56,7 +59,7 @@ export function FastingHistory({ windows, className }: FastingHistoryProps) {
       <div>
         <p className="text-sm font-medium mb-2 flex items-center gap-2">
           <Clock className="h-4 w-4" />
-          Последние окна голодания
+          {t('fasting.recentWindows')}
         </p>
         <div className="space-y-2">
           {windows.map((window, index) => {
