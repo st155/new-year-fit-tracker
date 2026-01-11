@@ -7,6 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { CheckCircle2, XCircle, Loader2, X, Zap } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getIntlLocale } from '@/lib/date-locale';
 
 interface ProcessingLog {
   id: string;
@@ -214,7 +215,7 @@ export function BatchProcessingDialog({ open, onOpenChange, onComplete }: BatchP
                       <p className="text-xs text-destructive mt-1">{log.error}</p>
                     )}
                     <p className="text-xs text-muted-foreground mt-1">
-                      {log.timestamp.toLocaleTimeString('ru-RU')}
+                      {log.timestamp.toLocaleTimeString(getIntlLocale())}
                     </p>
                   </div>
                 </div>

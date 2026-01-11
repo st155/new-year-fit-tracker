@@ -9,6 +9,7 @@ import { WeeklyGoals } from "./weekly-goals";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from 'react-i18next';
+import { getIntlLocale } from '@/lib/date-locale';
 
 interface MetricCardProps {
   icon: React.ReactNode;
@@ -227,7 +228,7 @@ export function AdditionalMetrics() {
         if (strainRes.data && strainRes.data.length > 0) {
           const strainRecord = strainRes.data[0];
           newMetrics.strain.value = Number(strainRecord.value).toFixed(1);
-          newMetrics.strain.subtitle = new Date(strainRecord.measurement_date).toLocaleDateString('ru-RU');
+          newMetrics.strain.subtitle = new Date(strainRecord.measurement_date).toLocaleDateString(getIntlLocale());
         }
 
         // Active minutes

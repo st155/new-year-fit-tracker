@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { TrainerClientCard } from '@/components/trainer/ui';
 import { Users, Plus } from 'lucide-react';
 import { AddClientToPlanDialog } from './AddClientToPlanDialog';
+import { getIntlLocale } from '@/lib/date-locale';
 
 interface AssignedClient {
   id: string;
@@ -96,7 +97,7 @@ export function TrainingPlanClientsTab({
                   }}
                   healthScore={75}
                   isActive={assignment.status === 'active'}
-                  lastActivity={`Начал ${new Date(assignment.start_date).toLocaleDateString('ru-RU')}`}
+                  lastActivity={`Начал ${new Date(assignment.start_date).toLocaleDateString(getIntlLocale())}`}
                   onViewDetails={() => onViewClient(assignment.client_id)}
                 />
               );

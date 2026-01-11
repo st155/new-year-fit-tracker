@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrainerProgressRing } from '@/components/trainer/ui';
 import { Calendar, Target } from 'lucide-react';
+import { getIntlLocale } from '@/lib/date-locale';
 
 interface TrainingPlanOverviewTabProps {
   createdAt: string;
@@ -30,7 +31,7 @@ export function TrainingPlanOverviewTab({
           <div className="flex justify-between">
             <span className="text-muted-foreground">Создан:</span>
             <span className="font-medium">
-              {new Date(createdAt).toLocaleDateString('ru-RU')}
+              {new Date(createdAt).toLocaleDateString(getIntlLocale())}
             </span>
           </div>
           <div className="flex justify-between">

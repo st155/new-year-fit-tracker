@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { AlertCircle, ChevronRight, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { getIntlLocale } from '@/lib/date-locale';
 
 interface ErrorDetailsPanelProps {
   documentId: string;
@@ -84,7 +85,7 @@ export const ErrorDetailsPanel = ({
           </Badge>
           {processingErrorDetails?.timestamp && (
             <span className="text-xs text-muted-foreground">
-              {new Date(processingErrorDetails.timestamp).toLocaleString('ru-RU')}
+              {new Date(processingErrorDetails.timestamp).toLocaleString(getIntlLocale())}
             </span>
           )}
         </div>

@@ -13,6 +13,7 @@ import { Camera, Calendar, ChevronDown, Check } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn, parseTimeInput, isTimeUnit } from "@/lib/utils";
 import { isStrengthWeightGoal, formatStrengthGoal } from "@/lib/units";
+import { getIntlLocale } from '@/lib/date-locale';
 
 interface Goal {
   id: string;
@@ -280,7 +281,7 @@ export function QuickMeasurementDialog({
     if (form.measurement_date === today) {
       return t('quickMeasurement.today');
     }
-    return new Date(form.measurement_date).toLocaleDateString('ru-RU', { 
+    return new Date(form.measurement_date).toLocaleDateString(getIntlLocale(), { 
       day: 'numeric', 
       month: 'short' 
     });

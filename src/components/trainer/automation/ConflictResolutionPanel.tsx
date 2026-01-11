@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle, CheckCircle2, TrendingUp, TrendingDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { ConfidenceBadge } from '@/components/data-quality/ConfidenceBadge';
+import { getIntlLocale } from '@/lib/date-locale';
 
 interface MetricConflict {
   metric_name: string;
@@ -183,7 +184,7 @@ export function ConflictResolutionPanel({ clientId }: ConflictResolutionPanelPro
                 <div>
                   <div className="font-semibold">{conflict.metric_name}</div>
                   <div className="text-sm text-muted-foreground">
-                    {new Date(conflict.measurement_date).toLocaleDateString('ru-RU')}
+                    {new Date(conflict.measurement_date).toLocaleDateString(getIntlLocale())}
                   </div>
                 </div>
                 <Button

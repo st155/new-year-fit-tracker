@@ -1,5 +1,6 @@
 import { Clock, TrendingUp, Award } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getIntlLocale } from '@/lib/date-locale';
 
 interface FastingWindow {
   id: string;
@@ -92,7 +93,7 @@ export function FastingHistory({ windows, className }: FastingHistoryProps) {
                       <Award className="h-4 w-4 text-amber-500 animate-pulse" />
                     )}
                     <span className="text-xs text-muted-foreground">
-                      {new Date(window.eating_end!).toLocaleDateString('ru-RU', {
+                      {new Date(window.eating_end!).toLocaleDateString(getIntlLocale(), {
                         month: 'short',
                         day: 'numeric',
                         hour: '2-digit',

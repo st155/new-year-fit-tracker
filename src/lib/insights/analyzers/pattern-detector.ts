@@ -3,6 +3,8 @@
  * Detects temporal patterns and optimal times for activities
  */
 
+import { getIntlLocale } from '@/lib/date-locale';
+
 export interface TimePattern {
   metricName: string;
   timeOfDay?: string;
@@ -69,7 +71,7 @@ export function detectWeekdayPatterns(metricsWithTimestamp: any[]): TimePattern[
     if (!timestamp) return;
 
     const date = new Date(timestamp);
-    const dayOfWeek = date.toLocaleDateString('ru-RU', { weekday: 'long' });
+    const dayOfWeek = date.toLocaleDateString(getIntlLocale(), { weekday: 'long' });
     const key = `${item.metric_name}-${dayOfWeek}`;
 
     if (!patterns.has(key)) {
