@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BrainCircuit } from "lucide-react";
 
@@ -7,6 +8,8 @@ interface AIInsightCardProps {
 }
 
 export function AIInsightCard({ recoveryScore, message }: AIInsightCardProps) {
+  const { t } = useTranslation('workouts');
+
   return (
     <div>
       <h2 className="text-xs font-semibold text-green-400 uppercase tracking-wider mb-2">
@@ -16,14 +19,14 @@ export function AIInsightCard({ recoveryScore, message }: AIInsightCardProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <BrainCircuit className="w-5 h-5 text-green-400" />
-            AI Инсайт
+            {t('aiInsight.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
             <div className="flex items-baseline gap-2">
               <span className="text-3xl font-bold text-green-400">{recoveryScore}%</span>
-              <span className="text-sm text-muted-foreground">восстановление</span>
+              <span className="text-sm text-muted-foreground">{t('aiInsight.recovery')}</span>
             </div>
             <p className="text-sm text-foreground/80">{message}</p>
           </div>

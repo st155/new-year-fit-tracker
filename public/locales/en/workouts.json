@@ -87,6 +87,7 @@
   },
   "aiInsight": {
     "title": "AI Insight",
+    "recovery": "recovery",
     "highVolumeFeelingGood": "Great! You handled a high volume and feel good. I'll increase the load next workout. 💪",
     "hardWorkoutNormal": "A tough workout is normal! Your body is adapting. The next session will be adjusted for better recovery. 🌟",
     "impressiveVolume": "Impressive volume! This data will help me create the perfect program for your progress. 🎯",
