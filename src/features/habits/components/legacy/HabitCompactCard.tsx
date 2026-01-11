@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -14,6 +15,7 @@ import { HabitOptionsMenu } from "./HabitOptionsMenu";
 import { HabitEditDialog } from "./HabitEditDialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { getIntlLocale } from "@/lib/date-locale";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,6 +34,7 @@ interface HabitCompactCardProps {
 }
 
 export function HabitCompactCard({ habit, userId, onCompleted }: HabitCompactCardProps) {
+  const { t } = useTranslation('habits');
   const [elapsedTime, setElapsedTime] = useState<{
     days: number;
     hours: number;
@@ -157,7 +160,7 @@ export function HabitCompactCard({ habit, userId, onCompleted }: HabitCompactCar
             </div>
             <div className="text-xs text-muted-foreground mt-2 flex items-center justify-center gap-1">
               <Clock className="h-3 w-3" />
-              {Math.round(progress)}% цели
+              {t('dashboardCard.percentToGoal', { percent: Math.round(progress) })}
             </div>
           </div>
 
@@ -174,7 +177,7 @@ export function HabitCompactCard({ habit, userId, onCompleted }: HabitCompactCar
               variant={status.isFasting ? "excellent" : "fair"}
               className="text-sm px-4 py-1.5"
             >
-              {status.isFasting ? "🔥 Голодание" : "🍽️ Прием пищи"}
+              {status.isFasting ? t('dashboardCard.fasting') : t('dashboardCard.eating')}
             </Badge>
           </div>
         </div>
@@ -190,18 +193,17 @@ export function HabitCompactCard({ habit, userId, onCompleted }: HabitCompactCar
       <AlertDialog open={showArchiveDialog} onOpenChange={setShowArchiveDialog}>
         <AlertDialogContent className="glass-strong border-white/20">
           <AlertDialogHeader>
-            <AlertDialogTitle>Архивировать привычку?</AlertDialogTitle>
+            <AlertDialogTitle>{t('archive.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Привычка будет скрыта из списка активных, но все данные сохранятся.
-              Вы сможете восстановить её позже.
+              {t('archive.description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="glass-card border-white/20">
-              Отмена
+              {t('delete.cancel')}
             </AlertDialogCancel>
             <AlertDialogAction onClick={handleArchiveConfirm}>
-              Архивировать
+              {t('archive.confirm')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -210,30 +212,20 @@ export function HabitCompactCard({ habit, userId, onCompleted }: HabitCompactCar
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent className="glass-strong border-white/20">
           <AlertDialogHeader>
-            <AlertDialogTitle>Удалить привычку навсегда?</AlertDialogTitle>
+            <AlertDialogTitle>{t('delete.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Это действие нельзя отменить. Будут удалены:
-              <ul className="mt-2 list-disc list-inside text-sm">
-                <li>Все логи выполнения</li>
-                <li>Вся статистика и история</li>
-                <li>Все измерения и попытки</li>
-              </ul>
-              <div className="mt-3 p-3 bg-destructive/10 rounded-md border border-destructive/30">
-                <p className="text-sm font-semibold text-destructive">
-                  ⚠️ Если вы хотите временно скрыть привычку, используйте "Архивировать"
-                </p>
-              </div>
+              {t('delete.description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="glass-card border-white/20">
-              Отмена
+              {t('delete.cancel')}
             </AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleDeleteConfirm}
               className="bg-destructive hover:bg-destructive/90"
             >
-              Удалить навсегда
+              {t('delete.confirm')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -271,7 +263,7 @@ export function HabitCompactCard({ habit, userId, onCompleted }: HabitCompactCar
               {elapsedTime.hours}ч
             </div>
             <div className="text-xs text-muted-foreground mt-2">
-              Без срывов
+              {t('dashboardCard.withoutSlips')}
             </div>
           </div>
 
@@ -287,13 +279,13 @@ export function HabitCompactCard({ habit, userId, onCompleted }: HabitCompactCar
             {currentAttempt && (
               <Badge variant="fair" className="flex items-center gap-1 text-xs">
                 <Flame className="h-3 w-3" />
-                С {new Date(currentAttempt.start_date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
+                {t('dashboardCard.since', { date: new Date(currentAttempt.start_date).toLocaleDateString(getIntlLocale(), { day: 'numeric', month: 'short' }) })}
               </Badge>
             )}
             
             {moneySaved !== null && moneySaved > 0 && (
               <Badge variant="excellent" className="flex items-center gap-1 text-xs font-bold">
-                💰 {moneySaved.toLocaleString('ru-RU')} ₽
+                💰 {moneySaved.toLocaleString(getIntlLocale())} ₽
               </Badge>
             )}
           </div>
@@ -310,18 +302,17 @@ export function HabitCompactCard({ habit, userId, onCompleted }: HabitCompactCar
       <AlertDialog open={showArchiveDialog} onOpenChange={setShowArchiveDialog}>
         <AlertDialogContent className="glass-strong border-white/20">
           <AlertDialogHeader>
-            <AlertDialogTitle>Архивировать привычку?</AlertDialogTitle>
+            <AlertDialogTitle>{t('archive.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Привычка будет скрыта из списка активных, но все данные сохранятся.
-              Вы сможете восстановить её позже.
+              {t('archive.description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="glass-card border-white/20">
-              Отмена
+              {t('delete.cancel')}
             </AlertDialogCancel>
             <AlertDialogAction onClick={handleArchiveConfirm}>
-              Архивировать
+              {t('archive.confirm')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -330,30 +321,20 @@ export function HabitCompactCard({ habit, userId, onCompleted }: HabitCompactCar
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent className="glass-strong border-white/20">
           <AlertDialogHeader>
-            <AlertDialogTitle>Удалить привычку навсегда?</AlertDialogTitle>
+            <AlertDialogTitle>{t('delete.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Это действие нельзя отменить. Будут удалены:
-              <ul className="mt-2 list-disc list-inside text-sm">
-                <li>Все логи выполнения</li>
-                <li>Вся статистика и история</li>
-                <li>Все измерения и попытки</li>
-              </ul>
-              <div className="mt-3 p-3 bg-destructive/10 rounded-md border border-destructive/30">
-                <p className="text-sm font-semibold text-destructive">
-                  ⚠️ Если вы хотите временно скрыть привычку, используйте "Архивировать"
-                </p>
-              </div>
+              {t('delete.description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="glass-card border-white/20">
-              Отмена
+              {t('delete.cancel')}
             </AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleDeleteConfirm}
               className="bg-destructive hover:bg-destructive/90"
             >
-              Удалить навсегда
+              {t('delete.confirm')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -398,7 +379,7 @@ export function HabitCompactCard({ habit, userId, onCompleted }: HabitCompactCar
               <CheckCircle2 className="h-16 w-16 text-green-500 mb-2" />
             </motion.div>
             <Badge variant="excellent" className="text-sm">
-              ✓ Выполнено
+              {t('dashboardCard.completed')}
             </Badge>
           </div>
         ) : habit.habit_type === "numeric_counter" && targetValue ? (
@@ -423,7 +404,7 @@ export function HabitCompactCard({ habit, userId, onCompleted }: HabitCompactCar
         ) : (
           <div className="text-center py-6">
             <div className="text-sm text-muted-foreground">
-              Не выполнено
+              {t('dashboardCard.notCompleted')}
             </div>
           </div>
         )}

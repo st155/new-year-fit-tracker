@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
@@ -16,6 +17,7 @@ import {
 } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 import { useSystemStatus } from '@/hooks/metrics/useSystemStatus';
+import { getIntlLocale } from '@/lib/date-locale';
 
 type ServiceStatus = 'operational' | 'degraded' | 'down' | 'checking';
 
@@ -26,6 +28,7 @@ interface SystemHealth {
 }
 
 export function SystemHealthIndicator() {
+  const { t } = useTranslation('integrations');
   const [health, setHealth] = useState<SystemHealth>({
     supabase: 'checking',
     terra: 'checking',
@@ -117,47 +120,47 @@ export function SystemHealthIndicator() {
   const getStatusText = (status: ServiceStatus) => {
     switch (status) {
       case 'operational':
-        return 'Работает';
+        return t('system.operational');
       case 'degraded':
-        return 'Проблемы';
+        return t('system.degraded');
       case 'down':
-        return 'Недоступно';
+        return t('system.down');
       case 'checking':
-        return 'Проверка...';
+        return t('system.checking');
     }
   };
 
   const getTerraDescription = (): string => {
-    if (!systemStatus) return 'Проверка...';
+    if (!systemStatus) return t('system.checking');
     
     const { webhooksLast1h, pendingJobs, processingJobs, lastProcessedTime } = systemStatus;
     
     // Critical: Queue is stalled while webhooks are coming
     if (webhooksLast1h > 0 && pendingJobs > 5) {
-      return `⚠️ Очередь застопорилась: ${pendingJobs} задач ожидают обработки. Вебхуки приходят, но не обрабатываются.`;
+      return `⚠️ ${t('system.queueStalled', { pending: pendingJobs })}`;
     }
     
     if (webhooksLast1h === 0) {
-      return 'Нет данных от устройств за час. Проверьте подключения.';
+      return t('system.noDeviceData');
     }
     
     if (pendingJobs > 5) {
-      return `Застой в очереди: ${pendingJobs} задач`;
+      return t('system.queueBacklog', { pending: pendingJobs });
     }
     
     if (processingJobs > 0) {
-      return `Обрабатывается: ${processingJobs} задач`;
+      return t('system.processing', { count: processingJobs });
     }
     
     if (lastProcessedTime) {
       const minutes = Math.floor((Date.now() - new Date(lastProcessedTime).getTime()) / (1000 * 60));
       if (minutes < 60) {
-        return `Обработано ${minutes} мин назад`;
+        return t('system.processedMinAgo', { minutes });
       }
-      return `Обработано ${Math.floor(minutes / 60)}ч назад`;
+      return t('system.processedHoursAgo', { hours: Math.floor(minutes / 60) });
     }
     
-    return 'Данные обрабатываются нормально';
+    return t('system.dataProcessingNormal');
   };
 
   const getStatusColor = (status: ServiceStatus) => {
@@ -197,13 +200,13 @@ export function SystemHealthIndicator() {
           className="gap-2"
         >
           <div className={`h-2 w-2 rounded-full ${getStatusColor(overallStatus)}`} />
-          <span className="text-xs">Статус системы</span>
+          <span className="text-xs">{t('system.title')}</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h4 className="font-semibold">Статус системы</h4>
+            <h4 className="font-semibold">{t('system.title')}</h4>
             <Button
               variant="ghost"
               size="sm"
@@ -220,7 +223,7 @@ export function SystemHealthIndicator() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {getStatusIcon(health.supabase)}
-                  <p className="text-sm font-medium">БД & Авторизация</p>
+                  <p className="text-sm font-medium">{t('system.dbAuth')}</p>
                 </div>
                 <Badge 
                   variant={getStatusBadgeVariant(health.supabase)}
@@ -231,8 +234,8 @@ export function SystemHealthIndicator() {
               </div>
               <p className="text-xs text-muted-foreground">
                 {health.supabase === 'operational' 
-                  ? 'База данных работает стабильно' 
-                  : 'Проблемы с подключением к БД'}
+                  ? t('system.dbStable')
+                  : t('system.dbIssues')}
               </p>
             </div>
 
@@ -241,7 +244,7 @@ export function SystemHealthIndicator() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {getStatusIcon(health.terra)}
-                  <p className="text-sm font-medium">Устройства (Terra API)</p>
+                  <p className="text-sm font-medium">{t('system.terraApi')}</p>
                 </div>
                 <Badge 
                   variant={getStatusBadgeVariant(health.terra)}
@@ -255,9 +258,9 @@ export function SystemHealthIndicator() {
               </p>
               {systemStatus && (
                 <div className="flex gap-3 text-xs text-muted-foreground mt-1">
-                  <span>Вебхуки 1ч: {systemStatus.webhooksLast1h}</span>
-                  <span>Очередь: {systemStatus.pendingJobs}</span>
-                  <span>Обработка: {systemStatus.processingJobs}</span>
+                  <span>{t('system.webhooks1h')}: {systemStatus.webhooksLast1h}</span>
+                  <span>{t('system.queue')}: {systemStatus.pendingJobs}</span>
+                  <span>{t('system.processingLabel')}: {systemStatus.processingJobs}</span>
                 </div>
               )}
             </div>
@@ -265,7 +268,7 @@ export function SystemHealthIndicator() {
 
           {/* Last Check */}
           <div className="text-xs text-muted-foreground text-center">
-            Последняя проверка: {health.lastCheck.toLocaleTimeString('ru-RU')}
+            {t('system.lastCheck')}: {health.lastCheck.toLocaleTimeString(getIntlLocale())}
           </div>
 
           {/* Status Links */}
@@ -276,7 +279,7 @@ export function SystemHealthIndicator() {
               rel="noopener noreferrer"
               className="flex items-center justify-between text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
-              <span>Статус Supabase</span>
+              <span>{t('system.supabaseStatus')}</span>
               <ExternalLink className="h-3 w-3" />
             </a>
             <a
@@ -285,7 +288,7 @@ export function SystemHealthIndicator() {
               rel="noopener noreferrer"
               className="flex items-center justify-between text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
-              <span>Статус Terra</span>
+              <span>{t('system.terraStatus')}</span>
               <ExternalLink className="h-3 w-3" />
             </a>
           </div>
@@ -296,12 +299,8 @@ export function SystemHealthIndicator() {
               <div className="flex items-start gap-2">
                 <AlertCircle className="h-4 w-4 text-yellow-500 mt-0.5 flex-shrink-0" />
                 <div className="text-xs text-muted-foreground">
-                  {overallStatus === 'degraded' && (
-                    'Сервисы работают медленнее обычного. Возможны задержки.'
-                  )}
-                  {overallStatus === 'down' && (
-                    'Обнаружены проблемы с сервисами. Проверьте официальные страницы статуса.'
-                  )}
+                  {overallStatus === 'degraded' && t('system.degradedWarning')}
+                  {overallStatus === 'down' && t('system.downWarning')}
                 </div>
               </div>
             </div>

@@ -1,4 +1,5 @@
 // Утилиты для экспорта данных
+import { getIntlLocale } from '@/lib/date-locale';
 
 interface ExportData {
   headers: string[];
@@ -92,7 +93,7 @@ export const exportToPDF = (data: ExportData, filename: string, title: string) =
         </tbody>
       </table>
       <div class="footer">
-        <p>Экспортировано: ${new Date().toLocaleString('ru-RU')}</p>
+        <p>Exported: ${new Date().toLocaleString(getIntlLocale())}</p>
       </div>
     </body>
     </html>
@@ -134,7 +135,7 @@ const downloadFile = (blob: Blob, filename: string) => {
 export const formatDateForExport = (date: string | Date | null): string => {
   if (!date) return '';
   const d = new Date(date);
-  return d.toLocaleDateString('ru-RU', {
+  return d.toLocaleDateString(getIntlLocale(), {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric'

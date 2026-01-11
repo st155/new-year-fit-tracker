@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
+import { getIntlLocale } from '@/lib/date-locale';
 
 interface AIActionsHistoryProps {
   userId: string | undefined;
@@ -213,7 +214,7 @@ export function AIActionsHistory({ userId }: AIActionsHistoryProps) {
                             {t('aiHistory.awaitingConfirmation')}
                           </Badge>
                           <span className="text-xs text-muted-foreground">
-                            {new Date(action.created_at).toLocaleString('ru-RU')}
+                            {new Date(action.created_at).toLocaleString(getIntlLocale())}
                           </span>
                         </div>
                         <p className="text-sm mb-2 font-medium">
@@ -248,7 +249,7 @@ export function AIActionsHistory({ userId }: AIActionsHistoryProps) {
                             {t('aiHistory.rejected')}
                           </Badge>
                           <span className="text-xs text-muted-foreground">
-                            {new Date(action.created_at).toLocaleString('ru-RU')}
+                            {new Date(action.created_at).toLocaleString(getIntlLocale())}
                           </span>
                         </div>
                         <p className="text-sm mb-2 font-medium">
@@ -323,21 +324,22 @@ export function AIActionsHistory({ userId }: AIActionsHistoryProps) {
                                 const actionDate = new Date(action.created_at);
                                 const now = new Date();
                                 const diffHours = (now.getTime() - actionDate.getTime()) / (1000 * 60 * 60);
+                                const locale = getIntlLocale();
                                 
                                 if (diffHours < 24) {
-                                  return actionDate.toLocaleTimeString('ru-RU', { 
+                                  return actionDate.toLocaleTimeString(locale, { 
                                     hour: '2-digit', 
                                     minute: '2-digit' 
                                   });
                                 } else if (diffHours < 168) { // less than 7 days
-                                  return actionDate.toLocaleDateString('ru-RU', { 
+                                  return actionDate.toLocaleDateString(locale, { 
                                     day: '2-digit', 
                                     month: '2-digit',
                                     hour: '2-digit',
                                     minute: '2-digit'
                                   });
                                 } else {
-                                  return actionDate.toLocaleDateString('ru-RU', { 
+                                  return actionDate.toLocaleDateString(locale, { 
                                     day: '2-digit', 
                                     month: '2-digit',
                                     year: 'numeric'

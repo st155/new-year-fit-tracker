@@ -501,5 +501,31 @@
     "quickSync": "Quick sync",
     "load30Days": "Load 30 days"
   },
-  "autoRefresh": "Auto-refresh"
+  "autoRefresh": "Auto-refresh",
+  "system": {
+    "title": "System Status",
+    "operational": "Operational",
+    "degraded": "Issues",
+    "down": "Unavailable",
+    "checking": "Checking...",
+    "dbAuth": "DB & Auth",
+    "dbStable": "Database is stable",
+    "dbIssues": "Database connection issues",
+    "terraApi": "Devices (Terra API)",
+    "noDeviceData": "No device data for the past hour. Check connections.",
+    "queueStalled": "Queue stalled: {{pending}} tasks awaiting. Webhooks arriving but not processed.",
+    "queueBacklog": "Queue backlog: {{pending}} tasks",
+    "processing": "Processing: {{count}} tasks",
+    "processedMinAgo": "Processed {{minutes}} min ago",
+    "processedHoursAgo": "Processed {{hours}}h ago",
+    "dataProcessingNormal": "Data is being processed normally",
+    "lastCheck": "Last check",
+    "supabaseStatus": "Supabase Status",
+    "terraStatus": "Terra Status",
+    "degradedWarning": "Services are slower than usual. Delays possible.",
+    "downWarning": "Service issues detected. Check official status pages.",
+    "webhooks1h": "Webhooks 1h",
+    "queue": "Queue",
+    "processingLabel": "Processing"
+  }
 }

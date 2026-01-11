@@ -9,6 +9,7 @@ import { getHabitIcon, getHabitSentiment, getHabitNeonColor } from "@/lib/habit-
 import { CheckCircle2, TrendingUp, Flame } from "lucide-react";
 import { HabitHistory } from "./HabitHistory";
 import { HabitSparkline } from "./HabitSparkline";
+import { getIntlLocale } from "@/lib/date-locale";
 
 interface HabitDashboardCardProps {
   habit: any;
@@ -86,7 +87,7 @@ export function HabitDashboardCard({ habit, userId }: HabitDashboardCardProps) {
             </div>
             <div className="flex-1">
               <h3 className="font-semibold text-lg">{habit.name}</h3>
-              <p className="text-xs text-muted-foreground">Интервальное голодание</p>
+              <p className="text-xs text-muted-foreground">{t('dashboardCard.intermittentFasting')}</p>
             </div>
           </div>
 
@@ -130,7 +131,7 @@ export function HabitDashboardCard({ habit, userId }: HabitDashboardCardProps) {
                   {hours}:{minutes.toString().padStart(2, '0')}
                 </div>
                 <div className="text-xs text-muted-foreground mt-1">
-                  {Math.round(progress)}% до цели
+                  {t('dashboardCard.percentToGoal', { percent: Math.round(progress) })}
                 </div>
               </div>
             </div>
@@ -153,11 +154,11 @@ export function HabitDashboardCard({ habit, userId }: HabitDashboardCardProps) {
           <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border/50">
             <div className="flex items-center gap-1">
               <Flame className="h-3 w-3" />
-              <span>Цель: {targetHours}ч</span>
+              <span>{t('dashboardCard.targetHours', { hours: targetHours })}</span>
             </div>
             {currentWindow && (
               <span>
-                Окно {currentWindow.fasting_duration ? `${Math.floor(currentWindow.fasting_duration / 60)}:${(currentWindow.fasting_duration % 60).toString().padStart(2, '0')}` : '—'}
+                {t('dashboardCard.window')} {currentWindow.fasting_duration ? `${Math.floor(currentWindow.fasting_duration / 60)}:${(currentWindow.fasting_duration % 60).toString().padStart(2, '0')}` : '—'}
               </span>
             )}
           </div>
@@ -165,7 +166,7 @@ export function HabitDashboardCard({ habit, userId }: HabitDashboardCardProps) {
           {/* Recent History */}
           {fastingWindow.windows && fastingWindow.windows.length > 1 && (
             <div className="pt-3 space-y-2">
-              <div className="text-xs text-muted-foreground">Последние окна</div>
+              <div className="text-xs text-muted-foreground">{t('dashboardCard.recentWindows')}</div>
               <HabitHistory 
                 windows={fastingWindow.windows.slice(1, 4)}
                 type="windows"
@@ -192,18 +193,18 @@ export function HabitDashboardCard({ habit, userId }: HabitDashboardCardProps) {
             </div>
             <div className="flex-1">
               <h3 className="font-semibold text-lg">{habit.name}</h3>
-              <p className="text-xs text-muted-foreground">Счётчик времени</p>
+              <p className="text-xs text-muted-foreground">{t('dashboardCard.durationCounter')}</p>
             </div>
           </div>
 
           {/* Main Metric - Large Timer */}
           <div className="flex flex-col items-center py-6">
             <div className="habit-metric-number text-4xl mb-2">
-              {elapsedTime.days > 0 && `${elapsedTime.days}д `}
-              {elapsedTime.hours}ч {elapsedTime.minutes}м
+              {elapsedTime.days > 0 && `${elapsedTime.days}${t('widget.days')} `}
+              {elapsedTime.hours}{t('widget.hours')} {elapsedTime.minutes}{t('widget.minutes')}
             </div>
             <div className="text-sm text-muted-foreground">
-              Прошло без срывов
+              {t('dashboardCard.elapsedClean')}
             </div>
           </div>
 
@@ -213,9 +214,9 @@ export function HabitDashboardCard({ habit, userId }: HabitDashboardCardProps) {
               <span className="text-2xl">💰</span>
               <div>
                 <div className="text-lg font-bold text-green-400">
-                  {moneySaved.toLocaleString('ru-RU')} ₽
+                  {moneySaved.toLocaleString(getIntlLocale())} ₽
                 </div>
-                <div className="text-xs text-muted-foreground">Сэкономлено</div>
+                <div className="text-xs text-muted-foreground">{t('dashboardCard.saved')}</div>
               </div>
             </div>
           )}
@@ -224,17 +225,17 @@ export function HabitDashboardCard({ habit, userId }: HabitDashboardCardProps) {
           <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border/50">
             <div className="flex items-center gap-1">
               <Flame className="h-3 w-3" />
-              <span>Без срывов с {new Date(currentAttempt?.start_date || '').toLocaleDateString('ru-RU')}</span>
+              <span>{t('dashboardCard.cleanSince', { date: new Date(currentAttempt?.start_date || '').toLocaleDateString(getIntlLocale()) })}</span>
             </div>
             {currentAttempt?.days_lasted && (
-              <span>Лучшая: {currentAttempt.days_lasted} дн.</span>
+              <span>{t('dashboardCard.bestDays', { days: currentAttempt.days_lasted })}</span>
             )}
           </div>
 
           {/* Recent Attempts History */}
           {attempts && attempts.length > 1 && (
             <div className="pt-3 space-y-2">
-              <div className="text-xs text-muted-foreground">История попыток</div>
+              <div className="text-xs text-muted-foreground">{t('dashboardCard.attemptHistory')}</div>
               <HabitHistory 
                 attempts={attempts.filter(a => a.end_date).slice(0, 3)}
                 type="attempts"

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { getIntlLocale } from '@/lib/date-locale';
 
 interface BloodTestDataPoint {
   date: string;
@@ -50,7 +51,7 @@ export function useBloodTestTrends(canonicalNames: string[], displayNames: strin
         const biomarker = biomarkers?.find(b => b.id === r.biomarker_id);
         if (!biomarker || !r.normalized_value) return;
 
-        const date = new Date(r.test_date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const date = new Date(r.test_date).toLocaleDateString(getIntlLocale(), { day: '2-digit', month: '2-digit', year: 'numeric' });
         if (!dateMap.has(date)) {
           dateMap.set(date, { date });
         }
