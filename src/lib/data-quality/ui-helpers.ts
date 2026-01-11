@@ -3,6 +3,7 @@
  */
 
 import type { BadgeProps } from '@/components/ui/badge';
+import i18n from '@/i18n';
 
 export function getConfidenceColor(confidence: number): string {
   if (confidence >= 80) return 'hsl(var(--success))';
@@ -19,10 +20,10 @@ export function getConfidenceBadgeVariant(confidence: number): BadgeProps['varia
 }
 
 export function getConfidenceLabel(confidence: number): string {
-  if (confidence >= 80) return 'Отлично';
-  if (confidence >= 60) return 'Хорошо';
-  if (confidence >= 40) return 'Средне';
-  return 'Плохо';
+  if (confidence >= 80) return i18n.t('common:dataQuality.excellent');
+  if (confidence >= 60) return i18n.t('common:dataQuality.good');
+  if (confidence >= 40) return i18n.t('common:dataQuality.fair');
+  return i18n.t('common:dataQuality.poor');
 }
 
 export function getConfidenceIcon(confidence: number): string {

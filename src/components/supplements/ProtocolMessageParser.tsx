@@ -472,15 +472,7 @@ Melatonin 3mg before bed`
             <Textarea
               value={messageText}
               onChange={(e) => setMessageText(e.target.value)}
-              placeholder="Утро:
-Витамин D 5000 МЕ утром
-Магний цитрат 200 мг после еды
-Омега-3 по 1000 мг после еды
-
-Обед:
-Магний цитрат 200 мг после еды
-...
-"
+              placeholder={t('parser.enterText')}
               className="min-h-[500px] font-mono text-sm resize-y"
             />
           </div>

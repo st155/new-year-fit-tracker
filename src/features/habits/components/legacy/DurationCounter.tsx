@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, TrendingUp, DollarSign } from "lucide-react";
@@ -29,6 +30,7 @@ interface DurationCounterProps {
 }
 
 export function DurationCounter({ habit, userId }: DurationCounterProps) {
+  const { t } = useTranslation('habits');
   const [elapsed, setElapsed] = useState({ days: 0, hours: 0, minutes: 0 });
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [resetReason, setResetReason] = useState("");
@@ -97,12 +99,12 @@ export function DurationCounter({ habit, userId }: DurationCounterProps) {
         <div className="flex justify-center mb-6 mt-8">
           <div className={`neon-circle ${circleClass} w-48 h-48 rotate-slow`}>
             <div className="text-center">
-              <div className={`text-5xl font-bold text-glow mb-1 text-${sentiment === 'negative' ? 'habit-negative' : 'habit-positive'}`}>
+            <div className={`text-5xl font-bold text-glow mb-1 text-${sentiment === 'negative' ? 'habit-negative' : 'habit-positive'}`}>
                 {elapsed.days}
               </div>
-              <div className="text-sm text-muted-foreground">дней</div>
+              <div className="text-sm text-muted-foreground">{t('durationCounter.days')}</div>
               <div className="text-xs text-muted-foreground mt-1">
-                {elapsed.hours}ч {elapsed.minutes}м
+                {t('durationCounter.hoursMinutes', { hours: elapsed.hours, minutes: elapsed.minutes })}
               </div>
             </div>
           </div>
@@ -118,7 +120,7 @@ export function DurationCounter({ habit, userId }: DurationCounterProps) {
           </div>
           {longestStreak > 0 && (
             <p className="text-xs text-muted-foreground">
-              Лучший результат: {longestStreak} дней
+              {t('durationCounter.bestResult', { count: longestStreak })}
             </p>
           )}
         </div>
@@ -160,7 +162,7 @@ export function DurationCounter({ habit, userId }: DurationCounterProps) {
         {/* History of attempts */}
         {attempts && attempts.length > 1 && (
           <div className="space-y-2">
-            <div className="text-xs text-muted-foreground">История попыток</div>
+            <div className="text-xs text-muted-foreground">{t('durationCounter.attemptHistory')}</div>
             <HabitHistory 
               attempts={attempts.filter(a => a.end_date)}
               type="attempts"

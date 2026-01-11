@@ -784,5 +784,23 @@
     "since": "Since {{date}}",
     "completed": "Completed!",
     "notCompleted": "Not completed today"
+  },
+  "durationCounter": {
+    "days": "days",
+    "hoursMinutes": "{{hours}}h {{minutes}}m",
+    "bestResult": "Best result: {{count}} days",
+    "attemptHistory": "Attempt history"
+  },
+  "level": {
+    "startHabits": "Start completing habits to earn XP",
+    "habitLevel": "Habit Level",
+    "levelNumber": "Level {{level}}",
+    "xpToNext": "{{xp}} XP to next level"
+  },
+  "numericWidget": {
+    "units": "units",
+    "percentOfGoal": "{{percent}}% of goal",
+    "goalAchieved": "✓ Goal achieved!",
+    "valuePlaceholder": "Value"
   }
 }

@@ -585,5 +585,27 @@
     "actionError": "Error executing action",
     "timeout": "AI is not responding for 30 seconds",
     "refreshPage": "Refresh page"
+  },
+  "dataQuality": {
+    "title": "Data Quality",
+    "excellent": "Excellent",
+    "good": "Good",
+    "fair": "Fair",
+    "poor": "Poor",
+    "factors": {
+      "sourceReliability": "Source Reliability",
+      "dataFreshness": "Data Freshness",
+      "measurementFrequency": "Measurement Frequency",
+      "crossValidation": "Cross Validation"
+    }
+  },
+  "theme": {
+    "toggle": "Toggle theme"
+  },
+  "comparison": {
+    "period1": "Period 1",
+    "period2": "Period 2",
+    "selectPeriod": "Select period",
+    "metricsComparison": "Metrics Comparison"
   }
 }
