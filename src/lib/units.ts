@@ -87,7 +87,8 @@ export function formatMeasurement(value: number, unit: string): string {
  * Format strength goal with reps: "105 кг × 1" or "60 кг × 8"
  */
 export function formatStrengthGoal(value: number, unit: string, reps?: number | null): string {
-  if (reps && (unit === 'кг' || unit === 'kg')) {
+  const normalized = normalizeUnit(unit).normalized;
+  if (reps && normalized === 'kg') {
     if (reps === 1) {
       return i18n.t('units:format.strengthGoal1RM', { value });
     }
@@ -100,7 +101,8 @@ export function formatStrengthGoal(value: number, unit: string, reps?: number | 
  * Check if a goal is a strength-type goal that uses weight × reps format
  */
 export function isStrengthWeightGoal(goalType: string, unit: string): boolean {
-  return (goalType === 'strength' && (unit === 'кг' || unit === 'kg'));
+  const normalized = normalizeUnit(unit).normalized;
+  return goalType === 'strength' && normalized === 'kg';
 }
 
 /**
@@ -115,17 +117,6 @@ export function getCommonUnitsByType(): Record<string, string[]> {
     flexibility: [i18n.t('units:display.cm'), i18n.t('units:display.degrees')]
   };
 }
-
-/**
- * @deprecated Use getCommonUnitsByType() for localized units
- */
-export const COMMON_UNITS_BY_TYPE: Record<string, string[]> = {
-  strength: ['раз', 'кг', 'сек'],
-  cardio: ['мин', 'км', 'мл/кг/мин'],
-  body_composition: ['кг', '%'],
-  endurance: ['мин', 'км', 'раз'],
-  flexibility: ['см', 'градусы']
-};
 
 /**
  * Get goal suggestions (localized)
@@ -153,26 +144,5 @@ export function getGoalSuggestions(): Record<string, { name: string; value: numb
   };
 }
 
-/**
- * @deprecated Use getGoalSuggestions() for localized suggestions
- */
-export const GOAL_SUGGESTIONS: Record<string, { name: string; value: number; unit: string }[]> = {
-  strength: [
-    { name: 'Подтягивания', value: 10, unit: 'раз' },
-    { name: 'Отжимания', value: 50, unit: 'раз' },
-    { name: 'Жим лёжа', value: 80, unit: 'кг' },
-    { name: 'Приседания', value: 100, unit: 'кг' }
-  ],
-  cardio: [
-    { name: 'Бег 5 км', value: 25, unit: 'мин' },
-    { name: 'VO₂max', value: 45, unit: 'мл/кг/мин' }
-  ],
-  body_composition: [
-    { name: 'Процент жира', value: 15, unit: '%' },
-    { name: 'Вес', value: 75, unit: 'кг' }
-  ],
-  endurance: [
-    { name: 'Бег 10 км', value: 60, unit: 'мин' },
-    { name: 'Планка', value: 5, unit: 'мин' }
-  ]
-};
+// Legacy exports removed - use getCommonUnitsByType() and getGoalSuggestions() instead
+// These getter functions return localized values based on current language

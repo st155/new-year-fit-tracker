@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { EXERCISES, EXERCISE_CATEGORIES, Exercise } from '@/lib/exercises-database';
+import { EXERCISES, getExerciseCategories, Exercise } from '@/lib/exercises-database';
 import { Search, Dumbbell } from 'lucide-react';
 
 interface ExerciseSelectorProps {
@@ -18,6 +18,8 @@ export const ExerciseSelector = ({ open, onClose, onSelect }: ExerciseSelectorPr
   const { t } = useTranslation('trainer');
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  
+  const categories = getExerciseCategories();
 
   const filteredExercises = EXERCISES.filter(exercise => {
     const matchesSearch = exercise.nameRu.toLowerCase().includes(search.toLowerCase()) ||
@@ -61,7 +63,7 @@ export const ExerciseSelector = ({ open, onClose, onSelect }: ExerciseSelectorPr
             >
               {t('exerciseSelector.all')}
             </Badge>
-            {EXERCISE_CATEGORIES.map(cat => (
+            {categories.map(cat => (
               <Badge
                 key={cat.value}
                 variant={selectedCategory === cat.value ? 'default' : 'outline'}
@@ -98,7 +100,7 @@ export const ExerciseSelector = ({ open, onClose, onSelect }: ExerciseSelectorPr
                   </div>
                   <div className="flex flex-col items-end gap-1">
                     <Badge variant="secondary">
-                      {EXERCISE_CATEGORIES.find(c => c.value === exercise.category)?.label}
+                      {categories.find(c => c.value === exercise.category)?.label}
                     </Badge>
                     <span className="text-xs text-muted-foreground">
                       {exercise.equipment}

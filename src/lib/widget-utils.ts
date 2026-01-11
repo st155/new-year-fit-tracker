@@ -1,3 +1,4 @@
+import i18n from '@/i18n';
 import { 
   Activity, Footprints, Zap, Scale, Heart, Flame, 
   Moon, Droplet, type LucideIcon 
@@ -144,35 +145,33 @@ export interface MetricTooltipTexts {
   steps: string;
 }
 
-// Default Russian texts for quality labels
 function getDefaultQualityTexts(): QualityLabelTexts {
   return {
     recovery: {
-      low: 'Низкое восстановление',
-      medium: 'Среднее',
-      high: 'Отличное',
+      low: i18n.t('widgets:quality.lowRecovery'),
+      medium: i18n.t('widgets:quality.average'),
+      high: i18n.t('widgets:quality.excellent'),
     },
     sleep: {
-      poor: 'Плохой сон',
-      normal: 'Норма',
-      good: 'Хороший сон',
+      poor: i18n.t('widgets:quality.poorSleep'),
+      normal: i18n.t('widgets:quality.normal'),
+      good: i18n.t('widgets:quality.goodSleep'),
     },
     steps: {
-      veryLow: 'Очень мало',
-      low: 'Маловато',
-      good: 'Хорошо',
-      excellent: 'Отлично',
+      veryLow: i18n.t('widgets:quality.tooFewSteps'),
+      low: i18n.t('widgets:quality.lowActivity'),
+      good: i18n.t('widgets:quality.good'),
+      excellent: i18n.t('widgets:quality.excellent'),
     },
   };
 }
 
-// Default Russian texts for tooltips
 function getDefaultTooltipTexts(): MetricTooltipTexts {
   return {
-    recovery: 'Оценка готовности организма к нагрузкам. >66 = отличное, 33-66 = среднее, <33 = низкое восстановление',
-    sleepEfficiency: 'Процент времени, проведенного во сне от времени в постели. >85% = отлично, 75-85% = норма, <75% = плохо',
-    hrv: 'Вариабельность сердечного ритма. Индикатор восстановления и адаптации к стрессу. Чем выше - тем лучше',
-    steps: 'Количество шагов за день. Рекомендуется: >10000 шагов. Минимум: 8000',
+    recovery: i18n.t('widgets:tooltips.recovery'),
+    sleepEfficiency: i18n.t('widgets:tooltips.sleepEfficiency'),
+    hrv: i18n.t('widgets:tooltips.hrv'),
+    steps: i18n.t('widgets:tooltips.steps'),
   };
 }
 
