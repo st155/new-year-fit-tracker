@@ -818,7 +818,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                           <YAxis tick={{ fontSize: 12 }} />
                           <Tooltip 
                             labelFormatter={(value) => format(new Date(value), 'dd.MM.yyyy')}
-                            formatter={(value: any) => [value, 'Шаги']}
+                            formatter={(value: any) => [value, t('healthCharts.steps')]}
                           />
                           <Line type="monotone" dataKey="steps" stroke="#3b82f6" strokeWidth={2} />
                         </LineChart>
@@ -834,7 +834,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Weight className="h-5 w-5 text-green-500" />
-                          <CardTitle className="text-lg">Вес</CardTitle>
+                          <CardTitle className="text-lg">{t('healthCharts.weight')}</CardTitle>
                         </div>
                         {healthData.find(d => d.weight)?.weight_source && (
                           <Badge variant="outline" className="text-xs">
@@ -855,7 +855,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                           <YAxis tick={{ fontSize: 12 }} />
                           <Tooltip 
                             labelFormatter={(value) => format(new Date(value), 'dd.MM.yyyy')}
-                            formatter={(value: any) => [value, 'кг']}
+                            formatter={(value: any) => [value, t('healthCharts.kg')]}
                           />
                           <Line type="monotone" dataKey="weight" stroke="#10b981" strokeWidth={2} />
                         </LineChart>
@@ -871,7 +871,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Heart className="h-5 w-5 text-red-500" />
-                          <CardTitle className="text-lg">Пульс</CardTitle>
+                          <CardTitle className="text-lg">{t('healthCharts.heartRate')}</CardTitle>
                         </div>
                         {healthData.find(d => d.heart_rate_avg)?.heart_rate_avg_source && (
                           <Badge variant="outline" className="text-xs">
@@ -892,7 +892,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                           <YAxis tick={{ fontSize: 12 }} />
                           <Tooltip 
                             labelFormatter={(value) => format(new Date(value), 'dd.MM.yyyy')}
-                            formatter={(value: any) => [value, 'уд/мин']}
+                            formatter={(value: any) => [value, t('healthCharts.bpm')]}
                           />
                           <Line type="monotone" dataKey="heart_rate_avg" stroke="#ef4444" strokeWidth={2} />
                         </LineChart>
@@ -909,7 +909,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Zap className="h-5 w-5 text-green-500" />
-                        <CardTitle className="text-lg">Recovery Score</CardTitle>
+                        <CardTitle className="text-lg">{t('recoveryMetrics.recoveryScore')}</CardTitle>
                       </div>
                       {healthData.find(d => d.recovery_score)?.recovery_score_source && (
                         <Badge variant="outline" className="text-xs">
@@ -946,7 +946,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Activity className="h-5 w-5 text-orange-500" />
-                        <CardTitle className="text-lg">Day Strain</CardTitle>
+                        <CardTitle className="text-lg">{t('recoveryMetrics.dayStrain')}</CardTitle>
                       </div>
                       {healthData.find(d => d.day_strain)?.day_strain_source && (
                         <Badge variant="outline" className="text-xs">
@@ -967,7 +967,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                         <YAxis domain={[0, 21]} tick={{ fontSize: 12 }} />
                         <Tooltip 
                           labelFormatter={(value) => format(new Date(value), 'dd.MM.yyyy')}
-                          formatter={(value: any) => [value, 'Strain']}
+                          formatter={(value: any) => [value, t('healthCharts.strain')]}
                         />
                         <Line type="monotone" dataKey="day_strain" stroke="#f97316" strokeWidth={2} />
                       </LineChart>
@@ -983,7 +983,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Moon className="h-5 w-5 text-indigo-500" />
-                        <CardTitle className="text-lg">Эффективность сна</CardTitle>
+                        <CardTitle className="text-lg">{t('healthCharts.sleepEfficiency')}</CardTitle>
                       </div>
                       {healthData.find(d => d.sleep_efficiency)?.sleep_efficiency_source && (
                         <Badge variant="outline" className="text-xs">
@@ -1004,7 +1004,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                         <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
                         <Tooltip 
                           labelFormatter={(value) => format(new Date(value), 'dd.MM.yyyy')}
-                          formatter={(value: any) => [value + '%', 'Эффективность']}
+                          formatter={(value: any) => [value + '%', t('healthCharts.efficiency')]}
                         />
                         <Line type="monotone" dataKey="sleep_efficiency" stroke="#6366f1" strokeWidth={2} />
                       </LineChart>
@@ -1020,7 +1020,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Moon className="h-5 w-5 text-purple-500" />
-                        <CardTitle className="text-lg">Фазы сна</CardTitle>
+                        <CardTitle className="text-lg">{t('healthCharts.sleepPhases')}</CardTitle>
                       </div>
                       {healthData.find(d => d.deep_sleep_duration || d.light_sleep_duration || d.rem_sleep_duration)?.deep_sleep_duration_source && (
                         <Badge variant="outline" className="text-xs">
@@ -1044,9 +1044,9 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                           formatter={(value: any) => [value ? value.toFixed(1) + 'h' : '0h', '']}
                         />
                         <Legend />
-                        <Bar dataKey="deep_sleep_duration" fill="#7c3aed" name="Глубокий сон" stackId="sleep" />
-                        <Bar dataKey="light_sleep_duration" fill="#a78bfa" name="Легкий сон" stackId="sleep" />
-                        <Bar dataKey="rem_sleep_duration" fill="#ddd6fe" name="REM сон" stackId="sleep" />
+                        <Bar dataKey="deep_sleep_duration" fill="#7c3aed" name={t('healthCharts.deepSleep')} stackId="sleep" />
+                        <Bar dataKey="light_sleep_duration" fill="#a78bfa" name={t('healthCharts.lightSleep')} stackId="sleep" />
+                        <Bar dataKey="rem_sleep_duration" fill="#ddd6fe" name={t('healthCharts.remSleep')} stackId="sleep" />
                       </BarChart>
                     </ResponsiveContainer>
                   </CardContent>
@@ -1060,7 +1060,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Heart className="h-5 w-5 text-pink-500" />
-                        <CardTitle className="text-lg">HRV (вариабельность пульса)</CardTitle>
+                        <CardTitle className="text-lg">{t('healthCharts.hrvVariability')}</CardTitle>
                       </div>
                       {healthData.find(d => d.hrv)?.hrv_source && (
                         <Badge variant="outline" className="text-xs">
@@ -1081,7 +1081,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                         <YAxis tick={{ fontSize: 12 }} />
                         <Tooltip 
                           labelFormatter={(value) => format(new Date(value), 'dd.MM.yyyy')}
-                          formatter={(value: any) => [value + ' ms', 'HRV RMSSD']}
+                          formatter={(value: any) => [value + ' ms', t('healthCharts.hrvRmssd')]}
                         />
                         <Line type="monotone" dataKey="hrv" stroke="#ec4899" strokeWidth={2} />
                       </LineChart>
@@ -1097,7 +1097,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Wind className="h-5 w-5 text-cyan-500" />
-                        <CardTitle className="text-lg">Частота дыхания</CardTitle>
+                        <CardTitle className="text-lg">{t('healthCharts.respiratoryRate')}</CardTitle>
                       </div>
                       {healthData.find(d => d.respiratory_rate)?.respiratory_rate_source && (
                         <Badge variant="outline" className="text-xs">
@@ -1118,7 +1118,7 @@ export function ClientDetailView({ client, onBack }: ClientDetailViewProps) {
                         <YAxis domain={[10, 20]} tick={{ fontSize: 12 }} />
                         <Tooltip 
                           labelFormatter={(value) => format(new Date(value), 'dd.MM.yyyy')}
-                          formatter={(value: any) => [value.toFixed(1) + ' вдохов/мин', 'Частота']}
+                          formatter={(value: any) => [value.toFixed(1) + ' ' + t('healthCharts.breathsPerMin'), t('healthCharts.rate')]}
                         />
                         <Line type="monotone" dataKey="respiratory_rate" stroke="#06b6d4" strokeWidth={2} />
                       </LineChart>

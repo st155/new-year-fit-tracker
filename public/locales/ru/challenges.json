@@ -151,6 +151,12 @@
     "deleteFailed": "Ошибка удаления челленджа: {{error}}",
     "extendFailed": "Ошибка продления челленджа: {{error}}"
   },
+  "leaderboard": {
+    "balance": "Баланс",
+    "activity": "Актив.",
+    "recovery": "Восст.",
+    "progress": "Прогр."
+  },
   "pointsBreakdown": {
     "title": "Детали баллов",
     "totalPoints": "Всего баллов / 1000",

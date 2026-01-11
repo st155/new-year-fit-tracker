@@ -13,7 +13,7 @@ export function StrainChart({ data }: StrainChartProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Day Strain</CardTitle>
+          <CardTitle>{t('strain.title')}</CardTitle>
           <CardDescription>{t('strain.noData')}</CardDescription>
         </CardHeader>
       </Card>
@@ -37,7 +37,7 @@ export function StrainChart({ data }: StrainChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Day Strain</CardTitle>
+        <CardTitle>{t('strain.title')}</CardTitle>
         <CardDescription>{t('strain.subtitle')}</CardDescription>
       </CardHeader>
       <CardContent>
@@ -66,7 +66,7 @@ export function StrainChart({ data }: StrainChartProps) {
                         <div className="grid gap-2">
                           <div className="flex flex-col">
                             <span className="text-[0.70rem] uppercase text-muted-foreground">
-                              Strain
+                              {t('strain.label')}
                             </span>
                             <span className="font-bold text-foreground">
                               {data.value.toFixed(1)}

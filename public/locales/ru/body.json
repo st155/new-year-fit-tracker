@@ -73,7 +73,8 @@
     "measurementHistory": "История измерений",
     "loadingErrorTitle": "Ошибка загрузки",
     "failedToLoadInBody": "Не удалось загрузить данные InBody. Попробуйте обновить страницу.",
-    "refresh": "Обновить"
+    "refresh": "Обновить",
+    "aiAnalysisError": "Ошибка AI анализа: {{message}}"
   },
   
   "detail": {
