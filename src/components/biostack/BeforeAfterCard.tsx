@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, TrendingDown, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -10,6 +11,9 @@ interface BeforeAfterCardProps {
 }
 
 export function BeforeAfterCard({ stackItemId, biomarkerId }: BeforeAfterCardProps) {
+  const { t, i18n } = useTranslation('biostack');
+  const dateLocale = i18n.language === 'ru' ? 'ru-RU' : 'en-US';
+
   const { data, isLoading } = useQuery({
     queryKey: ['before-after', stackItemId, biomarkerId],
     queryFn: async () => {
@@ -112,12 +116,12 @@ export function BeforeAfterCard({ stackItemId, biomarkerId }: BeforeAfterCardPro
       <CardContent className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs text-muted-foreground">До приёма</p>
+            <p className="text-xs text-muted-foreground">{t('card.before')}</p>
             <p className="text-lg font-semibold">
               {data.before.value} {data.before.unit}
             </p>
             <p className="text-xs text-muted-foreground">
-              {new Date(data.before.date).toLocaleDateString()}
+              {new Date(data.before.date).toLocaleDateString(dateLocale)}
             </p>
           </div>
           
@@ -126,12 +130,12 @@ export function BeforeAfterCard({ stackItemId, biomarkerId }: BeforeAfterCardPro
           </div>
           
           <div>
-            <p className="text-xs text-muted-foreground">После приёма</p>
+            <p className="text-xs text-muted-foreground">{t('card.after')}</p>
             <p className="text-lg font-semibold">
               {data.after.value} {data.after.unit}
             </p>
             <p className="text-xs text-muted-foreground">
-              {new Date(data.after.date).toLocaleDateString()}
+              {new Date(data.after.date).toLocaleDateString(dateLocale)}
             </p>
           </div>
         </div>
@@ -141,7 +145,11 @@ export function BeforeAfterCard({ stackItemId, biomarkerId }: BeforeAfterCardPro
             {isImprovement ? '+' : ''}{data.change.toFixed(1)}%
           </p>
           <p className="text-xs text-muted-foreground">
-            {Math.abs(data.change) < 5 ? 'Без значимых изменений' : isImprovement ? 'Улучшение' : 'Ухудшение'}
+            {Math.abs(data.change) < 5 
+              ? t('card.noChange') 
+              : isImprovement 
+                ? t('card.improvement') 
+                : t('card.decline')}
           </p>
         </div>
       </CardContent>

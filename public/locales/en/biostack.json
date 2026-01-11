@@ -371,6 +371,22 @@
     "yourRating": "⭐ Your rating: {{rating}}/5",
     "alreadyInStack": "✅ Already in stack",
     "libraryOnly": "📚 Library only",
-    "addToStack": "➕ Add to Stack"
+    "addToStack": "➕ Add to Stack",
+    "before": "Before taking",
+    "after": "After taking",
+    "noChange": "No significant changes",
+    "improvement": "Improvement",
+    "decline": "Decline"
+  },
+  "library": {
+    "scannedCount": "Scanned {{count}}x",
+    "empty": "No supplements in your library",
+    "selected": "Selected: {{count}}",
+    "addToStack": "Add to Stack ({{count}})",
+    "addFromLibrary": "Add from Library",
+    "searchPlaceholder": "Search your library...",
+    "inStack": "In Stack",
+    "unknownBrand": "Unknown brand",
+    "cancel": "Cancel"
   }
 }

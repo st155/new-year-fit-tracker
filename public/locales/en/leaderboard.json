@@ -1,5 +1,12 @@
 {
   "title": "Leaderboard",
+  "miniCard": {
+    "rating": "Rating",
+    "outOf": "of {{total}}",
+    "points": "{{points}} points",
+    "joinChallenge": "Join a challenge",
+    "viewTable": "Table →"
+  },
   "team": "Team",
   "rank": "Rank",
   "points": "points",

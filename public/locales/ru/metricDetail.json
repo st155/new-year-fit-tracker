@@ -2,5 +2,20 @@
   "loadError": "Ошибка загрузки данных метрики",
   "backHome": "Вернуться на главную",
   "detailedInfo": "Детальная информация о метрике",
-  "currentValue": "Текущее значение"
+  "currentValue": "Текущее значение",
+  "history": {
+    "title": "История записей",
+    "empty": "Нет записей для отображения",
+    "date": "Дата",
+    "value": "Значение",
+    "source": "Источник",
+    "quality": "Качество",
+    "sources": {
+      "manual": "Ручной ввод",
+      "whoop": "Whoop",
+      "ultrahuman": "Ultrahuman",
+      "garmin": "Garmin",
+      "withings": "Withings"
+    }
+  }
 }

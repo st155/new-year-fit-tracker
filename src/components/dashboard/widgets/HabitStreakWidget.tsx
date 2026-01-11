@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { useHabitsQuery } from '@/features/habits';
@@ -6,6 +7,7 @@ import { Flame, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export function HabitStreakWidget() {
+  const { t } = useTranslation('widgets');
   const { user } = useAuth();
   const { data: habits, isLoading } = useHabitsQuery({ enabled: !!user?.id });
   const navigate = useNavigate();
@@ -46,9 +48,9 @@ export function HabitStreakWidget() {
               <Flame className="h-5 w-5 text-orange-500" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Серии привычек</p>
+              <p className="text-xs text-muted-foreground">{t('habitStreak.title')}</p>
               <p className="text-sm font-semibold">
-                {totalStreaks} {totalStreaks === 1 ? 'активная серия' : 'активных серий'}
+                {t('habitStreak.activeStreaks', { count: totalStreaks })}
               </p>
             </div>
           </div>
@@ -57,21 +59,21 @@ export function HabitStreakWidget() {
               <p className="text-2xl font-bold text-orange-500">
                 {longestStreak}
               </p>
-              <p className="text-xs text-muted-foreground">дней</p>
+              <p className="text-xs text-muted-foreground">{t('habitStreak.days')}</p>
             </div>
           )}
         </div>
 
         {longestStreak === 0 ? (
           <div className="text-center py-2 text-sm text-muted-foreground">
-            <p>Начните серию - выполняйте привычки каждый день!</p>
+            <p>{t('habitStreak.emptyState')}</p>
           </div>
         ) : (
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">Сегодня</span>
+              <span className="text-muted-foreground">{t('habitStreak.today')}</span>
               <span className="font-medium">
-                {completedToday}/{totalHabits} выполнено
+                {t('habitStreak.completed', { done: completedToday, total: totalHabits })}
               </span>
             </div>
             <div className="flex gap-1">
@@ -93,7 +95,7 @@ export function HabitStreakWidget() {
               )}
             </div>
             <p className="text-xs text-muted-foreground text-right">
-              Продолжайте в том же духе! 🔥
+              {t('habitStreak.keepItUp')}
             </p>
           </div>
         )}

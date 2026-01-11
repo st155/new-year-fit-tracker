@@ -2,5 +2,20 @@
   "loadError": "Error loading metric data",
   "backHome": "Back to home",
   "detailedInfo": "Detailed metric information",
-  "currentValue": "Current Value"
+  "currentValue": "Current Value",
+  "history": {
+    "title": "Entry History",
+    "empty": "No entries to display",
+    "date": "Date",
+    "value": "Value",
+    "source": "Source",
+    "quality": "Quality",
+    "sources": {
+      "manual": "Manual entry",
+      "whoop": "Whoop",
+      "ultrahuman": "Ultrahuman",
+      "garmin": "Garmin",
+      "withings": "Withings"
+    }
+  }
 }

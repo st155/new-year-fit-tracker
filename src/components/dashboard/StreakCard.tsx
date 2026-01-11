@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -20,6 +21,7 @@ interface GoalStreak {
 }
 
 export function StreakCard({ className }: StreakCardProps) {
+  const { t } = useTranslation('dashboardPage');
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [goalStreaks, setGoalStreaks] = useState<GoalStreak[]>([]);
@@ -111,10 +113,10 @@ export function StreakCard({ className }: StreakCardProps) {
   };
 
   const getNextMilestone = (current: number): { target: number; text: string } => {
-    if (current < 7) return { target: 7, text: '7 дней' };
-    if (current < 30) return { target: 30, text: '30 дней' };
-    if (current < 100) return { target: 100, text: '100 дней' };
-    return { target: 365, text: '365 дней' };
+    if (current < 7) return { target: 7, text: t('streak.milestone', { days: 7 }) };
+    if (current < 30) return { target: 30, text: t('streak.milestone', { days: 30 }) };
+    if (current < 100) return { target: 100, text: t('streak.milestone', { days: 100 }) };
+    return { target: 365, text: t('streak.milestone', { days: 365 }) };
   };
 
   const nextMilestone = getNextMilestone(overallStreak.current);
@@ -126,7 +128,7 @@ export function StreakCard({ className }: StreakCardProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Flame className="h-5 w-5 text-orange-500" />
-            Серии
+            {t('streak.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -148,10 +150,10 @@ export function StreakCard({ className }: StreakCardProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Flame className="h-5 w-5 text-orange-500" />
-          Серии выполнения
+          {t('streak.titleFull')}
         </CardTitle>
         <CardDescription>
-          Отслеживайте последовательность достижения целей
+          {t('streak.subtitle')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -165,7 +167,7 @@ export function StreakCard({ className }: StreakCardProps) {
                   {overallStreak.current}
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  Текущая серия
+                  {t('streak.current')}
                 </div>
               </div>
             </div>
@@ -175,7 +177,7 @@ export function StreakCard({ className }: StreakCardProps) {
                 <span className="font-semibold">{overallStreak.longest}</span>
               </div>
               <div className="text-xs text-muted-foreground">
-                Лучшая серия
+                {t('streak.best')}
               </div>
             </div>
           </div>
@@ -183,8 +185,8 @@ export function StreakCard({ className }: StreakCardProps) {
           {/* Прогресс до следующей вехи */}
           <div className="space-y-2">
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>До {nextMilestone.text}</span>
-              <span>{nextMilestone.target - overallStreak.current} дней</span>
+              <span>{t('streak.to')} {nextMilestone.text}</span>
+              <span>{nextMilestone.target - overallStreak.current} {t('streak.daysLeft')}</span>
             </div>
             <Progress value={milestoneProgress} className="h-2" />
           </div>
@@ -195,7 +197,7 @@ export function StreakCard({ className }: StreakCardProps) {
           <div className="space-y-3">
             <h4 className="text-sm font-medium flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
-              Топ целей
+              {t('streak.topGoals')}
             </h4>
             {goalStreaks.map((streak, index) => (
               <div 
@@ -209,7 +211,7 @@ export function StreakCard({ className }: StreakCardProps) {
                       {streak.goalName}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {streak.totalDays} дней всего
+                      {streak.totalDays} {t('streak.totalDays')}
                     </div>
                   </div>
                 </div>
@@ -222,7 +224,7 @@ export function StreakCard({ className }: StreakCardProps) {
                   </Badge>
                   {streak.longestStreak > streak.currentStreak && (
                     <span className="text-xs text-muted-foreground">
-                      (макс: {streak.longestStreak})
+                      {t('streak.max', { value: streak.longestStreak })}
                     </span>
                   )}
                 </div>
@@ -236,7 +238,7 @@ export function StreakCard({ className }: StreakCardProps) {
           <div className="text-center py-6">
             <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">
-              Начните отслеживать цели, чтобы создать серию!
+              {t('streak.emptyState')}
             </p>
           </div>
         )}
@@ -245,11 +247,11 @@ export function StreakCard({ className }: StreakCardProps) {
         <div className="grid grid-cols-3 gap-3 pt-3 border-t">
           <div className="text-center">
             <div className="text-xl font-bold">{overallStreak.total}</div>
-            <div className="text-xs text-muted-foreground">Всего дней</div>
+            <div className="text-xs text-muted-foreground">{t('streak.totalLabel')}</div>
           </div>
           <div className="text-center">
             <div className="text-xl font-bold">{overallStreak.longest}</div>
-            <div className="text-xs text-muted-foreground">Рекорд</div>
+            <div className="text-xs text-muted-foreground">{t('streak.recordLabel')}</div>
           </div>
           <div className="text-center">
             <div className="text-xl font-bold">
@@ -257,7 +259,7 @@ export function StreakCard({ className }: StreakCardProps) {
                 ? Math.round((overallStreak.current / overallStreak.total) * 100) 
                 : 0}%
             </div>
-            <div className="text-xs text-muted-foreground">Активность</div>
+            <div className="text-xs text-muted-foreground">{t('streak.activityLabel')}</div>
           </div>
         </div>
       </CardContent>
