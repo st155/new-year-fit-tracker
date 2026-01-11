@@ -27,7 +27,7 @@ interface HealthAnalysis {
 }
 
 export function HealthAnalysisWidget() {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('medicalDocs');
   const [isGenerating, setIsGenerating] = useState(false);
   const queryClient = useQueryClient();
 
@@ -75,11 +75,11 @@ export function HealthAnalysisWidget() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['health-analysis-latest'] });
-      toast.success(t('healthAnalysis.updateSuccess'));
+      toast.success(t('healthAnalysis.updateSuccess', 'Analysis updated'));
       setIsGenerating(false);
     },
     onError: (error: Error) => {
-      toast.error(`${t('errors.generic')}: ${error.message}`);
+      toast.error(`Error: ${error.message}`);
       setIsGenerating(false);
     }
   });
@@ -115,10 +115,10 @@ export function HealthAnalysisWidget() {
               <Sparkles className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold">Общий анализ здоровья</h3>
+              <h3 className="text-lg font-semibold">{t('healthAnalysis.title')}</h3>
               {analysis && (
                 <p className="text-sm text-muted-foreground">
-                  Последнее обновление: {new Date(analysis.analysis_date).toLocaleDateString('ru-RU')}
+                  {t('healthAnalysis.lastUpdate')} {new Date(analysis.analysis_date).toLocaleDateString()}
                 </p>
               )}
             </div>
@@ -133,12 +133,12 @@ export function HealthAnalysisWidget() {
             {isGenerating ? (
               <>
                 <RefreshCw className="h-4 w-4 animate-spin" />
-                Генерация...
+                {t('healthAnalysis.generating')}
               </>
             ) : (
               <>
                 <RefreshCw className="h-4 w-4" />
-                Обновить
+                {t('healthAnalysis.refresh')}
               </>
             )}
           </Button>
@@ -151,13 +151,12 @@ export function HealthAnalysisWidget() {
                 <TrendingUp className="h-8 w-8 text-muted-foreground" />
               </div>
               <div>
-                <p className="text-lg font-medium mb-2">Нет данных для анализа</p>
+                <p className="text-lg font-medium mb-2">{t('healthAnalysis.noData')}</p>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Загрузите и обработайте медицинские документы для получения<br />
-                  персонализированного анализа состояния здоровья
+                  {t('healthAnalysis.uploadHint')}
                 </p>
                 <Button onClick={handleGenerate} disabled={isGenerating}>
-                  {isGenerating ? 'Генерация...' : 'Создать анализ'}
+                  {isGenerating ? t('healthAnalysis.generating') : t('healthAnalysis.create')}
                 </Button>
               </div>
             </div>
@@ -167,9 +166,9 @@ export function HealthAnalysisWidget() {
             {/* Overall Score */}
             {analysis.overall_score == null ? (
               <div className="text-center py-6 bg-muted/30 rounded-lg">
-                <p className="text-muted-foreground">Недостаточно данных для расчёта оценки</p>
+                <p className="text-muted-foreground">{t('healthAnalysis.insufficientData')}</p>
                 <p className="text-xs text-muted-foreground mt-2">
-                  Проанализировано документов: {analysis.documents_analyzed}
+                  {t('healthAnalysis.documentsAnalyzed')} {analysis.documents_analyzed}
                 </p>
               </div>
             ) : (
@@ -202,10 +201,10 @@ export function HealthAnalysisWidget() {
                 </div>
 
                 <div className="flex-1">
-                  <p className="text-sm text-muted-foreground mb-2">Общая оценка здоровья</p>
+                  <p className="text-sm text-muted-foreground mb-2">{t('healthAnalysis.overallScore')}</p>
                   <p className="text-sm leading-relaxed">{analysis.summary}</p>
                   <p className="text-xs text-muted-foreground mt-2">
-                    Проанализировано документов: {analysis.documents_analyzed}
+                    {t('healthAnalysis.documentsAnalyzed')} {analysis.documents_analyzed}
                   </p>
                 </div>
               </div>
@@ -218,10 +217,7 @@ export function HealthAnalysisWidget() {
                   <div key={key} className="bg-background/50 rounded-lg p-3 text-center">
                     <div className="text-lg font-semibold text-primary">{value != null ? value.toFixed(1) : '—'}</div>
                     <div className="text-xs text-muted-foreground capitalize">
-                      {key === 'cardiovascular' && 'Сердечно-сосудистая'}
-                      {key === 'metabolic' && 'Метаболизм'}
-                      {key === 'body_composition' && 'Композиция тела'}
-                      {key === 'recovery' && 'Восстановление'}
+                      {t(`healthAnalysis.categories.${key}`)}
                     </div>
                   </div>
                 ))}
@@ -235,7 +231,7 @@ export function HealthAnalysisWidget() {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm font-medium">
                     <CheckCircle2 className="h-4 w-4 text-green-500" />
-                    <span>Сильные стороны</span>
+                    <span>{t('healthAnalysis.strengths')}</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {analysis.achievements.slice(0, 3).map((achievement, idx) => (
@@ -252,7 +248,7 @@ export function HealthAnalysisWidget() {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm font-medium">
                     <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                    <span>Требует внимания</span>
+                    <span>{t('healthAnalysis.concerns')}</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {analysis.concerns.slice(0, 3).map((concern, idx) => (

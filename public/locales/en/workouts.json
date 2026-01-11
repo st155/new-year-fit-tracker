@@ -72,6 +72,34 @@
     "avgHeartRate": "Avg Heart Rate",
     "source": "Source:"
   },
+  "statsModal": {
+    "title": "Detailed Statistics",
+    "charts": "Charts",
+    "records": "Records",
+    "achievements": "Achievements",
+    "volumeByWeek": "Training volume by week",
+    "frequency": "Workout frequency",
+    "durationByWeek": "Duration by week",
+    "personalRecords": "Personal Records",
+    "week": "Week {{number}}",
+    "months": {
+      "aug": "Aug",
+      "sep": "Sep",
+      "oct": "Oct",
+      "nov": "Nov"
+    },
+    "exercises": {
+      "squats": "Squats",
+      "benchPress": "Bench Press",
+      "deadlift": "Deadlift"
+    },
+    "achievementsList": {
+      "firstWorkout": "First Workout",
+      "streak7": "7-day Streak",
+      "squatPR": "Squat PR",
+      "workouts50": "50 Workouts"
+    }
+  },
   "generating": {
     "title": "Generating your AI plan",
     "status": "GENERATING YOUR NEW PROGRAM..."

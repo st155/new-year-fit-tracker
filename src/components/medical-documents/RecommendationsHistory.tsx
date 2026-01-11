@@ -7,8 +7,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useRecommendationsHistory } from "@/hooks/medical-documents/useRecommendationsHistory";
 import { Sparkles, Loader2, Lightbulb, Calendar, ChevronRight, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
+import { useTranslation } from 'react-i18next';
 
 export const RecommendationsHistory = () => {
+  const { t } = useTranslation('medicalDocs');
   const { history, isLoading, generateRecommendation, recalculateUnits } = useRecommendationsHistory();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -44,10 +46,10 @@ export const RecommendationsHistory = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Calendar className="h-5 w-5 text-primary" />
-            История рекомендаций
+            {t('recommendations.history', 'Recommendations History')}
           </CardTitle>
           <CardDescription>
-            {history?.length || 0} сохранённых генераций
+            {t('recommendations.savedCount', { count: history?.length || 0 })}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -74,7 +76,7 @@ export const RecommendationsHistory = () => {
                       </div>
                       {rec.health_score && (
                         <Badge variant="outline" className="text-xs">
-                          Оценка: {rec.health_score}/100
+                          {t('recommendations.score', { score: rec.health_score })}
                         </Badge>
                       )}
                     </div>
@@ -96,12 +98,12 @@ export const RecommendationsHistory = () => {
             {recalculateUnits.isPending ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Пересчёт...
+                {t('recommendations.recalculating', 'Recalculating...')}
               </>
             ) : (
               <>
                 <RefreshCw className="h-4 w-4" />
-                🔄 Обновить данные
+                {t('recommendations.refreshData', '🔄 Refresh data')}
               </>
             )}
           </Button>
@@ -123,17 +125,17 @@ export const RecommendationsHistory = () => {
             {recalculateUnits.isPending ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Пересчёт единиц...
+                {t('recommendations.recalculatingUnits', 'Recalculating units...')}
               </>
             ) : generateRecommendation.isPending ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Генерация...
+                {t('recommendations.analyzing')}
               </>
             ) : (
               <>
                 <Sparkles className="h-4 w-4" />
-                Сгенерировать новый
+                {t('recommendations.generateNew', 'Generate new')}
               </>
             )}
           </Button>
@@ -147,12 +149,12 @@ export const RecommendationsHistory = () => {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Lightbulb className="h-5 w-5 text-purple-500" />
-                AI Рекомендации
+                {t('recommendations.title')}
               </CardTitle>
               <CardDescription>
                 {selectedRec
-                  ? `От ${new Date(selectedRec.generated_at).toLocaleString('ru-RU')}`
-                  : 'Нажмите "Сгенерировать новый" для получения рекомендаций'}
+                  ? t('recommendations.from', { date: new Date(selectedRec.generated_at).toLocaleString() })
+                  : t('recommendations.clickGenerate', 'Click "Generate new" to get recommendations')}
               </CardDescription>
             </div>
             {selectedRec?.health_score && (
@@ -167,9 +169,9 @@ export const RecommendationsHistory = () => {
           {!selectedRec && !history?.length ? (
             <div className="text-center py-16 text-muted-foreground">
               <Lightbulb className="h-20 w-20 mx-auto mb-4 opacity-30" />
-              <p className="text-lg mb-2">Получите персональные рекомендации</p>
+              <p className="text-lg mb-2">{t('recommendations.emptyTitle')}</p>
               <p className="text-sm">
-                AI проанализирует все ваши документы, цели и измерения
+                {t('recommendations.emptyDesc')}
               </p>
             </div>
           ) : selectedRec ? (
@@ -179,13 +181,13 @@ export const RecommendationsHistory = () => {
                   {selectedRec.context_snapshot.documents_analyzed && (
                     <Badge variant="secondary" className="gap-1">
                       <span className="text-primary">📄</span>
-                      {selectedRec.context_snapshot.documents_analyzed} документов
+                      {t('recommendations.documents', { count: selectedRec.context_snapshot.documents_analyzed })}
                     </Badge>
                   )}
                   {selectedRec.context_snapshot.biomarkers_count && (
                     <Badge variant="secondary" className="gap-1">
                       <span className="text-primary">🧪</span>
-                      {selectedRec.context_snapshot.biomarkers_count} биомаркеров
+                      {t('recommendations.biomarkers', { count: selectedRec.context_snapshot.biomarkers_count })}
                     </Badge>
                   )}
                 </div>

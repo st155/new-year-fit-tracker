@@ -147,7 +147,7 @@
     "retry": "Retry Migration",
     "start": "Start Migration"
   },
-  "recommendations": {
+"recommendations": {
     "title": "AI Recommendations",
     "subtitle": "Personal advice based on all your data",
     "ready": "Recommendations ready",
@@ -161,7 +161,54 @@
     "documents": "{{count}} documents",
     "goals": "{{count}} goals",
     "measurements": "{{count}} measurements",
-    "generatedAt": "Generated"
+    "generatedAt": "Generated",
+    "history": "Recommendations History",
+    "savedCount": "{{count}} saved generations",
+    "score": "Score: {{score}}/100",
+    "recalculating": "Recalculating...",
+    "refreshData": "🔄 Refresh data",
+    "recalculatingUnits": "Recalculating units...",
+    "generateNew": "Generate new",
+    "from": "From {{date}}",
+    "clickGenerate": "Click \"Generate new\" to get recommendations",
+    "biomarkers": "{{count}} biomarkers"
+  },
+  "categories": {
+    "blood_test": "Blood Tests",
+    "lab_urine": "Urine Tests",
+    "imaging_report": "MRI/Ultrasound",
+    "clinical_note": "Clinical Notes",
+    "prescription": "Prescriptions",
+    "fitness_report": "Fitness Reports",
+    "inbody": "Body Composition",
+    "progress_photo": "Progress Photos",
+    "other": "Other"
+  },
+  "dashboard": {
+    "categoryTitle": "Category Summary",
+    "categorySubtitle": "Quick overview of your medical documents",
+    "lastDate": "Last:"
+  },
+  "healthAnalysis": {
+    "title": "Overall Health Analysis",
+    "lastUpdate": "Last update:",
+    "generating": "Generating...",
+    "refresh": "Refresh",
+    "noData": "No data for analysis",
+    "uploadHint": "Upload and process medical documents for personalized health analysis",
+    "create": "Create analysis",
+    "insufficientData": "Insufficient data to calculate score",
+    "documentsAnalyzed": "Documents analyzed:",
+    "overallScore": "Overall health score",
+    "categories": {
+      "cardiovascular": "Cardiovascular",
+      "metabolic": "Metabolic",
+      "body_composition": "Body Composition",
+      "recovery": "Recovery"
+    },
+    "strengths": "Strengths",
+    "concerns": "Needs attention",
+    "updateSuccess": "Analysis updated"
   },
   "protocol": {
     "actionType": {
