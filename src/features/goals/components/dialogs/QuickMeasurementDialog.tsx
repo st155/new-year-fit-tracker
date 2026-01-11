@@ -12,7 +12,8 @@ import { PhotoUpload } from "@/components/ui/photo-upload";
 import { Camera, Calendar, ChevronDown, Check } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn, parseTimeInput, isTimeUnit } from "@/lib/utils";
-import { isStrengthWeightGoal, formatStrengthGoal } from "@/lib/units";
+import { isStrengthWeightGoal, formatStrengthGoal, normalizeUnit } from "@/lib/units";
+import { isTimeBasedGoal } from "@/lib/goal-detection";
 import { getIntlLocale } from '@/lib/date-locale';
 
 interface Goal {
@@ -60,8 +61,7 @@ export function QuickMeasurementDialog({
     if (!value) return 0;
     
     const isTimeGoal = isTimeUnit(goal.target_unit) || 
-                      goal.goal_name.toLowerCase().includes('время') ||
-                      goal.goal_name.toLowerCase().includes('бег');
+                      isTimeBasedGoal(goal.goal_name, goal.target_unit);
     
     if (isTimeGoal) {
       return parseTimeInput(value);
@@ -259,15 +259,13 @@ export function QuickMeasurementDialog({
   };
 
   const isNumericGoal = () => {
-    return goal.target_unit.toLowerCase().includes('reps') || 
-           goal.target_unit.toLowerCase().includes('раз') ||
-           goal.target_unit.toLowerCase().includes('повтор');
+    const normalized = normalizeUnit(goal.target_unit).normalized;
+    return normalized === 'reps';
   };
 
   const isWeightGoal = () => {
-    return goal.target_unit.toLowerCase().includes('kg') || 
-           goal.target_unit.toLowerCase().includes('кг') ||
-           goal.goal_name.toLowerCase().includes('вес');
+    const normalized = normalizeUnit(goal.target_unit).normalized;
+    return normalized === 'kg' || normalizeUnit(goal.goal_name).normalized === 'kg';
   };
 
   const adjustValue = (increment: number) => {

@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { GoalCreateDialog, GoalEditDialog } from "@/features/goals/components";
 import { useTranslation } from "react-i18next";
+import { isLowerBetterGoal, isTimeBasedGoal as isTimeBasedGoalCheck, goalNameToRouteKey } from "@/lib/goal-detection";
 
 interface Goal {
   id: string;
@@ -125,7 +126,7 @@ export function GoalsSection({ userRole }: GoalsSectionProps) {
             
             let progress = 0;
             if (goal.target_value) {
-              if (isTimeBasedGoal(goal.goal_name, goal.target_unit)) {
+              if (isTimeBasedGoalLocal(goal.goal_name, goal.target_unit)) {
                 const currentDecimal = convertTimeToDecimal(currentValue);
                 const targetDecimal = convertTimeToDecimal(goal.target_value);
                 if (currentDecimal > 0) {
@@ -158,8 +159,8 @@ export function GoalsSection({ userRole }: GoalsSectionProps) {
               category,
               icon: goalIcons[category] || goalIcons.strength,
               rawGoal: goal,
-              displayCurrent: isTimeBasedGoal(goal.goal_name, goal.target_unit || '') ? formatTimeDisplay(currentValue) : currentValue.toString(),
-              displayTarget: isTimeBasedGoal(goal.goal_name, goal.target_unit || '') ? formatTimeDisplay(goal.target_value || 0) : (goal.target_value || 0).toString()
+              displayCurrent: isTimeBasedGoalLocal(goal.goal_name, goal.target_unit || '') ? formatTimeDisplay(currentValue) : currentValue.toString(),
+              displayTarget: isTimeBasedGoalLocal(goal.goal_name, goal.target_unit || '') ? formatTimeDisplay(goal.target_value || 0) : (goal.target_value || 0).toString()
             } as DisplayGoal;
           })
         );
@@ -194,25 +195,11 @@ export function GoalsSection({ userRole }: GoalsSectionProps) {
   };
 
   const isLowerIsBetterGoal = (goalName: string, goalType: string): boolean => {
-    const nameLower = goalName.toLowerCase();
-    
-    return goalType === 'body_composition' || 
-           nameLower.includes('жир') || 
-           nameLower.includes('вес') ||
-           (nameLower.includes('бег') && nameLower.includes('км')) ||
-           (nameLower.includes('гребля') && nameLower.includes('км'));
+    return isLowerBetterGoal(goalName, goalType);
   };
 
-  const isTimeBasedGoal = (goalName: string, unit: string): boolean => {
-    const nameLower = goalName.toLowerCase();
-    const unitLower = unit.toLowerCase();
-    
-    return (nameLower.includes('бег') || 
-            nameLower.includes('гребля') || 
-            nameLower.includes('время') ||
-            unitLower.includes('мин') || 
-            unitLower.includes('сек')) &&
-           !nameLower.includes('планка'); // Планка - исключение, там больше = лучше
+  const isTimeBasedGoalLocal = (goalName: string, unit: string): boolean => {
+    return isTimeBasedGoalCheck(goalName, unit);
   };
 
   const mapGoalTypeToCategory = (goalType: string): "strength" | "endurance" | "body" | "cardio" => {
@@ -248,7 +235,7 @@ export function GoalsSection({ userRole }: GoalsSectionProps) {
         </div>
         
         <div className="space-y-4">
-          {["Антон С.", "Дмитрий К.", "Михаил Л.", "Александр П."].map((name, index) => (
+          {[t('goals.demoUser1'), t('goals.demoUser2'), t('goals.demoUser3'), t('goals.demoUser4')].map((name, index) => (
             <div key={name} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center text-sm font-bold">
@@ -294,28 +281,9 @@ export function GoalsSection({ userRole }: GoalsSectionProps) {
         <div className="space-y-3">
           {goals.map((goal) => {
             const getClickHandler = () => {
-              const nameMap: Record<string, string> = {
-                'вес': 'weight',
-                'weight': 'weight',
-                'жир': 'body_fat',
-                'body fat': 'body_fat',
-                'процент жира': 'body_fat',
-                'vo2': 'vo2max',
-                'подтягивания': 'vo2max', // Пока без детального экрана
-                'жим': 'vo2max', // Пока без детального экрана
-                'шаги': 'steps',
-                'steps': 'steps',
-                'планка': 'recovery', // Пока без детального экрана
-                'отжимания': 'recovery', // Пока без детального экрана
-                'выпады': 'recovery', // Пока без детального экрана
-                'бег': 'recovery' // Пока без детального экрана
-              };
-              
-              const goalName = goal.title.toLowerCase();
-              for (const [key, route] of Object.entries(nameMap)) {
-                if (goalName.includes(key)) {
-                  return () => navigate(`/metric/${route}`);
-                }
+              const route = goalNameToRouteKey(goal.title);
+              if (route) {
+                return () => navigate(`/metric/${route}`);
               }
               return undefined;
             };
