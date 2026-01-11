@@ -21,6 +21,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { ArrowLeft, Calendar, Users, Dumbbell, Copy, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface TrainingPlanHeaderProps {
   planName: string;
@@ -42,6 +43,7 @@ export function TrainingPlanHeader({
   onDuplicate,
 }: TrainingPlanHeaderProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation('trainingPlan');
 
   return (
     <>
@@ -50,13 +52,13 @@ export function TrainingPlanHeader({
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
-              <Link to="/trainer-dashboard">Панель тренера</Link>
+              <Link to="/trainer-dashboard">{t('breadcrumbs.trainerDashboard')}</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
-              <Link to="/trainer-dashboard?tab=plans">Планы</Link>
+              <Link to="/trainer-dashboard?tab=plans">{t('breadcrumbs.plans')}</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
@@ -88,15 +90,15 @@ export function TrainingPlanHeader({
               <div className="flex items-center gap-3 ml-14">
                 <Badge variant="secondary" className="flex items-center gap-1">
                   <Calendar className="h-3 w-3" />
-                  {durationWeeks} недель
+                  {durationWeeks} {t('header.weeks')}
                 </Badge>
                 <Badge variant="secondary" className="flex items-center gap-1">
                   <Dumbbell className="h-3 w-3" />
-                  {totalWorkouts} тренировок
+                  {totalWorkouts} {t('header.workouts')}
                 </Badge>
                 <Badge variant="secondary" className="flex items-center gap-1">
                   <Users className="h-3 w-3" />
-                  {activeClients} активных клиентов
+                  {activeClients} {t('header.activeClients')}
                 </Badge>
               </div>
             </div>
@@ -104,26 +106,26 @@ export function TrainingPlanHeader({
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" onClick={onDuplicate}>
                 <Copy className="h-4 w-4 mr-2" />
-                Копировать
+                {t('header.copy')}
               </Button>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="outline" size="sm">
                     <Trash2 className="h-4 w-4 mr-2" />
-                    Удалить
+                    {t('header.delete')}
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Удалить план?</AlertDialogTitle>
+                    <AlertDialogTitle>{t('deleteDialog.title')}</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Это действие нельзя отменить. План будет удален навсегда.
+                      {t('deleteDialog.description')}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Отмена</AlertDialogCancel>
+                    <AlertDialogCancel>{t('deleteDialog.cancel')}</AlertDialogCancel>
                     <AlertDialogAction onClick={onDelete}>
-                      Удалить
+                      {t('deleteDialog.delete')}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

@@ -1,4 +1,21 @@
 {
+  "breadcrumbs": {
+    "trainerDashboard": "Панель тренера",
+    "plans": "Планы"
+  },
+  "header": {
+    "weeks": "недель",
+    "workouts": "тренировок",
+    "activeClients": "активных клиентов",
+    "copy": "Копировать",
+    "delete": "Удалить"
+  },
+  "deleteDialog": {
+    "title": "Удалить план?",
+    "description": "Это действие нельзя отменить. План будет удален навсегда.",
+    "cancel": "Отмена",
+    "delete": "Удалить"
+  },
   "overview": {
     "planInfo": "Информация о плане",
     "created": "Создан:",

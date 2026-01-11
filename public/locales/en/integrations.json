@@ -529,5 +529,14 @@
     "webhooks1h": "Webhooks 1h",
     "queue": "Queue",
     "processingLabel": "Processing"
+  },
+  "errors": {
+    "failedToDeauth": "Failed to remove old token"
+  },
+  "sourceComparison": {
+    "title": "Detailed Source Comparison",
+    "description": "Compare metrics from different devices and see how they differ",
+    "tableTitle": "Comparison Table",
+    "tableDescription": "Detailed value comparison from different sources"
   }
 }

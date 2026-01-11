@@ -400,5 +400,8 @@
     "inStack": "In Stack",
     "unknownBrand": "Unknown brand",
     "cancel": "Cancel"
+  },
+  "protocols": {
+    "noItems": "No supplements in this protocol"
   }
 }

@@ -70,14 +70,14 @@ export function MetricsComparison() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Детальное сравнение источников данных</CardTitle>
+          <CardTitle>{t('sourceComparison.title')}</CardTitle>
           <CardDescription>
-            Сравните показатели от разных устройств и посмотрите как они отличаются
+            {t('sourceComparison.description')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-4">
-            <label className="text-sm font-medium">Выберите метрику:</label>
+            <label className="text-sm font-medium">{t('selectMetric')}:</label>
             <Select value={selectedMetric} onValueChange={setSelectedMetric}>
               <SelectTrigger className="w-[250px]">
                 <SelectValue placeholder="Все метрики" />
@@ -138,9 +138,9 @@ export function MetricsComparison() {
       {/* Таблица с детальным сравнением */}
       <Card>
         <CardHeader>
-          <CardTitle>Сравнительная таблица</CardTitle>
+          <CardTitle>{t('sourceComparison.tableTitle')}</CardTitle>
           <CardDescription>
-            Детальное сравнение значений от разных источников
+            {t('sourceComparison.tableDescription')}
           </CardDescription>
         </CardHeader>
         <CardContent>
