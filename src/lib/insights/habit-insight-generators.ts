@@ -2,6 +2,7 @@
  * Habit-specific insight generators
  */
 
+import i18n from '@/i18n';
 import type { SmartInsight, InsightGeneratorContext } from './types';
 import {
   analyzeCompletionPatterns,
@@ -16,7 +17,14 @@ import { calculateHabitsQuality, getHabitsNeedingAttention, getTopPerformingHabi
 import { generateHabitRecommendations } from './ai-recommendations';
 
 function getHabitName(habit: any): string {
-  return habit?.name || habit?.title || 'Привычка';
+  return habit?.name || habit?.title || i18n.t('insights:habits.defaultName');
+}
+
+/**
+ * Get localized time label
+ */
+function getTimeLabel(time: string): string {
+  return i18n.t(`insights:timeLabels.${time}`, { defaultValue: time });
 }
 
 /**
@@ -40,7 +48,11 @@ export function generatePatternInsights(context: InsightGeneratorContext): Smart
         id: `pattern-optimal-time-${habit.id}`,
         type: 'habit_pattern',
         emoji: '⏰',
-        message: `"${getHabitName(habit)}" на ${Math.round(optimalTime.successRate)}% успешнее ${timeLabel}`,
+        message: i18n.t('insights:habits.moreSuccessful', {
+          title: getHabitName(habit),
+          percent: Math.round(optimalTime.successRate),
+          timeLabel,
+        }),
         priority: Math.round(optimalTime.confidence),
         action: {
           type: 'modal',
@@ -63,7 +75,11 @@ export function generatePatternInsights(context: InsightGeneratorContext): Smart
         id: `pattern-chain-${chain.habit1}-${chain.habit2}`,
         type: 'habit_pattern',
         emoji: '🔗',
-        message: `"${getHabitName(habit1)}" и "${getHabitName(habit2)}" выполняются вместе в ${Math.round(chain.coOccurrenceRate)}% случаев`,
+        message: i18n.t('insights:habits.togetherRate', {
+          habit1: getHabitName(habit1),
+          habit2: getHabitName(habit2),
+          percent: Math.round(chain.coOccurrenceRate),
+        }),
         priority: Math.round(chain.coOccurrenceRate),
         action: {
           type: 'modal',
@@ -97,7 +113,11 @@ export function generateRiskInsights(context: InsightGeneratorContext): SmartIns
         id: `risk-streak-${habit.id}`,
         type: 'habit_risk',
         emoji: '⚠️',
-        message: `Стрейк "${getHabitName(habit)}" (${habit.current_streak} дней) под угрозой`,
+        message: i18n.t('insights:habits.atRisk', {
+          title: getHabitName(habit),
+          days: habit.current_streak,
+          count: habit.current_streak,
+        }),
         priority: Math.round(risk),
         action: {
           type: 'navigate',
@@ -114,7 +134,9 @@ export function generateRiskInsights(context: InsightGeneratorContext): SmartIns
         id: `risk-quality-${habit.id}`,
         type: 'habit_risk',
         emoji: '📉',
-        message: `Качество выполнения "${getHabitName(habit)}" снижается`,
+        message: i18n.t('insights:habits.qualityDecreasing', {
+          title: getHabitName(habit),
+        }),
         priority: 65,
         action: {
           type: 'modal',
@@ -149,11 +171,14 @@ export function generateOptimizationInsights(context: InsightGeneratorContext): 
         id: `optimize-consistency-${habit.id}`,
         type: 'habit_optimization',
         emoji: '🎯',
-        message: `Улучшите регулярность "${getHabitName(habit)}" (сейчас ${Math.round(consistency)}%)`,
+        message: i18n.t('insights:habits.improveConsistency', {
+          title: getHabitName(habit),
+          percent: Math.round(consistency),
+        }),
         priority: 70 - Math.round(consistency / 2),
         action: {
           type: 'modal',
-          data: { habitId: habit.id, suggestion: 'Попробуйте установить напоминание' },
+          data: { habitId: habit.id, suggestion: i18n.t('recommendations:setReminder') },
         },
         timestamp: new Date(),
         source: 'habit-optimization',
@@ -172,7 +197,10 @@ export function generateOptimizationInsights(context: InsightGeneratorContext): 
         id: `optimize-synergy-${synergy.habit1}-${synergy.habit2}`,
         type: 'habit_optimization',
         emoji: '⚡',
-        message: `Объедините "${getHabitName(habit1)}" и "${getHabitName(habit2)}" для лучших результатов`,
+        message: i18n.t('insights:habits.combine', {
+          habit1: getHabitName(habit1),
+          habit2: getHabitName(habit2),
+        }),
         priority: Math.round(synergy.synergyScore * 0.7),
         action: {
           type: 'modal',
@@ -208,7 +236,10 @@ export function generateHabitAchievementInsights(context: InsightGeneratorContex
           id: `achievement-milestone-${habit.id}`,
           type: 'achievement',
           emoji: '🏆',
-          message: `Новый рекорд: ${habit.current_streak} дней подряд "${getHabitName(habit)}"!`,
+          message: i18n.t('insights:habits.newRecord', {
+            days: habit.current_streak,
+            title: getHabitName(habit),
+          }),
           priority: 85,
           action: {
             type: 'modal',
@@ -231,7 +262,11 @@ export function generateHabitAchievementInsights(context: InsightGeneratorContex
         id: `achievement-quality-${habit.id}`,
         type: 'achievement',
         emoji: '⭐',
-        message: `"${getHabitName(habit)}" - оценка качества ${best.grade} (${best.overallScore}/100)`,
+        message: i18n.t('insights:habits.qualityGrade', {
+          title: getHabitName(habit),
+          grade: best.grade,
+          score: best.overallScore,
+        }),
         priority: 75,
         action: {
           type: 'modal',
@@ -276,15 +311,4 @@ export function generateAIRecommendationInsights(context: InsightGeneratorContex
   });
 
   return insights;
-}
-
-// Helper
-function getTimeLabel(time: string): string {
-  const labels: Record<string, string> = {
-    morning: 'утром',
-    afternoon: 'днём',
-    evening: 'вечером',
-    night: 'ночью',
-  };
-  return labels[time] || time;
 }

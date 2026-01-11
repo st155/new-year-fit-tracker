@@ -31,6 +31,18 @@ import {
   type PersonalBaseline 
 } from '@/hooks/metrics/usePersonalBaselines';
 import { useTranslation } from 'react-i18next';
+import {
+  isStepsMetric,
+  isBodyFatMetric,
+  isStrainMetric,
+  isActiveCaloriesMetric,
+  isRestingHRMetric,
+  isHRVMetric,
+  isMaxHRMetric,
+  isRecoveryMetric,
+  isSleepEfficiencyMetric,
+  isSleepDurationMetric,
+} from '@/lib/metric-detection';
 
 interface WidgetCardProps {
   widget: Widget;
@@ -178,74 +190,69 @@ const getSourceDisplayName = (source: string): string => {
 // Определение цвета рамки по качеству значения метрики
 // ВАЖНО: Используем более мягкие пороги, чтобы не показывать красные плитки для нормальных персональных значений
 const getMetricQualityColor = (metricName: string, value: number): string | null => {
-  const name = metricName.toLowerCase();
-  
   // Recovery Score: <33 = красный, 33-66 = желтый, >66 = зеленый
-  if (name.includes('recovery')) {
+  if (isRecoveryMetric(metricName)) {
     if (value < 33) return '#ef4444';
     if (value < 67) return '#eab308';
     return '#10b981';
   }
   
-  // Sleep Efficiency: <70 = красный, 70-80 = желтый, ≥80 = зеленый (смягчили)
-  if (name.includes('sleep') && name.includes('efficiency')) {
+  // Sleep Efficiency: <70 = красный, 70-80 = желтый, ≥80 = зеленый
+  if (isSleepEfficiencyMetric(metricName)) {
     if (value < 70) return '#ef4444';
     if (value < 80) return '#eab308';
     return '#10b981';
   }
   
-  // Sleep Duration: <5.5ч = красный, 5.5-6.5ч = желтый, ≥6.5ч = зеленый (смягчили)
-  if (name.includes('sleep') && name.includes('duration')) {
+  // Sleep Duration: <5.5ч = красный, 5.5-6.5ч = желтый, ≥6.5ч = зеленый
+  if (isSleepDurationMetric(metricName)) {
     if (value < 5.5) return '#ef4444';
     if (value < 6.5) return '#eab308';
     return '#10b981';
   }
   
   // Resting HR: Очень широкий диапазон нормы (35-90 bpm)
-  // Для спортсменов 35-50 это отлично, для обычных людей 60-80 тоже норма
-  if ((name.includes('resting') && name.includes('heart')) || name.includes('resting hr') || name.includes('пульс в покое')) {
-    if (value < 30 || value > 100) return '#ef4444'; // Только экстремальные значения
-    return '#10b981'; // Всё остальное - норма (35-100 bpm)
+  if (isRestingHRMetric(metricName)) {
+    if (value < 30 || value > 100) return '#ef4444';
+    return '#10b981';
   }
   
-  // Steps: <3000 = красный, <5000 = желтый, >=8000 = зеленый (смягчили)
-  if (name.includes('step') || name.includes('шаг')) {
+  // Steps: <3000 = красный, <5000 = желтый, >=8000 = зеленый
+  if (isStepsMetric(metricName)) {
     if (value < 3000) return '#ef4444';
     if (value < 5000) return '#eab308';
     if (value >= 8000) return '#10b981';
-    return null; // 5000-8000 нейтрально
+    return null;
   }
   
   // Body Fat Percentage: широкий диапазон нормы 8-30%
-  if ((name.includes('body') && name.includes('fat')) || name.includes('процент жира') || name.includes('жир')) {
-    if (value < 5 || value > 40) return '#ef4444'; // Только экстремальные значения
-    if (value >= 8 && value <= 25) return '#10b981'; // Атлетический и здоровый диапазон
-    return null; // 5-8% и 25-40% - нейтрально
+  if (isBodyFatMetric(metricName)) {
+    if (value < 5 || value > 40) return '#ef4444';
+    if (value >= 8 && value <= 25) return '#10b981';
+    return null;
   }
   
-  // HRV: Широкий диапазон нормы, т.к. сильно зависит от возраста и физподготовки
-  // HRV 20-30 может быть нормой для пожилых, 80-150 для молодых спортсменов
-  if (name.includes('hrv')) {
-    if (value < 15) return '#ef4444'; // Только очень низкий HRV
-    if (value < 25) return '#eab308'; // Низковат, но не критично
-    return '#10b981'; // 25+ = норма (убрали верхний порог)
+  // HRV: Широкий диапазон нормы
+  if (isHRVMetric(metricName)) {
+    if (value < 15) return '#ef4444';
+    if (value < 25) return '#eab308';
+    return '#10b981';
   }
   
-  // Day Strain: Нет плохих значений - любой strain это нормально
-  // <8 = день отдыха (норма), 8-15 = обычный день, >15 = активный день
-  if ((name.includes('strain') && !name.includes('workout')) || name.includes('нагрузка')) {
-    return null; // Не показываем цвет - любой strain нормален
+  // Day Strain: Нет плохих значений
+  if (isStrainMetric(metricName)) {
+    return null;
   }
   
-  // Active Calories: <100 = красный, 100-300 = желтый, >=300 = зеленый (смягчили)
-  if ((name.includes('active') && name.includes('calor')) || name.includes('активные калории')) {
+  // Active Calories: <100 = красный, 100-300 = желтый, >=300 = зеленый
+  if (isActiveCaloriesMetric(metricName)) {
     if (value < 100) return '#ef4444';
     if (value < 300) return '#eab308';
     return '#10b981';
   }
   
-  // Max Heart Rate: Не показываем цвет - это просто факт, не хорошо/плохо
-  if ((name.includes('max') && name.includes('heart')) || name.includes('max hr') || name.includes('макс')) {
+  // Max Heart Rate: Не показываем цвет
+  if (isMaxHRMetric(metricName)) {
     return null;
   }
   
@@ -255,21 +262,19 @@ const getMetricQualityColor = (metricName: string, value: number): string | null
 // Получение текстового индикатора качества метрики
 // Используем более мягкие оценки, учитывая индивидуальные особенности
 const getQualityLabel = (metricName: string, value: number, t: (key: string) => string): { icon: string; text: string; color: string } | null => {
-  const name = metricName.toLowerCase();
-  
-  if (name.includes('recovery')) {
+  if (isRecoveryMetric(metricName)) {
     if (value < 33) return { icon: '🔴', text: t('quality.lowRecovery'), color: '#ef4444' };
     if (value < 67) return { icon: '⚠️', text: t('quality.average'), color: '#eab308' };
     return { icon: '✅', text: t('quality.excellent'), color: '#10b981' };
   }
   
-  if (name.includes('sleep') && name.includes('efficiency')) {
+  if (isSleepEfficiencyMetric(metricName)) {
     if (value < 70) return { icon: '😴', text: t('quality.poorSleep'), color: '#ef4444' };
     if (value < 80) return { icon: '😐', text: t('quality.normal'), color: '#eab308' };
     return { icon: '😊', text: t('quality.goodSleep'), color: '#10b981' };
   }
   
-  if (name.includes('sleep') && name.includes('duration')) {
+  if (isSleepDurationMetric(metricName)) {
     if (value < 5.5) return { icon: '😴', text: t('quality.poorSleep'), color: '#ef4444' };
     if (value < 6.5) return { icon: '😐', text: t('quality.notEnoughSleep'), color: '#eab308' };
     if (value < 8) return { icon: '😊', text: t('quality.good'), color: '#10b981' };
@@ -277,7 +282,7 @@ const getQualityLabel = (metricName: string, value: number, t: (key: string) => 
   }
   
   // HRV: Более мягкие пороги
-  if (name.includes('hrv')) {
+  if (isHRVMetric(metricName)) {
     if (value < 15) return { icon: '🔴', text: t('quality.veryLow'), color: '#ef4444' };
     if (value < 25) return { icon: '⚠️', text: t('quality.tooLow'), color: '#eab308' };
     if (value < 50) return { icon: '😊', text: t('quality.normal'), color: '#10b981' };
@@ -285,23 +290,23 @@ const getQualityLabel = (metricName: string, value: number, t: (key: string) => 
   }
   
   // Day Strain: Нет плохих значений
-  if (name.includes('strain') && !name.includes('workout')) {
+  if (isStrainMetric(metricName)) {
     if (value < 8) return { icon: '😌', text: t('quality.restDay'), color: '#10b981' };
     if (value <= 14) return { icon: '💪', text: t('quality.activeDay'), color: '#10b981' };
     return { icon: '🔥', text: t('quality.intensiveDay'), color: '#10b981' };
   }
   
   // Steps
-  if (name.includes('step')) {
+  if (isStepsMetric(metricName)) {
     if (value < 3000) return { icon: '🔴', text: t('quality.tooFewSteps'), color: '#ef4444' };
     if (value < 5000) return { icon: '⚠️', text: t('quality.lowActivity'), color: '#eab308' };
     if (value >= 10000) return { icon: '✅', text: t('quality.excellent'), color: '#10b981' };
     if (value >= 8000) return { icon: '😊', text: t('quality.good'), color: '#10b981' };
-    return null; // 5000-8000 нейтрально
+    return null;
   }
   
   // Body Fat Percentage - широкий диапазон нормы
-  if (name.includes('body') && name.includes('fat')) {
+  if (isBodyFatMetric(metricName)) {
     if (value < 5) return { icon: '⚠️', text: t('quality.criticallyLow'), color: '#ef4444' };
     if (value < 10) return { icon: '🏃', text: t('quality.competitive'), color: '#10b981' };
     if (value < 15) return { icon: '💪', text: t('quality.athletic'), color: '#10b981' };
@@ -313,19 +318,19 @@ const getQualityLabel = (metricName: string, value: number, t: (key: string) => 
   }
   
   // Active Calories
-  if (name.includes('active') && name.includes('calories')) {
+  if (isActiveCaloriesMetric(metricName)) {
     if (value < 100) return { icon: '🔴', text: t('quality.lowActivity'), color: '#ef4444' };
     if (value < 300) return { icon: '⚠️', text: t('quality.mediumActivity'), color: '#eab308' };
     return { icon: '✅', text: t('quality.goodActivity'), color: '#10b981' };
   }
   
   // Max Heart Rate - просто информация, не оценка
-  if (name.includes('max') && name.includes('heart')) {
-    return null; // Не показываем оценку
+  if (isMaxHRMetric(metricName)) {
+    return null;
   }
   
   // Resting Heart Rate - широкий диапазон нормы
-  if ((name.includes('resting') && name.includes('heart')) || name.includes('resting hr') || name.includes('пульс в покое')) {
+  if (isRestingHRMetric(metricName)) {
     if (value < 30) return { icon: '⚠️', text: t('quality.veryLow'), color: '#ef4444' };
     if (value < 50) return { icon: '🏃', text: t('quality.athletic'), color: '#10b981' };
     if (value < 60) return { icon: '✅', text: t('quality.excellent'), color: '#10b981' };
@@ -340,49 +345,47 @@ const getQualityLabel = (metricName: string, value: number, t: (key: string) => 
 
 // Получение пояснения для метрики
 const getMetricTooltip = (metricName: string, t: (key: string) => string): string | null => {
-  const name = metricName.toLowerCase();
-  console.log('[DEBUG getMetricTooltip]', metricName, '→', name);
-  
-  if (name.includes('recovery')) {
+  if (isRecoveryMetric(metricName)) {
     return t('tooltips.recovery');
   }
   
-  if (name.includes('sleep') && name.includes('efficiency')) {
+  if (isSleepEfficiencyMetric(metricName)) {
     return t('tooltips.sleepEfficiency');
   }
   
-  if (name.includes('sleep') && name.includes('duration')) {
+  if (isSleepDurationMetric(metricName)) {
     return t('tooltips.sleepDuration');
   }
   
-  if (name.includes('hrv')) {
+  if (isHRVMetric(metricName)) {
     return t('tooltips.hrv');
   }
   
-  if (name.includes('strain') && !name.includes('workout')) {
+  if (isStrainMetric(metricName)) {
     return t('tooltips.strain');
   }
   
-  if ((name.includes('resting') && name.includes('heart')) || name.includes('resting hr') || name.includes('пульс в покое')) {
+  if (isRestingHRMetric(metricName)) {
     return t('tooltips.restingHR');
   }
   
-  if (name.includes('step')) {
+  if (isStepsMetric(metricName)) {
     return t('tooltips.steps');
   }
   
-  if (name.includes('body') && name.includes('fat')) {
+  if (isBodyFatMetric(metricName)) {
     return t('tooltips.bodyFat');
   }
   
-  if (name.includes('active') && name.includes('calories')) {
+  if (isActiveCaloriesMetric(metricName)) {
     return t('tooltips.activeCalories');
   }
   
-  if (name.includes('max') && name.includes('heart')) {
+  if (isMaxHRMetric(metricName)) {
     return t('tooltips.maxHR');
   }
   
+  const name = metricName.toLowerCase();
   if (name.includes('weight')) {
     return t('tooltips.weight');
   }
