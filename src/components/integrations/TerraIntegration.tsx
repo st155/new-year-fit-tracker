@@ -348,7 +348,7 @@ export function TerraIntegration() {
       
       if (deauthError) {
         console.warn('⚠️ Deauth before reconnect failed:', deauthError);
-        throw new Error('Не удалось удалить старый токен');
+        throw new Error(t('errors.failedToDeauth'));
       }
       
       // Шаг 2: Ждём 5 секунд, чтобы Whoop/провайдер очистил OAuth кэш

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfDay, endOfDay } from "date-fns";
 import { getWorkoutCategory, WorkoutCategory } from "@/lib/workout-category";
+import i18n from "@/i18n";
 
 export interface CompletedWorkoutSummary {
   id: string;
@@ -70,7 +71,7 @@ export function useTodayCompletedWorkouts(userId?: string) {
           
           results.push({
             id: w.id,
-            workout_type: w.workout_type || 'Тренировка',
+            workout_type: w.workout_type || i18n.t('workouts:fallback.workout'),
             category,
             start_time: w.start_time,
             duration_minutes: w.duration_minutes,
@@ -128,7 +129,7 @@ export function useTodayCompletedWorkouts(userId?: string) {
 
           results.push({
             id: `manual-${sessionKey}`,
-            workout_type: logs[0].workout_name || 'Силовая тренировка',
+            workout_type: logs[0].workout_name || i18n.t('workouts:terraActivities.strengthTraining'),
             category: 'strength',
             start_time: firstLog.created_at,
             duration_minutes: durationMinutes,

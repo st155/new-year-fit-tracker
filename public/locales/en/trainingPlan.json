@@ -1,4 +1,21 @@
 {
+  "breadcrumbs": {
+    "trainerDashboard": "Trainer Dashboard",
+    "plans": "Plans"
+  },
+  "header": {
+    "weeks": "weeks",
+    "workouts": "workouts",
+    "activeClients": "active clients",
+    "copy": "Copy",
+    "delete": "Delete"
+  },
+  "deleteDialog": {
+    "title": "Delete plan?",
+    "description": "This action cannot be undone. The plan will be deleted permanently.",
+    "cancel": "Cancel",
+    "delete": "Delete"
+  },
   "overview": {
     "planInfo": "Plan Information",
     "created": "Created:",

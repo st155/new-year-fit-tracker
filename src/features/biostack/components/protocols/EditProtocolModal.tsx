@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { EditProtocolItemDialog } from './EditProtocolItemDialog';
 import { biostackQueryKeys } from '@/features/biostack/constants/query-keys';
+import { useTranslation } from 'react-i18next';
 
 interface EditProtocolModalProps {
   protocol: any;
@@ -20,6 +21,7 @@ interface EditProtocolModalProps {
 }
 
 export function EditProtocolModal({ protocol, open, onClose }: EditProtocolModalProps) {
+  const { t } = useTranslation('biostack');
   const [name, setName] = useState(protocol.name);
   const [description, setDescription] = useState(protocol.description || '');
   const [editingItem, setEditingItem] = useState<any>(null);
@@ -199,7 +201,7 @@ export function EditProtocolModal({ protocol, open, onClose }: EditProtocolModal
 
               {(!protocol.protocol_items || protocol.protocol_items.length === 0) && (
                 <p className="text-center py-6 text-muted-foreground">
-                  В этом протоколе нет добавок
+                  {t('protocols.noItems')}
                 </p>
               )}
             </div>

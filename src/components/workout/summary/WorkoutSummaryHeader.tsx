@@ -1,8 +1,11 @@
 import { useEffect } from "react";
 import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
+import { useTranslation } from "react-i18next";
 
 export function WorkoutSummaryHeader() {
+  const { t } = useTranslation('workouts');
+  
   useEffect(() => {
     // Celebration confetti effect
     const duration = 2000;
@@ -43,10 +46,10 @@ export function WorkoutSummaryHeader() {
       className="text-center space-y-2"
     >
       <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-        Тренировка завершена!
+        {t('summary.completed')}
       </h1>
       <p className="text-xl text-muted-foreground">
-        Отличная работа! 💪
+        {t('summary.greatJob')}
       </p>
     </motion.div>
   );

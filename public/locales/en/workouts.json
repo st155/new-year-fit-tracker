@@ -1020,5 +1020,9 @@
     "title": "Exercises",
     "sets": "set(s)",
     "set": "Set"
+  },
+  "summary": {
+    "completed": "Workout Complete!",
+    "greatJob": "Great job! 💪"
   }
 }
