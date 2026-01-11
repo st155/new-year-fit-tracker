@@ -1,5 +1,6 @@
 {
   "aggregated": "Агрегированное",
+  "allMetrics": "Все метрики",
   "title": "Интеграции",
   "callback": {
     "processing": "Обработка подключения...",

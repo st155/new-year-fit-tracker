@@ -511,7 +511,7 @@ export const AIChatWindow = ({
   const handleApprovePlan = async () => {
     if (sending) return;
     
-    const approvalMessage = "Да, выполнить план";
+    const approvalMessage = t('aiChat.approvePlan');
     setInput('');
     
     await onSendMessage(approvalMessage, 'general', [], [], selectedClient?.user_id, true);
@@ -641,20 +641,20 @@ export const AIChatWindow = ({
             <FileText className="h-4 w-4 text-primary" />
           )}
           <Badge variant="secondary" className="text-xs">
-            {isPreparing ? '⏳ Подготовка плана...' : 'План ожидает подтверждения'}
+            {isPreparing ? t('aiChat.preparingPlan') : t('aiChat.planAwaitingConfirmation')}
           </Badge>
         </div>
         
         {!isPreparing && actionCount > 0 && (
           <div className="text-xs text-muted-foreground mb-3">
-            Действий: {actionCount}
+            {t('aiChat.actionsCount', { count: actionCount })}
           </div>
         )}
         
         {isPreparing ? (
           <div className="flex items-center gap-2 text-sm text-yellow-600 dark:text-yellow-400">
             <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Готовлю структурированный план...</span>
+            <span>{t('aiChat.preparingStructured')}</span>
           </div>
         ) : (
           <div className="flex gap-2">
@@ -665,7 +665,7 @@ export const AIChatWindow = ({
               className="bg-green-600 hover:bg-green-700 text-white"
             >
               <CheckCircle className="h-3 w-3 mr-1" />
-              Выполнить
+              {t('aiChat.execute')}
             </Button>
             <Button
               size="sm"
@@ -673,7 +673,7 @@ export const AIChatWindow = ({
               onClick={onReconsider}
               disabled={sending}
             >
-              Подумать
+              {t('aiChat.think')}
             </Button>
           </div>
         )}

@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { Sparkles } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface AIMotivationProps {
   habit: any;
@@ -7,6 +8,8 @@ interface AIMotivationProps {
 }
 
 export function AIMotivation({ habit, elapsedMinutes }: AIMotivationProps) {
+  const { t } = useTranslation('habits');
+  
   const motivation = useMemo(() => {
     const milestones = habit.ai_motivation?.milestones || {};
     const milestoneKeys = Object.keys(milestones).map(Number).sort((a, b) => a - b);
@@ -42,11 +45,11 @@ export function AIMotivation({ habit, elapsedMinutes }: AIMotivationProps) {
   if (!motivation) return null;
 
   const formatRemaining = (minutes: number) => {
-    if (minutes < 60) return `${minutes}м`;
-    if (minutes < 1440) return `${Math.floor(minutes / 60)}ч ${minutes % 60}м`;
+    if (minutes < 60) return t('fasting.duration.minutes', { mins: minutes });
+    if (minutes < 1440) return t('fasting.duration.hours', { hours: Math.floor(minutes / 60), mins: minutes % 60 });
     const days = Math.floor(minutes / 1440);
     const hours = Math.floor((minutes % 1440) / 60);
-    return `${days}д ${hours}ч`;
+    return t('fasting.duration.days', { days, hours });
   };
 
   return (
@@ -56,11 +59,9 @@ export function AIMotivation({ habit, elapsedMinutes }: AIMotivationProps) {
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-foreground">
             {motivation.isNext ? (
-              <>
-                Еще <span className="text-primary">{formatRemaining(motivation.remaining)}</span> до прогресса!
-              </>
+              t('motivation.moreToProgress', { time: formatRemaining(motivation.remaining) })
             ) : (
-              "Достигнуто! 🎉"
+              t('motivation.achieved')
             )}
           </p>
           <p className="text-xs text-muted-foreground mt-1">

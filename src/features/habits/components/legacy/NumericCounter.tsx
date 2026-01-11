@@ -9,6 +9,7 @@ import {
 } from "@/lib/habit-utils";
 import { HabitSparkline } from "./HabitSparkline";
 import { HabitHistory } from "./HabitHistory";
+import { useTranslation } from "react-i18next";
 
 interface NumericCounterProps {
   habit: any;
@@ -16,6 +17,7 @@ interface NumericCounterProps {
 }
 
 export function NumericCounter({ habit, userId }: NumericCounterProps) {
+  const { t } = useTranslation('habits');
   const { stats, measurements, addMeasurement, isAdding } = useHabitMeasurements(habit.id, userId);
 
   const currentValue = stats?.total || 0;
@@ -106,7 +108,7 @@ export function NumericCounter({ habit, userId }: NumericCounterProps) {
       {/* Sparkline */}
       {measurements && measurements.length > 1 && (
         <div className="space-y-2">
-          <div className="text-xs text-muted-foreground">Последние 7 дней</div>
+          <div className="text-xs text-muted-foreground">{t('history.last7days')}</div>
           <HabitSparkline 
             data={measurements.slice(0, 7).reverse().map(m => m.value)}
             width={250}
@@ -133,7 +135,7 @@ export function NumericCounter({ habit, userId }: NumericCounterProps) {
       {/* Recent History */}
       {measurements && measurements.length > 0 && (
         <div className="space-y-2">
-          <div className="text-xs text-muted-foreground">Последние записи</div>
+          <div className="text-xs text-muted-foreground">{t('history.recentEntries')}</div>
           <HabitHistory 
             measurements={measurements}
             type="measurements"

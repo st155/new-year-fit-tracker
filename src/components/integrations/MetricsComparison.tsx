@@ -80,10 +80,10 @@ export function MetricsComparison() {
             <label className="text-sm font-medium">{t('selectMetric')}:</label>
             <Select value={selectedMetric} onValueChange={setSelectedMetric}>
               <SelectTrigger className="w-[250px]">
-                <SelectValue placeholder="Все метрики" />
+                <SelectValue placeholder={t('allMetrics')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Все метрики</SelectItem>
+                <SelectItem value="">{t('allMetrics')}</SelectItem>
                 {uniqueMetrics.map(metric => (
                   <SelectItem key={metric} value={metric}>
                     {metric}

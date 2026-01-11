@@ -11,6 +11,7 @@ import {
 } from "@/lib/habit-utils";
 import { HabitHistory } from "./HabitHistory";
 import { HabitSparkline } from "./HabitSparkline";
+import { useTranslation } from "react-i18next";
 
 interface DailyMeasurementProps {
   habit: any;
@@ -18,6 +19,7 @@ interface DailyMeasurementProps {
 }
 
 export function DailyMeasurement({ habit, userId }: DailyMeasurementProps) {
+  const { t } = useTranslation('habits');
   const [value, setValue] = useState("");
   const { measurements, stats, addMeasurement, isAdding } = useHabitMeasurements(habit.id, userId);
 
@@ -156,7 +158,7 @@ export function DailyMeasurement({ habit, userId }: DailyMeasurementProps) {
       {/* Sparkline */}
       {measurements && measurements.length > 1 && (
         <div className="space-y-2">
-          <div className="text-xs text-muted-foreground">Тренд за неделю</div>
+          <div className="text-xs text-muted-foreground">{t('history.weekTrend')}</div>
           <HabitSparkline 
             data={measurements.slice(0, 7).reverse().map(m => m.value)}
             width={250}
@@ -169,7 +171,7 @@ export function DailyMeasurement({ habit, userId }: DailyMeasurementProps) {
       {/* Recent History */}
       {measurements && measurements.length > 0 && (
         <div className="space-y-2">
-          <div className="text-xs text-muted-foreground">Последние замеры</div>
+          <div className="text-xs text-muted-foreground">{t('history.recentMeasurements')}</div>
           <HabitHistory 
             measurements={measurements}
             type="measurements"

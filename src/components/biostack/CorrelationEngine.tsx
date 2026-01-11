@@ -479,7 +479,7 @@ export function CorrelationEngine() {
                           dataKey="consistency" 
                           fill="#22c55e"
                           fillOpacity={0.6}
-                          name="Регулярность (%)"
+                          name={t('correlation.consistencyPercent')}
                         />
                         <Line 
                           yAxisId="left"
