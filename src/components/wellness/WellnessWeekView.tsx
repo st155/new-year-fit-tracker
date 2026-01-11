@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useWeeklyActivities, useToggleActivityCompletion, WellnessActivity } from "@/hooks/useWellnessActivities";
 import { getActivityConfig, getActivityLabel } from "@/lib/wellness-activity-types";
 import { format, startOfWeek, addDays, isSameDay, isToday } from "date-fns";
-import { ru } from "date-fns/locale";
+import { getDateLocale } from "@/lib/date-locale";
 import { CheckCircle, Circle, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -84,7 +84,7 @@ export function WellnessWeekView({ compact = false }: WellnessWeekViewProps) {
                       <Circle className="w-5 h-5 text-neutral-600" />
                     )}
                     <span className={isCurrentDay ? "text-foreground" : "text-muted-foreground"}>
-                      {format(day, 'EEE', { locale: ru })}
+                      {format(day, 'EEE', { locale: getDateLocale() })}
                     </span>
                     <div className="flex gap-1">
                       {dayActivities.map((activity) => {
@@ -141,7 +141,7 @@ export function WellnessWeekView({ compact = false }: WellnessWeekViewProps) {
                   "text-xs mb-1",
                   isCurrentDay ? "text-cyan-400 font-medium" : "text-muted-foreground"
                 )}>
-                  {format(day, 'EEE', { locale: ru })}
+                  {format(day, 'EEE', { locale: getDateLocale() })}
                 </div>
                 <div className="text-sm font-medium mb-2">
                   {format(day, 'd')}

@@ -4,7 +4,7 @@ import { Heart, Moon, Footprints, Scale, Zap, Activity } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format, parseISO, isToday, isYesterday } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { getDateLocale, getIntlLocale } from '@/lib/date-locale';
 import type { HealthMetric } from '@/hooks/profile/useProfileSummary';
 
 interface HealthSnapshotProps {
@@ -41,7 +41,7 @@ const metricConfig: Record<string, { icon: React.ReactNode; color: string; forma
   'Steps': {
     icon: <Footprints className="h-4 w-4" />,
     color: 'text-cyan-500',
-    format: (v) => v.toLocaleString('ru-RU')
+    format: (v) => v.toLocaleString(getIntlLocale())
   },
   'HRV': {
     icon: <Heart className="h-4 w-4" />,
@@ -56,7 +56,7 @@ function formatDate(dateStr: string): string {
   const date = parseISO(dateStr);
   if (isToday(date)) return 'Сегодня';
   if (isYesterday(date)) return 'Вчера';
-  return format(date, 'd MMM', { locale: ru });
+  return format(date, 'd MMM', { locale: getDateLocale() });
 }
 
 function getSourceBadge(source: string): string {

@@ -16,7 +16,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { getDateLocale } from '@/lib/date-locale';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -140,7 +140,7 @@ export default function BiomarkerDetail() {
               <span className="text-lg text-muted-foreground">{latestResult.normalized_unit}</span>
             </div>
             <p className="text-sm text-muted-foreground mt-2">
-              {format(new Date(latestResult.test_date), 'dd MMMM yyyy', { locale: ru })}
+              {format(new Date(latestResult.test_date), 'dd MMMM yyyy', { locale: getDateLocale() })}
             </p>
           </CardContent>
         </Card>
@@ -154,7 +154,7 @@ export default function BiomarkerDetail() {
               {history.slice(0, 10).map((result) => (
                 <div key={result.id} className="flex justify-between items-center p-3 border-b border-border last:border-0">
                   <span className="text-sm text-muted-foreground">
-                    {format(new Date(result.test_date), 'dd MMM yyyy', { locale: ru })}
+                    {format(new Date(result.test_date), 'dd MMM yyyy', { locale: getDateLocale() })}
                   </span>
                   <span className="font-medium">
                     {result.normalized_value} {result.normalized_unit}
@@ -473,7 +473,7 @@ export default function BiomarkerDetail() {
                     <div className="flex items-center justify-between">
                       <div className="space-y-1">
                         <p className="font-semibold">
-                          {format(new Date(result.test_date), 'dd MMMM yyyy', { locale: ru })}
+                          {format(new Date(result.test_date), 'dd MMMM yyyy', { locale: getDateLocale() })}
                         </p>
                         {result.raw_test_name !== biomarker.display_name && (
                           <p className="text-xs text-muted-foreground">

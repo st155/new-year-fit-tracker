@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { format, eachDayOfInterval, startOfYear, endOfDay, isToday } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { getDateLocale } from '@/lib/date-locale';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -127,7 +127,7 @@ export function HabitCalendarHeatmap({ userId, habitIds }: HabitCalendarHeatmapP
                     <TooltipContent className="glass-strong border-white/20">
                       <div className="text-xs space-y-1">
                         <div className="font-semibold">
-                          {format(day.date, 'd MMMM yyyy', { locale: ru })}
+                          {format(day.date, 'd MMMM yyyy', { locale: getDateLocale() })}
                         </div>
                         <div className="text-muted-foreground">
                           {day.count === 0 ? 'Нет выполнений' : `${day.count} ${day.count === 1 ? 'выполнение' : 'выполнений'}`}

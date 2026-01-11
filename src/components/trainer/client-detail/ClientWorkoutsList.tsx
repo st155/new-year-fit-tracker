@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { getDateLocale } from '@/lib/date-locale';
 import { Dumbbell, Clock, Flame, Heart, Activity } from 'lucide-react';
 
 interface ClientWorkoutsListProps {
@@ -214,7 +214,7 @@ export function ClientWorkoutsList({ clientId }: ClientWorkoutsListProps) {
                   <TableRow key={workout.id}>
                     <TableCell className="font-medium">
                       {workout.start_time 
-                        ? format(new Date(workout.start_time), 'dd MMM yyyy, HH:mm', { locale: ru })
+                        ? format(new Date(workout.start_time), 'dd MMM yyyy, HH:mm', { locale: getDateLocale() })
                         : '-'
                       }
                     </TableCell>

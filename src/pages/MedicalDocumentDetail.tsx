@@ -29,7 +29,7 @@ import { BiomarkerCard } from '@/components/biomarkers/BiomarkerCard';
 import { BiomarkerMappingDialog } from '@/components/biomarkers/BiomarkerMappingDialog';
 import { PDFViewerPanel } from '@/components/medical-documents/PDFViewerPanel';
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { getDateLocale } from '@/lib/date-locale';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { documentsApi } from '@/lib/api';
@@ -343,7 +343,7 @@ export default function MedicalDocumentDetail() {
           <div className="flex flex-wrap gap-2 mt-2 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
               <Calendar className="h-4 w-4" />
-              {format(new Date(document.document_date || document.uploaded_at), 'dd MMMM yyyy', { locale: ru })}
+              {format(new Date(document.document_date || document.uploaded_at), 'dd MMMM yyyy', { locale: getDateLocale() })}
             </div>
             {results && results.length > 0 && results[0].laboratory_name && (
               <div className="flex items-center gap-1">
@@ -514,7 +514,7 @@ export default function MedicalDocumentDetail() {
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">{t('detail.labels.documentDate')}:</span>
                 <span className="font-medium">
-                  {format(new Date(document.document_date || document.uploaded_at), 'dd MMMM yyyy', { locale: ru })}
+                  {format(new Date(document.document_date || document.uploaded_at), 'dd MMMM yyyy', { locale: getDateLocale() })}
                 </span>
               </div>
               {document.tags && document.tags.length > 0 && (

@@ -6,7 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Badge } from '@/components/ui/badge';
 import { Calendar as CalendarIcon, TrendingUp, TrendingDown, Minus, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { getDateLocale } from '@/lib/date-locale';
 import { DateRange } from 'react-day-picker';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -161,11 +161,11 @@ export function PeriodComparison({ clientId }: PeriodComparisonProps) {
                   {period1?.from ? (
                     period1.to ? (
                       <>
-                        {format(period1.from, 'd MMM', { locale: ru })} -{' '}
-                        {format(period1.to, 'd MMM yyyy', { locale: ru })}
+                        {format(period1.from, 'd MMM', { locale: getDateLocale() })} -{' '}
+                        {format(period1.to, 'd MMM yyyy', { locale: getDateLocale() })}
                       </>
                     ) : (
-                      format(period1.from, 'd MMM yyyy', { locale: ru })
+                      format(period1.from, 'd MMM yyyy', { locale: getDateLocale() })
                     )
                   ) : (
                     <span>Выберите период</span>
@@ -180,7 +180,7 @@ export function PeriodComparison({ clientId }: PeriodComparisonProps) {
                   selected={period1}
                   onSelect={setPeriod1}
                   numberOfMonths={2}
-                  locale={ru}
+                  locale={getDateLocale()}
                 />
               </PopoverContent>
             </Popover>
@@ -205,11 +205,11 @@ export function PeriodComparison({ clientId }: PeriodComparisonProps) {
                   {period2?.from ? (
                     period2.to ? (
                       <>
-                        {format(period2.from, 'd MMM', { locale: ru })} -{' '}
-                        {format(period2.to, 'd MMM yyyy', { locale: ru })}
+                        {format(period2.from, 'd MMM', { locale: getDateLocale() })} -{' '}
+                        {format(period2.to, 'd MMM yyyy', { locale: getDateLocale() })}
                       </>
                     ) : (
-                      format(period2.from, 'd MMM yyyy', { locale: ru })
+                      format(period2.from, 'd MMM yyyy', { locale: getDateLocale() })
                     )
                   ) : (
                     <span>Выберите период</span>
@@ -224,7 +224,7 @@ export function PeriodComparison({ clientId }: PeriodComparisonProps) {
                   selected={period2}
                   onSelect={setPeriod2}
                   numberOfMonths={2}
-                  locale={ru}
+                  locale={getDateLocale()}
                 />
               </PopoverContent>
             </Popover>

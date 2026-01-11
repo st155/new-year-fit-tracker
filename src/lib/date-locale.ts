@@ -28,3 +28,11 @@ export const getDateTimeFormat = () => {
 export const getTimeFormat = () => {
   return i18n.language === 'ru' ? 'HH:mm' : 'h:mm a';
 };
+
+/**
+ * Returns the appropriate Intl locale string based on current i18n language
+ * Use for toLocaleString, toLocaleDateString, toLocaleTimeString
+ */
+export const getIntlLocale = () => {
+  return i18n.language === 'ru' ? 'ru-RU' : 'en-US';
+};

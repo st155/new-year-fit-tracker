@@ -1,5 +1,5 @@
 import { formatDistanceToNow } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { getDateLocale } from '@/lib/date-locale';
 import { cn } from '@/lib/utils';
 import type { Notification } from '@/hooks/useNotifications';
 
@@ -32,7 +32,7 @@ export function NotificationItem({ notification, onClick }: NotificationItemProp
         <p className="text-xs text-muted-foreground mt-1">
           {formatDistanceToNow(new Date(notification.timestamp), {
             addSuffix: true,
-            locale: ru,
+            locale: getDateLocale(),
           })}
         </p>
       </div>

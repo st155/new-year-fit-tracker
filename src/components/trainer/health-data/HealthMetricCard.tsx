@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { LineChart, Line, ResponsiveContainer, Tooltip } from "recharts";
 import { formatSourceName } from "@/hooks/useClientDetailData";
 import { format, parseISO } from "date-fns";
-import { ru } from "date-fns/locale";
+import { getDateLocale } from "@/lib/date-locale";
 
 interface HealthMetricCardProps {
   title: string;
@@ -56,7 +56,7 @@ export function HealthMetricCard({ title, icon, value, unit, source, data, trend
                   return (
                     <div className="bg-background border rounded px-2 py-1 text-xs shadow-lg">
                       <div className="font-medium text-primary">
-                        {format(parseISO(data.date), 'd MMM yyyy', { locale: ru })}
+                        {format(parseISO(data.date), 'd MMM yyyy', { locale: getDateLocale() })}
                       </div>
                       <div className="text-muted-foreground">
                         {payload[0].value} {unit}

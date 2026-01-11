@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format, subDays } from "date-fns";
-import { ru } from "date-fns/locale";
+import { getDateLocale } from "@/lib/date-locale";
 import i18n from "@/i18n";
 
 export type PeriodFilter = '7d' | '30d' | '90d' | 'all';
@@ -297,7 +297,7 @@ export function useProgressMetrics(userId?: string) {
       const sorted = Object.values(byDate).sort((a, b) => a.date.getTime() - b.date.getTime());
       
       return sorted.map(d => ({
-        date: format(d.date, 'd MMM', { locale: ru }),
+        date: format(d.date, 'd MMM', { locale: getDateLocale() }),
         value: d.value,
         weight: d.maxWeight,
         reps: d.maxReps,
@@ -321,7 +321,7 @@ export function useProgressMetrics(userId?: string) {
       const sorted = Object.values(byDate).sort((a, b) => a.date.getTime() - b.date.getTime());
       
       return sorted.map(d => ({
-        date: format(d.date, 'd MMM', { locale: ru }),
+        date: format(d.date, 'd MMM', { locale: getDateLocale() }),
         value: Math.round(d.totalMinutes),
         count: d.count
       }));
@@ -342,7 +342,7 @@ export function useProgressMetrics(userId?: string) {
       const sorted = Object.entries(byDate)
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([_, d]) => ({
-          date: format(d.date, 'd MMM', { locale: ru }),
+          date: format(d.date, 'd MMM', { locale: getDateLocale() }),
           value: Math.round(d.values.reduce((a, b) => a + b, 0) / d.values.length * 10) / 10
         }));
       
