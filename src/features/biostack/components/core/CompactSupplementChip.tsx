@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { getIntlLocale } from '@/lib/date-locale';
 
 export interface UnifiedSupplementItem {
   id: string;
@@ -274,7 +275,7 @@ export function CompactSupplementChip({
             {item.takenToday && item.takenAt && (
               <div className="pt-2 border-t border-border/30">
                 <p className="text-xs text-green-500">
-                  ✅ Принято {item.todayIntakeCount > 1 ? `${item.todayIntakeCount} раз(а)` : ''} в {item.takenAt.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+                  ✅ Принято {item.todayIntakeCount > 1 ? `${item.todayIntakeCount} раз(а)` : ''} в {item.takenAt.toLocaleTimeString(getIntlLocale(), { hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
             )}

@@ -7,6 +7,7 @@ import { useCategoryDetail } from '@/hooks/medical-documents/useCategoryDetail';
 import { CategoryMetricCard } from '@/components/medical-documents/CategoryMetricCard';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { getIntlLocale } from '@/lib/date-locale';
 
 const categoryIcons: Record<string, string> = {
   blood_test: '🩸',
@@ -161,7 +162,7 @@ export default function CategoryDetailPage() {
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {doc.document_date ? new Date(doc.document_date).toLocaleDateString('ru-RU', {
+                      {doc.document_date ? new Date(doc.document_date).toLocaleDateString(getIntlLocale(), {
                         day: 'numeric',
                         month: 'long',
                         year: 'numeric'

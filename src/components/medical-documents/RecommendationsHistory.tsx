@@ -8,6 +8,7 @@ import { useRecommendationsHistory } from "@/hooks/medical-documents/useRecommen
 import { Sparkles, Loader2, Lightbulb, Calendar, ChevronRight, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslation } from 'react-i18next';
+import { getIntlLocale } from '@/lib/date-locale';
 
 export const RecommendationsHistory = () => {
   const { t } = useTranslation('medicalDocs');
@@ -68,7 +69,7 @@ export const RecommendationsHistory = () => {
                   >
                     <div className="flex flex-col items-start gap-1">
                       <div className="text-sm font-medium">
-                        {new Date(rec.generated_at).toLocaleDateString('ru-RU', {
+                        {new Date(rec.generated_at).toLocaleDateString(getIntlLocale(), {
                           day: '2-digit',
                           month: 'short',
                           year: 'numeric',

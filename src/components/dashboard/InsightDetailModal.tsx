@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import type { SmartInsight } from '@/lib/insights/types';
+import { getIntlLocale } from '@/lib/date-locale';
 
 interface InsightDetailModalProps {
   insight: SmartInsight | null;
@@ -90,7 +91,7 @@ export function InsightDetailModal({
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Время:</span>
               <span className="font-medium">
-                {insight.timestamp.toLocaleTimeString('ru-RU', {
+                {insight.timestamp.toLocaleTimeString(getIntlLocale(), {
                   hour: '2-digit',
                   minute: '2-digit',
                 })}

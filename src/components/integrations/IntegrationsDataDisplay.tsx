@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { terraApi, jobsApi } from '@/lib/api';
+import { getIntlLocale } from '@/lib/date-locale';
 
 interface MetricData {
   name: string;
@@ -204,7 +205,7 @@ export function IntegrationsDataDisplay() {
           source: provider,
           icon: getMetricIcon(metricName, item.metric_category),
           color: getMetricColor(item.metric_category),
-          lastUpdate: new Date(item.measurement_date).toLocaleDateString('ru-RU'),
+          lastUpdate: new Date(item.measurement_date).toLocaleDateString(getIntlLocale()),
         });
       }
     });
@@ -231,7 +232,7 @@ export function IntegrationsDataDisplay() {
           source: provider,
           icon: getMetricIcon('Steps', s.metric_category),
           color: getMetricColor(s.metric_category),
-          lastUpdate: new Date(s.measurement_date).toLocaleDateString('ru-RU'),
+          lastUpdate: new Date(s.measurement_date).toLocaleDateString(getIntlLocale()),
         });
       }
     } catch (e) {
@@ -409,7 +410,7 @@ export function IntegrationsDataDisplay() {
               <div className="flex items-center gap-3">
                 {provider.lastSync && (
                   <span className="text-sm text-muted-foreground">
-                    {new Date(provider.lastSync).toLocaleString('ru-RU')}
+                    {new Date(provider.lastSync).toLocaleString(getIntlLocale())}
                   </span>
                 )}
                 <Button variant="outline" size="sm" onClick={fetchIntegrationsData}>

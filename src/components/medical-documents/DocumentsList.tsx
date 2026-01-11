@@ -11,6 +11,7 @@ import { useMedicalDocuments, DocumentType } from '@/hooks/useMedicalDocuments';
 import { toast } from '@/hooks/use-toast';
 import { DocumentComparison } from './DocumentComparison';
 import { documentsApi } from '@/lib/api';
+import { getIntlLocale } from '@/lib/date-locale';
 
 export const DocumentsList = () => {
   const { t } = useTranslation('medicalDocs');
@@ -22,7 +23,7 @@ export const DocumentsList = () => {
   );
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ru-RU', {
+    return new Date(dateString).toLocaleDateString(getIntlLocale(), {
       year: 'numeric',
       month: 'long',
       day: 'numeric',

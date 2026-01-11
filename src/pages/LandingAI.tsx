@@ -19,6 +19,7 @@ import confetti from 'canvas-confetti';
 import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
 import { useTranslation } from 'react-i18next';
+import { getIntlLocale } from '@/lib/date-locale';
 
 const BodyModel3D = lazy(() => import('@/components/body-composition/BodyModel3D').then(m => ({ default: m.BodyModel3D })));
 
@@ -196,7 +197,7 @@ export default function LandingAI() {
 
   const chartData = useMemo(() => {
     return metricsHistory?.slice(-7).map((m: any) => ({
-      date: new Date(m.measured_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }),
+      date: new Date(m.measured_at).toLocaleDateString(getIntlLocale(), { day: 'numeric', month: 'short' }),
       value: m.value,
     })) || [];
   }, [metricsHistory]);

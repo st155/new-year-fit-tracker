@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useLinkedBiomarkers } from "@/hooks/biostack/useLinkedBiomarkers";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { getIntlLocale } from '@/lib/date-locale';
 
 interface CompactSupplementChipProps {
   item: UnifiedSupplementItem;
@@ -192,7 +193,7 @@ export function CompactSupplementChip({ item, isSelected, onToggle, onToggleInta
             {item.takenToday && item.takenAt && (
               <div className="pt-2 border-t border-border/30">
                 <p className="text-xs text-green-500">
-                  ✅ Принято {item.todayIntakeCount > 1 ? `${item.todayIntakeCount} раз(а)` : ''} в {item.takenAt.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+                  ✅ Принято {item.todayIntakeCount > 1 ? `${item.todayIntakeCount} раз(а)` : ''} в {item.takenAt.toLocaleTimeString(getIntlLocale(), { hour: '2-digit', minute: '2-digit' })}
                 </p>
                 {item.todayIntakeCount > 1 && (
                   <p className="text-[10px] text-muted-foreground mt-1">

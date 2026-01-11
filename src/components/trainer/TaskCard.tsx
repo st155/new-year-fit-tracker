@@ -5,6 +5,7 @@ import { CheckCircle2, Circle, Calendar, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
+import { getIntlLocale } from '@/lib/date-locale';
 
 interface TaskCardProps {
   task: {
@@ -109,7 +110,7 @@ export const TaskCard = ({ task, onUpdate }: TaskCardProps) => {
               {isOverdue && <AlertCircle className="h-4 w-4" />}
               <Calendar className="h-4 w-4" />
               <span>
-                {new Date(task.deadline).toLocaleDateString('ru-RU')}
+                {new Date(task.deadline).toLocaleDateString(getIntlLocale())}
               </span>
             </div>
           )}

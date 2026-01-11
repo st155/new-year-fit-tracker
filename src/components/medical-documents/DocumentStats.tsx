@@ -1,6 +1,7 @@
 import { useMedicalDocuments, DocumentType } from '@/hooks/useMedicalDocuments';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Activity, Camera, FlaskConical, FileCheck } from 'lucide-react';
+import { getIntlLocale } from '@/lib/date-locale';
 
 export const DocumentStats = () => {
   const { documents } = useMedicalDocuments();
@@ -16,7 +17,7 @@ export const DocumentStats = () => {
   const aiProcessed = documents.filter(d => d.ai_processed).length;
 
   const lastUpload = documents.length > 0 
-    ? new Date(documents[0].uploaded_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
+    ? new Date(documents[0].uploaded_at).toLocaleDateString(getIntlLocale(), { day: 'numeric', month: 'short' })
     : '';
 
   return (

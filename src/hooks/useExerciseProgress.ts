@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { subMonths } from 'date-fns';
+import { getIntlLocale } from '@/lib/date-locale';
 
 interface ExerciseProgress {
   date: string;
@@ -42,7 +43,7 @@ export function useExerciseProgress(exerciseName: string, userId?: string) {
       // Group by date and find max value per day
       // For bodyweight: max reps; for weighted: max weight
       const grouped = data?.reduce((acc: Record<string, ExerciseProgress>, curr) => {
-        const date = new Date(curr.performed_at).toLocaleDateString('ru-RU');
+        const date = new Date(curr.performed_at).toLocaleDateString(getIntlLocale());
         const weight = curr.actual_weight || 0;
         const reps = curr.actual_reps || 0;
         const volume = weight * reps;
