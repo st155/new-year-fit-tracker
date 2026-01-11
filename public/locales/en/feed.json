@@ -6,12 +6,40 @@
     "title": "No activity yet",
     "description": "Start tracking your fitness data to see your activity feed"
   },
+  "social": {
+    "title": "Social Activity",
+    "subtitle": "Habits 3.0",
+    "emptyTitle": "Complete habits and join teams!",
+    "emptySubtitle": "Your activity will appear here 🚀",
+    "viewAll": "Click to view all events",
+    "user": "User",
+    "teamActivity": "Team Activity",
+    "allEvents": "All events"
+  },
   "events": {
-    "completion": "completed habit \"{{name}}\"",
-    "streak": "reached {{days}} days streak!",
+    "completion": "completed a habit",
+    "streak": "reached a streak",
+    "milestone": "reached a goal",
+    "level_up": "leveled up",
+    "completionFull": "completed habit \"{{name}}\"",
+    "streakFull": "reached {{days}} days streak!",
     "achievement": "earned achievement \"{{name}}\"",
-    "milestone": "reached milestone: {{text}}",
+    "milestoneFull": "reached milestone: {{text}}",
     "challengeComplete": "completed challenge \"{{name}}\"",
     "progressUpdate": "updated progress"
+  },
+  "habits": {
+    "title": "Habits 3.0",
+    "today": "Today",
+    "streaks": "Streaks",
+    "teams": "Teams",
+    "allHabits": "All habits",
+    "allCompleted": "All habits completed for today!",
+    "errorLoading": "Error loading habits",
+    "couldNotLoad": "Could not load your habits",
+    "tryAgain": "Try again",
+    "startTracking": "Start tracking habits",
+    "createFirst": "Create your first habit and start the journey to a better version of yourself",
+    "createFirstButton": "Create first habit"
   }
 }

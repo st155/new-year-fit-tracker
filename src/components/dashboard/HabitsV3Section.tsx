@@ -13,8 +13,10 @@ import { motion } from "framer-motion";
 import { useHabitFeed } from "@/hooks/useHabitFeed";
 import { HabitWidgetCard } from "@/features/habits/components/widgets/HabitWidgetCard";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 export function HabitsV3Section() {
+  const { t } = useTranslation('feed');
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: habits, isLoading: habitsLoading, error, refetch } = useHabitsQuery({ enabled: !!user?.id });
@@ -71,13 +73,13 @@ export function HabitsV3Section() {
         <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
           <Target className="h-8 w-8 text-destructive" />
         </div>
-        <h3 className="text-lg font-semibold mb-2">Ошибка загрузки привычек</h3>
+        <h3 className="text-lg font-semibold mb-2">{t('habits.errorLoading')}</h3>
         <p className="text-muted-foreground mb-4">
-          {error.message || 'Не удалось загрузить ваши привычки'}
+          {error.message || t('habits.couldNotLoad')}
         </p>
         <Button onClick={() => refetch()} variant="outline" className="gap-2">
           <Target className="h-4 w-4" />
-          Попробовать снова
+          {t('habits.tryAgain')}
         </Button>
       </Card>
     );
@@ -90,13 +92,13 @@ export function HabitsV3Section() {
         <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
           <Target className="h-8 w-8 text-primary" />
         </div>
-        <h3 className="text-lg font-semibold mb-2">Начните отслеживать привычки</h3>
+        <h3 className="text-lg font-semibold mb-2">{t('habits.startTracking')}</h3>
         <p className="text-muted-foreground mb-4 max-w-md mx-auto">
-          Создайте свою первую привычку и начните путь к лучшей версии себя
+          {t('habits.createFirst')}
         </p>
         <Button onClick={() => navigate('/habits')} className="gap-2">
           <Plus className="h-4 w-4" />
-          Создать первую привычку
+          {t('habits.createFirstButton')}
         </Button>
       </Card>
     );
@@ -134,17 +136,17 @@ export function HabitsV3Section() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold bg-gradient-to-r from-primary via-purple-500 to-primary bg-clip-text text-transparent">
-            Привычки 3.0
+            {t('habits.title')}
           </h2>
           <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
               <Target className="h-3 w-3" />
-              Сегодня: {completedToday}/{totalActive}
+              {t('habits.today')}: {completedToday}/{totalActive}
             </span>
             {activeStreaks > 0 && (
               <span className="flex items-center gap-1 text-orange-500">
                 <Flame className="h-3 w-3" />
-                Серии: {activeStreaks}
+                {t('habits.streaks')}: {activeStreaks}
               </span>
             )}
             {levelInfo && (
@@ -162,7 +164,7 @@ export function HabitsV3Section() {
             className="gap-2"
           >
             <Users className="h-4 w-4" />
-            Команды
+            {t('habits.teams')}
           </Button>
           <Button 
             onClick={() => navigate('/habits')} 
@@ -170,7 +172,7 @@ export function HabitsV3Section() {
             size="sm" 
             className="gap-2"
           >
-            Все привычки
+            {t('habits.allHabits')}
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
@@ -201,7 +203,7 @@ export function HabitsV3Section() {
         <Card className="p-6 text-center border-dashed">
           <div className="text-4xl mb-2">🎉</div>
           <p className="text-muted-foreground">
-            Все привычки на сегодня выполнены!
+            {t('habits.allCompleted')}
           </p>
         </Card>
       )}
@@ -217,7 +219,7 @@ export function HabitsV3Section() {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-primary" />
-                <h3 className="font-semibold">Активность команды</h3>
+                <h3 className="font-semibold">{t('social.teamActivity')}</h3>
               </div>
               <Button
                 onClick={() => navigate('/habits?tab=social')}
@@ -225,7 +227,7 @@ export function HabitsV3Section() {
                 size="sm"
                 className="gap-2 h-8"
               >
-                Все события
+                {t('social.allEvents')}
                 <ArrowRight className="h-3 w-3" />
               </Button>
             </div>
@@ -242,13 +244,13 @@ export function HabitsV3Section() {
                   </span>
                   <div className="flex-1">
                     <span className="font-medium text-foreground">
-                      {event.profiles?.username || 'Пользователь'}
+                      {event.profiles?.username || t('social.user')}
                     </span>
                     {' '}
-                    {event.event_type === 'completion' && 'выполнил привычку'}
-                    {event.event_type === 'streak' && 'достиг серии'}
-                    {event.event_type === 'milestone' && 'достиг цели'}
-                    {event.event_type === 'level_up' && 'повысил уровень'}
+                    {event.event_type === 'completion' && t('events.completion')}
+                    {event.event_type === 'streak' && t('events.streak')}
+                    {event.event_type === 'milestone' && t('events.milestone')}
+                    {event.event_type === 'level_up' && t('events.level_up')}
                   </div>
                 </div>
               ))}
