@@ -1,4 +1,21 @@
 {
+  "modal": {
+    "priority": "Priority:",
+    "source": "Source:",
+    "time": "Time:",
+    "details": "Details",
+    "hide": "Hide insight",
+    "descriptions": {
+      "critical": "This is a critical issue that requires immediate attention. We recommend taking action as soon as possible.",
+      "warning": "Pay attention to this indicator. Early intervention can prevent problems in the future.",
+      "achievement": "Great job! Keep up the good work.",
+      "correlation": "We've found a relationship between your metrics. This can help optimize your actions.",
+      "anomaly": "An unusual deviation from your normal indicators has been detected. Check if everything is okay.",
+      "prediction": "Based on current data, we predict you'll reach your goal within the specified timeframe.",
+      "recommendation": "We recommend adding this metric for a more complete picture of your health.",
+      "default": "Additional information about this insight."
+    }
+  },
   "quality": {
     "poor_one": "{{count}} metric needs attention",
     "poor_other": "{{count}} metrics need attention",

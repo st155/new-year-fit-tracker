@@ -167,25 +167,25 @@ export function CompactSupplementChip({ item, isSelected, onToggle, onToggleInta
             
             <div className="space-y-1 text-xs">
               <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">Дозировка:</span>
+                <span className="text-muted-foreground">{t('tooltip.dosage')}</span>
                 <span className="text-foreground">{item.dosage}</span>
               </div>
               {item.form && (
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Форма:</span>
+                  <span className="text-muted-foreground">{t('tooltip.form')}</span>
                   <span className="text-foreground">{item.form}</span>
                 </div>
               )}
               {item.protocolName && (
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Протокол:</span>
+                  <span className="text-muted-foreground">{t('tooltip.protocol')}</span>
                   <span className="text-blue-400">📋 {item.protocolName}</span>
                 </div>
               )}
               {item.source === 'manual' && (
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Источник:</span>
-                  <span className="text-foreground">🏷️ Ручной ввод</span>
+                  <span className="text-muted-foreground">{t('tooltip.source')}</span>
+                  <span className="text-foreground">{t('tooltip.manualEntry')}</span>
                 </div>
               )}
             </div>
@@ -193,11 +193,11 @@ export function CompactSupplementChip({ item, isSelected, onToggle, onToggleInta
             {item.takenToday && item.takenAt && (
               <div className="pt-2 border-t border-border/30">
                 <p className="text-xs text-green-500">
-                  ✅ Принято {item.todayIntakeCount > 1 ? `${item.todayIntakeCount} раз(а)` : ''} в {item.takenAt.toLocaleTimeString(getIntlLocale(), { hour: '2-digit', minute: '2-digit' })}
+                  {t('tooltip.taken')} {item.todayIntakeCount > 1 ? `${item.todayIntakeCount} ${t('tooltip.times')}` : ''} {t('tooltip.at')} {item.takenAt.toLocaleTimeString(getIntlLocale(), { hour: '2-digit', minute: '2-digit' })}
                 </p>
                 {item.todayIntakeCount > 1 && (
                   <p className="text-[10px] text-muted-foreground mt-1">
-                    Нажмите + чтобы добавить ещё
+                    {t('tooltip.addMoreHint')}
                   </p>
                 )}
               </div>
@@ -206,7 +206,7 @@ export function CompactSupplementChip({ item, isSelected, onToggle, onToggleInta
             {/* Linked Biomarkers Section */}
             {linkedBiomarkers && linkedBiomarkers.length > 0 && (
               <div className="pt-2 border-t border-border/30 space-y-2">
-                <p className="text-xs font-semibold text-muted-foreground">Связанные биомаркеры:</p>
+                <p className="text-xs font-semibold text-muted-foreground">{t('tooltip.linkedBiomarkers')}</p>
                 <div className="space-y-1.5">
                   {linkedBiomarkers.map((biomarker) => (
                     <Link

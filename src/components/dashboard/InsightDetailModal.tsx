@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import type { SmartInsight } from '@/lib/insights/types';
 import { getIntlLocale } from '@/lib/date-locale';
 
@@ -27,6 +28,7 @@ export function InsightDetailModal({
   onClose,
   onHide,
 }: InsightDetailModalProps) {
+  const { t } = useTranslation('insights');
   const navigate = useNavigate();
 
   if (!insight) return null;
@@ -46,21 +48,21 @@ export function InsightDetailModal({
   const getDetailedDescription = () => {
     switch (insight.type) {
       case 'critical':
-        return 'Это критическая проблема, требующая немедленного внимания. Рекомендуем принять меры как можно скорее.';
+        return t('modal.descriptions.critical');
       case 'warning':
-        return 'Обратите внимание на этот показатель. Раннее вмешательство может предотвратить проблемы в будущем.';
+        return t('modal.descriptions.warning');
       case 'achievement':
-        return 'Отличная работа! Продолжайте в том же духе.';
+        return t('modal.descriptions.achievement');
       case 'correlation':
-        return 'Мы обнаружили взаимосвязь между вашими метриками. Это может помочь оптимизировать ваши действия.';
+        return t('modal.descriptions.correlation');
       case 'anomaly':
-        return 'Обнаружено необычное отклонение от ваших обычных показателей. Проверьте, всё ли в порядке.';
+        return t('modal.descriptions.anomaly');
       case 'prediction':
-        return 'На основе текущих данных мы прогнозируем достижение вашей цели в указанные сроки.';
+        return t('modal.descriptions.prediction');
       case 'recommendation':
-        return 'Мы рекомендуем добавить эту метрику для более полной картины вашего здоровья.';
+        return t('modal.descriptions.recommendation');
       default:
-        return 'Дополнительная информация об этом инсайте.';
+        return t('modal.descriptions.default');
     }
   };
 
@@ -81,15 +83,15 @@ export function InsightDetailModal({
 
           <div className="flex flex-col gap-2 pt-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Приоритет:</span>
+              <span className="text-muted-foreground">{t('modal.priority')}</span>
               <span className="font-medium">{insight.priority}/100</span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Источник:</span>
+              <span className="text-muted-foreground">{t('modal.source')}</span>
               <span className="font-medium capitalize">{insight.source}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Время:</span>
+              <span className="text-muted-foreground">{t('modal.time')}</span>
               <span className="font-medium">
                 {insight.timestamp.toLocaleTimeString(getIntlLocale(), {
                   hour: '2-digit',
@@ -102,11 +104,11 @@ export function InsightDetailModal({
           <div className="flex gap-2 pt-4">
             {insight.action.path && (
               <Button onClick={handleAction} className="flex-1">
-                Подробнее
+                {t('modal.details')}
               </Button>
             )}
             <Button variant="outline" onClick={handleHide}>
-              Скрыть инсайт
+              {t('modal.hide')}
             </Button>
           </div>
         </div>
