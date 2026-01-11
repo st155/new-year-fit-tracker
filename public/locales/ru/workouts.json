@@ -45,6 +45,11 @@
     "loadError": "Ошибка загрузки",
     "loadErrorDesc": "Не удалось загрузить изображение по этому URL"
   },
+"actions": {
+    "startWorkout": "Начать тренировку",
+    "skip": "Пропустить",
+    "preview": "Просмотр"
+  },
 "stats": {
     "duration": "Длительность",
     "minutes": "{{value}} мин",

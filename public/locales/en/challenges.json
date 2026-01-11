@@ -151,6 +151,12 @@
     "deleteFailed": "Failed to delete challenge: {{error}}",
     "extendFailed": "Failed to extend challenge: {{error}}"
   },
+  "leaderboard": {
+    "balance": "Balance",
+    "activity": "Activity",
+    "recovery": "Recovery",
+    "progress": "Progress"
+  },
   "pointsBreakdown": {
     "title": "Points Breakdown",
     "totalPoints": "Total Points / 1000",

@@ -162,7 +162,7 @@ export const InBodyHistory = forwardRef<{ refresh: () => void }>((props, ref) =>
 
       if (error) {
         console.error('Edge function error:', error);
-        throw new Error(`Ошибка AI анализа: ${error.message}`);
+        throw new Error(t('history.aiAnalysisError', { message: error.message }));
       }
 
       console.log('Analysis complete:', data);
@@ -495,12 +495,12 @@ export const InBodyHistory = forwardRef<{ refresh: () => void }>((props, ref) =>
             <ErrorBoundary
               fallback={
                 <div className="p-8 text-center">
-                  <div className="text-destructive text-xl mb-4">⚠️ Ошибка загрузки</div>
+                  <div className="text-destructive text-xl mb-4">⚠️ {t('history.loadingErrorTitle')}</div>
                   <p className="text-muted-foreground mb-4">
-                    Не удалось загрузить данные InBody. Попробуйте обновить страницу.
+                    {t('history.failedToLoadInBody')}
                   </p>
                   <Button onClick={() => window.location.reload()}>
-                    Обновить
+                    {t('history.refresh')}
                   </Button>
                 </div>
               }

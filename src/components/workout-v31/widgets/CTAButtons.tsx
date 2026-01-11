@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Play, SkipForward, Eye } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface CTAButtonsProps {
   onStart: () => void;
@@ -9,7 +10,9 @@ interface CTAButtonsProps {
   startDisabled?: boolean;
 }
 
-export function CTAButtons({ onStart, onSkip, onPreview, startLabel = "Начать тренировку", startDisabled = false }: CTAButtonsProps) {
+export function CTAButtons({ onStart, onSkip, onPreview, startLabel, startDisabled = false }: CTAButtonsProps) {
+  const { t } = useTranslation('workouts');
+  
   return (
     <div className="space-y-3">
       <Button 
@@ -19,7 +22,7 @@ export function CTAButtons({ onStart, onSkip, onPreview, startLabel = "Нача�
         size="lg"
       >
         <Play className="w-4 h-4 mr-2" />
-        {startLabel}
+        {startLabel ?? t('actions.startWorkout')}
       </Button>
       
       <div className="grid grid-cols-2 gap-3">
@@ -29,7 +32,7 @@ export function CTAButtons({ onStart, onSkip, onPreview, startLabel = "Нача�
           className="border-neutral-700 hover:border-neutral-600"
         >
           <SkipForward className="w-4 h-4 mr-2" />
-          Пропустить
+          {t('actions.skip')}
         </Button>
         
         <Button 
@@ -38,7 +41,7 @@ export function CTAButtons({ onStart, onSkip, onPreview, startLabel = "Нача�
           className="border-neutral-700 hover:border-neutral-600"
         >
           <Eye className="w-4 h-4 mr-2" />
-          Просмотр
+          {t('actions.preview')}
         </Button>
       </div>
     </div>

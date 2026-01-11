@@ -7,6 +7,7 @@ import { BalanceIndicator } from "./BalanceIndicator";
 import { PointsBreakdownDialog } from "./PointsBreakdownDialog";
 import { formatPoints, type LeaderboardEntry } from "@/features/challenges/utils";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface PersonalStatsCardProps {
   userEntry?: LeaderboardEntry;
@@ -14,6 +15,7 @@ interface PersonalStatsCardProps {
 }
 
 export function PersonalStatsCard({ userEntry, leaderboard }: PersonalStatsCardProps) {
+  const { t } = useTranslation('challenges');
   const [showBreakdown, setShowBreakdown] = useState(false);
 
   if (!userEntry) {
@@ -75,7 +77,7 @@ export function PersonalStatsCard({ userEntry, leaderboard }: PersonalStatsCardP
               <div className="p-3 bg-orange-500/10 border border-orange-500/20 rounded-lg">
                 <div className="flex items-center gap-1 text-orange-500 mb-1">
                   <Activity className="h-4 w-4" />
-                  <span className="text-xs font-medium">Актив.</span>
+                  <span className="text-xs font-medium">{t('leaderboard.activity')}</span>
                 </div>
                 <div className="text-xl font-bold">{userEntry.pointsBreakdown.activity?.total || 0}</div>
                 <div className="text-xs text-muted-foreground">/ 300</div>
@@ -84,7 +86,7 @@ export function PersonalStatsCard({ userEntry, leaderboard }: PersonalStatsCardP
               <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
                 <div className="flex items-center gap-1 text-green-500 mb-1">
                   <Activity className="h-4 w-4" />
-                  <span className="text-xs font-medium">Восст.</span>
+                  <span className="text-xs font-medium">{t('leaderboard.recovery')}</span>
                 </div>
                 <div className="text-xl font-bold">{userEntry.pointsBreakdown.recovery?.total || 0}</div>
                 <div className="text-xs text-muted-foreground">/ 300</div>
@@ -93,7 +95,7 @@ export function PersonalStatsCard({ userEntry, leaderboard }: PersonalStatsCardP
               <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
                 <div className="flex items-center gap-1 text-blue-500 mb-1">
                   <TrendingUp className="h-4 w-4" />
-                  <span className="text-xs font-medium">Прогр.</span>
+                  <span className="text-xs font-medium">{t('leaderboard.progress')}</span>
                 </div>
                 <div className="text-xl font-bold">{userEntry.pointsBreakdown.progress?.total || 0}</div>
                 <div className="text-xs text-muted-foreground">/ 200</div>
@@ -102,7 +104,7 @@ export function PersonalStatsCard({ userEntry, leaderboard }: PersonalStatsCardP
               <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg">
                 <div className="flex items-center gap-1 text-purple-500 mb-1">
                   <Zap className="h-4 w-4" />
-                  <span className="text-xs font-medium">Баланс</span>
+                  <span className="text-xs font-medium">{t('leaderboard.balance')}</span>
                 </div>
                 <div className="text-xl font-bold">{userEntry.pointsBreakdown.balance?.total || 0}</div>
                 <div className="text-xs text-muted-foreground">/ 200</div>

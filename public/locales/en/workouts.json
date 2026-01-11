@@ -45,6 +45,11 @@
     "loadError": "Load Error",
     "loadErrorDesc": "Could not load image from this URL"
   },
+"actions": {
+    "startWorkout": "Start Workout",
+    "skip": "Skip",
+    "preview": "Preview"
+  },
 "stats": {
     "duration": "Duration",
     "minutes": "{{value}} min",
