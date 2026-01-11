@@ -1,103 +1,134 @@
 /**
- * Translation map for workout names from English to Russian
- * Used to translate source_data.name from wearable providers
+ * Translation utilities for workout names
+ * Uses i18n for localized workout names
  */
-export const WORKOUT_TRANSLATIONS: Record<string, string> = {
+import i18n from '@/i18n';
+
+/**
+ * Mapping of English workout names to i18n keys
+ */
+const WORKOUT_KEYS: Record<string, string> = {
   // Recovery & Wellness
-  'Sauna': 'Сауна',
-  'Ice Bath': 'Ледяная ванна',
-  'Meditation': 'Медитация',
-  'Stretching': 'Растяжка',
-  'Massage Therapy': 'Массаж',
-  'Massage': 'Массаж',
-  'Yoga': 'Йога',
-  'Breathwork': 'Дыхательные упражнения',
-  'Nap': 'Дневной сон',
-  'Recovery': 'Восстановление',
+  'sauna': 'sauna',
+  'ice bath': 'iceBath',
+  'meditation': 'meditation',
+  'stretching': 'stretching',
+  'massage therapy': 'massage',
+  'massage': 'massage',
+  'yoga': 'yoga',
+  'breathwork': 'breathwork',
+  'nap': 'nap',
+  'recovery': 'recovery',
   
   // Cardio
-  'Walking': 'Прогулка',
-  'Running': 'Бег',
-  'Cycling': 'Велосипед',
-  'Swimming': 'Плавание',
-  'Hiking': 'Хайкинг',
-  'Rowing': 'Гребля',
-  'Elliptical': 'Эллиптический тренажёр',
-  'Stair Climbing': 'Подъём по лестнице',
-  'Jump Rope': 'Скакалка',
-  'Dance': 'Танцы',
-  'Aerobics': 'Аэробика',
-  'HIIT': 'HIIT',
-  'Cardio': 'Кардио',
+  'walking': 'walking',
+  'running': 'running',
+  'cycling': 'cycling',
+  'swimming': 'swimming',
+  'hiking': 'hiking',
+  'rowing': 'rowing',
+  'elliptical': 'elliptical',
+  'stair climbing': 'stairClimbing',
+  'jump rope': 'jumpRope',
+  'dance': 'dance',
+  'aerobics': 'aerobics',
+  'hiit': 'hiit',
+  'cardio': 'cardio',
   
   // Strength
-  'Strength Training': 'Силовая тренировка',
-  'Strength training': 'Силовая тренировка',
-  'Weightlifting': 'Силовая тренировка',
-  'Weight Training': 'Силовая тренировка',
-  'Functional Training': 'Функциональная тренировка',
-  'CrossFit': 'Кроссфит',
-  'Calisthenics': 'Калистеника',
-  'Bodyweight': 'Тренировка с собственным весом',
+  'strength training': 'strengthTraining',
+  'weightlifting': 'strengthTraining',
+  'weight training': 'strengthTraining',
+  'functional training': 'functionalTraining',
+  'crossfit': 'crossfit',
+  'calisthenics': 'calisthenics',
+  'bodyweight': 'bodyweight',
   
   // Sports
-  'Tennis': 'Теннис',
-  'Golf': 'Гольф',
-  'Basketball': 'Баскетбол',
-  'Football': 'Футбол',
-  'Soccer': 'Футбол',
-  'Volleyball': 'Волейбол',
-  'Boxing': 'Бокс',
-  'Martial Arts': 'Единоборства',
-  'Skiing': 'Лыжи',
-  'Snowboarding': 'Сноуборд',
-  'Surfing': 'Сёрфинг',
-  'Paddleboarding': 'SUP',
+  'tennis': 'tennis',
+  'golf': 'golf',
+  'basketball': 'basketball',
+  'football': 'football',
+  'soccer': 'soccer',
+  'volleyball': 'volleyball',
+  'boxing': 'boxing',
+  'martial arts': 'martialArts',
+  'skiing': 'skiing',
+  'snowboarding': 'snowboarding',
+  'surfing': 'surfing',
+  'paddleboarding': 'paddleboarding',
   
   // Generic
-  'Workout': 'Тренировка',
-  'Whoop Workout': 'Тренировка',
-  'Activity': 'Активность',
-  'Other': 'Другое',
-  'Unknown': 'Тренировка',
+  'workout': 'workout',
+  'whoop workout': 'workout',
+  'activity': 'activity',
+  'other': 'other',
+  'unknown': 'workout',
 };
 
 /**
- * Translates workout name from English to Russian
- * Also handles names with location prefixes (e.g., "Germasogeia Бег" -> "Бег")
+ * Russian workout names for detection in mixed strings
+ */
+const RUSSIAN_WORKOUT_KEYS: Record<string, string> = {
+  'бег': 'running',
+  'прогулка': 'walking',
+  'плавание': 'swimming',
+  'велосипед': 'cycling',
+  'йога': 'yoga',
+  'силовая': 'strengthTraining',
+  'тренировка': 'workout',
+  'кардио': 'cardio',
+  'растяжка': 'stretching',
+  'медитация': 'meditation',
+  'сауна': 'sauna',
+};
+
+/**
+ * Translates workout name to the current locale
+ * Handles English names, Russian names, and mixed strings with locations
  */
 export function translateWorkoutName(name: string): string {
-  if (!name) return 'Тренировка';
+  if (!name) return i18n.t('workouts:activities.workout');
   
-  // Direct translation lookup
-  const directTranslation = WORKOUT_TRANSLATIONS[name];
-  if (directTranslation) {
-    return directTranslation;
+  const lowerName = name.toLowerCase().trim();
+  
+  // Direct English lookup
+  const englishKey = WORKOUT_KEYS[lowerName];
+  if (englishKey) {
+    return i18n.t(`workouts:activities.${englishKey}`);
   }
   
-  // Case-insensitive lookup
-  const lowerName = name.toLowerCase();
-  for (const [key, value] of Object.entries(WORKOUT_TRANSLATIONS)) {
-    if (key.toLowerCase() === lowerName) {
-      return value;
+  // Check if name contains a known English workout type (for names like "Morning Running")
+  for (const [englishName, key] of Object.entries(WORKOUT_KEYS)) {
+    if (lowerName.includes(englishName)) {
+      return i18n.t(`workouts:activities.${key}`);
     }
   }
   
-  // Check if name contains a known workout type (for names like "Germasogeia Бег")
-  for (const [key, value] of Object.entries(WORKOUT_TRANSLATIONS)) {
-    if (name.includes(key)) {
-      return value;
+  // Check for Russian workout names in the string (for names like "Germasogeia Бег")
+  for (const [russianName, key] of Object.entries(RUSSIAN_WORKOUT_KEYS)) {
+    if (name.toLowerCase().includes(russianName)) {
+      return i18n.t(`workouts:activities.${key}`);
     }
   }
   
-  // Check for Russian workout names already in the string
-  const russianWorkouts = ['Бег', 'Прогулка', 'Плавание', 'Велосипед', 'Йога'];
-  for (const workout of russianWorkouts) {
-    if (name.includes(workout)) {
-      return workout;
-    }
-  }
-  
-  // Return original if no translation found (might already be in Russian)
+  // Return original if no translation found (might already be in the target language)
   return name;
 }
+
+/**
+ * @deprecated Use translateWorkoutName function instead
+ * Kept for backward compatibility - now uses i18n dynamically
+ */
+export const WORKOUT_TRANSLATIONS: Record<string, string> = new Proxy({} as Record<string, string>, {
+  get(target, prop) {
+    if (typeof prop === 'string') {
+      const lowerProp = prop.toLowerCase();
+      const key = WORKOUT_KEYS[lowerProp];
+      if (key) {
+        return i18n.t(`workouts:activities.${key}`);
+      }
+    }
+    return prop as string;
+  }
+});
