@@ -11,8 +11,10 @@ import { formatDistanceToNow } from "date-fns";
 import { getDateLocale } from "@/lib/date-locale";
 import { useHabitNotificationsRealtime } from "@/hooks/composite/realtime";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 export function HabitSocialWidget() {
+  const { t } = useTranslation('feed');
   const { user } = useAuth();
   const { data: feedEvents = [], isLoading } = useHabitFeed();
   const navigate = useNavigate();
@@ -64,8 +66,8 @@ export function HabitSocialWidget() {
               <Users className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Социальная активность</p>
-              <p className="text-sm font-semibold">Habits 3.0</p>
+              <p className="text-xs text-muted-foreground">{t('social.title')}</p>
+              <p className="text-sm font-semibold">{t('social.subtitle')}</p>
             </div>
           </div>
           {unreadCount > 0 && (
@@ -79,8 +81,8 @@ export function HabitSocialWidget() {
         {recentEvents.length === 0 ? (
           <div className="text-center py-4 text-sm text-muted-foreground space-y-2">
             <Sparkles className="h-8 w-8 mx-auto text-primary/50 animate-pulse" />
-            <p className="font-medium">Завершайте привычки и вступайте в команды!</p>
-            <p className="text-xs">Ваша активность появится здесь 🚀</p>
+            <p className="font-medium">{t('social.emptyTitle')}</p>
+            <p className="text-xs">{t('social.emptySubtitle')}</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -108,13 +110,13 @@ export function HabitSocialWidget() {
                 </span>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium truncate">
-                    {event.profiles?.username || 'Пользователь'}
+                    {event.profiles?.username || t('social.user')}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {event.event_type === 'completion' && 'выполнил привычку'}
-                    {event.event_type === 'streak' && 'достиг серии'}
-                    {event.event_type === 'milestone' && 'достиг цели'}
-                    {event.event_type === 'level_up' && 'повысил уровень'}
+                    {event.event_type === 'completion' && t('events.completion')}
+                    {event.event_type === 'streak' && t('events.streak')}
+                    {event.event_type === 'milestone' && t('events.milestone')}
+                    {event.event_type === 'level_up' && t('events.level_up')}
                   </p>
                 </div>
                 <span className="text-xs text-muted-foreground flex-shrink-0">
@@ -128,7 +130,7 @@ export function HabitSocialWidget() {
               ))}
             </AnimatePresence>
             <p className="text-xs text-muted-foreground text-center pt-2">
-              Нажмите для просмотра всех событий
+              {t('social.viewAll')}
             </p>
           </div>
         )}
