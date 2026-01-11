@@ -3,12 +3,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle, Wifi, WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from 'react-i18next';
 
 interface SupabaseConnectionCheckProps {
   children: React.ReactNode;
 }
 
 export function SupabaseConnectionCheck({ children }: SupabaseConnectionCheckProps) {
+  const { t } = useTranslation('common');
   const [isChecking, setIsChecking] = useState(true);
   const [isConnected, setIsConnected] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -69,9 +71,9 @@ export function SupabaseConnectionCheck({ children }: SupabaseConnectionCheckPro
           <div className="animate-spin mx-auto">
             <Wifi className="h-12 w-12 text-primary" />
           </div>
-          <h3 className="text-lg font-semibold">Подключение к серверу...</h3>
+          <h3 className="text-lg font-semibold">{t('connection.connecting')}</h3>
           <p className="text-sm text-muted-foreground">
-            Попытка {retryCount + 1} из 4
+            {t('connection.attempt', { current: retryCount + 1, total: 4 })}
           </p>
         </div>
       </div>
@@ -85,11 +87,11 @@ export function SupabaseConnectionCheck({ children }: SupabaseConnectionCheckPro
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription className="space-y-4">
             <div>
-              <h3 className="font-semibold mb-2">Не удалось подключиться к серверу</h3>
+              <h3 className="font-semibold mb-2">{t('connection.failed')}</h3>
               <p className="text-sm mb-4">{error}</p>
               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
                 <WifiOff className="h-3 w-3" />
-                <span>Проверьте подключение к интернету</span>
+                <span>{t('connection.checkInternet')}</span>
               </div>
             </div>
             <div className="flex gap-2">
@@ -101,7 +103,7 @@ export function SupabaseConnectionCheck({ children }: SupabaseConnectionCheckPro
                 size="sm"
                 className="flex-1"
               >
-                Повторить попытку
+                {t('connection.retry')}
               </Button>
               <Button
                 onClick={() => window.location.reload()}
@@ -109,7 +111,7 @@ export function SupabaseConnectionCheck({ children }: SupabaseConnectionCheckPro
                 variant="outline"
                 className="flex-1"
               >
-                Перезагрузить
+                {t('connection.reload')}
               </Button>
             </div>
           </AlertDescription>

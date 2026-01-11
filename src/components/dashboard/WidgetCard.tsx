@@ -666,20 +666,20 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
   logger.debug('[WidgetCard freshness]', { metricName, source, date: data.measurement_date, daysDiff });
   
   const getDataAgeMessage = () => {
-    if (!data?.measurement_date) return 'Нет данных';
+    if (!data?.measurement_date) return t('time.noData');
     
     const measurementDate = parseISO(data.measurement_date);
     const now = new Date();
     const diffMinutes = Math.floor((now.getTime() - measurementDate.getTime()) / 60000);
     
     if (diffMinutes < 60) {
-      return `${diffMinutes}м назад`;
+      return t('time.minAgo', { min: diffMinutes });
     } else if (diffMinutes < 1440) {
-      return `${Math.floor(diffMinutes / 60)}ч назад`;
+      return t('time.hoursAgo', { hours: Math.floor(diffMinutes / 60) });
     } else if (isToday) {
-      return 'Данные за сегодня';
+      return t('time.dataToday');
     } else if (isYesterday) {
-      return 'Данные за вчера';
+      return t('time.dataYesterday');
     } else {
       return format(measurementDate, 'd MMM', { locale: getDateLocale() });
     }

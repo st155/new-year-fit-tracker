@@ -242,6 +242,11 @@
   "research": {
     "linkBiomarkersHint": "Click \"Link Biomarkers\" to search for scientific data"
   },
+  "evidenceLevel": {
+    "high": "High",
+    "moderate": "Moderate",
+    "low": "Low"
+  },
   "intake": {
     "addMore": "Add another intake",
     "cancel": "Cancel intake"

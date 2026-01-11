@@ -112,6 +112,7 @@
     "andMore": "and {{count}} more"
   },
   "title": "Dashboard",
+  "quickAccess": "Quick Access",
   "myMetrics": "My Metrics",
   "refresh": "Refresh",
   "quickActions": {

@@ -80,7 +80,23 @@
     "showOptional": "Add",
     "workout": "Workout",
     "addWater": "+250ml",
-    "weighIn": "Weigh in"
+    "weighIn": "Weigh in",
+    "skip": "Skip",
+    "continue": "Continue"
+  },
+  "pwa": {
+    "updateAvailable": "Update Available",
+    "newVersionReady": "A new version of the app is ready to use",
+    "update": "Update",
+    "later": "Later"
+  },
+  "connection": {
+    "connecting": "Connecting to server...",
+    "attempt": "Attempt {{current}} of {{total}}",
+    "failed": "Could not connect to server",
+    "checkInternet": "Check your internet connection",
+    "retry": "Retry",
+    "reload": "Reload"
   },
   "states": {
     "loading": "Loading...",
@@ -156,6 +172,11 @@
     "currentYear": "✓ Current year",
     "checkYear": "⚠️ Check the year!",
     "lastMeasurement": "since last measurement",
+    "noData": "No data",
+    "minAgo": "{{min}}m ago",
+    "hoursAgo": "{{hours}}h ago",
+    "dataToday": "Data for today",
+    "dataYesterday": "Data for yesterday",
     "morning": "in the morning",
     "afternoon": "in the afternoon",
     "evening": "in the evening",

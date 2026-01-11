@@ -112,6 +112,14 @@
     "recovery": "Recovery",
     "synergy": "Synergy"
   },
+  "badges": {
+    "title": "Achievements",
+    "noAchievements": "No achievements earned",
+    "keepParticipating": "Keep participating in challenges!",
+    "earned": "({{count}} earned)",
+    "daysInRow": "{{count}} days in a row",
+    "maxStreak": "Maximum activity streak"
+  },
   "info": {
     "notFound": "Challenge information not found",
     "about": "About Challenge",

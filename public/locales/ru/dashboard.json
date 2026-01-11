@@ -113,6 +113,7 @@
     }
   },
   "title": "Дашборд",
+  "quickAccess": "Быстрый доступ",
   "myMetrics": "Мои метрики",
   "refresh": "Обновить",
   "quickActions": {

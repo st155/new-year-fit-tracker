@@ -3,8 +3,10 @@ import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { updateServiceWorker } from '@/lib/pwa-utils';
+import { useTranslation } from 'react-i18next';
 
 export function UpdatePrompt() {
+  const { t } = useTranslation('common');
   const [showUpdate, setShowUpdate] = useState(false);
 
   useEffect(() => {
@@ -50,10 +52,10 @@ export function UpdatePrompt() {
     <div className="fixed top-20 left-4 right-4 md:left-auto md:right-6 md:max-w-md z-50 animate-slide-in-right">
       <Alert className="glass-card border-primary/20 shadow-glow">
         <RefreshCw className="h-4 w-4" />
-        <AlertTitle>Доступно обновление</AlertTitle>
+        <AlertTitle>{t('pwa.updateAvailable')}</AlertTitle>
         <AlertDescription className="mt-2 space-y-3">
           <p className="text-sm">
-            Новая версия приложения готова к использованию
+            {t('pwa.newVersionReady')}
           </p>
           <div className="flex gap-2">
             <Button
@@ -62,14 +64,14 @@ export function UpdatePrompt() {
               className="bg-gradient-primary ripple"
             >
               <RefreshCw className="h-3 w-3 mr-2" />
-              Обновить
+              {t('pwa.update')}
             </Button>
             <Button
               onClick={() => setShowUpdate(false)}
               size="sm"
               variant="ghost"
             >
-              Позже
+              {t('pwa.later')}
             </Button>
           </div>
         </AlertDescription>

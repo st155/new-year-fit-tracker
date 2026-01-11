@@ -77,7 +77,23 @@
     "publish": "Опубликовать",
     "publishing": "Публикую...",
     "hideOptional": "Скрыть",
-    "showOptional": "Добавить"
+    "showOptional": "Добавить",
+    "skip": "Пропустить",
+    "continue": "Продолжить"
+  },
+  "pwa": {
+    "updateAvailable": "Доступно обновление",
+    "newVersionReady": "Новая версия приложения готова к использованию",
+    "update": "Обновить",
+    "later": "Позже"
+  },
+  "connection": {
+    "connecting": "Подключение к серверу...",
+    "attempt": "Попытка {{current}} из {{total}}",
+    "failed": "Не удалось подключиться к серверу",
+    "checkInternet": "Проверьте подключение к интернету",
+    "retry": "Повторить попытку",
+    "reload": "Перезагрузить"
   },
   "states": {
     "loading": "Загрузка...",
@@ -157,7 +173,12 @@
     "afternoon": "днём",
     "evening": "вечером",
     "night": "ночью",
-    "anytime": "в любое время"
+    "anytime": "в любое время",
+    "noData": "Нет данных",
+    "minAgo": "{{min}}м назад",
+    "hoursAgo": "{{hours}}ч назад",
+    "dataToday": "Данные за сегодня",
+    "dataYesterday": "Данные за вчера"
   },
   "plurals": {
     "day_one": "день",
