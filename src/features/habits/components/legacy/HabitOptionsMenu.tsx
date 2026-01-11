@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { MoreVertical, Edit, Archive, Trash2, BarChart3 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface HabitOptionsMenuProps {
   onEdit?: () => void;
@@ -23,6 +24,8 @@ export function HabitOptionsMenu({
   onViewHistory,
   onDeletePermanent,
 }: HabitOptionsMenuProps) {
+  const { t } = useTranslation('habits');
+  
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -45,7 +48,7 @@ export function HabitOptionsMenu({
             className="hover:bg-white/10 cursor-pointer"
           >
             <Edit className="mr-2 h-4 w-4" />
-            <span>Редактировать</span>
+            <span>{t('menu.edit', 'Edit')}</span>
           </DropdownMenuItem>
         )}
         
@@ -58,7 +61,7 @@ export function HabitOptionsMenu({
             className="hover:bg-white/10 cursor-pointer"
           >
             <BarChart3 className="mr-2 h-4 w-4" />
-            <span>История</span>
+            <span>{t('menu.history', 'History')}</span>
           </DropdownMenuItem>
         )}
         
@@ -75,7 +78,7 @@ export function HabitOptionsMenu({
             className="hover:bg-white/10 cursor-pointer"
           >
             <Archive className="mr-2 h-4 w-4" />
-            <span>Архивировать</span>
+            <span>{t('menu.archive', 'Archive')}</span>
           </DropdownMenuItem>
         )}
         
@@ -92,7 +95,7 @@ export function HabitOptionsMenu({
             className="text-destructive hover:bg-destructive/10 cursor-pointer"
           >
             <Trash2 className="mr-2 h-4 w-4" />
-            <span>Удалить навсегда</span>
+            <span>{t('menu.deletePermanently', 'Delete permanently')}</span>
           </DropdownMenuItem>
         )}
         
@@ -105,7 +108,7 @@ export function HabitOptionsMenu({
             className="text-destructive hover:bg-destructive/10 cursor-pointer"
           >
             <Trash2 className="mr-2 h-4 w-4" />
-            <span>Удалить навсегда</span>
+            <span>{t('menu.deletePermanently', 'Delete permanently')}</span>
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>

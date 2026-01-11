@@ -2,6 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
 import { Flame, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 interface FriendHabitCardProps {
   friend: {
@@ -15,6 +16,8 @@ interface FriendHabitCardProps {
 }
 
 export function FriendHabitCard({ friend, className }: FriendHabitCardProps) {
+  const { t } = useTranslation('habits');
+  
   return (
     <Card className={cn(
       "p-3 hover:border-primary/50 transition-all duration-200 hover:shadow-glow cursor-pointer",
@@ -33,7 +36,7 @@ export function FriendHabitCard({ friend, className }: FriendHabitCardProps) {
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
               <Flame className="h-3 w-3 text-orange-500" />
-              {friend.current_streak} дней
+              {t('card.daysCount', '{{count}} days', { count: friend.current_streak })}
             </span>
             <span className="flex items-center gap-1">
               <TrendingUp className="h-3 w-3 text-success" />

@@ -14,6 +14,7 @@ import {
 import { useHabitAttempts } from '@/hooks/useHabitAttempts';
 import { cn } from '@/lib/utils';
 import { differenceInDays, parseISO } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 
 interface StreakCardProps {
   habit: any;
@@ -47,6 +48,7 @@ function getHabitIcon(habitName: string) {
 }
 
 export function StreakCard({ habit, userId, onReset }: StreakCardProps) {
+  const { t } = useTranslation('habits');
   const { currentAttempt, resetHabit, isResetting } = useHabitAttempts(habit.id, userId);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -62,7 +64,7 @@ export function StreakCard({ habit, userId, onReset }: StreakCardProps) {
   const IconComponent = iconData.icon;
 
   const handleReset = async () => {
-    await resetHabit({ reason: 'Сброс через виджет' });
+    await resetHabit({ reason: t('streak.resetReason', 'Reset via widget') });
     onReset?.();
     setIsOpen(false);
   };
@@ -131,7 +133,7 @@ export function StreakCard({ habit, userId, onReset }: StreakCardProps) {
               {daysCount}
             </motion.div>
             <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
-              {daysCount === 1 ? 'день' : daysCount < 5 ? 'дня' : 'дней'}
+              {t('streak.day', { count: daysCount, defaultValue: daysCount === 1 ? 'day' : 'days' })}
             </div>
           </div>
 
@@ -149,7 +151,7 @@ export function StreakCard({ habit, userId, onReset }: StreakCardProps) {
           className="text-destructive focus:text-destructive"
         >
           <RotateCcw className="w-4 h-4 mr-2" />
-          {isResetting ? 'Сброс...' : 'Сбросить счётчик'}
+          {isResetting ? t('streak.resetting', 'Resetting...') : t('streak.resetCounter', 'Reset counter')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

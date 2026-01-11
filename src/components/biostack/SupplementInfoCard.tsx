@@ -7,6 +7,7 @@ import { Star, Users, TrendingUp } from "lucide-react";
 import { useSupplementPopularity } from "@/hooks/biostack/useSupplementPopularity";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useTranslation } from 'react-i18next';
 
 interface SupplementInfoCardProps {
   product: {
@@ -36,6 +37,7 @@ interface SupplementInfoCardProps {
 }
 
 export function SupplementInfoCard({ product, onAddToStack, onSaveToLibraryOnly, onRate }: SupplementInfoCardProps) {
+  const { t } = useTranslation('biostack');
   const { data: popularity } = useSupplementPopularity(product.id);
 
   // Check if product is in user's library
@@ -113,7 +115,7 @@ export function SupplementInfoCard({ product, onAddToStack, onSaveToLibraryOnly,
               {popularity && popularity.userCount > 0 && (
                 <Badge variant="outline" className="border-green-500/50 text-green-400">
                   <Users className="w-3 h-3 mr-1" />
-                  {popularity.userCount} принимают
+                  {t('card.usersCount', '{{count}} taking', { count: popularity.userCount })}
                 </Badge>
               )}
             </div>
@@ -124,19 +126,19 @@ export function SupplementInfoCard({ product, onAddToStack, onSaveToLibraryOnly,
         <div className="flex flex-wrap gap-2 mt-3">
           {libraryEntry && (
             <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/50">
-              📚 В библиотеке • сканировано {libraryEntry.scan_count}x
+              {t('card.inLibraryScanned', '📚 In library • scanned {{count}}x', { count: libraryEntry.scan_count })}
             </Badge>
           )}
           
           {stackEntry && (
             <Badge className="bg-green-500/20 text-green-400 border-green-500/50">
-              ✅ В стеке
+              {t('card.inStack', '✅ In stack')}
             </Badge>
           )}
           
           {libraryEntry?.custom_rating && (
             <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/50">
-              ⭐ Ваша оценка: {libraryEntry.custom_rating}/5
+              {t('card.yourRating', '⭐ Your rating: {{rating}}/5', { rating: libraryEntry.custom_rating })}
             </Badge>
           )}
         </div>
@@ -369,7 +371,7 @@ export function SupplementInfoCard({ product, onAddToStack, onSaveToLibraryOnly,
                     : 'bg-green-500 hover:bg-green-600 text-black'
                 }`}
               >
-                {stackEntry ? '✅ Уже в стеке' : '➕ Add to Stack'}
+                {stackEntry ? t('card.alreadyInStack', '✅ Already in stack') : t('card.addToStack', '➕ Add to Stack')}
               </Button>
             )}
             {onSaveToLibraryOnly && !stackEntry && (
@@ -378,7 +380,7 @@ export function SupplementInfoCard({ product, onAddToStack, onSaveToLibraryOnly,
                 variant="outline"
                 className="flex-1 border-blue-500/50 text-blue-400 hover:bg-blue-500/10"
               >
-                📚 Только в библиотеку
+                {t('card.libraryOnly', '📚 Library only')}
               </Button>
             )}
             {onRate && (

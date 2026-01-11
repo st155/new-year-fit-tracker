@@ -1,6 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Line, LineChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { TrendingUp, TrendingDown } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface HabitsOverviewChartProps {
   completionRate: number; // 0-100
@@ -8,6 +9,8 @@ interface HabitsOverviewChartProps {
 }
 
 export function HabitsOverviewChart({ completionRate, history }: HabitsOverviewChartProps) {
+  const { t } = useTranslation('habits');
+  
   const getColor = () => {
     if (completionRate >= 80) return 'text-habit-positive';
     if (completionRate >= 60) return 'text-yellow-500';
@@ -66,7 +69,7 @@ export function HabitsOverviewChart({ completionRate, history }: HabitsOverviewC
                 {Math.round(completionRate)}%
               </div>
               <div className="text-sm text-muted-foreground mt-2">
-                Выполнение
+                {t('chart.completion', 'Completion')}
               </div>
             </div>
           </div>
@@ -81,7 +84,7 @@ export function HabitsOverviewChart({ completionRate, history }: HabitsOverviewC
                 <TrendingDown className="h-5 w-5 text-habit-negative" />
               )}
               <span className={trend >= 0 ? 'text-habit-positive' : 'text-habit-negative'}>
-                {trend >= 0 ? '+' : ''}{Math.abs(trend).toFixed(1)}% за период
+                {trend >= 0 ? '+' : ''}{t('chart.trendPeriod', '{{trend}}% for period', { trend: Math.abs(trend).toFixed(1) })}
               </span>
             </div>
 
@@ -97,7 +100,7 @@ export function HabitsOverviewChart({ completionRate, history }: HabitsOverviewC
                         borderRadius: '8px'
                       }}
                       labelStyle={{ color: 'hsl(var(--foreground))' }}
-                      formatter={(value: any) => [`${value.toFixed(1)}%`, 'Выполнение']}
+                      formatter={(value: any) => [`${value.toFixed(1)}%`, t('chart.completion', 'Completion')]}
                     />
                     <Line 
                       type="monotone" 
@@ -114,10 +117,10 @@ export function HabitsOverviewChart({ completionRate, history }: HabitsOverviewC
             {/* Description */}
             <p className="text-sm text-muted-foreground text-center lg:text-left">
               {completionRate >= 80 
-                ? 'Отличная работа! Продолжайте в том же духе! 🎉' 
+                ? t('chart.excellent', 'Great work! Keep it up! 🎉')
                 : completionRate >= 60 
-                ? 'Хорошо! Немного усилий и будет идеально 💪'
-                : 'Есть пространство для улучшений. Вы можете лучше! 🚀'
+                ? t('chart.good', 'Good! A little more effort and it will be perfect 💪')
+                : t('chart.needsImprovement', "There's room for improvement. You can do better! 🚀")
               }
             </p>
           </div>

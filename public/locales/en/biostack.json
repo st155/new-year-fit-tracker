@@ -363,5 +363,14 @@
       "no_change": "No change",
       "opposite": "Opposite"
     }
+  },
+  "card": {
+    "usersCount": "{{count}} taking",
+    "inLibraryScanned": "📚 In library • scanned {{count}}x",
+    "inStack": "✅ In stack",
+    "yourRating": "⭐ Your rating: {{rating}}/5",
+    "alreadyInStack": "✅ Already in stack",
+    "libraryOnly": "📚 Library only",
+    "addToStack": "➕ Add to Stack"
   }
 }
