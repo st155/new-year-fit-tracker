@@ -16,7 +16,7 @@ interface SleepChartProps {
 }
 
 export function SleepChart({ data }: SleepChartProps) {
-  const { t } = useTranslation('dashboard');
+  const { t } = useTranslation(['dashboard', 'units']);
 
   if (!data || data.length === 0) {
     return (
@@ -77,32 +77,32 @@ export function SleepChart({ data }: SleepChartProps) {
                           <div className="grid gap-1 text-sm">
                             {data.deep && (
                               <div className="flex items-center justify-between gap-4">
-                                <span className="text-muted-foreground">{t('sleep.deep')}:</span>
-                                <span className="font-medium">{(data.deep / 60).toFixed(1)}ч</span>
+                                <span className="text-muted-foreground">{t('dashboard:sleep.deep')}:</span>
+                                <span className="font-medium">{t('units:duration.hoursValue', { value: (data.deep / 60).toFixed(1) })}</span>
                               </div>
                             )}
                             {data.light && (
                               <div className="flex items-center justify-between gap-4">
-                                <span className="text-muted-foreground">{t('sleep.light')}:</span>
-                                <span className="font-medium">{(data.light / 60).toFixed(1)}ч</span>
+                                <span className="text-muted-foreground">{t('dashboard:sleep.light')}:</span>
+                                <span className="font-medium">{t('units:duration.hoursValue', { value: (data.light / 60).toFixed(1) })}</span>
                               </div>
                             )}
                             {data.rem && (
                               <div className="flex items-center justify-between gap-4">
                                 <span className="text-muted-foreground">REM:</span>
-                                <span className="font-medium">{(data.rem / 60).toFixed(1)}ч</span>
+                                <span className="font-medium">{t('units:duration.hoursValue', { value: (data.rem / 60).toFixed(1) })}</span>
                               </div>
                             )}
                             {data.awake && (
                               <div className="flex items-center justify-between gap-4">
-                                <span className="text-muted-foreground">{t('sleep.awake')}:</span>
-                                <span className="font-medium">{(data.awake / 60).toFixed(1)}ч</span>
+                                <span className="text-muted-foreground">{t('dashboard:sleep.awake')}:</span>
+                                <span className="font-medium">{t('units:duration.hoursValue', { value: (data.awake / 60).toFixed(1) })}</span>
                               </div>
                             )}
                             {data.total && (
                               <div className="flex items-center justify-between gap-4 pt-1 border-t">
-                                <span className="font-medium">{t('sleep.total')}:</span>
-                                <span className="font-bold">{data.total.toFixed(1)}ч</span>
+                                <span className="font-medium">{t('dashboard:sleep.total')}:</span>
+                                <span className="font-bold">{t('units:duration.hoursValue', { value: data.total.toFixed(1) })}</span>
                               </div>
                             )}
                           </div>
@@ -125,12 +125,12 @@ export function SleepChart({ data }: SleepChartProps) {
         {/* Summary stats */}
         <div className="mt-4 grid grid-cols-2 gap-2">
           <div className="flex flex-col p-2 rounded-lg bg-muted/50">
-            <span className="text-xs text-muted-foreground">{t('sleep.averageDuration')}</span>
-            <span className="font-medium">{averageTotal.toFixed(1)}ч</span>
+            <span className="text-xs text-muted-foreground">{t('dashboard:sleep.averageDuration')}</span>
+            <span className="font-medium">{t('units:duration.hoursValue', { value: averageTotal.toFixed(1) })}</span>
           </div>
           {latestScore && (
             <div className="flex flex-col p-2 rounded-lg bg-muted/50">
-              <span className="text-xs text-muted-foreground">{t('sleep.lastScore')}</span>
+              <span className="text-xs text-muted-foreground">{t('dashboard:sleep.lastScore')}</span>
               <span className="font-medium">{latestScore}/100</span>
             </div>
           )}

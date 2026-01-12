@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import i18n from '@/i18n';
 import { useAuth } from '@/hooks/useAuth';
 import { useMetricDetail } from '@/hooks/useMetricDetail';
 import { AnimatedPage } from '@/components/layout/AnimatedPage';
@@ -31,7 +32,7 @@ const formatValue = (value: number, metricName: string): string => {
   if (metricName.toLowerCase().includes('sleep') && metricName.toLowerCase().includes('duration')) {
     const hours = Math.floor(value);
     const minutes = Math.round((value - hours) * 60);
-    return `${hours}ч ${minutes}м`;
+    return i18n.t('units:duration.hoursMinutes', { hours, minutes });
   }
   
   if (metricName === 'Steps') {

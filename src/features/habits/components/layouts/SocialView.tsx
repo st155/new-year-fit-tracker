@@ -58,13 +58,13 @@ export function SocialView() {
         {import.meta.env.DEV && (
           <Card className="p-4 bg-muted/30 border-dashed">
             <div className="flex items-center justify-between text-sm">
-              <div className="space-y-1">
-                <p className="font-semibold">🛠️ Debug Info:</p>
-                <p>События в ленте: {feedEvents?.length || 0}</p>
-                <p>Команды: {myTeams?.length || 0}</p>
-                <p>Активная вкладка: {activeTab}</p>
-                {selectedTeamId && <p>Выбранная команда: {selectedTeamId}</p>}
-              </div>
+            <div className="space-y-1">
+              <p className="font-semibold">🛠️ {t('socialView.debug.title')}:</p>
+              <p>{t('socialView.debug.feedEvents', { count: feedEvents?.length || 0 })}</p>
+              <p>{t('socialView.debug.teams', { count: myTeams?.length || 0 })}</p>
+              <p>{t('socialView.debug.activeTab', { tab: activeTab })}</p>
+              {selectedTeamId && <p>{t('socialView.debug.selectedTeam', { id: selectedTeamId })}</p>}
+            </div>
               <div className="space-x-2">
                 <Button
                   variant="outline"

@@ -627,7 +627,14 @@
     },
     "selectTeam": "Select team",
     "noTeamActivity": "No activity in the team yet",
-    "selectTeamToView": "Select a team to view activity"
+    "selectTeamToView": "Select a team to view activity",
+    "debug": {
+      "title": "Debug Info",
+      "feedEvents": "Feed events: {{count}}",
+      "teams": "Teams: {{count}}",
+      "activeTab": "Active tab: {{tab}}",
+      "selectedTeam": "Selected team: {{id}}"
+    }
   },
   "createTeam": {
     "title": "Create team",
