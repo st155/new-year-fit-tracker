@@ -97,5 +97,13 @@
       "title": "What is VO2Max?",
       "description": "VO2Max is the maximum oxygen consumption, a key indicator of cardiovascular endurance."
     }
+  },
+  "personalBaseline": {
+    "personalRecord": "Personal record!",
+    "aboveAverage": "Above average",
+    "yourNormal": "Your normal",
+    "belowNormal": "Below your normal",
+    "slightlyBelow": "Slightly below normal",
+    "betterThanNormal": "Better than normal"
   }
 }

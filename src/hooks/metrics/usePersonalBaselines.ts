@@ -6,6 +6,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import i18n from '@/i18n';
 
 export interface PersonalBaseline {
   id: string;
@@ -302,7 +303,7 @@ export function getPersonalizedQualityLabel(
   if (atBest) {
     return { 
       icon: '🏆', 
-      text: 'Личный рекорд!', 
+      text: i18n.t('health:personalBaseline.personalRecord'), 
       color: '#22c55e',
       isPersonalized: true 
     };
@@ -317,7 +318,7 @@ export function getPersonalizedQualityLabel(
   if (value >= personal_low && value <= personal_high) {
     return { 
       icon: betterThanAvg ? '✅' : '😊', 
-      text: betterThanAvg ? 'Выше среднего' : 'Твоя норма', 
+      text: betterThanAvg ? i18n.t('health:personalBaseline.aboveAverage') : i18n.t('health:personalBaseline.yourNormal'), 
       color: '#10b981',
       isPersonalized: true 
     };
@@ -330,21 +331,21 @@ export function getPersonalizedQualityLabel(
     if (value > personal_high) {
       const deviation = (value - personal_high) / range;
       if (deviation > 1) {
-        return { icon: '🔴', text: 'Ниже твоей нормы', color: '#ef4444', isPersonalized: true };
+        return { icon: '🔴', text: i18n.t('health:personalBaseline.belowNormal'), color: '#ef4444', isPersonalized: true };
       }
-      return { icon: '⚠️', text: 'Чуть ниже нормы', color: '#eab308', isPersonalized: true };
+      return { icon: '⚠️', text: i18n.t('health:personalBaseline.slightlyBelow'), color: '#eab308', isPersonalized: true };
     }
     // Below p25 is good for lower-is-better
-    return { icon: '✅', text: 'Лучше нормы', color: '#10b981', isPersonalized: true };
+    return { icon: '✅', text: i18n.t('health:personalBaseline.betterThanNormal'), color: '#10b981', isPersonalized: true };
   } else {
     if (value < personal_low) {
       const deviation = (personal_low - value) / range;
       if (deviation > 1) {
-        return { icon: '🔴', text: 'Ниже твоей нормы', color: '#ef4444', isPersonalized: true };
+        return { icon: '🔴', text: i18n.t('health:personalBaseline.belowNormal'), color: '#ef4444', isPersonalized: true };
       }
-      return { icon: '⚠️', text: 'Чуть ниже нормы', color: '#eab308', isPersonalized: true };
+      return { icon: '⚠️', text: i18n.t('health:personalBaseline.slightlyBelow'), color: '#eab308', isPersonalized: true };
     }
     // Above p75 is good for higher-is-better
-    return { icon: '✅', text: 'Лучше нормы', color: '#10b981', isPersonalized: true };
+    return { icon: '✅', text: i18n.t('health:personalBaseline.betterThanNormal'), color: '#10b981', isPersonalized: true };
   }
 }

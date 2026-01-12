@@ -97,5 +97,13 @@
       "title": "Что такое VO2Max?",
       "description": "VO2Max — максимальное потребление кислорода, ключевой показатель сердечно-сосудистой выносливости."
     }
+  },
+  "personalBaseline": {
+    "personalRecord": "Личный рекорд!",
+    "aboveAverage": "Выше среднего",
+    "yourNormal": "Твоя норма",
+    "belowNormal": "Ниже твоей нормы",
+    "slightlyBelow": "Чуть ниже нормы",
+    "betterThanNormal": "Лучше нормы"
   }
 }
