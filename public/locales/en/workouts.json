@@ -144,7 +144,16 @@
     },
     "progressHistory": "Progress History",
     "notEnoughData": "Not enough data to show progress",
-    "performMoreToSeeChart": "Perform the exercise several times to see the chart"
+    "performMoreToSeeChart": "Perform the exercise several times to see the chart",
+    "details": "Exercise Details",
+    "aiModified": "AI Modified",
+    "setsReps": "Sets × Reps",
+    "weight": "Weight",
+    "rir": "RIR",
+    "rpe": "RPE",
+    "restTime": "Rest Time",
+    "aiAdjustment": "AI adjustment:",
+    "start": "Start Exercise"
   },
   "aiRationale": {
     "description": "Our algorithm creates a personalized program using information about you and your goals."
@@ -390,7 +399,10 @@
       "legs": "Legs",
       "core": "Core"
     },
-    "createPlan": "Create Plan"
+    "createPlan": "Create Plan",
+    "continueWithDays": "Continue ({{count}} days)",
+    "recommended": "Recommended: {{weight}}kg",
+    "useRecommended": "Use recommended"
   },
   "dayCard": {
     "today": "Today",
@@ -611,25 +623,6 @@
     "paddleboarding": "Paddleboarding",
     "activity": "Activity",
     "other": "Other"
-  },
-"onboarding": {
-    "planCreated": "Plan created!",
-    "createError": "Error creating plan",
-    "continue": "Continue",
-    "continueWithDays": "Continue ({{count}} days)",
-    "recommended": "Recommended: {{weight}}kg",
-    "useRecommended": "Use recommended"
-  },
-  "exercise": {
-    "details": "Exercise Details",
-    "aiModified": "AI Modified",
-    "setsReps": "Sets × Reps",
-    "weight": "Weight",
-    "rir": "RIR",
-    "rpe": "RPE",
-    "restTime": "Rest Time",
-    "aiAdjustment": "AI adjustment:",
-    "start": "Start Exercise"
   },
   "strengthList": {
     "title": "Exercises",
