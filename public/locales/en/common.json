@@ -563,7 +563,20 @@
     "allIssues": "All issues",
     "missingInEn": "Missing in EN 🇺🇸",
     "missingInRu": "Missing in RU 🇷🇺",
-    "namespaceStats": "Namespace Statistics"
+    "namespaceStats": "Namespace Statistics",
+    "analysisError": "Analysis error"
+  },
+  "docs": {
+    "buttonBestPractices": {
+      "useFitness": "Use \"fitness\" for primary actions",
+      "useSuccess": "Use \"success\" for positive actions",
+      "useDestructive": "\"destructive\" for dangerous actions (deletion)",
+      "iconsLeft": "Icons on the left for create/add actions",
+      "iconsRight": "Icons on the right for download/navigation actions",
+      "iconOnlyAria": "Icon-only buttons require aria-label",
+      "useLoadingState": "Always use loading state for async operations",
+      "disabledTooltip": "Disabled buttons should have tooltip with explanation"
+    }
   },
   "dataSource": {
     "metrics": "Metrics",

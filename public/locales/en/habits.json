@@ -110,7 +110,12 @@
     "completed": "Completed ({{count}})",
     "notCompleted": "Not completed",
     "notStarted": "Not started ({{count}})",
-    "inProgress": "In progress ({{count}})"
+    "inProgress": "In progress ({{count}})",
+    "morningTitle": "☀️ Morning habits",
+    "afternoonTitle": "☕ Afternoon habits",
+    "eveningTitle": "🌙 Evening habits",
+    "nightTitle": "✨ Night habits",
+    "anytimeTitle": "🎯 Anytime"
   },
   "empty": {
     "noHabitsToDisplay": "No habits to display",
@@ -469,7 +474,8 @@
   },
   "team": {
     "avgStreak": "~{{streak}} days",
-    "open": "Open"
+    "open": "Open",
+    "join": "Join"
   },
 "fastingControl": {
     "startFasting": "Start fasting",
