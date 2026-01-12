@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { BarChart3, CheckCircle, XCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { NamespaceStats } from '../types';
 
 interface StatsSummaryProps {
@@ -9,6 +10,7 @@ interface StatsSummaryProps {
 }
 
 export function StatsSummary({ namespaceStats }: StatsSummaryProps) {
+  const { t } = useTranslation('common');
   const sortedStats = [...namespaceStats].sort((a, b) => b.syncIssues - a.syncIssues);
 
   return (
@@ -16,7 +18,7 @@ export function StatsSummary({ namespaceStats }: StatsSummaryProps) {
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
           <BarChart3 className="h-5 w-5 text-primary" />
-          Статистика по namespaces
+          {t('devTools.namespaceStats')}
         </CardTitle>
       </CardHeader>
       <CardContent>

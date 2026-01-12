@@ -191,7 +191,8 @@
     "enrichingTime": "⏱️ Получение полной информации о продукте...",
     "enrichingDetails": "Создаём информационную карточку в стиле Vivino",
     "foundByBarcode": "Мгновенно найден по баркоду!",
-    "alreadyInDatabase": "Продукт уже в базе данных"
+    "alreadyInDatabase": "Продукт уже в базе данных",
+    "manualBarcodePlaceholder": "012345678901 или 5901234123457"
   },
   "errors": {
     "notAuthenticated": "Пользователь не авторизован",

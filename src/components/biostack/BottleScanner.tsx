@@ -785,7 +785,7 @@ export function BottleScanner({ isOpen, onClose, onSuccess }: BottleScannerProps
                 <Input
                   id="manual-barcode"
                   type="text"
-                  placeholder="012345678901 или 5901234123457"
+                  placeholder={t('scanner.manualBarcodePlaceholder')}
                   value={manualBarcode}
                   onChange={(e) => {
                     const value = e.target.value.replace(/\D/g, ''); // Only digits
