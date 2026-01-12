@@ -303,7 +303,8 @@
     "noPlan": "No plan assigned",
     "viewFullPlan": "View full plan",
     "createPlan": "Create plan",
-    "reps": "reps"
+    "reps": "reps",
+    "myPlans": "My Plans"
   },
   "planGeneration": {
     "analyzing": "Your AI trainer is analyzing 1RM, goals and recovery...",

@@ -131,7 +131,7 @@ export default function TrainingPlan() {
             variant="outline" 
             onClick={() => navigate('/my-training-plans')}
           >
-            Мои планы
+            {t('todaysPlan.myPlans')}
           </Button>
         </div>
         <Card className="border-dashed">
