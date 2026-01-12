@@ -3,6 +3,7 @@ import { Info, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ExerciseIcon from "./ExerciseIcon";
 import { AdjustedExercise } from "@/hooks/useDailyWorkout";
+import { useTranslation } from "react-i18next";
 
 interface MinimalistExerciseCardProps {
   exercise: AdjustedExercise;
@@ -17,6 +18,8 @@ export default function MinimalistExerciseCard({
   onInfoClick,
   onStartClick
 }: MinimalistExerciseCardProps) {
+  const { t } = useTranslation('workouts');
+
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
@@ -38,7 +41,7 @@ export default function MinimalistExerciseCard({
       <div className="flex items-center gap-4 flex-1">
         <ExerciseIcon name={exercise?.name} />
         <div className="flex-1">
-          <h3 className="text-base font-medium text-gray-200">{exercise?.name || 'Упражнение'}</h3>
+          <h3 className="text-base font-medium text-gray-200">{exercise?.name || t('exercise.defaultName')}</h3>
           <p className="text-sm text-gray-400">
             {exercise.sets} × {exercise.reps}
             {exercise.weight && ` @ ${exercise.weight}kg`}

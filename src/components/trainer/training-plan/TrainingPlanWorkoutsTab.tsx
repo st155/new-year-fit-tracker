@@ -25,10 +25,6 @@ interface WorkoutExercise {
   target_metric?: string;
 }
 
-const getExerciseName = (exercise: WorkoutExercise): string => {
-  return exercise.exercise_name || exercise.name || 'Упражнение';
-};
-
 interface TrainingPlanWorkout {
   id: string;
   day_of_week: number;
@@ -42,10 +38,14 @@ interface TrainingPlanWorkoutsTabProps {
 }
 
 export function TrainingPlanWorkoutsTab({ workouts }: TrainingPlanWorkoutsTabProps) {
-  const { t } = useTranslation('trainingPlan');
+  const { t } = useTranslation(['trainingPlan', 'workouts', 'common']);
   const { getImageUrl, setImageUrl } = useExerciseImages();
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState<string>('');
+
+  const getExerciseName = (exercise: WorkoutExercise): string => {
+    return exercise.exercise_name || exercise.name || t('workouts:exercise.defaultName');
+  };
 
   const DAY_NAMES = [
     t('days.monday'),
