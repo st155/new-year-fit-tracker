@@ -2,6 +2,7 @@
  * Level System for Gamification
  * Calculates user level, progress, and XP requirements
  */
+import i18n from '@/i18n';
 
 export interface UserLevel {
   level: number;
@@ -111,12 +112,12 @@ export function calculateHabitXP(params: HabitXPParams): number {
 export function getLevelRewards(level: number): string[] {
   const rewards: string[] = [];
   
-  if (level >= 5) rewards.push('🎨 Цветные темы разблокированы');
-  if (level >= 10) rewards.push('⭐ Особые значки');
-  if (level >= 15) rewards.push('🔥 Премиум аналитика');
-  if (level >= 20) rewards.push('👑 Легендарный статус');
-  if (level >= 25) rewards.push('💎 Эксклюзивные награды');
-  if (level >= 30) rewards.push('🏆 Мастер привычек');
+  if (level >= 5) rewards.push(i18n.t('gamification:levels.rewards.colorThemes'));
+  if (level >= 10) rewards.push(i18n.t('gamification:levels.rewards.specialBadges'));
+  if (level >= 15) rewards.push(i18n.t('gamification:levels.rewards.premiumAnalytics'));
+  if (level >= 20) rewards.push(i18n.t('gamification:levels.rewards.legendaryStatus'));
+  if (level >= 25) rewards.push(i18n.t('gamification:levels.rewards.exclusiveRewards'));
+  if (level >= 30) rewards.push(i18n.t('gamification:levels.rewards.habitsMaster'));
   
   return rewards;
 }
@@ -125,13 +126,13 @@ export function getLevelRewards(level: number): string[] {
  * Get level title based on level
  */
 export function getLevelTitle(level: number): string {
-  if (level < 5) return 'Новичок';
-  if (level < 10) return 'Практик';
-  if (level < 15) return 'Энтузиаст';
-  if (level < 20) return 'Эксперт';
-  if (level < 25) return 'Мастер';
-  if (level < 30) return 'Легенда';
-  return 'Гуру';
+  if (level < 5) return i18n.t('gamification:levels.titles.novice');
+  if (level < 10) return i18n.t('gamification:levels.titles.practitioner');
+  if (level < 15) return i18n.t('gamification:levels.titles.enthusiast');
+  if (level < 20) return i18n.t('gamification:levels.titles.expert');
+  if (level < 25) return i18n.t('gamification:levels.titles.master');
+  if (level < 30) return i18n.t('gamification:levels.titles.legend');
+  return i18n.t('gamification:levels.titles.guru');
 }
 
 /**

@@ -28,6 +28,31 @@
       "unlocked": "No achievements unlocked yet",
       "locked": "All achievements unlocked! 🎉",
       "all": "No achievements"
+    },
+    "items": {
+      "streak_3": { "name": "First Spark", "description": "3-day streak for any habit" },
+      "streak_7": { "name": "Week of Strength", "description": "7-day streak for any habit" },
+      "streak_14": { "name": "Two Weeks", "description": "14-day streak" },
+      "streak_30": { "name": "Monthly Marathon", "description": "30-day streak" },
+      "streak_50": { "name": "Habit Champion", "description": "50-day streak" },
+      "streak_100": { "name": "Habit Legend", "description": "100-day streak" },
+      "streak_365": { "name": "Annual Warrior", "description": "365-day streak" },
+      "first_habit": { "name": "First Step", "description": "Complete your first habit" },
+      "completions_10": { "name": "Beginner", "description": "10 habit completions" },
+      "completions_50": { "name": "Practitioner", "description": "50 habit completions" },
+      "completions_100": { "name": "Centurion", "description": "100 habit completions" },
+      "completions_500": { "name": "Habit Master", "description": "500 completions" },
+      "completions_1000": { "name": "Guru", "description": "1000 habit completions" },
+      "perfect_day": { "name": "Perfect Day", "description": "All habits completed in a day" },
+      "perfect_week": { "name": "Perfect Week", "description": "All habits for 7 days straight" },
+      "perfect_month": { "name": "Perfect Month", "description": "All habits for 30 days" },
+      "early_bird": { "name": "Early Bird", "description": "Complete a habit before 6:00" },
+      "night_owl": { "name": "Night Owl", "description": "Complete a habit after 23:00" },
+      "comeback_kid": { "name": "Comeback", "description": "Restore streak after a miss" },
+      "multi_habit": { "name": "Multitasking", "description": "Complete 5 habits in a day" },
+      "super_user": { "name": "Super User", "description": "10 active habits at once" },
+      "trainer": { "name": "Trainer", "description": "Certified team trainer" },
+      "early_adopter": { "name": "Pioneer", "description": "One of the first platform users" }
     }
   },
   "levelUp": {
@@ -46,5 +71,24 @@
     "xp": "{{xp}} XP",
     "progress": "Progress",
     "unlockedRewards": "Unlocked rewards"
+  },
+  "levels": {
+    "titles": {
+      "novice": "Novice",
+      "practitioner": "Practitioner",
+      "enthusiast": "Enthusiast",
+      "expert": "Expert",
+      "master": "Master",
+      "legend": "Legend",
+      "guru": "Guru"
+    },
+    "rewards": {
+      "colorThemes": "🎨 Color themes unlocked",
+      "specialBadges": "⭐ Special badges",
+      "premiumAnalytics": "🔥 Premium analytics",
+      "legendaryStatus": "👑 Legendary status",
+      "exclusiveRewards": "💎 Exclusive rewards",
+      "habitsMaster": "🏆 Habits master"
+    }
   }
 }

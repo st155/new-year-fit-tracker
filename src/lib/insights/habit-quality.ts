@@ -5,6 +5,7 @@
 
 import { parseISO, differenceInDays, subDays } from 'date-fns';
 import { calculateConsistencyScore, calculateHabitMomentum } from './analyzers/habit-analyzer';
+import i18n from '@/i18n';
 
 interface Habit {
   id: string;
@@ -81,17 +82,17 @@ export function calculateHabitQuality(
   // Generate recommendation
   let recommendation = '';
   if (overallScore >= 90) {
-    recommendation = 'Отлично! Продолжайте в том же духе';
+    recommendation = i18n.t('habits:quality.recommendations.excellent');
   } else if (consistency < 50) {
-    recommendation = 'Улучшите регулярность выполнения привычки';
+    recommendation = i18n.t('habits:quality.recommendations.improveConsistency');
   } else if (streakRatio < 50) {
-    recommendation = 'Сосредоточьтесь на поддержании стрейка';
+    recommendation = i18n.t('habits:quality.recommendations.focusOnStreak');
   } else if (momentum < -20) {
-    recommendation = 'Восстановите momentum - начните с малого';
+    recommendation = i18n.t('habits:quality.recommendations.restoreMomentum');
   } else if (completionRate < 50) {
-    recommendation = 'Увеличьте частоту выполнения привычки';
+    recommendation = i18n.t('habits:quality.recommendations.increaseFrequency');
   } else {
-    recommendation = 'Хорошая работа! Продолжайте улучшать';
+    recommendation = i18n.t('habits:quality.recommendations.goodWork');
   }
 
   return {

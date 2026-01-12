@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { DEFAULT_HABIT_TEMPLATES } from "./habit-templates";
+import i18n from "@/i18n";
 
 export async function migrateExistingHabits(userId: string) {
   try {
@@ -62,10 +63,10 @@ export async function migrateExistingHabits(userId: string) {
         if (!habit.ai_motivation) {
           updates.ai_motivation = {
             milestones: {
-              1440: "✨ 1 день пройден! Отличное начало!",
-              10080: "🔥 Неделя позади! Продолжай в том же духе!",
-              43200: "💪 Целый месяц! Ты молодец!",
-              129600: "🏆 3 месяца! Это уже стало привычкой!",
+              1440: i18n.t('habits:migrateMotivation.day1'),
+              10080: i18n.t('habits:migrateMotivation.week1'),
+              43200: i18n.t('habits:migrateMotivation.month1'),
+              129600: i18n.t('habits:migrateMotivation.month3'),
             },
           };
         }
