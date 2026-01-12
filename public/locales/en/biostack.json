@@ -132,7 +132,6 @@
     "newResults": "New results! {{name}} updated",
     "open": "Open"
   },
-  },
   "scanner": {
     "frontReady": "📸 Front side ready",
     "frontReadyDesc": "Now photograph the back side with barcode",

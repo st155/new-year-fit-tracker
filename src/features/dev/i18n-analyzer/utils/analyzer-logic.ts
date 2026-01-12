@@ -1,4 +1,5 @@
-import type { SyncIssue, NamespaceStats, AnalysisReport } from '../types';
+import type { SyncIssue, NamespaceStats, AnalysisReport, JsonValidationError } from '../types';
+import { validateAllJsonFiles } from './json-validator';
 
 // Plural suffixes used by i18next - differences between RU and EN are expected
 const PLURAL_SUFFIXES = ['_zero', '_one', '_two', '_few', '_many', '_other'];
@@ -9,7 +10,7 @@ function isPluralKeyMismatch(key: string): boolean {
 }
 
 // List of known namespaces (auto-discovered from public/locales/ru/)
-const NAMESPACES = [
+export const NAMESPACES = [
   'activity',
   'admin',
   'auth',
@@ -87,11 +88,16 @@ function flattenObject(obj: Record<string, unknown>, prefix = ''): string[] {
   return keys;
 }
 
-async function loadNamespaceFiles(namespace: string): Promise<{
+async function loadNamespaceFiles(namespace: string, brokenNamespaces: string[]): Promise<{
   en: Record<string, unknown> | null;
   ru: Record<string, unknown> | null;
 }> {
   const results = { en: null as Record<string, unknown> | null, ru: null as Record<string, unknown> | null };
+  
+  // Skip broken namespaces - they can't be parsed
+  if (brokenNamespaces.includes(namespace)) {
+    return results;
+  }
   
   try {
     const enResponse = await fetch(`/locales/en/${namespace}.json`);
@@ -99,7 +105,7 @@ async function loadNamespaceFiles(namespace: string): Promise<{
       results.en = await enResponse.json();
     }
   } catch {
-    // File doesn't exist
+    // File doesn't exist or parse error
   }
   
   try {
@@ -108,13 +114,16 @@ async function loadNamespaceFiles(namespace: string): Promise<{
       results.ru = await ruResponse.json();
     }
   } catch {
-    // File doesn't exist
+    // File doesn't exist or parse error
   }
   
   return results;
 }
 
 export async function analyzeLocales(): Promise<AnalysisReport> {
+  // Step 1: Validate all JSON files first
+  const { errors: jsonErrors, brokenNamespaces } = await validateAllJsonFiles(NAMESPACES);
+  
   const syncIssues: SyncIssue[] = [];
   const namespaceStats: NamespaceStats[] = [];
   let totalKeysRu = 0;
@@ -122,7 +131,18 @@ export async function analyzeLocales(): Promise<AnalysisReport> {
   let totalNamespaces = 0;
 
   for (const namespace of NAMESPACES) {
-    const { en, ru } = await loadNamespaceFiles(namespace);
+    const { en, ru } = await loadNamespaceFiles(namespace, brokenNamespaces);
+    
+    // If namespace is broken, add it to stats with 0 keys
+    if (brokenNamespaces.includes(namespace)) {
+      namespaceStats.push({
+        name: namespace,
+        ruKeys: 0,
+        enKeys: 0,
+        syncIssues: 0,
+      });
+      continue;
+    }
     
     if (!en && !ru) continue;
     
@@ -164,5 +184,7 @@ export async function analyzeLocales(): Promise<AnalysisReport> {
       totalKeysEn,
       namespaceStats,
     },
+    jsonErrors,
+    brokenNamespaces,
   };
 }

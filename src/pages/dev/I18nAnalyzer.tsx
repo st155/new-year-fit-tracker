@@ -9,6 +9,7 @@ import {
   AnalyzerFilters,
   SyncIssuesPanel,
   StatsSummary,
+  JsonErrorsPanel,
   type FilterState,
 } from '@/features/dev/i18n-analyzer';
 
@@ -54,6 +55,12 @@ export default function I18nAnalyzer() {
           stats={report.stats} 
           onRefresh={refresh} 
           loading={loading} 
+        />
+        
+        {/* JSON Errors Panel - CRITICAL, shown first */}
+        <JsonErrorsPanel 
+          errors={report.jsonErrors} 
+          brokenNamespaces={report.brokenNamespaces}
         />
         
         <AnalyzerFilters 

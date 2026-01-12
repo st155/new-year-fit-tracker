@@ -60,7 +60,7 @@
     "retryProcessing": "Повторить обработку",
     "reprocessDocument": "Переобработать документ"
   },
-"extraction": {
+  "extraction": {
     "reprocessSuccess": "Документ успешно переобработан",
     "reprocessFailed": "Ошибка переобработки документа: {{error}}",
     "extracted": "Извлечено",

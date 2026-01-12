@@ -11,6 +11,16 @@ export interface NamespaceStats {
   syncIssues: number;
 }
 
+export interface JsonValidationError {
+  namespace: string;
+  language: 'en' | 'ru';
+  line: number;
+  column: number;
+  message: string;
+  preview: string; // 3 lines of context around the error
+  rawError: string;
+}
+
 export interface AnalysisReport {
   syncIssues: SyncIssue[];
   stats: {
@@ -19,6 +29,8 @@ export interface AnalysisReport {
     totalKeysEn: number;
     namespaceStats: NamespaceStats[];
   };
+  jsonErrors: JsonValidationError[];
+  brokenNamespaces: string[]; // namespaces that failed to parse
 }
 
 export interface FilterState {
