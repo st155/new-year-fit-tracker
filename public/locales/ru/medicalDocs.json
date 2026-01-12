@@ -393,10 +393,37 @@
     "warning": "Внимание",
     "critical": "Критично"
   },
-  "stats": {
+"stats": {
     "min": "Мин",
     "avg": "Сред",
-    "max": "Макс"
+    "max": "Макс",
+    "title": "✨ Статистика документов",
+    "documents_one": "{{count}} документ",
+    "documents_few": "{{count}} документа",
+    "documents_many": "{{count}} документов",
+    "documents_other": "{{count}} документов",
+    "bloodTests_one": "{{count}} анализ",
+    "bloodTests_few": "{{count}} анализа",
+    "bloodTests_many": "{{count}} анализов",
+    "bloodTests_other": "{{count}} анализов",
+    "photos_one": "{{count}} фото",
+    "photos_other": "{{count}} фото",
+    "aiProcessed_one": "{{count}} обработано AI",
+    "aiProcessed_other": "{{count}} обработано AI",
+    "lastUpload": "📅 Последний: {{date}}",
+    "inbody_one": "{{count}} InBody",
+    "inbody_other": "{{count}} InBody"
+  },
+  "categorySummary": {
+    "noDescription": "Нет описания",
+    "normal": "В норме",
+    "minorDeviations": "Незначительные отклонения",
+    "needsAttention": "Требует внимания",
+    "hasDeviations": "Есть отклонения",
+    "documentsCount_one": "{{count}} документ",
+    "documentsCount_few": "{{count}} документа",
+    "documentsCount_many": "{{count}} документов",
+    "documentsCount_other": "{{count}} документов"
   },
   "measurements_one": "{{count}} измерение",
   "measurements_few": "{{count}} измерения",

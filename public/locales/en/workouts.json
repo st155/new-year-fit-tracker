@@ -393,10 +393,16 @@
     "zone4": "Zone 4",
     "zone5": "Zone 5"
   },
-  "logger": {
+"logger": {
     "weight": "Weight",
     "recommended": "Recommended: {{weight}}kg",
     "useRecommended": "Use recommended"
+  },
+  "exercises": {
+    "toast": {
+      "saveError": "Save error",
+      "imageSavedLocally": "Image saved locally but not synced"
+    }
   },
   "activityTypes": {
     "strength": "Strength",

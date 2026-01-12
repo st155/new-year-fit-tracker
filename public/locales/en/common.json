@@ -84,11 +84,14 @@
     "skip": "Skip",
     "continue": "Continue"
   },
-  "pwa": {
+"pwa": {
     "updateAvailable": "Update Available",
     "newVersionReady": "A new version of the app is ready to use",
     "update": "Update",
-    "later": "Later"
+    "later": "Later",
+    "notLoading": "App not loading?",
+    "tryClearCache": "Try refreshing the app cache",
+    "updating": "Updating..."
   },
   "connection": {
     "connecting": "Connecting to server...",

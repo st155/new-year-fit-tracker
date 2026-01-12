@@ -395,10 +395,16 @@
     "zone4": "Зона 4",
     "zone5": "Зона 5"
   },
-  "logger": {
+"logger": {
     "weight": "Вес",
     "recommended": "Рекомендуем: {{weight}}кг",
     "useRecommended": "Использовать рекомендованный"
+  },
+  "exercises": {
+    "toast": {
+      "saveError": "Ошибка сохранения",
+      "imageSavedLocally": "Изображение сохранено локально, но не синхронизировано"
+    }
   },
   "activityTypes": {
     "strength": "Силовая",

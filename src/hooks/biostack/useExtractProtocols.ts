@@ -24,7 +24,7 @@ export function useExtractProtocols() {
 
       if (fetchError) throw fetchError;
       if (!docs || docs.length === 0) {
-        throw new Error('Нет документов для обработки');
+        throw new Error(t('toast.noDocuments'));
       }
 
       setProgress({ current: 0, total: docs.length });
