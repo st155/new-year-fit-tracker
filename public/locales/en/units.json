@@ -47,6 +47,7 @@
   "duration": {
     "hoursMinutes": "{{hours}}h {{minutes}}m",
     "minutesOnly": "{{minutes}}m",
-    "daysShort": "{{count}}d"
+    "daysShort": "{{count}}d",
+    "hoursShort": "h"
   }
 }

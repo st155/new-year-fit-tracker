@@ -52,7 +52,7 @@ interface ClientsListProps {
 }
 
 export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, loading }: ClientsListProps) {
-  const { t } = useTranslation('trainer');
+  const { t } = useTranslation(['trainer', 'units']);
   const [searchEmail, setSearchEmail] = useState("");
   const [searching, setSearching] = useState(false);
   const [foundUsers, setFoundUsers] = useState<any[]>([]);
@@ -441,7 +441,7 @@ export function ClientsList({ clients, onSelectClient, onAddClient, onRefresh, l
               client.sleep_hours_avg && {
                 name: t('clients.metrics.sleep'),
                 value: client.sleep_hours_avg.toFixed(1),
-                unit: 'ч',
+                unit: t('units:duration.hoursShort'),
                 trend: client.sleep_trend,
                 alert: client.poor_sleep_alert,
                 icon: <Moon className="h-3 w-3" />,
