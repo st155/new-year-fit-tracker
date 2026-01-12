@@ -306,6 +306,10 @@
     "reps": "reps",
     "myPlans": "My Plans"
   },
+  "exercise": {
+    "defaultName": "Exercise"
+    "myPlans": "My Plans"
+  },
   "planGeneration": {
     "analyzing": "Your AI trainer is analyzing 1RM, goals and recovery...",
     "creatingMacrocycle": "Creating personalized 12-week macrocycle...",
