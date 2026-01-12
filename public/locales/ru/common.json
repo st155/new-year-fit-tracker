@@ -79,6 +79,9 @@
     "publishing": "Публикую...",
     "hideOptional": "Скрыть",
     "showOptional": "Добавить",
+    "workout": "Тренировка",
+    "addWater": "+250мл",
+    "weighIn": "Взвеситься",
     "skip": "Пропустить",
     "continue": "Продолжить"
   },
@@ -162,8 +165,8 @@
     "generating": "AI генерирует ответ",
     "sendError": "Ошибка отправки. Попробуйте ещё раз.",
     "actionError": "Ошибка при выполнении действия",
-    "timeout": "Время ожидания истекло",
-    "refreshPage": "Попробуйте обновить страницу"
+    "timeout": "AI не отвечает уже 30 секунд",
+    "refreshPage": "Обновить страницу"
   },
   "time": {
     "today": "Сегодня",
@@ -434,7 +437,9 @@
     "minAgo": "{{min}} мин назад",
     "hoursAgo": "{{hours}} ч назад",
     "daysAgo": "{{days}} дн назад",
-    "syncedAt": "Синхронизация"
+    "syncedAt": "Синхронизация",
+    "active": "Активно",
+    "stale": "Устарело"
   },
   "notifications": {
     "allMarkedRead": "Все уведомления отмечены прочитанными",
@@ -515,7 +520,16 @@
     "recalculationStarted": "Пересчёт уверенности запущен",
     "recalculationStartedFor": "Пересчёт уверенности запущен для {{metric}}",
     "recalculationFailed": "Не удалось запустить пересчёт уверенности",
-    "recalculateFailed": "Не удалось пересчитать уверенность"
+    "recalculateFailed": "Не удалось пересчитать уверенность",
+    "factors": {
+      "sourceReliability": "Надежность источника данных",
+      "dataFreshness": "Актуальность данных",
+      "measurementFrequency": "Регулярность измерений",
+      "crossValidation": "Перекрестная проверка"
+    },
+    "zoneTitle": "{{zone}} качество данных",
+    "zoneDescription": "Метрики с уровнем качества \"{{zone}}\"",
+    "noMetrics": "Нет метрик в этой категории"
   },
   "webhook": {
     "queued": "Webhook добавлен в очередь на обработку",
@@ -579,47 +593,6 @@
     "sourceAutoSelect": "Источник: {{source}} (автовыбор)",
     "personalAssessment": "Персональная оценка на основе твоих данных за {{days}}+ дней"
   },
-  "actions": {
-    "save": "Сохранить",
-    "saving": "Сохранение...",
-    "cancel": "Отмена",
-    "delete": "Удалить",
-    "deleting": "Удаление...",
-    "add": "Добавить",
-    "adding": "Добавляю...",
-    "edit": "Редактировать",
-    "close": "Закрыть",
-    "confirm": "Подтвердить",
-    "retry": "Повторить",
-    "back": "Назад",
-    "next": "Далее",
-    "send": "Отправить",
-    "replace": "Заменить",
-    "choose": "Выбрать",
-    "chooseFile": "Выбрать файл",
-    "upload": "Загрузить",
-    "publish": "Опубликовать",
-    "publishing": "Публикую...",
-    "hideOptional": "Скрыть",
-    "showOptional": "Добавить",
-    "workout": "Тренировка",
-    "addWater": "+250мл",
-    "weighIn": "Взвеситься"
-  },
-  "status": {
-    "connected": "Подключено",
-    "disconnected": "Отключено",
-    "pending": "Ожидание",
-    "error": "Ошибка",
-    "unknown": "Неизвестно",
-    "justNow": "только что",
-    "minAgo": "{{min}} мин назад",
-    "hoursAgo": "{{hours}} ч назад",
-    "daysAgo": "{{days}} дн назад",
-    "syncedAt": "Синхронизация",
-    "active": "Активно",
-    "stale": "Устарело"
-  },
   "dataSource": {
     "metrics": "Метрик",
     "dataQuality": "Качество данных",
@@ -646,30 +619,6 @@
     "activeChallenges_one": "{{count}} активный челлендж",
     "activeChallenges_few": "{{count}} активных челленджа",
     "activeChallenges_many": "{{count}} активных челленджей"
-  },
-  "ai": {
-    "sending": "Отправка",
-    "generating": "AI генерирует ответ",
-    "sendError": "Ошибка отправки. Попробуйте ещё раз.",
-    "actionError": "Ошибка при выполнении действия",
-    "timeout": "AI не отвечает уже 30 секунд",
-    "refreshPage": "Обновить страницу"
-  },
-  "dataQuality": {
-    "title": "Качество данных",
-    "excellent": "Отлично",
-    "good": "Хорошо",
-    "fair": "Средне",
-    "poor": "Плохо",
-    "factors": {
-      "sourceReliability": "Надежность источника данных",
-      "dataFreshness": "Актуальность данных",
-      "measurementFrequency": "Регулярность измерений",
-      "crossValidation": "Перекрестная проверка"
-    },
-    "zoneTitle": "{{zone}} качество данных",
-    "zoneDescription": "Метрики с уровнем качества \"{{zone}}\"",
-    "noMetrics": "Нет метрик в этой категории"
   },
   "theme": {
     "toggle": "Переключить тему"
