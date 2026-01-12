@@ -889,7 +889,8 @@
     "added": "Измерение добавлено: {{value}}",
     "error": "Ошибка",
     "enterValidValue": "Введите корректное значение",
-    "addFailed": "Не удалось добавить измерение"
+    "addFailed": "Не удалось добавить измерение",
+    "strengthDisplay": "{{weight}} кг × {{reps}}"
   },
   "recognizedClient": {
     "alias": "Псевдоним",

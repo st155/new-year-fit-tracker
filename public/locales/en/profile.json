@@ -85,12 +85,14 @@
     },
     "units": {
       "min": "{{value}} min",
-      "streak": "🔥 {{days}} days in a row"
+      "streak": "🔥 {{days}} days in a row",
+      "km": "{{value}} km"
     }
   },
   "health": {
     "title": "Health",
     "noData": "No health data",
-    "connectTracker": "Connect a tracker to start monitoring"
+    "connectTracker": "Connect a tracker to start monitoring",
+    "sleepHours": "{{value}} h"
   }
 }

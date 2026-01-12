@@ -21,7 +21,7 @@ export function CircularFastingProgress({
   status,
   className,
 }: CircularFastingProgressProps) {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'units']);
   const size = 340;
   const strokeWidth = 24;
   const radius = (size - strokeWidth) / 2;
@@ -31,8 +31,8 @@ export function CircularFastingProgress({
   const formatTime = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    if (hours === 0) return `${mins}м`;
-    return `${hours}ч ${mins}м`;
+    if (hours === 0) return t('units:duration.minutesOnly', { minutes: mins });
+    return t('units:duration.hoursMinutes', { hours, minutes: mins });
   };
 
   const getStatusColor = () => {

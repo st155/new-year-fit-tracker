@@ -889,7 +889,8 @@
     "added": "Measurement added: {{value}}",
     "error": "Error",
     "enterValidValue": "Enter a valid value",
-    "addFailed": "Failed to add measurement"
+    "addFailed": "Failed to add measurement",
+    "strengthDisplay": "{{weight}} kg × {{reps}}"
   },
   "recognizedClient": {
     "alias": "Alias",
