@@ -81,7 +81,7 @@ export function QuickMeasurementDialog({
       if (error) throw error;
 
       const displayValue = isStrength && repsValue
-        ? `${numValue} кг × ${repsValue}`
+        ? t('measurement.strengthDisplay', { weight: numValue, reps: repsValue })
         : formatMeasurement(numValue, goal.target_unit);
 
       toast({

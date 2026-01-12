@@ -74,7 +74,7 @@ export function RecentActivity({ activities, isLoading }: RecentActivityProps) {
       parts.push(`${Math.round(meta.calories)} kcal`);
     }
     if (meta.distance_km) {
-      parts.push(`${meta.distance_km.toFixed(1)} ${i18n.language === 'ru' ? 'км' : 'km'}`);
+      parts.push(t('recentActivity.units.km', { value: meta.distance_km.toFixed(1) }));
     }
     if (meta.streak) {
       parts.push(t('recentActivity.units.streak', { days: meta.streak }));

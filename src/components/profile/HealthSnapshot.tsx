@@ -13,7 +13,7 @@ interface HealthSnapshotProps {
   isLoading?: boolean;
 }
 
-const metricConfig: Record<string, { icon: React.ReactNode; color: string; format: (v: number) => string }> = {
+const getMetricConfig = (t: (key: string, options?: any) => string): Record<string, { icon: React.ReactNode; color: string; format: (v: number) => string }> => ({
   'Weight': {
     icon: <Scale className="h-4 w-4" />,
     color: 'text-blue-500',
@@ -27,7 +27,7 @@ const metricConfig: Record<string, { icon: React.ReactNode; color: string; forma
   'Sleep Duration': {
     icon: <Moon className="h-4 w-4" />,
     color: 'text-purple-500',
-    format: (v) => `${v.toFixed(1)} ч`
+    format: (v) => t('profile:health.sleepHours', { value: v.toFixed(1) })
   },
   'Recovery Score': {
     icon: <Zap className="h-4 w-4" />,
@@ -49,7 +49,7 @@ const metricConfig: Record<string, { icon: React.ReactNode; color: string; forma
     color: 'text-pink-500',
     format: (v) => `${Math.round(v)} ms`
   }
-};
+});
 
 const priorityOrder = ['Weight', 'Resting Heart Rate', 'Sleep Duration', 'Recovery Score', 'Day Strain', 'Steps', 'HRV'];
 
@@ -147,6 +147,7 @@ export function HealthSnapshot({ metrics, isLoading }: HealthSnapshotProps) {
       </CardHeader>
       <CardContent className="space-y-2">
         {sortedMetrics.map((metric, index) => {
+          const metricConfig = getMetricConfig(t);
           const config = metricConfig[metric.name] || {
             icon: <Activity className="h-4 w-4" />,
             color: 'text-muted-foreground',

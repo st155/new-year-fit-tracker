@@ -16,7 +16,7 @@ interface ClientWorkoutsListProps {
 }
 
 export function ClientWorkoutsList({ clientId }: ClientWorkoutsListProps) {
-  const { t } = useTranslation('trainerDashboard');
+  const { t } = useTranslation(['trainerDashboard', 'units']);
   const [period, setPeriod] = useState('30');
   const [workoutType, setWorkoutType] = useState<string>('all');
 
@@ -108,9 +108,9 @@ export function ClientWorkoutsList({ clientId }: ClientWorkoutsListProps) {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     if (hours > 0) {
-      return `${hours}ч ${mins}м`;
+      return t('units:duration.hoursMinutes', { hours, minutes: mins });
     }
-    return `${mins}м`;
+    return t('units:duration.minutesOnly', { minutes: mins });
   };
 
   if (isLoading) {
