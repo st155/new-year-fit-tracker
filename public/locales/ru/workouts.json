@@ -1062,5 +1062,9 @@
   "manualWorkout": {
     "placeholder": "Пример ввода:\n\nLunges alternating\n10x20kg\n10x40kg\n8x50kg\n\nOverhead press barbell\n10x20kg\n8x40kg\n\nsuperset:\nDips\n10\n10x20kg\n\nBiceps dumbbell\n10x20kg\n10x25\n\nPlank 3x45sec\nSide Plank\n1m 1m",
     "trainerNotes": "Тренировка с {{trainer}}"
+  },
+  "restTimer": {
+    "completedTitle": "Отдых завершен! 💪",
+    "completedBody": "Время для следующего подхода"
   }
 }

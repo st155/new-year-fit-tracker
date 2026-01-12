@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { showNotification, playSound, vibrate } from '@/lib/notification-utils';
+import i18n from '@/i18n';
 
 interface UseRestTimerOptions {
   initialDuration: number;
@@ -59,8 +60,8 @@ export function useRestTimer({
           // Timer complete
           playSound(1000, 300);
           vibrate([200, 100, 200]);
-          showNotification('Отдых завершен! 💪', {
-            body: 'Время для следующего подхода',
+          showNotification(i18n.t('workouts:restTimer.completedTitle'), {
+            body: i18n.t('workouts:restTimer.completedBody'),
             tag: 'rest-timer',
           });
           
