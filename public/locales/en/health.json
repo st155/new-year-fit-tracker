@@ -47,7 +47,14 @@
 "metrics": {
     "bloodPressure": "Blood Pressure",
     "stale": "Stale",
-    "dataQuality": "Data Quality"
+    "dataQuality": "Data Quality",
+    "statistics": "Statistics",
+    "average": "Average",
+    "records": "Records",
+    "maximum": "Maximum",
+    "minimum": "Minimum",
+    "trendDays": "Trend (7 days)",
+    "historyDays": "History for the last 90 days"
   },
   "units": {
     "mlKgMin": "ml/kg/min",

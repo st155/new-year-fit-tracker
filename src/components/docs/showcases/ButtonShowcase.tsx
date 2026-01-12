@@ -32,7 +32,7 @@ export function ButtonShowcase() {
       />
 
       <ComponentSection
-        title="Button Variants (Продолжение)"
+        title={t('docs.buttonVariantsContinued')}
         examples={[
           { label: 'Destructive', component: <Button variant="destructive">Delete</Button> },
           { label: 'Outline', component: <Button variant="outline">Outline</Button> },

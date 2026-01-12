@@ -13,7 +13,7 @@ interface MetricChartProps {
 }
 
 export function MetricChart({ records, metricName, color }: MetricChartProps) {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'health']);
   
   const chartData = useMemo(() => {
     // Group by date and take average if multiple values per day
@@ -53,7 +53,7 @@ export function MetricChart({ records, metricName, color }: MetricChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>История за последние 90 дней</CardTitle>
+        <CardTitle>{t('health:metrics.historyDays')}</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>

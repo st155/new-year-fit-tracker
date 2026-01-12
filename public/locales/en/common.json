@@ -576,7 +576,12 @@
       "iconOnlyAria": "Icon-only buttons require aria-label",
       "useLoadingState": "Always use loading state for async operations",
       "disabledTooltip": "Disabled buttons should have tooltip with explanation"
-    }
+    },
+    "buttonVariantsContinued": "Button Variants (Continued)"
+  },
+  "tooltips": {
+    "sourceAutoSelect": "Source: {{source}} (auto-selected)",
+    "personalAssessment": "Personal assessment based on your data for {{days}}+ days"
   },
   "dataSource": {
     "metrics": "Metrics",
