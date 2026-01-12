@@ -40,8 +40,13 @@
       "weight": "Weight"
     },
     "endurance": {
-      "run10k": "10K Run",
+    "run10k": "10K Run",
       "plank": "Plank"
     }
+  },
+  "duration": {
+    "hoursMinutes": "{{hours}}h {{minutes}}m",
+    "minutesOnly": "{{minutes}}m",
+    "daysShort": "{{count}}d"
   }
 }

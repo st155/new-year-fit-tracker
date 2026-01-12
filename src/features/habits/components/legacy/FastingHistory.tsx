@@ -16,13 +16,13 @@ interface FastingHistoryProps {
 }
 
 export function FastingHistory({ windows, className }: FastingHistoryProps) {
-  const { t } = useTranslation('habits');
+  const { t } = useTranslation(['habits', 'units']);
 
   const formatDuration = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    if (hours === 0) return `${mins}м`;
-    return `${hours}ч ${mins}м`;
+    if (hours === 0) return t('units:duration.minutesOnly', { minutes: mins });
+    return t('units:duration.hoursMinutes', { hours, minutes: mins });
   };
 
   const bestFasting = Math.max(...windows.map(w => w.fasting_duration || 0));

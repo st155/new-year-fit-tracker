@@ -209,6 +209,12 @@
 "aiChat": {
     "execute": "Execute",
     "reconsider": "Reconsider",
+    "collapse": "Collapse",
+    "showAll": "Show all ({{count}})",
+    "sending": "Sending...",
+    "sent": "✓ Sent",
+    "sendFailed": "Not sent",
+    "retry": "Retry",
     "think": "Think",
     "approvePlan": "Yes, execute the plan",
     "planAwaitingConfirmation": "Plan awaiting confirmation",

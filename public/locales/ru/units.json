@@ -40,8 +40,13 @@
       "weight": "Вес"
     },
     "endurance": {
-      "run10k": "Бег 10 км",
+    "run10k": "Бег 10 км",
       "plank": "Планка"
     }
+  },
+  "duration": {
+    "hoursMinutes": "{{hours}}ч {{minutes}}м",
+    "minutesOnly": "{{minutes}}м",
+    "daysShort": "{{count}}д"
   }
 }

@@ -34,7 +34,7 @@ interface HabitCompactCardProps {
 }
 
 export function HabitCompactCard({ habit, userId, onCompleted }: HabitCompactCardProps) {
-  const { t } = useTranslation('habits');
+  const { t } = useTranslation(['habits', 'units']);
   const [elapsedTime, setElapsedTime] = useState<{
     days: number;
     hours: number;
@@ -414,7 +414,7 @@ export function HabitCompactCard({ habit, userId, onCompleted }: HabitCompactCar
           {currentStreak > 0 && (
             <Badge variant="fair" className="flex items-center gap-1 text-xs">
               <Flame className="h-3 w-3" />
-              {currentStreak}д
+              {t('units:duration.daysShort', { count: currentStreak })}
             </Badge>
           )}
           

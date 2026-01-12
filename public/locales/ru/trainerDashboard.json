@@ -208,6 +208,12 @@
 "aiChat": {
     "execute": "Выполнить",
     "reconsider": "Пересмотреть",
+    "collapse": "Свернуть",
+    "showAll": "Показать все ({{count}})",
+    "sending": "Отправка...",
+    "sent": "✓ Отправлено",
+    "sendFailed": "Не отправлено",
+    "retry": "Повторить",
     "think": "Подумать",
     "approvePlan": "Да, выполнить план",
     "planAwaitingConfirmation": "План ожидает подтверждения",

@@ -221,7 +221,11 @@
     "recentMeasurements": "Recent measurements",
     "last7days": "Last 7 days",
     "recentEntries": "Recent entries",
-    "weekTrend": "Week trend"
+    "weekTrend": "Week trend",
+    "noRecords": "No records",
+    "noAttempts": "No attempts",
+    "noFastingWindows": "No fasting windows",
+    "daysCount": "{{count}} days"
   },
   "numericWidget": {
     "units": "units",
