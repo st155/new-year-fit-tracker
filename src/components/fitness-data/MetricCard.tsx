@@ -7,6 +7,7 @@ import { getConfidenceColor } from '@/lib/data-quality';
 import { FitnessCard } from '@/components/ui/fitness-card';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 interface MetricCardProps {
   name: string;
@@ -58,7 +59,8 @@ export function MetricCard({
   confidence = 0,
   trend,
 }: MetricCardProps) {
-  const sparklineData = sparkline?.map((s, idx) => ({ 
+  const { t } = useTranslation('health');
+  const sparklineData = sparkline?.map((s, idx) => ({
     index: idx.toString(), 
     value: s.value 
   })) || [];
@@ -131,7 +133,7 @@ export function MetricCard({
         {confidence > 0 && (
           <div className="mb-4">
             <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-              <span>Data Quality</span>
+              <span>{t('metrics.dataQuality')}</span>
               <span>{confidence}%</span>
             </div>
             <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
@@ -173,7 +175,7 @@ export function MetricCard({
         {/* Stale indicator */}
         {isStale && (
           <Badge variant="secondary" className="absolute top-2 right-2 text-xs">
-            Устаревшие
+            {t('metrics.stale')}
           </Badge>
         )}
       </div>

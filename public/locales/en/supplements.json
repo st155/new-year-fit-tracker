@@ -139,7 +139,7 @@
     "forWeeks": "in {{weeks}} weeks",
     "weeksOnSupplement": "{{weeks}} wks on supplement"
   },
-  "correlation": {
+"correlation": {
     "noActiveSupplements": "No active supplements",
     "addToSeeCorrelations": "Add supplements to your stack to see scientific correlations with biomarkers",
     "scientificCorrelations": "Scientific Correlations",
@@ -160,7 +160,18 @@
     "biomarkerChange": "Biomarker change",
     "intakeConsistency": "Intake consistency",
     "forMonths": "For {{months}} months",
-    "correlation": "Correlation"
+    "correlation": "Correlation",
+    "timeToEffect": "Time to Effect",
+    "weeks": "{{count}} weeks",
+    "biomarkerVsConsistency": "Biomarker level vs supplement intake consistency",
+    "consistencyPercent": "Consistency (%)",
+    "aiAnalysis": "🤖 AI Analysis",
+    "highConfidence": "High confidence",
+    "mediumConfidence": "Medium confidence",
+    "effective": "✅ Effective",
+    "keyInsight": "Key Insight:",
+    "recommendation": "Recommendation:",
+    "overMonths": "For {{count}} months"
   },
   "timeline": {
     "morning": "Morning",
