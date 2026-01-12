@@ -206,7 +206,8 @@
     }
   },
   "fallback": {
-    "workout": "Тренировка"
+    "workout": "Тренировка",
+    "planName": "План тренировок"
   },
   "source": {
     "manual": "Вручную",

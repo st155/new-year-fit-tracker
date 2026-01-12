@@ -1,4 +1,19 @@
 {
+  "time": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "dataToday": "Data for today",
+    "dataYesterday": "Data for yesterday",
+    "days": "{{count}} days",
+    "notUpdatedDays": "Not updated for {{count}} days",
+    "outdated": "Outdated",
+    "lastUpdate": "Last:"
+  },
+  "bodyFat": {
+    "healthyZone": "Healthy Zone",
+    "inRange": "In Range",
+    "outOfRange": "Out of Range"
+  },
   "quality": {
     "lowRecovery": "Low recovery",
     "average": "Average",

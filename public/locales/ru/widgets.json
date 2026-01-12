@@ -1,4 +1,19 @@
 {
+  "time": {
+    "today": "Сегодня",
+    "yesterday": "Вчера",
+    "dataToday": "Данные за сегодня",
+    "dataYesterday": "Данные за вчера",
+    "days": "{{count}} дней",
+    "notUpdatedDays": "Не обновлялось {{count}} дней",
+    "outdated": "Устарело",
+    "lastUpdate": "Последнее:"
+  },
+  "bodyFat": {
+    "healthyZone": "Здоровая зона",
+    "inRange": "В норме",
+    "outOfRange": "Вне нормы"
+  },
   "quality": {
     "lowRecovery": "Низкое восстановление",
     "average": "Среднее",

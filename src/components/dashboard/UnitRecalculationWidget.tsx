@@ -44,8 +44,8 @@ export function UnitRecalculationWidget() {
 
       if (error) throw error;
 
-      toast.success(t('unitRecalculation.success'), {
-        description: t('unitRecalculation.successDesc', { count: data?.updated || 0 }),
+      toast.success(t('unitRecalculation.successTitle'), {
+        description: t('unitRecalculation.successDescription', { count: data?.updated || 0 }),
       });
 
       // Invalidate queries to refresh data
@@ -53,7 +53,7 @@ export function UnitRecalculationWidget() {
       queryClient.invalidateQueries({ queryKey: ['unit-recalculation-check'] });
     } catch (error: any) {
       console.error('Unit recalculation error:', error);
-      toast.error(t('unitRecalculation.error'), {
+      toast.error(t('unitRecalculation.errorTitle'), {
         description: error.message,
       });
     } finally {
@@ -73,10 +73,10 @@ export function UnitRecalculationWidget() {
           <div className="flex-1 space-y-2">
             <div>
               <h3 className="text-sm font-semibold text-yellow-500">
-                {t('unitRecalculation.title')}
+                {t('unitRecalculation.alertTitle')}
               </h3>
               <p className="text-xs text-muted-foreground mt-1">
-                {t('unitRecalculation.description')}
+                {t('unitRecalculation.alertDescription')}
               </p>
             </div>
             <Button
