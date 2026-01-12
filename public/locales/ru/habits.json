@@ -715,6 +715,7 @@
     "eventsCreateError": "Ошибка создания демо событий"
   },
   "pdf": {
+    "title": "Отчет по привычке",
     "statistics": "Статистика",
     "currentStreak": "Текущая серия",
     "bestStreak": "Лучшая серия",

@@ -584,6 +584,7 @@
     "eventsCreateError": "Error creating demo events"
   },
   "pdf": {
+    "title": "Habit Report",
     "statistics": "Statistics",
     "currentStreak": "Current streak",
     "bestStreak": "Best streak",
