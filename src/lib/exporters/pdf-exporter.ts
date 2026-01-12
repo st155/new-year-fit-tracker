@@ -41,7 +41,7 @@ export async function exportHabitToPDF(habit: HabitData): Promise<void> {
   let currentY = height - 60;
 
   // Title
-  page.drawText('Отчет по привычке', {
+  page.drawText(i18n.t('habits:pdf.title'), {
     x: 50,
     y: currentY,
     size: 28,
