@@ -352,7 +352,7 @@ const ProfilePage = () => {
                   </div>
                   <div>
                     <p className="font-medium text-sm">i18n Analyzer</p>
-                    <p className="text-xs text-muted-foreground">Анализ локализации проекта</p>
+                    <p className="text-xs text-muted-foreground">{t('devTools.i18nAnalyzerDesc')}</p>
                   </div>
                 </Link>
                 <Echo11SyncCard />

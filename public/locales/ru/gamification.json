@@ -18,6 +18,7 @@
   "achievements": {
     "title": "Достижения",
     "unlocked": "Разблокировано {{count}} из {{total}} достижений",
+    "unlockNotification": "Достижение разблокировано!",
     "tabs": {
       "all": "Все ({{count}})",
       "unlocked": "Разблокированные ({{count}})",

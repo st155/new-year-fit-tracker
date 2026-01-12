@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Sparkles } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -11,11 +12,13 @@ interface AchievementUnlockedToastProps {
 }
 
 export function AchievementUnlockedToast({ achievement }: AchievementUnlockedToastProps) {
+  const { t } = useTranslation('gamification');
+  
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <Sparkles className="h-5 w-5 text-amber-500" />
-        <h3 className="font-bold text-base">Достижение разблокировано!</h3>
+        <h3 className="font-bold text-base">{t('achievements.unlockNotification')}</h3>
       </div>
 
       <div className="flex items-start gap-3">

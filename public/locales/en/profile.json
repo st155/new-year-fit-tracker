@@ -19,7 +19,8 @@
   "settingsError": "Failed to save settings",
   "devTools": {
     "title": "Developer Tools",
-    "subtitle": "Testing and debugging"
+    "subtitle": "Testing and debugging",
+    "i18nAnalyzerDesc": "Project localization analysis"
   },
   "hero": {
     "trainer": "Trainer",

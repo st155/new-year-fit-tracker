@@ -673,5 +673,33 @@
     "respiratoryRate": "Respiratory Rate",
     "breathsPerMin": "breaths/min",
     "rate": "Rate"
+  },
+  "analytics": {
+    "pageTitle": "Analytics",
+    "pageDescription": "Overview of your clients' activity and progress"
+  },
+  "workoutAnalysis": {
+    "title": "Workout Analysis",
+    "noData": "No workout data for selected period",
+    "noDataShort": "No data",
+    "workouts": "Workouts",
+    "last30days": "Last 30 days",
+    "avgIntensity": "Avg Intensity",
+    "popularType": "Popular Type",
+    "mostOften": "Most often",
+    "streak": "Streak",
+    "consecutiveDays": "Consecutive days",
+    "typeDistribution": "Workout Type Distribution",
+    "intensityStrain": "Intensity (Strain)",
+    "count": "Count",
+    "otherActivity": "Other Activity",
+    "nonWorkoutTypes": {
+      "meditation": "Meditation",
+      "massage": "Massage",
+      "stagePerformance": "Stage Performance",
+      "caddy": "Caddy",
+      "breathingExercise": "Breathing Exercise",
+      "sleep": "Sleep"
+    }
   }
 }
