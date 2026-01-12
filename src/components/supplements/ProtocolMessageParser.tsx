@@ -52,25 +52,15 @@ export function ProtocolMessageParser({ onProtocolCreated }: ProtocolMessagePars
   const EXAMPLE_PROTOCOLS = [
     {
       title: t('parser.examples.doctor'),
-      text: `Витамин D3 5000 МЕ - утром натощак
-Магний цитрат 200 мг - 3 раза в день после еды
-Омега-3 1000 мг - утром и вечером
-Мелатонин 3 мг - за 30 минут до сна`
+      text: t('parser.exampleTexts.doctor')
     },
     {
       title: t('parser.examples.family'),
-      text: `Купи:
-Вит Д - 5000 единиц утром
-Магний - 200мг 3 раза
-Омега3 - 1000 мг 2 раза в день
-Мелатонин 3мг на ночь`
+      text: t('parser.exampleTexts.family')
     },
     {
       title: t('parser.examples.store'),
-      text: `Vitamin D3 (NOW Foods) - 5000 IU morning
-Magnesium Citrate (Solgar) - 200mg x3 after meals
-Omega-3 Fish Oil - 1000mg twice daily
-Melatonin 3mg before bed`
+      text: t('parser.exampleTexts.store')
     }
   ];
 

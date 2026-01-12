@@ -6,6 +6,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import i18n from '@/i18n';
 import type {
   ProtocolDTO,
   ActiveProtocolDTO,
@@ -262,12 +263,12 @@ export const protocolsService = {
 
     if (protocolError) throw protocolError;
 
-    onProgress?.(0, supplements.length, 'Обработка добавок...');
+    onProgress?.(0, supplements.length, i18n.t('biostack:progress.processingSupplements'));
 
     // Process each supplement
     for (let i = 0; i < supplements.length; i++) {
       const supp = supplements[i];
-      onProgress?.(i, supplements.length, `Обработка ${supp.supplement_name}...`);
+      onProgress?.(i, supplements.length, i18n.t('biostack:progress.processingSupplement', { name: supp.supplement_name }));
 
       // Find or create product
       let productId: string | null = null;

@@ -221,6 +221,11 @@
       "family": "От члена семьи (неформальный)",
       "store": "Список из магазина"
     },
+    "exampleTexts": {
+      "doctor": "Витамин D3 5000 МЕ - утром натощак\nМагний цитрат 200 мг - 3 раза в день после еды\nОмега-3 1000 мг - утром и вечером\nМелатонин 3 мг - за 30 минут до сна",
+      "family": "Купи:\nВит Д - 5000 единиц утром\nМагний - 200мг 3 раза\nОмега3 - 1000 мг 2 раза в день\nМелатонин 3мг на ночь",
+      "store": "Vitamin D3 (NOW Foods) - 5000 IU morning\nMagnesium Citrate (Solgar) - 200mg x3 after meals\nOmega-3 Fish Oil - 1000mg twice daily\nMelatonin 3mg before bed"
+    },
     "protocolFromDate": "Протокол от {{date}}",
     "analyzing": "Анализирую с помощью AI...",
     "recognize": "Распознать протокол",

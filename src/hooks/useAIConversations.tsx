@@ -642,8 +642,8 @@ export const useAIConversations = (userId: string | undefined) => {
           if (newMessage.role === 'system' && newMessage.metadata?.autoExecuted) {
             const successCount = newMessage.metadata.results?.filter((r: any) => r.success).length || 0;
             showToast({
-              title: '⚡ Действия выполнены автоматически',
-              description: `Успешно: ${successCount} действий`,
+              title: i18n.t('trainerDashboard:aiChat.toast.autoExecutedTitle'),
+              description: i18n.t('trainerDashboard:aiChat.toast.autoExecutedDesc', { count: successCount }),
               duration: 5000,
             });
           }

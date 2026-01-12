@@ -295,6 +295,15 @@
     "addProtocolFailed": "Could not add protocol",
     "defaultTag": "Doctor's protocol"
   },
+  "progress": {
+    "processingSupplements": "Processing supplements...",
+    "processingSupplement": "Processing {{name}}..."
+  },
+  "aiGenerator": {
+    "rationaleSimple": "Recommended for {{biomarker}}",
+    "rationaleWithChange": "Recommended for {{biomarker}} (expected improvement: {{percent}}% in {{weeks}} weeks)",
+    "targetOutcome": "Improve {{biomarker}}"
+  },
   "correlation": {
     "noActiveSupplements": "No active supplements in stack",
     "addToSeeCorrelations": "Add supplements to your stack to see scientific correlations and effectiveness analysis",

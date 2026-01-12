@@ -37,7 +37,8 @@
     "goalNotFound": "Goal not found",
     "saveFailed": "Failed to save",
     "fkError": "Goal link error. Try reloading the page.",
-    "permissionDenied": "Permission denied"
+    "permissionDenied": "Permission denied",
+    "pdfTimeout": "PDF loading timeout ({{seconds}} seconds)"
   },
   "success": {
     "saved": "Saved",

@@ -217,6 +217,11 @@
       "family": "From family member (informal)",
       "store": "Store list"
     },
+    "exampleTexts": {
+      "doctor": "Vitamin D3 5000 IU - morning on empty stomach\nMagnesium citrate 200 mg - 3 times a day after meals\nOmega-3 1000 mg - morning and evening\nMelatonin 3 mg - 30 min before sleep",
+      "family": "Buy:\nVitamin D - 5000 units morning\nMagnesium - 200mg 3 times\nOmega3 - 1000 mg 2 times a day\nMelatonin 3mg at night",
+      "store": "Vitamin D3 (NOW Foods) - 5000 IU morning\nMagnesium Citrate (Solgar) - 200mg x3 after meals\nOmega-3 Fish Oil - 1000mg twice daily\nMelatonin 3mg before bed"
+    },
     "protocolFromDate": "Protocol from {{date}}",
     "analyzing": "Analyzing with AI...",
     "recognize": "Recognize protocol",
