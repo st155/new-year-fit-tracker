@@ -2,6 +2,7 @@
  * Achievement Definitions
  * Defines all available achievements with their requirements
  */
+import i18n from '@/i18n';
 
 export type AchievementRarity = 'common' | 'rare' | 'epic' | 'legendary';
 export type AchievementCategory = 'streak' | 'completion' | 'consistency' | 'special';
@@ -24,12 +25,11 @@ export interface AchievementDefinition {
   requirement: AchievementRequirement;
 }
 
-export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
+// Base achievement definitions without localized strings
+const ACHIEVEMENT_DEFINITIONS_BASE: Omit<AchievementDefinition, 'name' | 'description'>[] = [
   // Streak achievements
   {
     id: 'streak_3',
-    name: 'Первая искра',
-    description: 'Стрейк 3 дня для любой привычки',
     category: 'streak',
     icon: '🔥',
     rarity: 'common',
@@ -38,8 +38,6 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   },
   {
     id: 'streak_7',
-    name: 'Неделя силы',
-    description: 'Стрейк 7 дней для любой привычки',
     category: 'streak',
     icon: '⚡',
     rarity: 'common',
@@ -48,8 +46,6 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   },
   {
     id: 'streak_14',
-    name: 'Две недели',
-    description: 'Стрейк 14 дней',
     category: 'streak',
     icon: '💪',
     rarity: 'rare',
@@ -58,8 +54,6 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   },
   {
     id: 'streak_30',
-    name: 'Месячный марафон',
-    description: 'Стрейк 30 дней',
     category: 'streak',
     icon: '🏆',
     rarity: 'rare',
@@ -68,8 +62,6 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   },
   {
     id: 'streak_50',
-    name: 'Чемпион привычек',
-    description: 'Стрейк 50 дней',
     category: 'streak',
     icon: '👑',
     rarity: 'epic',
@@ -78,8 +70,6 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   },
   {
     id: 'streak_100',
-    name: 'Легенда привычек',
-    description: 'Стрейк 100 дней',
     category: 'streak',
     icon: '🌟',
     rarity: 'legendary',
@@ -88,8 +78,6 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   },
   {
     id: 'streak_365',
-    name: 'Годовой воин',
-    description: 'Стрейк 365 дней',
     category: 'streak',
     icon: '💎',
     rarity: 'legendary',
@@ -100,8 +88,6 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   // Completion achievements
   {
     id: 'first_habit',
-    name: 'Первый шаг',
-    description: 'Выполните первую привычку',
     category: 'completion',
     icon: '🌱',
     rarity: 'common',
@@ -110,8 +96,6 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   },
   {
     id: 'completions_10',
-    name: 'Новичок',
-    description: '10 выполнений привычек',
     category: 'completion',
     icon: '🎯',
     rarity: 'common',
@@ -120,8 +104,6 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   },
   {
     id: 'completions_50',
-    name: 'Практик',
-    description: '50 выполнений привычек',
     category: 'completion',
     icon: '🎖️',
     rarity: 'rare',
@@ -130,8 +112,6 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   },
   {
     id: 'completions_100',
-    name: 'Центурион',
-    description: '100 выполнений привычек',
     category: 'completion',
     icon: '💯',
     rarity: 'rare',
@@ -140,8 +120,6 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   },
   {
     id: 'completions_500',
-    name: 'Мастер привычек',
-    description: '500 выполнений',
     category: 'completion',
     icon: '🏅',
     rarity: 'epic',
@@ -150,8 +128,6 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   },
   {
     id: 'completions_1000',
-    name: 'Гуру',
-    description: '1000 выполнений привычек',
     category: 'completion',
     icon: '🔱',
     rarity: 'legendary',
@@ -162,8 +138,6 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   // Consistency achievements
   {
     id: 'perfect_day',
-    name: 'Идеальный день',
-    description: 'Все привычки выполнены за день',
     category: 'consistency',
     icon: '⭐',
     rarity: 'rare',
@@ -172,8 +146,6 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   },
   {
     id: 'perfect_week',
-    name: 'Идеальная неделя',
-    description: 'Все привычки выполнены 7 дней подряд',
     category: 'consistency',
     icon: '🌟',
     rarity: 'epic',
@@ -182,8 +154,6 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   },
   {
     id: 'perfect_month',
-    name: 'Идеальный месяц',
-    description: 'Все привычки 30 дней',
     category: 'consistency',
     icon: '✨',
     rarity: 'legendary',
@@ -194,8 +164,6 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   // Special achievements
   {
     id: 'early_bird',
-    name: 'Ранняя пташка',
-    description: 'Выполните привычку до 6:00',
     category: 'special',
     icon: '🐦',
     rarity: 'rare',
@@ -204,8 +172,6 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   },
   {
     id: 'night_owl',
-    name: 'Полуночник',
-    description: 'Выполните привычку после 23:00',
     category: 'special',
     icon: '🦉',
     rarity: 'rare',
@@ -214,8 +180,6 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   },
   {
     id: 'comeback_kid',
-    name: 'Возвращение',
-    description: 'Восстановите стрейк после пропуска',
     category: 'special',
     icon: '🔄',
     rarity: 'rare',
@@ -224,8 +188,6 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   },
   {
     id: 'multi_habit',
-    name: 'Многозадачность',
-    description: 'Выполните 5 привычек за день',
     category: 'special',
     icon: '🎨',
     rarity: 'rare',
@@ -234,8 +196,6 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   },
   {
     id: 'super_user',
-    name: 'Суперпользователь',
-    description: '10 активных привычек одновременно',
     category: 'special',
     icon: '⚡',
     rarity: 'epic',
@@ -246,8 +206,6 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   // Role-based achievements
   {
     id: 'trainer',
-    name: 'Тренер',
-    description: 'Сертифицированный тренер команды',
     category: 'special',
     icon: '🏋️‍♂️',
     rarity: 'legendary',
@@ -256,8 +214,6 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   },
   {
     id: 'early_adopter',
-    name: 'Первопроходец',
-    description: 'Один из первых пользователей платформы',
     category: 'special',
     icon: '🚀',
     rarity: 'epic',
@@ -265,6 +221,20 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
     requirement: { type: 'early_adopter', value: 1 }
   },
 ];
+
+/**
+ * Get localized achievement definitions
+ */
+export function getLocalizedAchievements(): AchievementDefinition[] {
+  return ACHIEVEMENT_DEFINITIONS_BASE.map(achievement => ({
+    ...achievement,
+    name: i18n.t(`gamification:achievements.items.${achievement.id}.name`),
+    description: i18n.t(`gamification:achievements.items.${achievement.id}.description`),
+  }));
+}
+
+// Export as getter for backward compatibility
+export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = getLocalizedAchievements();
 
 /**
  * Get rarity color classes

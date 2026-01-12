@@ -903,5 +903,27 @@
       }
     }
   },
-  "milestoneProgress": "To {{label}}"
+  "milestoneProgress": "To {{label}}",
+  "quality": {
+    "recommendations": {
+      "excellent": "Excellent! Keep up the great work",
+      "improveConsistency": "Improve the regularity of habit completion",
+      "focusOnStreak": "Focus on maintaining your streak",
+      "restoreMomentum": "Restore momentum - start small",
+      "increaseFrequency": "Increase the frequency of habit completion",
+      "goodWork": "Good work! Keep improving"
+    }
+  },
+  "durationMilestones": {
+    "oneWeek": "1 week",
+    "oneMonth": "1 month",
+    "hundredDays": "100 days",
+    "oneYear": "1 year"
+  },
+  "migrateMotivation": {
+    "day1": "✨ 1 day passed! Great start!",
+    "week1": "🔥 A week behind! Keep it up!",
+    "month1": "💪 A whole month! You're doing great!",
+    "month3": "🏆 3 months! It's become a habit!"
+  }
 }

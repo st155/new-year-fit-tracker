@@ -1,6 +1,7 @@
 /**
  * Duration formatting utilities with i18n support
  */
+import i18n from '@/i18n';
 
 /**
  * Format options for elapsed time
@@ -30,12 +31,17 @@ const defaultFormats: ElapsedTimeFormatOptions = {
   minutes: '{{minutes}}м',
 };
 
-const defaultMilestoneLabels: MilestoneLabels = {
-  oneWeek: '1 неделя',
-  oneMonth: '1 месяц',
-  hundredDays: '100 дней',
-  oneYear: '1 год',
-};
+/**
+ * Get localized milestone labels
+ */
+function getDefaultMilestoneLabels(): MilestoneLabels {
+  return {
+    oneWeek: i18n.t('habits:durationMilestones.oneWeek'),
+    oneMonth: i18n.t('habits:durationMilestones.oneMonth'),
+    hundredDays: i18n.t('habits:durationMilestones.hundredDays'),
+    oneYear: i18n.t('habits:durationMilestones.oneYear'),
+  };
+}
 
 /**
  * Calculate elapsed time from a start date
@@ -89,13 +95,14 @@ export function formatElapsedTime(
  */
 export function getMilestoneProgress(
   days: number,
-  labels: MilestoneLabels = defaultMilestoneLabels
+  labels?: MilestoneLabels
 ): { next: number; progress: number; label: string } | null {
+  const resolvedLabels = labels || getDefaultMilestoneLabels();
   const milestones = [
-    { value: 7, label: labels.oneWeek },
-    { value: 30, label: labels.oneMonth },
-    { value: 100, label: labels.hundredDays },
-    { value: 365, label: labels.oneYear }
+    { value: 7, label: resolvedLabels.oneWeek },
+    { value: 30, label: resolvedLabels.oneMonth },
+    { value: 100, label: resolvedLabels.hundredDays },
+    { value: 365, label: resolvedLabels.oneYear }
   ];
   
   for (const milestone of milestones) {
