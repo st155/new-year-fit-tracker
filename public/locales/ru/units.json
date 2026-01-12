@@ -47,6 +47,7 @@
   "duration": {
     "hoursMinutes": "{{hours}}ч {{minutes}}м",
     "minutesOnly": "{{minutes}}м",
-    "daysShort": "{{count}}д"
+    "daysShort": "{{count}}д",
+    "hoursShort": "ч"
   }
 }
