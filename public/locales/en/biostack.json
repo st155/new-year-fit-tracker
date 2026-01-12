@@ -292,7 +292,8 @@
     "addedToLibrary": "{{name}} added to library",
     "addToLibraryFailed": "Could not add to library",
     "protocolAddedCount": "Added {{count}} supplements to library",
-    "addProtocolFailed": "Could not add protocol"
+    "addProtocolFailed": "Could not add protocol",
+    "defaultTag": "Doctor's protocol"
   },
   "correlation": {
     "noActiveSupplements": "No active supplements in stack",

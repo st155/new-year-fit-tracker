@@ -320,7 +320,11 @@
     "rejectError": "Ошибка отклонения",
     "newPlanReady": "Новый план готов",
     "goToPending": "Перейти к ожидающим",
-    "executedCount": "Выполнено действий: {{success}}{{failText}}"
+    "executedCount": "Выполнено действий: {{success}}{{failText}}",
+    "errorsCount": ", ошибок: {{fail}}"
+  },
+  "sources": {
+    "manual": "Ручной ввод"
   },
   "schedule": {
     "loadError": "Ошибка загрузки событий",

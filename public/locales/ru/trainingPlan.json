@@ -198,5 +198,6 @@
     },
     "activePlan": "Активный план",
     "previousPlans": "Предыдущие планы"
-  }
+  },
+  "copySuffix": "(копия)"
 }

@@ -128,7 +128,7 @@ export function useAddSupplementToLibrary() {
               user_id: user.id,
               product_id: productId,
               intake_times: schedule?.intakeTimes || ['morning'],
-              notes: `${item.dosage || ''} ${item.frequency || ''} - ${item.protocol_tag || 'Протокол от доктора'}`.trim(),
+              notes: `${item.dosage || ''} ${item.frequency || ''} - ${item.protocol_tag || i18n.t('biostack:doctorProtocol.defaultTag')}`.trim(),
               is_active: true,
             } as any);
 

@@ -902,7 +902,7 @@ export const AIChatWindow = ({
             <div className="flex-1">
               <p className="text-sm font-medium">{selectedClient.full_name}</p>
               <p className="text-xs text-muted-foreground">
-                AI работает с этим клиентом
+                {t('aiChat.workingWithClient')}
               </p>
             </div>
             <Button
@@ -910,13 +910,13 @@ export const AIChatWindow = ({
               size="sm"
               onClick={() => navigate(`/trainer-dashboard?tab=clients&client=${selectedClient.user_id}`)}
             >
-              Профиль
+              {t('aiChat.profile')}
             </Button>
           </div>
         ) : (
           <div className="text-center py-2">
-            <p className="text-sm font-medium">Чат с AI</p>
-            <p className="text-xs text-muted-foreground">Используйте @username для работы с клиентами</p>
+            <p className="text-sm font-medium">{t('aiChat.chatWithAI')}</p>
+            <p className="text-xs text-muted-foreground">{t('aiChat.useMentions')}</p>
           </div>
         )}
       </div>
@@ -927,10 +927,9 @@ export const AIChatWindow = ({
         {messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground">
             <Bot className="h-16 w-16 mb-4 opacity-50" />
-            <h3 className="text-lg font-medium mb-2">Начните разговор с AI</h3>
+            <h3 className="text-lg font-medium mb-2">{t('aiChat.startConversation')}</h3>
             <p className="text-sm max-w-md">
-              Задавайте вопросы, анализируйте клиентов или обсуждайте планы тренировок.
-              Используйте @username для упоминания конкретных клиентов.
+              {t('aiChat.welcomeMessage')}
             </p>
           </div>
         ) : (

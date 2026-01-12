@@ -198,5 +198,6 @@
     },
     "activePlan": "Active plan",
     "previousPlans": "Previous plans"
-  }
+  },
+  "copySuffix": "(copy)"
 }
