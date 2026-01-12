@@ -48,6 +48,8 @@
     "hoursMinutes": "{{hours}}ч {{minutes}}м",
     "minutesOnly": "{{minutes}}м",
     "daysShort": "{{count}}д",
-    "hoursShort": "ч"
+    "hoursShort": "ч",
+    "hoursValue": "{{value}}ч",
+    "daysUnit": "д"
   }
 }

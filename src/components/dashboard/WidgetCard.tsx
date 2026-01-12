@@ -398,7 +398,7 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { t } = useTranslation(['widgets', 'common']);
+  const { t } = useTranslation(['widgets', 'common', 'units']);
   const dateLocale = getDateLocale();
   
   // Load personal baselines for personalized quality assessment
@@ -559,13 +559,13 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
                         showLabel={false}
                       />
                     )}
-                    {src.age_hours < 24 ? (
-                      <span className="text-xs text-muted-foreground">{src.age_hours}ч</span>
+                  {src.age_hours < 24 ? (
+                      <span className="text-xs text-muted-foreground">{src.age_hours}{t('units:duration.hoursShort')}</span>
                     ) : (
                       <span 
                         className={`text-xs ${isStale ? 'text-destructive' : isWarning ? 'text-yellow-600' : 'text-muted-foreground'}`}
                       >
-                        {Math.floor(src.age_hours / 24)}д
+                        {Math.floor(src.age_hours / 24)}{t('units:duration.daysUnit')}
                       </span>
                     )}
                   </div>

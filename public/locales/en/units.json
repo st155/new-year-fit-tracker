@@ -48,6 +48,8 @@
     "hoursMinutes": "{{hours}}h {{minutes}}m",
     "minutesOnly": "{{minutes}}m",
     "daysShort": "{{count}}d",
-    "hoursShort": "h"
+    "hoursShort": "h",
+    "hoursValue": "{{value}}h",
+    "daysUnit": "d"
   }
 }
