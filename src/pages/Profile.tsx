@@ -23,6 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { CleanupAppleHealthButton } from "@/components/admin/CleanupAppleHealthButton";
 import { Echo11SyncCard } from "@/components/progress/Echo11SyncCard";
+import { canAccessDevTools } from "@/lib/dev-access";
 
 const ProfilePage = () => {
   const { t } = useTranslation('profile');
@@ -49,8 +50,8 @@ const ProfilePage = () => {
     progress_sharing: false
   });
 
-  // Show dev tabs only for specific users or in dev mode
-  const isDev = import.meta.env.DEV || user?.email === 'st@roosh.vc';
+  // Show dev tabs only for allowed users (centralized check)
+  const isDev = canAccessDevTools(user?.email);
 
   useEffect(() => {
     fetchProfile();
