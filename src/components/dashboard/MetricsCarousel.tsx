@@ -12,6 +12,7 @@ import { HighlightCard } from './HighlightCard';
 import { MetricCard } from '@/components/metrics';
 import { createMetricConfig, MetricKey } from '@/lib/metric-config';
 import { useTranslation } from 'react-i18next';
+import { Trans } from 'react-i18next';
 import { useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -51,7 +52,7 @@ const SLIDE_GROUPS = {
 };
 
 export function MetricsCarousel({ mappedMetrics, selectedMetrics, onMetricClick }: MetricsCarouselProps) {
-  const { t } = useTranslation('dashboard');
+  const { t } = useTranslation(['dashboard', 'health']);
   const metricConfig = createMetricConfig(t);
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
@@ -155,12 +156,12 @@ export function MetricsCarousel({ mappedMetrics, selectedMetrics, onMetricClick 
           {showAllMetrics ? (
             <>
               <ChevronUp className="mr-2 h-4 w-4" />
-              Скрыть детали
+              {t('health:metrics.hideDetails')}
             </>
           ) : (
             <>
               <ChevronDown className="mr-2 h-4 w-4" />
-              Показать все метрики ({allMetricsWithData.length})
+              {t('health:metrics.showAllMetrics', { count: allMetricsWithData.length })}
             </>
           )}
         </Button>

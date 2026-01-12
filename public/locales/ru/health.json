@@ -61,7 +61,9 @@
     "maximum": "Максимум",
     "minimum": "Минимум",
     "trendDays": "Тренд (7 дней)",
-    "historyDays": "История за последние 90 дней"
+    "historyDays": "История за последние 90 дней",
+    "hideDetails": "Скрыть детали",
+    "showAllMetrics": "Показать все метрики ({{count}})"
   },
   "units": {
     "mlKgMin": "мл/кг/мин",

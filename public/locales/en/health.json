@@ -61,7 +61,9 @@
     "maximum": "Maximum",
     "minimum": "Minimum",
     "trendDays": "Trend (7 days)",
-    "historyDays": "History for the last 90 days"
+    "historyDays": "History for the last 90 days",
+    "hideDetails": "Hide details",
+    "showAllMetrics": "Show all metrics ({{count}})"
   },
   "units": {
     "mlKgMin": "ml/kg/min",
