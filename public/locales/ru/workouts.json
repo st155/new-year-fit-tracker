@@ -374,11 +374,19 @@
     "exercises_many": "{{count}} упражнений",
     "exercises_other": "{{count}} упражнений"
   },
-  "lastWorkout": {
+"lastWorkout": {
     "noData": "Нет записанных тренировок",
     "startFirst": "Начните свою первую тренировку!",
     "workout": "Тренировка",
     "volume": "объём"
+  },
+  "parsedPreview": {
+    "exercises": "Упражнения",
+    "sets": "Сеты",
+    "volume": "Объём",
+    "time": "Время",
+    "superset": "Суперсет {{number}}",
+    "volumeLabel": "Объём"
   },
 "units": {
     "min": "мин",

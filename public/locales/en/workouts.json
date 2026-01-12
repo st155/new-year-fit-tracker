@@ -372,11 +372,19 @@
     "exercises_one": "{{count}} exercise",
     "exercises_other": "{{count}} exercises"
   },
-  "lastWorkout": {
+"lastWorkout": {
     "noData": "No recorded workouts",
     "startFirst": "Start your first workout!",
     "workout": "Workout",
     "volume": "volume"
+  },
+  "parsedPreview": {
+    "exercises": "Exercises",
+    "sets": "Sets",
+    "volume": "Volume",
+    "time": "Time",
+    "superset": "Superset {{number}}",
+    "volumeLabel": "Volume"
   },
 "units": {
     "min": "min",

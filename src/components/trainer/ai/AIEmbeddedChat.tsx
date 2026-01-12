@@ -12,6 +12,7 @@ import { AIPendingActionsPanel } from '@/components/trainer/AIPendingActionsPane
 import { useAIPendingActions } from '@/hooks/useAIPendingActions';
 import { useAuth } from '@/hooks/useAuth';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface AIEmbeddedChatProps {
   selectedClient?: {
@@ -23,6 +24,7 @@ interface AIEmbeddedChatProps {
 }
 
 export function AIEmbeddedChat({ selectedClient }: AIEmbeddedChatProps) {
+  const { t } = useTranslation('trainer');
   const isMobile = useIsMobile();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'chat' | 'pending' | 'history'>('chat');
@@ -58,10 +60,10 @@ export function AIEmbeddedChat({ selectedClient }: AIEmbeddedChatProps) {
             <div className="px-4 pt-2 border-b border-purple-200 dark:border-purple-800">
               <TabsList className="bg-purple-100/50 dark:bg-purple-900/20">
                 <TabsTrigger value="chat" className="data-[state=active]:bg-white dark:data-[state=active]:bg-purple-950">
-                  Чат
+                  {t('ai.tabs.chat')}
                 </TabsTrigger>
                 <TabsTrigger value="pending" className="data-[state=active]:bg-white dark:data-[state=active]:bg-purple-950">
-                  <span>Ожидают</span>
+                  <span>{t('ai.tabs.pending')}</span>
                   {pendingActions.length > 0 && (
                     <Badge className="ml-2 bg-purple-500 text-white hover:bg-purple-600 animate-pulse" variant="secondary">
                       {pendingActions.length}
@@ -69,7 +71,7 @@ export function AIEmbeddedChat({ selectedClient }: AIEmbeddedChatProps) {
                   )}
                 </TabsTrigger>
                 <TabsTrigger value="history" className="data-[state=active]:bg-white dark:data-[state=active]:bg-purple-950">
-                  История
+                  {t('ai.tabs.history')}
                 </TabsTrigger>
               </TabsList>
             </div>
