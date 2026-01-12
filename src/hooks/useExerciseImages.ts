@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import i18n from '@/i18n';
 
 interface ExerciseImageMap {
   [exerciseName: string]: string;
@@ -106,8 +107,8 @@ export function useExerciseImages() {
         if (error) {
           console.error('Error saving exercise image:', error);
           toast({
-            title: 'Ошибка сохранения',
-            description: 'Изображение сохранено локально, но не синхронизировано',
+            title: i18n.t('workouts:exercises.toast.saveError'),
+            description: i18n.t('workouts:exercises.toast.imageSavedLocally'),
             variant: 'destructive',
           });
         }

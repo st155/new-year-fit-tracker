@@ -532,14 +532,14 @@ export const useAIConversations = (userId: string | undefined) => {
       await loadConversations();
 
       showToast({
-        title: 'Удалено',
-        description: 'Разговор удален'
+        title: i18n.t('trainerDashboard:aiChat.toast.deleted'),
+        description: i18n.t('trainerDashboard:aiChat.toast.conversationDeleted')
       });
     } catch (error) {
       console.error('Error deleting conversation:', error);
       showToast({
-        title: 'Ошибка',
-        description: 'Не удалось удалить разговор',
+        title: i18n.t('trainerDashboard:aiChat.toast.error'),
+        description: i18n.t('trainerDashboard:aiChat.toast.deleteError'),
         variant: 'destructive'
       });
     }

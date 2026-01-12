@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, X } from 'lucide-react';
 import { updateServiceWorker } from '@/lib/pwa-utils';
+import { useTranslation } from 'react-i18next';
 
 export function RecoveryBar() {
+  const { t } = useTranslation('common');
   const [showRecovery, setShowRecovery] = useState(false);
   const [isRecovering, setIsRecovering] = useState(false);
 
@@ -47,9 +49,9 @@ export function RecoveryBar() {
     <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-5">
       <div className="bg-card border border-border rounded-lg shadow-lg p-4 flex items-center gap-4 max-w-md">
         <div className="flex-1">
-          <p className="text-sm font-medium">Приложение не загружается?</p>
+          <p className="text-sm font-medium">{t('pwa.notLoading')}</p>
           <p className="text-xs text-muted-foreground">
-            Попробуйте обновить кэш приложения
+            {t('pwa.tryClearCache')}
           </p>
         </div>
         <Button
@@ -62,12 +64,12 @@ export function RecoveryBar() {
           {isRecovering ? (
             <>
               <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-              Обновление...
+              {t('pwa.updating')}
             </>
           ) : (
             <>
               <RefreshCw className="h-4 w-4 mr-2" />
-              Обновить
+              {t('pwa.update')}
             </>
           )}
         </Button>

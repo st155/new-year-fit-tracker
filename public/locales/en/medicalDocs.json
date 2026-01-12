@@ -393,10 +393,31 @@
     "warning": "Warning",
     "critical": "Critical"
   },
-  "stats": {
+"stats": {
     "min": "Min",
     "avg": "Avg",
-    "max": "Max"
+    "max": "Max",
+    "title": "✨ Document Statistics",
+    "documents_one": "{{count}} document",
+    "documents_other": "{{count}} documents",
+    "bloodTests_one": "{{count}} blood test",
+    "bloodTests_other": "{{count}} blood tests",
+    "photos_one": "{{count}} photo",
+    "photos_other": "{{count}} photos",
+    "aiProcessed_one": "{{count}} AI processed",
+    "aiProcessed_other": "{{count}} AI processed",
+    "lastUpload": "📅 Last: {{date}}",
+    "inbody_one": "{{count}} InBody",
+    "inbody_other": "{{count}} InBody"
+  },
+  "categorySummary": {
+    "noDescription": "No description",
+    "normal": "Normal",
+    "minorDeviations": "Minor deviations",
+    "needsAttention": "Needs attention",
+    "hasDeviations": "Has deviations",
+    "documentsCount_one": "{{count}} document",
+    "documentsCount_other": "{{count}} documents"
   },
   "measurements": "{{count}} measurement",
   "measurements_other": "{{count}} measurements",

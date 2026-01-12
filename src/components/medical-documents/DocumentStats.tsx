@@ -2,8 +2,10 @@ import { useMedicalDocuments, DocumentType } from '@/hooks/useMedicalDocuments';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Activity, Camera, FlaskConical, FileCheck } from 'lucide-react';
 import { getIntlLocale } from '@/lib/date-locale';
+import { useTranslation } from 'react-i18next';
 
 export const DocumentStats = () => {
+  const { t } = useTranslation('medicalDocs');
   const { documents } = useMedicalDocuments();
 
   if (!documents || documents.length === 0) return null;
@@ -23,33 +25,33 @@ export const DocumentStats = () => {
   return (
     <div className="glass-card p-4 mb-4">
       <div className="flex items-center gap-2 mb-3">
-        <span className="text-sm font-semibold text-foreground">✨ Статистика документов</span>
+        <span className="text-sm font-semibold text-foreground">{t('stats.title')}</span>
       </div>
       
       <div className="flex flex-wrap gap-2">
         <Badge variant="secondary" className="gap-1.5">
           <FileText className="h-3 w-3" />
-          {documents.length} документов
+          {t('stats.documents', { count: documents.length })}
         </Badge>
 
         {bloodTests > 0 && (
           <Badge variant="outline" className="gap-1.5 border-red-500/30">
             <Activity className="h-3 w-3 text-red-500" />
-            {bloodTests} анализов
+            {t('stats.bloodTests', { count: bloodTests })}
           </Badge>
         )}
 
         {inbodyDocs > 0 && (
           <Badge variant="outline" className="gap-1.5 border-blue-500/30">
             <FlaskConical className="h-3 w-3 text-blue-500" />
-            {inbodyDocs} InBody
+            {t('stats.inbody', { count: inbodyDocs })}
           </Badge>
         )}
 
         {photos > 0 && (
           <Badge variant="outline" className="gap-1.5 border-green-500/30">
             <Camera className="h-3 w-3 text-green-500" />
-            {photos} фото
+            {t('stats.photos', { count: photos })}
           </Badge>
         )}
 
@@ -60,13 +62,13 @@ export const DocumentStats = () => {
         {aiProcessed > 0 && (
           <Badge variant="outline" className="gap-1.5 border-green-500/30">
             <FileCheck className="h-3 w-3 text-green-500" />
-            {aiProcessed} обработано AI
+            {t('stats.aiProcessed', { count: aiProcessed })}
           </Badge>
         )}
 
         {lastUpload && (
           <Badge variant="outline" className="gap-1.5">
-            📅 Последний: {lastUpload}
+            {t('stats.lastUpload', { date: lastUpload })}
           </Badge>
         )}
       </div>

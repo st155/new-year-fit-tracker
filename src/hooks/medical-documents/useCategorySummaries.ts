@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import i18n from '@/i18n';
 
 interface CategorySummary {
   category: string;
@@ -45,7 +46,7 @@ export function useCategorySummaries() {
           // Собираем все уникальные саммари
           const allSummaries = catDocs
             .map(d => d.ai_summary)
-            .filter((s): s is string => !!s && s !== 'Нет описания');
+            .filter((s): s is string => !!s && s !== i18n.t('medicalDocs:categorySummary.noDescription'));
           
           // Генерируем обобщённое саммари
           let combinedSummary = '';
@@ -60,25 +61,25 @@ export function useCategorySummaries() {
             // Определяем общую оценку по ключевым словам
             const allText = allSummaries.join(' ').toLowerCase();
             
-            if (allText.includes('норм') || allText.includes('хорош') || allText.includes('отлично')) {
+            if (allText.includes('норм') || allText.includes('хорош') || allText.includes('отлично') || allText.includes('normal') || allText.includes('good') || allText.includes('excellent')) {
               overallScore = 'excellent';
-              healthIndicator = 'В норме';
-            } else if (allText.includes('незначительн') || allText.includes('лёгк') || allText.includes('легк')) {
+              healthIndicator = i18n.t('medicalDocs:categorySummary.normal');
+            } else if (allText.includes('незначительн') || allText.includes('лёгк') || allText.includes('легк') || allText.includes('minor') || allText.includes('slight')) {
               overallScore = 'good';
-              healthIndicator = 'Незначительные отклонения';
-            } else if (allText.includes('внимани') || allText.includes('контрол') || allText.includes('наблюд')) {
+              healthIndicator = i18n.t('medicalDocs:categorySummary.minorDeviations');
+            } else if (allText.includes('внимани') || allText.includes('контрол') || allText.includes('наблюд') || allText.includes('attention') || allText.includes('monitor')) {
               overallScore = 'attention';
-              healthIndicator = 'Требует внимания';
-            } else if (allText.includes('повышен') || allText.includes('понижен') || allText.includes('отклон')) {
+              healthIndicator = i18n.t('medicalDocs:categorySummary.needsAttention');
+            } else if (allText.includes('повышен') || allText.includes('понижен') || allText.includes('отклон') || allText.includes('elevated') || allText.includes('low')) {
               overallScore = 'warning';
-              healthIndicator = 'Есть отклонения';
+              healthIndicator = i18n.t('medicalDocs:categorySummary.hasDeviations');
             } else {
               overallScore = 'good';
-              healthIndicator = `${catDocs.length} документ${catDocs.length > 4 ? 'ов' : catDocs.length > 1 ? 'а' : ''}`;
+              healthIndicator = i18n.t('medicalDocs:categorySummary.documentsCount', { count: catDocs.length });
             }
           } else {
-            combinedSummary = 'Нет описания';
-            healthIndicator = `${catDocs.length} документ${catDocs.length > 4 ? 'ов' : catDocs.length > 1 ? 'а' : ''}`;
+            combinedSummary = i18n.t('medicalDocs:categorySummary.noDescription');
+            healthIndicator = i18n.t('medicalDocs:categorySummary.documentsCount', { count: catDocs.length });
           }
 
           summaries.push({

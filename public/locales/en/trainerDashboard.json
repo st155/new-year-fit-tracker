@@ -206,7 +206,7 @@
     "pending": "Pending",
     "result": "📋 Result"
   },
-  "aiChat": {
+"aiChat": {
     "execute": "Execute",
     "reconsider": "Reconsider",
     "think": "Think",
@@ -219,7 +219,19 @@
     "mentions_one": "{{count}} mention",
     "mentions_other": "{{count}} mentions",
     "requireConfirmation": "Require confirmation",
-    "newMessage": "New"
+    "newMessage": "New",
+    "workingWithClient": "AI is working with this client",
+    "profile": "Profile",
+    "chatWithAI": "Chat with AI",
+    "useMentions": "Use @username to work with clients",
+    "startConversation": "Start a conversation with AI",
+    "welcomeMessage": "Ask questions, analyze clients or discuss training plans. Use @username to mention specific clients.",
+    "toast": {
+      "deleted": "Deleted",
+      "conversationDeleted": "Conversation deleted",
+      "error": "Error",
+      "deleteError": "Failed to delete conversation"
+    }
   },
   "common": {
     "cancel": "Cancel",
