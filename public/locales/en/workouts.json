@@ -612,13 +612,56 @@
     "activity": "Activity",
     "other": "Other"
   },
-  "onboarding": {
+"onboarding": {
     "planCreated": "Plan created!",
     "createError": "Error creating plan",
     "continue": "Continue",
     "continueWithDays": "Continue ({{count}} days)",
     "recommended": "Recommended: {{weight}}kg",
     "useRecommended": "Use recommended"
+  },
+  "exercise": {
+    "details": "Exercise Details",
+    "aiModified": "AI Modified",
+    "setsReps": "Sets × Reps",
+    "weight": "Weight",
+    "rir": "RIR",
+    "rpe": "RPE",
+    "restTime": "Rest Time",
+    "aiAdjustment": "AI adjustment:",
+    "start": "Start Exercise"
+  },
+  "strengthList": {
+    "title": "Exercises",
+    "empty": "No exercise data",
+    "emptyHint": "Exercises will appear after syncing with journal",
+    "sets": "set(s)",
+    "set": "Set"
+  },
+  "detailUnits": {
+    "ton": "t",
+    "kg": "kg",
+    "minPerKm": "min/km",
+    "kmPerH": "km/h",
+    "perKm": "/km"
+  },
+  "completion": {
+    "saving": "Saving...",
+    "toMain": "TO MAIN SCREEN"
+  },
+  "trainingPlan": {
+    "activated": "Plan successfully activated!",
+    "activateFailed": "Failed to activate plan",
+    "activateError": "Error activating plan",
+    "deactivated": "Plan deactivated",
+    "deactivateFailed": "Failed to deactivate plan",
+    "active": "ACTIVE",
+    "inactive": "INACTIVE",
+    "weeks": "weeks",
+    "createdByAI": "Created by AI assistant",
+    "activate": "Activate",
+    "view": "View",
+    "deactivate": "Deactivate plan"
   },
   "map": {
     "title": "Route Map",
@@ -628,7 +671,23 @@
   },
 "history": {
     "title": "History",
-    "viewAll": "All {{count}}"
+    "viewAll": "All {{count}}",
+    "workoutRepeated": "Workout repeated",
+    "startWorkout": "Start workout \"{{name}}\"",
+    "lastWorkout": "Last Workout",
+    "intensive": "Intensive",
+    "whoopManual": "WHOOP + Manual",
+    "time": "Time",
+    "min": "min",
+    "calories": "Calories",
+    "kcal": "kcal",
+    "volume": "Volume",
+    "kg": "kg",
+    "strain": "Strain",
+    "distance": "Distance",
+    "km": "km",
+    "exercises": "exercises",
+    "sets": "sets"
   },
   "appleHealth": {
     "errors": {
@@ -788,12 +847,218 @@
       "saveToJournal": "Save to journal"
     }
   },
-  "summary": {
+"summary": {
     "noData": "Workout data not found",
     "loadError": "Error loading statistics",
     "saved": "Workout saved!",
     "saveError": "Error saving",
-    "loading": "Loading statistics..."
+    "loading": "Loading statistics...",
+    "completed": "Workout completed!",
+    "greatJob": "Great job! 💪"
+  },
+  "splits": {
+    "title": "Kilometer Splits",
+    "kilometer": "Kilometer {{km}}",
+    "pace": "Pace",
+    "time": "Time",
+    "estimatedNote": "Estimated data • GPS track required for accurate splits"
+  },
+  "strengthSummary": {
+    "title": "Workout Summary",
+    "totalVolume": "Total Volume",
+    "exercises": "Exercises",
+    "sets": "Sets"
+  },
+  "paceMetrics": {
+    "title": "Pace and Speed",
+    "avgPace": "Average Pace",
+    "avgSpeed": "Average Speed",
+    "calculatedNote": "⚡ Calculated from total distance and time"
+  },
+  "aiOnboarding": {
+    "planCreated": "✅ Done! Your plan \"{{name}}\" is created. Let's start training!",
+    "errorMessage": "❌ Error: {{message}}. Try again later.",
+    "planCreatedToast": "Plan created!",
+    "planCreatedDesc": "Your personal training plan is ready",
+    "error": "Error",
+    "welcome": "Hi! I'm your AI trainer 🤖 Let's create the perfect training plan. What's your main goal?",
+    "experience": "Great! What's your training experience?",
+    "trainingDays": "How many days per week can you train? Select days:",
+    "equipment": "What equipment do you have?",
+    "stress": "How stressful is your job? This affects recovery.",
+    "sleepHours": "How many hours do you usually sleep?",
+    "focusAreas": "Which body parts do you want to focus on?",
+    "liftingStyles": "What lifting styles do you prefer?",
+    "oneRepMax": "Do you know your max weights? This is optional but helps create an accurate plan.",
+    "injuries": "Do you have any injuries or limitations?",
+    "generating": "Great! Generating your personal plan... 🚀",
+    "setupTitle": "AI Training Plan Setup",
+    "stepDescription": "Step {{step}} of {{total}}: Setting up your program",
+    "primaryGoal": "What's your primary goal?",
+    "strengthDesc": "Get stronger and lift heavier weights",
+    "hypertrophyDesc": "Build muscle mass and size",
+    "fatLossDesc": "Burn fat while keeping muscle",
+    "enduranceDesc": "Improve stamina and conditioning",
+    "experienceTitle": "Experience level and training frequency",
+    "experienceLabel": "Experience level",
+    "beginnerDesc": "Less than 1 year of training",
+    "intermediateDesc": "1-3 years of regular training",
+    "advancedDesc": "3+ years of training experience",
+    "trainingDaysLabel": "Training days per week",
+    "daysFormat": "{{count}} days",
+    "equipmentTitle": "Equipment and preferences",
+    "equipmentLabel": "Available equipment",
+    "fullGymDesc": "Barbells, dumbbells, machines, cables",
+    "dumbbellsOnlyDesc": "Home gym with adjustable dumbbells",
+    "bodyweightDesc": "No equipment",
+    "durationLabel": "Preferred workout duration (minutes)",
+    "limitationsTitle": "Any injuries or limitations?",
+    "limitationsHint": "This helps AI avoid exercises that may aggravate your condition",
+    "generatePlan": "Create my plan",
+    "goals": {
+      "strength": "Strength",
+      "hypertrophy": "Mass",
+      "fatLoss": "Fat Loss",
+      "endurance": "Endurance"
+    },
+    "experienceLevels": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced"
+    },
+    "days": {
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat",
+      "sun": "Sun"
+    },
+    "equipmentOptions": {
+      "fullGym": "Full Gym",
+      "dumbbells": "Dumbbells Only",
+      "bodyweight": "Bodyweight"
+    },
+    "stressLabels": {
+      "min": "Low stress",
+      "max": "High stress"
+    },
+    "stressLevels": {
+      "1": "Low",
+      "2": "Below average",
+      "3": "Average",
+      "4": "Above average",
+      "5": "High"
+    },
+    "bodyParts": {
+      "chest": "Chest",
+      "back": "Back",
+      "shoulders": "Shoulders",
+      "arms": "Arms",
+      "legs": "Legs",
+      "core": "Core"
+    },
+    "squatStyles": {
+      "highBar": "High Bar",
+      "lowBar": "Low Bar",
+      "front": "Front",
+      "unknown": "Don't know"
+    },
+    "deadliftStyles": {
+      "conventional": "Conventional",
+      "sumo": "Sumo",
+      "trapBar": "Trap Bar",
+      "unknown": "Don't know"
+    },
+    "benchStyles": {
+      "flat": "Flat",
+      "incline": "Incline",
+      "closeGrip": "Close Grip",
+      "unknown": "Don't know"
+    },
+    "labels": {
+      "squat": "Squat",
+      "deadlift": "Deadlift",
+      "bench": "Bench Press",
+      "squatWeight": "Squat (kg)",
+      "benchWeight": "Bench Press (kg)",
+      "deadliftWeight": "Deadlift (kg)"
+    },
+    "buttons": {
+      "continue": "Continue",
+      "skip": "Skip",
+      "noLimitations": "No limitations"
+    },
+    "placeholders": {
+      "sleepExample": "Example: 7",
+      "injuries": "Example: lower back pain..."
+    }
+  },
+  "logging": {
+    "enterWeightAndReps": "Enter weight and reps",
+    "notAuthenticated": "Not authenticated",
+    "failedToSaveSet": "Failed to save set",
+    "setLogged": "Set {{number}} logged!",
+    "exerciseCompleted": "Exercise completed!",
+    "logMore": "Log remaining sets",
+    "usePrescribedValues": "Use prescribed values",
+    "saveSet": "Save set",
+    "completeExercise": "Complete exercise",
+    "switchToRPE": "Switch to RPE",
+    "switchToRIR": "Switch to RIR",
+    "setsLogged": "{{completed}}/{{total}} sets logged",
+    "prescribed": "Prescribed",
+    "rpeTarget": "Target RPE",
+    "rirTarget": "Target RIR",
+    "rest": "Rest",
+    "set": "Set",
+    "weight": "Weight (kg)",
+    "reps": "Reps",
+    "rpe": "RPE (Rate of Perceived Exertion)",
+    "rir": "RIR (Reps in Reserve)",
+    "rpeScale": {
+      "easy": "Easy (1)",
+      "max": "Max effort (10)"
+    },
+    "rirScale": {
+      "failure": "Failure (0)",
+      "manyLeft": "Many left (10)"
+    },
+    "notes": "Notes (optional)",
+    "notesPlaceholder": "How did the exercise feel? Any observations...",
+    "workoutDeleted": "Workout deleted",
+    "workoutDeletedDesc": "Record successfully removed from journal",
+    "deleteError": "Delete error",
+    "deleteErrorDesc": "Failed to delete workout"
+  },
+  "liveLogger": {
+    "notAuthenticated": "Not authenticated",
+    "setCompleted": "Set {{number}} completed!",
+    "failedToSaveSet": "Failed to save set",
+    "nextExercise": "Next exercise!"
+  },
+  "editPlan": {
+    "title": "Edit Plan Parameters",
+    "description": "Update parameters and AI will create a new plan based on them",
+    "planUpdated": "Plan updated! Redirecting to new plan...",
+    "updateFailed": "Failed to update plan",
+    "primaryGoal": "Primary Goal",
+    "strength": "Strength",
+    "hypertrophy": "Mass",
+    "conditioning": "Conditioning",
+    "generalFitness": "General Fitness",
+    "experienceLevel": "Experience Level",
+    "beginner": "Beginner",
+    "intermediate": "Intermediate",
+    "advanced": "Advanced",
+    "workoutsPerWeek": "Workouts per week",
+    "daysCount": "{{count}} days",
+    "injuries": "Injuries and limitations (optional)",
+    "injuriesPlaceholder": "Describe any injuries or limitations...",
+    "cancel": "Cancel",
+    "creating": "Creating plan...",
+    "createNew": "Create new plan"
   },
   "management": {
     "backToWorkouts": "Back to workouts",
