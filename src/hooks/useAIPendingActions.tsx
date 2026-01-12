@@ -132,8 +132,8 @@ export const useAIPendingActions = (userId: string | undefined) => {
       const failCount = data.results.filter((r: any) => !r.success).length;
       
       // Build detailed toast message
-      const failText = failCount > 0 ? t('pendingActions.executedCount', { success: '', failText: `, ошибок: ${failCount}` }).split(': ')[1] : '';
-      let description = t('pendingActions.executedCount', { success: successCount, failText: failCount > 0 ? `, ошибок: ${failCount}` : '' });
+      const failText = failCount > 0 ? t('pendingActions.errorsCount', { fail: failCount }) : '';
+      let description = t('pendingActions.executedCount', { success: successCount, failText });
       
       const successMessages = data.results
         .filter((r: any) => r.success && r.message)

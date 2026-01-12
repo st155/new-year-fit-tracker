@@ -539,7 +539,7 @@ export const formatSourceName = (source: string): string => {
     'apple_health': 'Apple Health',
     'withings': 'Withings',
     'terra': 'Terra',
-    'manual': 'Ручной ввод',
+    'manual': i18n.t('trainerDashboard:sources.manual'),
     'ultrahuman': 'Ultrahuman'
   };
   return sourceMap[source.toLowerCase()] || source;

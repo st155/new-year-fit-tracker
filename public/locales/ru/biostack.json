@@ -291,7 +291,8 @@
     "addedToLibrary": "{{name}} добавлен в библиотеку",
     "addToLibraryFailed": "Не удалось добавить в библиотеку",
     "protocolAddedCount": "Добавлено {{count}} добавок в библиотеку",
-    "addProtocolFailed": "Не удалось добавить протокол"
+    "addProtocolFailed": "Не удалось добавить протокол",
+    "defaultTag": "Протокол от доктора"
   },
   "correlation": {
     "noActiveSupplements": "Нет активных добавок в стеке",

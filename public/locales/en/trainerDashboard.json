@@ -319,7 +319,11 @@
     "rejectError": "Rejection error",
     "newPlanReady": "New plan ready",
     "goToPending": "Go to pending",
-    "executedCount": "Actions executed: {{success}}{{failText}}"
+    "executedCount": "Actions executed: {{success}}{{failText}}",
+    "errorsCount": ", errors: {{fail}}"
+  },
+  "sources": {
+    "manual": "Manual entry"
   },
   "schedule": {
     "loadError": "Error loading events",

@@ -197,7 +197,7 @@ export const useTrainingPlanDetail = (planId: string | null) => {
         .from('training_plans')
         .insert({
           trainer_id: user.user.id,
-          name: `${plan.name} (копия)`,
+          name: `${plan.name} ${i18n.t('trainingPlan:copySuffix')}`,
           description: plan.description,
           duration_weeks: plan.duration_weeks
         })

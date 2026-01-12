@@ -276,4 +276,9 @@
     "today": "Today",
     "taken": "taken",
     "allDone": "✓ All done!"
+  },
+  "miniCard": {
+    "protocols": "Protocols",
+    "noActive": "No active",
+    "viewAll": "All protocols →"
   }

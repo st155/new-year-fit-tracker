@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Timer } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -13,6 +14,7 @@ interface Protocol {
 }
 
 export function ActiveProtocolsMiniCard() {
+  const { t } = useTranslation('supplements');
   const { user } = useAuth();
 
   const { data: protocols = [], isLoading } = useQuery({
@@ -68,7 +70,7 @@ export function ActiveProtocolsMiniCard() {
           <div className="w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center">
             <Timer className="w-4 h-4 text-primary" />
           </div>
-          <span className="text-xs font-medium text-foreground">Протоколы</span>
+          <span className="text-xs font-medium text-foreground">{t('miniCard.protocols')}</span>
         </div>
 
         <div className="space-y-2 flex-1">
@@ -97,11 +99,11 @@ export function ActiveProtocolsMiniCard() {
               </div>
             ))
           ) : (
-            <p className="text-[11px] text-muted-foreground">Нет активных</p>
+            <p className="text-[11px] text-muted-foreground">{t('miniCard.noActive')}</p>
           )}
         </div>
 
-        <div className="text-[10px] text-primary mt-auto">Все протоколы →</div>
+        <div className="text-[10px] text-primary mt-auto">{t('miniCard.viewAll')}</div>
       </Link>
     </motion.div>
   );
