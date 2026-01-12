@@ -297,4 +297,15 @@
     "protocols": "Protocols",
     "noActive": "No active",
     "viewAll": "All protocols →"
+  },
+  "timeValidation": {
+    "melatoninWarning": "⚠️ Melatonin should only be taken in the evening before sleep!",
+    "caffeineWarning": "☕ Caffeine is not recommended in the evening",
+    "preWorkoutWarning": "💪 Pre-workout is best taken before noon",
+    "magnesiumWarning": "🌙 Magnesium is better taken in the evening for sleep",
+    "ashwagandhaWarning": "🧘 Ashwagandha helps relax - better in the evening",
+    "vitaminDWarning": "☀️ Vitamin D is best taken in the morning",
+    "b12Warning": "⚡ Vitamin B12 provides energy - take in morning or afternoon",
+    "correctTime": "✓ {{name}} - correct intake time"
   }
+}

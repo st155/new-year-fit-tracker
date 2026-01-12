@@ -1,7 +1,9 @@
+import i18n from '@/i18n';
+
 export interface SupplementTimeRule {
   allowed: string[];
   default: string;
-  warning: string;
+  warningKey: string;
 }
 
 // Russian to English supplement name mapping for validation
@@ -21,41 +23,42 @@ const RUSSIAN_TO_ENGLISH: Record<string, string> = {
   'витамин b': 'b12',
 };
 
-export const SUPPLEMENT_TIME_RULES: Record<string, SupplementTimeRule> = {
+// Static rules with translation keys instead of hardcoded strings
+const SUPPLEMENT_TIME_RULES: Record<string, SupplementTimeRule> = {
   melatonin: {
     allowed: ['evening'],
     default: 'evening',
-    warning: '⚠️ Мелатонин принимается только вечером перед сном!',
+    warningKey: 'supplements:timeValidation.melatoninWarning',
   },
   caffeine: {
     allowed: ['morning', 'afternoon'],
     default: 'morning',
-    warning: '☕ Кофеин не рекомендуется принимать вечером',
+    warningKey: 'supplements:timeValidation.caffeineWarning',
   },
   'pre-workout': {
     allowed: ['morning', 'afternoon'],
     default: 'afternoon',
-    warning: '💪 Предтреники лучше принимать до обеда',
+    warningKey: 'supplements:timeValidation.preWorkoutWarning',
   },
   magnesium: {
     allowed: ['evening'],
     default: 'evening',
-    warning: '🌙 Магний лучше принимать вечером для сна',
+    warningKey: 'supplements:timeValidation.magnesiumWarning',
   },
   ashwagandha: {
     allowed: ['evening'],
     default: 'evening',
-    warning: '🧘 Ашвагандха помогает расслабиться - лучше вечером',
+    warningKey: 'supplements:timeValidation.ashwagandhaWarning',
   },
   'vitamin d': {
     allowed: ['morning', 'afternoon'],
     default: 'morning',
-    warning: '☀️ Витамин D лучше принимать утром',
+    warningKey: 'supplements:timeValidation.vitaminDWarning',
   },
   b12: {
     allowed: ['morning', 'afternoon'],
     default: 'morning',
-    warning: '⚡ Витамин B12 дает энергию - утром или днем',
+    warningKey: 'supplements:timeValidation.b12Warning',
   },
 };
 
@@ -85,7 +88,7 @@ export function validateIntakeTimes(
       if (hasInvalidTime) {
         return {
           valid: false,
-          warning: rule.warning,
+          warning: i18n.t(rule.warningKey),
           suggested: [rule.default],
           corrected: true,
         };
@@ -94,7 +97,7 @@ export function validateIntakeTimes(
       // Valid but provide info
       return {
         valid: true,
-        warning: `✓ ${supplementName} - правильное время приема`,
+        warning: i18n.t('supplements:timeValidation.correctTime', { name: supplementName }),
       };
     }
   }
