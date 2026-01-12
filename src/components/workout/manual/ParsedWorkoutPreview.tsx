@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { getDateLocale } from "@/lib/date-locale";
 import { Dumbbell, Clock, Layers, Zap } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface ParsedWorkoutPreviewProps {
   workout: ParsedWorkout;
@@ -18,6 +19,7 @@ export function ParsedWorkoutPreview({
   date,
   duration,
 }: ParsedWorkoutPreviewProps) {
+  const { t } = useTranslation('workouts');
   const formattedDate = format(new Date(date), "d MMMM yyyy", { locale: getDateLocale() });
   
   // Group exercises by superset
@@ -57,7 +59,7 @@ export function ParsedWorkoutPreview({
             <div>
               <div className="flex items-center justify-center gap-1 text-muted-foreground text-xs mb-1">
                 <Dumbbell className="w-3 h-3" />
-                Упражнения
+                {t('parsedPreview.exercises')}
               </div>
               <div className="text-xl font-bold text-cyan-400">
                 {workout.exercises.length}
@@ -66,7 +68,7 @@ export function ParsedWorkoutPreview({
             <div>
               <div className="flex items-center justify-center gap-1 text-muted-foreground text-xs mb-1">
                 <Layers className="w-3 h-3" />
-                Сеты
+                {t('parsedPreview.sets')}
               </div>
               <div className="text-xl font-bold text-blue-400">
                 {workout.totalSets}
@@ -75,19 +77,19 @@ export function ParsedWorkoutPreview({
             <div>
               <div className="flex items-center justify-center gap-1 text-muted-foreground text-xs mb-1">
                 <Zap className="w-3 h-3" />
-                Объём
+                {t('parsedPreview.volume')}
               </div>
               <div className="text-xl font-bold text-green-400">
-                {workout.totalVolume.toLocaleString()} кг
+                {t('stats.kg', { value: workout.totalVolume.toLocaleString() })}
               </div>
             </div>
             <div>
               <div className="flex items-center justify-center gap-1 text-muted-foreground text-xs mb-1">
                 <Clock className="w-3 h-3" />
-                Время
+                {t('parsedPreview.time')}
               </div>
               <div className="text-xl font-bold text-purple-400">
-                {duration} мин
+                {t('stats.minutes', { value: duration })}
               </div>
             </div>
           </div>
@@ -104,7 +106,7 @@ export function ParsedWorkoutPreview({
                   variant="secondary" 
                   className="bg-orange-500/20 text-orange-400 border-orange-500/30"
                 >
-                  Суперсет {group.supersetGroup}
+                  {t('parsedPreview.superset', { number: group.supersetGroup })}
                 </Badge>
                 <div className="flex-1 h-px bg-orange-500/30" />
               </div>
@@ -137,9 +139,9 @@ export function ParsedWorkoutPreview({
                     </div>
                     {exercise.totalVolume && exercise.totalVolume > 0 && (
                       <div className="text-right ml-3">
-                        <span className="text-xs text-muted-foreground">Объём</span>
+                        <span className="text-xs text-muted-foreground">{t('parsedPreview.volumeLabel')}</span>
                         <div className="text-sm font-semibold text-green-400">
-                          {exercise.totalVolume.toLocaleString()} кг
+                          {t('stats.kg', { value: exercise.totalVolume.toLocaleString() })}
                         </div>
                       </div>
                     )}

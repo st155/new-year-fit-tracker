@@ -22,7 +22,14 @@
     "alsoWorks": "Also works",
     "bannerTitle": "Recovery mode active",
     "bannerSubtitle": "We recommend resting today",
-    "dismiss": "Disable"
+    "dismiss": "Disable",
+    "rest": "Get plenty of rest and sleep",
+    "hydrate": "Drink plenty of water",
+    "temperature": "Monitor your temperature",
+    "subtitle": "Your body needs rest. All tasks are paused.",
+    "score": "Recovery",
+    "recommendations": "Recommendations",
+    "feelBetter": "I feel better"
   },
   "checks": {
     "buildInfo": "Build Info",

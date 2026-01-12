@@ -40,9 +40,9 @@ export function RecoveryModeOverlay({ metrics, reason, onDismiss }: RecoveryMode
   };
 
   const recommendations = [
-    { icon: Moon, text: t('recovery.rest', 'Отдыхайте и высыпайтесь') },
-    { icon: Droplets, text: t('recovery.hydrate', 'Пейте много воды') },
-    { icon: Thermometer, text: t('recovery.temperature', 'Следите за температурой') },
+    { icon: Moon, text: t('recovery.rest') },
+    { icon: Droplets, text: t('recovery.hydrate') },
+    { icon: Thermometer, text: t('recovery.temperature') },
   ];
 
   return (
@@ -73,10 +73,10 @@ export function RecoveryModeOverlay({ metrics, reason, onDismiss }: RecoveryMode
           {/* Title */}
           <div className="text-center space-y-2">
             <h2 className="text-2xl font-bold text-foreground">
-              {t('recovery.title', 'Режим восстановления')}
+              {t('recovery.title')}
             </h2>
             <p className="text-muted-foreground">
-              {t('recovery.subtitle', 'Ваш организм требует отдыха. Все задачи приостановлены.')}
+              {t('recovery.subtitle')}
             </p>
           </div>
 
@@ -91,7 +91,7 @@ export function RecoveryModeOverlay({ metrics, reason, onDismiss }: RecoveryMode
             {metrics.recovery > 0 && (
               <div className="text-center p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
                 <div className="text-2xl font-bold text-orange-500">{Math.round(metrics.recovery)}%</div>
-                <div className="text-xs text-muted-foreground">{t('recovery.score', 'Recovery')}</div>
+                <div className="text-xs text-muted-foreground">{t('recovery.score')}</div>
               </div>
             )}
             {metrics.hrv > 0 && (
@@ -105,7 +105,7 @@ export function RecoveryModeOverlay({ metrics, reason, onDismiss }: RecoveryMode
           {/* Recommendations */}
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-muted-foreground">
-              {t('recovery.recommendations', 'Рекомендации')}
+              {t('recovery.recommendations')}
             </h3>
             {recommendations.map((rec, i) => (
               <motion.div
@@ -128,7 +128,7 @@ export function RecoveryModeOverlay({ metrics, reason, onDismiss }: RecoveryMode
             className="w-full gap-2"
           >
             <X className="w-4 h-4" />
-            {t('recovery.feelBetter', 'Я чувствую себя лучше')}
+            {t('recovery.feelBetter')}
           </Button>
         </Card>
       </motion.div>

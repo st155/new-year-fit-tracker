@@ -87,7 +87,7 @@
     "success": "Client \"{{name}}\" added to plan",
     "addError": "Failed to add client"
   },
-  "ai": {
+"ai": {
     "newConversation": "New conversation",
     "newChat": "New Chat",
     "noConversations": "No conversations",
@@ -121,7 +121,12 @@
     "viewPlan": "View plan",
     "viewGoal": "View goal",
     "actionError": "Error executing action",
-    "sendError": "Send failed. Please try again."
+    "sendError": "Send failed. Please try again.",
+    "tabs": {
+      "chat": "Chat",
+      "pending": "Pending",
+      "history": "History"
+    }
   },
   "aiToast": {
     "error": "Error",
