@@ -437,7 +437,9 @@
     "empty": "No scheduled activities"
   },
   "units": {
-    "min": "min"
+    "min": "min",
+    "ms": "ms",
+    "bpm": "bpm"
   },
   "metricCard": {
     "withingsInstructions": "To update data:\n1. Step on your Withings scale\n2. Wait for sync with the app\n3. Data will appear here in 1-5 minutes",
@@ -491,70 +493,6 @@
     "sleepQuality": "Sleep Quality",
     "history": "Recovery History",
     "historyDesc": "Metrics over the last 7 days"
-  },
-  "units": {
-    "min": "min",
-    "ms": "ms",
-    "bpm": "bpm"
-  },
-  "qualityLabels": {
-    "recovery": {
-      "low": "Low recovery",
-      "medium": "Medium",
-      "excellent": "Excellent"
-    },
-    "sleepEfficiency": {
-      "poor": "Poor sleep",
-      "normal": "Normal",
-      "good": "Good sleep"
-    },
-    "sleepDuration": {
-      "low": "Not enough sleep",
-      "insufficient": "Insufficient",
-      "good": "Good",
-      "excellent": "Excellent"
-    },
-    "hrv": {
-      "veryLow": "Very low",
-      "low": "Low",
-      "normal": "Normal",
-      "excellent": "Excellent"
-    },
-    "strain": {
-      "rest": "Rest day",
-      "active": "Active day",
-      "intense": "Intense day"
-    },
-    "steps": {
-      "veryLow": "Very low",
-      "low": "Low",
-      "good": "Good",
-      "excellent": "Excellent"
-    },
-    "bodyFat": {
-      "critical": "Critically low",
-      "competition": "Competition",
-      "athletic": "Athletic",
-      "excellent": "Excellent",
-      "healthy": "Healthy",
-      "normal": "Normal",
-      "elevated": "Elevated",
-      "high": "High"
-    },
-    "calories": {
-      "low": "Low activity",
-      "medium": "Medium activity",
-      "good": "Good activity"
-    },
-    "restingHr": {
-      "veryLow": "Very low",
-      "athletic": "Athletic",
-      "excellent": "Excellent",
-      "good": "Good",
-      "normal": "Normal",
-      "elevated": "Elevated",
-      "high": "High"
-    }
   },
   "export": {
     "title": "Export Data",
