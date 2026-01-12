@@ -399,7 +399,13 @@
       "legs": "Ноги",
       "core": "Пресс"
     },
-    "createPlan": "Создать План"
+    "createPlan": "Создать План",
+    "planCreated": "План создан!",
+    "createError": "Ошибка создания плана",
+    "continue": "Продолжить",
+    "continueWithDays": "Продолжить ({{count}} дней)",
+    "recommended": "Рекомендуем: {{weight}}кг",
+    "useRecommended": "Использовать рекомендованный"
   },
   "dayCard": {
     "today": "Сегодня",
@@ -622,14 +628,6 @@
     "paddleboarding": "SUP",
     "activity": "Активность",
     "other": "Другое"
-  },
-"onboarding": {
-    "planCreated": "План создан!",
-    "createError": "Ошибка создания плана",
-    "continue": "Продолжить",
-    "continueWithDays": "Продолжить ({{count}} дней)",
-    "recommended": "Рекомендуем: {{weight}}кг",
-    "useRecommended": "Использовать рекомендованный"
   },
   "map": {
     "title": "Карта маршрута",
@@ -1061,9 +1059,6 @@
     "cancel": "Отмена",
     "creating": "Создание плана...",
     "createNew": "Создать новый план"
-  },
-  "fallback": {
-    "planName": "Тренировки"
   },
   "splits": {
     "title": "Сплиты по километрам",
