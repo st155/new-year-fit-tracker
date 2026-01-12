@@ -230,7 +230,9 @@
       "deleted": "Deleted",
       "conversationDeleted": "Conversation deleted",
       "error": "Error",
-      "deleteError": "Failed to delete conversation"
+      "deleteError": "Failed to delete conversation",
+      "autoExecutedTitle": "⚡ Actions executed automatically",
+      "autoExecutedDesc": "Success: {{count}} actions"
     }
   },
   "common": {

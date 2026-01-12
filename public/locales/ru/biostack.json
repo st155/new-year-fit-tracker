@@ -294,6 +294,15 @@
     "addProtocolFailed": "Не удалось добавить протокол",
     "defaultTag": "Протокол от доктора"
   },
+  "progress": {
+    "processingSupplements": "Обработка добавок...",
+    "processingSupplement": "Обработка {{name}}..."
+  },
+  "aiGenerator": {
+    "rationaleSimple": "Рекомендовано для {{biomarker}}",
+    "rationaleWithChange": "Рекомендовано для {{biomarker}} (ожидаемое улучшение: {{percent}}% за {{weeks}} недель)",
+    "targetOutcome": "Улучшить {{biomarker}}"
+  },
   "correlation": {
     "noActiveSupplements": "Нет активных добавок в стеке",
     "addToSeeCorrelations": "Добавьте добавки в стек, чтобы увидеть научные корреляции и анализ эффективности",

@@ -231,7 +231,9 @@
       "deleted": "Удалено",
       "conversationDeleted": "Разговор удален",
       "error": "Ошибка",
-      "deleteError": "Не удалось удалить разговор"
+      "deleteError": "Не удалось удалить разговор",
+      "autoExecutedTitle": "⚡ Действия выполнены автоматически",
+      "autoExecutedDesc": "Успешно: {{count}} действий"
     }
   },
   "common": {

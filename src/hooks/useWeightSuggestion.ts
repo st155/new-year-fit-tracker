@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { subDays } from 'date-fns';
+import i18n from '@/i18n';
 
 interface WeightSuggestion {
   suggestedWeight: number;
@@ -39,17 +40,17 @@ export function useWeightSuggestion(exerciseName: string, userId?: string) {
       if (lastRPE < 7) {
         // Too easy - increase significantly
         suggestedWeight = lastWeight + 5;
-        reason = 'Прошлая тренировка была лёгкой (RPE < 7). Увеличиваем вес.';
+        reason = i18n.t('workouts:weightSuggestion.tooEasy');
         confidence = 'high';
       } else if (lastRPE >= 7 && lastRPE < 9) {
         // Good intensity - progressive overload
         suggestedWeight = lastWeight + 2.5;
-        reason = `На основе прошлой тренировки (${lastWeight}кг) +2.5кг`;
+        reason = i18n.t('workouts:weightSuggestion.progressiveOverload', { weight: lastWeight });
         confidence = 'high';
       } else if (lastRPE >= 9) {
         // Too hard - keep same or reduce
         suggestedWeight = lastWeight;
-        reason = 'Прошлая тренировка была тяжёлой (RPE ≥ 9). Оставляем тот же вес.';
+        reason = i18n.t('workouts:weightSuggestion.tooHard');
         confidence = 'medium';
       }
 
@@ -60,7 +61,7 @@ export function useWeightSuggestion(exerciseName: string, userId?: string) {
         
         if (!isConsistent) {
           confidence = 'low';
-          reason += ' Вес нестабилен в последних тренировках.';
+          reason += i18n.t('workouts:weightSuggestion.unstableWeight');
         }
       }
 

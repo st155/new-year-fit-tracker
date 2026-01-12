@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { supplementsApi } from '@/lib/api';
 import { useTranslation } from 'react-i18next';
+import i18n from '@/i18n';
 
 interface AddSupplementToStackParams {
   supplementName: string;
@@ -71,8 +72,18 @@ export function useAddSupplementToStack() {
       }
 
       // Step 3: Create user_stack entry
-      const rationale = params.rationale || 
-        `Рекомендовано для ${params.biomarkerName}${params.expectedChange ? ` (ожидаемое улучшение: ${params.expectedChange}% за ${params.timeframeWeeks} недель)` : ''}`;
+      let rationale: string;
+      if (params.rationale) {
+        rationale = params.rationale;
+      } else if (params.expectedChange && params.timeframeWeeks) {
+        rationale = i18n.t('biostack:aiGenerator.rationaleWithChange', { 
+          biomarker: params.biomarkerName, 
+          percent: params.expectedChange, 
+          weeks: params.timeframeWeeks 
+        });
+      } else {
+        rationale = i18n.t('biostack:aiGenerator.rationaleSimple', { biomarker: params.biomarkerName });
+      }
 
       const { error: stackError } = await supabase
         .from('user_stack')
@@ -89,7 +100,7 @@ export function useAddSupplementToStack() {
           dosage_unit: dosageInfo.unit,
           ai_suggested: true,
           ai_rationale: rationale,
-          target_outcome: `Улучшить ${params.biomarkerName}`,
+          target_outcome: i18n.t('biostack:aiGenerator.targetOutcome', { biomarker: params.biomarkerName }),
           linked_biomarker_ids: [params.biomarkerId],
         });
 

@@ -3,6 +3,8 @@
  * Isolated from React components to avoid module resolution issues
  */
 
+import i18n from '@/i18n';
+
 let pdfjsLib: any = null;
 
 async function loadPdfJs() {
@@ -93,7 +95,7 @@ export async function convertPdfToImages(
   } catch (error) {
     clearTimeout(fetchTimeout);
     if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error(`Превышено время загрузки PDF (${Math.round(fetchTimeoutMs/1000)} секунд)`);
+      throw new Error(i18n.t('common:errors.pdfTimeout', { seconds: Math.round(fetchTimeoutMs/1000) }));
     }
     throw error;
   }

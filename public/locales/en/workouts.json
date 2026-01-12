@@ -775,5 +775,15 @@
   "weeklySplit": {
     "title": "Weekly Progress",
     "today": "Today"
+  },
+  "weightSuggestion": {
+    "tooEasy": "Last workout was too easy (RPE < 7). Increasing weight.",
+    "progressiveOverload": "Based on last workout ({{weight}}kg) +2.5kg",
+    "tooHard": "Last workout was too hard (RPE ≥ 9). Keeping same weight.",
+    "unstableWeight": " Weight is unstable in recent workouts."
+  },
+  "manualWorkout": {
+    "placeholder": "Example input:\n\nLunges alternating\n10x20kg\n10x40kg\n8x50kg\n\nOverhead press barbell\n10x20kg\n8x40kg\n\nsuperset:\nDips\n10\n10x20kg\n\nBiceps dumbbell\n10x20kg\n10x25\n\nPlank 3x45sec\nSide Plank\n1m 1m",
+    "trainerNotes": "Workout with {{trainer}}"
   }
 }

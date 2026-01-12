@@ -34,29 +34,7 @@ interface ManualWorkoutDialogProps {
   onSuccess?: () => void;
 }
 
-const PLACEHOLDER_TEXT = `Пример ввода:
-
-Lunges alternating 
-10x20kg
-10x40kg
-8x50kg
-
-Overhead press barbell 
-10x20kg
-8x40kg
-
-superset:
-Dips
-10
-10x20kg
-
-Biceps dumbbell 
-10x20kg
-10x25
-
-Plank 3x45sec
-Side Plank
-1m 1m`;
+// PLACEHOLDER_TEXT is now dynamic via i18n, see component body
 
 export function ManualWorkoutDialog({ 
   open, 
@@ -75,6 +53,8 @@ export function ManualWorkoutDialog({
   const [parsedWorkout, setParsedWorkout] = useState<ParsedWorkout | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [step, setStep] = useState<'input' | 'preview'>('input');
+  
+  const PLACEHOLDER_TEXT = t('manualWorkout.placeholder');
 
   const handleParse = () => {
     if (!workoutText.trim()) {
@@ -101,7 +81,7 @@ export function ManualWorkoutDialog({
     try {
       const startTime = new Date(workoutDate);
       startTime.setHours(10, 0, 0, 0);
-      const notes = trainerName ? `Тренировка с ${trainerName}` : workoutName;
+      const notes = trainerName ? t('manualWorkout.trainerNotes', { trainer: trainerName }) : workoutName;
 
       // Create workout record
       const { data: workout, error: workoutError } = await supabase
