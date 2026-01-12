@@ -422,10 +422,10 @@ export function CorrelationEngine() {
                   <Card className="p-4 bg-neutral-950 border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.2)]">
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Время до эффекта</span>
+                        <span className="text-sm text-muted-foreground">{t('correlation.timeToEffect')}</span>
                         <Clock className="h-4 w-4 text-amber-500" />
                       </div>
-                      <div className="text-2xl font-bold">{correlation.timeToEffect.weeks} недель</div>
+                      <div className="text-2xl font-bold">{t('correlation.weeks', { count: correlation.timeToEffect.weeks })}</div>
                       <div className="text-xs text-muted-foreground">
                         {correlation.timeToEffect.description}
                       </div>
@@ -440,10 +440,10 @@ export function CorrelationEngine() {
                   <div className="space-y-4">
                     <div>
                       <h3 className="text-lg font-semibold mb-1">
-                        {correlation.biomarker?.name} — Корреляция
+                        {correlation.biomarker?.name} — {t('correlation.correlation')}
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        Уровень биомаркера vs регулярность приёма добавки
+                        {t('correlation.biomarkerVsConsistency')}
                       </p>
                     </div>
                     
@@ -464,7 +464,7 @@ export function CorrelationEngine() {
                           yAxisId="right"
                           orientation="right"
                           stroke="#22c55e"
-                          label={{ value: 'Регулярность (%)', angle: 90, position: 'insideRight', style: { fill: '#22c55e' } }}
+                          label={{ value: t('correlation.consistencyPercent'), angle: 90, position: 'insideRight', style: { fill: '#22c55e' } }}
                         />
                         <Tooltip 
                           contentStyle={{ 
@@ -534,26 +534,26 @@ export function CorrelationEngine() {
                   <div className="space-y-4">
                     <div className="flex items-start justify-between">
                       <div>
-                        <h3 className="text-lg font-semibold mb-1">🤖 AI Анализ</h3>
+                        <h3 className="text-lg font-semibold mb-1">{t('correlation.aiAnalysis')}</h3>
                         <Badge variant={correlation.aiInsights.confidence_level === 'high' ? 'default' : 'secondary'}>
-                          {correlation.aiInsights.confidence_level === 'high' ? 'Высокая' : 'Средняя'} уверенность
+                          {correlation.aiInsights.confidence_level === 'high' ? t('correlation.highConfidence') : t('correlation.mediumConfidence')}
                         </Badge>
                       </div>
                       {correlation.aiInsights.is_effective && (
                         <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-                          ✅ Эффективно
+                          {t('correlation.effective')}
                         </Badge>
                       )}
                     </div>
                     
                     <div className="space-y-3">
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground mb-1">Ключевой вывод:</p>
+                        <p className="text-sm font-medium text-muted-foreground mb-1">{t('correlation.keyInsight')}</p>
                         <p className="text-base">{correlation.aiInsights.key_insight}</p>
                       </div>
                       
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground mb-1">Рекомендация:</p>
+                        <p className="text-sm font-medium text-muted-foreground mb-1">{t('correlation.recommendation')}</p>
                         <p className="text-base text-primary">{correlation.aiInsights.recommendation}</p>
                       </div>
                     </div>

@@ -44,8 +44,10 @@
     "ms": "ms",
     "bpm": "bpm"
   },
-  "metrics": {
-    "bloodPressure": "Blood Pressure"
+"metrics": {
+    "bloodPressure": "Blood Pressure",
+    "stale": "Stale",
+    "dataQuality": "Data Quality"
   },
   "units": {
     "mlKgMin": "ml/kg/min",

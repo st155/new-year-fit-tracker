@@ -44,8 +44,10 @@
     "ms": "мс",
     "bpm": "уд/мин"
   },
-  "metrics": {
-    "bloodPressure": "Пульсовое давление"
+"metrics": {
+    "bloodPressure": "Пульсовое давление",
+    "stale": "Устаревшие",
+    "dataQuality": "Качество данных"
   },
   "units": {
     "mlKgMin": "мл/кг/мин",
