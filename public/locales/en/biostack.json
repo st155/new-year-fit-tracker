@@ -192,7 +192,8 @@
     "enrichingTime": "⏱️ Getting comprehensive product details...",
     "enrichingDetails": "This creates a Vivino-style information card",
     "foundByBarcode": "Instantly found by barcode!",
-    "alreadyInDatabase": "Product already in database"
+    "alreadyInDatabase": "Product already in database",
+    "manualBarcodePlaceholder": "012345678901 or 5901234123457"
   },
   "errors": {
     "notAuthenticated": "User not authenticated",

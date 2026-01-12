@@ -552,7 +552,14 @@
   "devTools": {
     "copied": "Скопировано!",
     "noSyncIssues": "Проблем синхронизации не найдено",
-    "syncIssuesTitle": "Рассинхронизация EN/RU"
+    "syncIssuesTitle": "Рассинхронизация EN/RU",
+    "searchPlaceholder": "Поиск по ключу...",
+    "allNamespaces": "Все namespaces",
+    "missingInPlaceholder": "Отсутствует в...",
+    "allIssues": "Все проблемы",
+    "missingInEn": "Нет в EN 🇺🇸",
+    "missingInRu": "Нет в RU 🇷🇺",
+    "namespaceStats": "Статистика по namespaces"
   },
   "actions": {
     "save": "Сохранить",

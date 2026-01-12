@@ -556,7 +556,14 @@
   "devTools": {
     "copied": "Copied!",
     "noSyncIssues": "No sync issues found",
-    "syncIssuesTitle": "EN/RU Desync"
+    "syncIssuesTitle": "EN/RU Desync",
+    "searchPlaceholder": "Search by key...",
+    "allNamespaces": "All namespaces",
+    "missingInPlaceholder": "Missing in...",
+    "allIssues": "All issues",
+    "missingInEn": "Missing in EN 🇺🇸",
+    "missingInRu": "Missing in RU 🇷🇺",
+    "namespaceStats": "Namespace Statistics"
   },
   "dataSource": {
     "metrics": "Metrics",
