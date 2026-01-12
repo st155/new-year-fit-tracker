@@ -248,7 +248,7 @@ export function AIStackGenerator({ open, onOpenChange, onSuccess }: AIStackGener
                           <div>
                             <div className="font-semibold">{def.name}</div>
                             <div className="text-sm text-muted-foreground">
-                              {def.current_value} {def.unit} (Норма: {def.ref_min}-{def.ref_max})
+                              {def.current_value} {def.unit} {t('aiGenerator.refRange', { min: def.ref_min, max: def.ref_max })}
                             </div>
                           </div>
                           <Badge variant={def.status === 'low' ? 'destructive' : 'secondary'}>
@@ -333,7 +333,7 @@ export function AIStackGenerator({ open, onOpenChange, onSuccess }: AIStackGener
                           <div className="flex items-center gap-1">
                             <TrendingDown className="h-4 w-4 text-green-500" />
                             <span className="text-muted-foreground">
-                              +{rec.expected_improvement}% за {rec.timeframe_weeks} недель
+                              {t('aiGenerator.expectedImprovement', { percent: rec.expected_improvement, weeks: rec.timeframe_weeks })}
                             </span>
                           </div>
                         </div>

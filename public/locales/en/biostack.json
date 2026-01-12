@@ -351,7 +351,9 @@
     "synergyWith": "Synergy with:",
     "selectedCount": "Selected: {{selected}} of {{total}}",
     "addToStack": "Add to stack",
-    "adding": "Adding..."
+    "adding": "Adding...",
+    "refRange": "(Normal: {{min}}-{{max}})",
+    "expectedImprovement": "+{{percent}}% in {{weeks}} weeks"
   },
   "aiAnalysis": {
     "title": "AI Effectiveness Analysis",

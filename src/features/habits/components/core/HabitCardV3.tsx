@@ -398,7 +398,7 @@ export function HabitCardV3({
                 {milestone && (
                   <div className="space-y-1">
                     <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">До {milestone.label}</span>
+                      <span className="text-muted-foreground">{t('milestoneProgress', { label: milestone.label })}</span>
                       <span className="font-medium">{Math.round(milestone.progress)}%</span>
                     </div>
                     <Progress value={milestone.progress} className="h-2" />

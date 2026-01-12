@@ -674,5 +674,33 @@
     "respiratoryRate": "Частота дыхания",
     "breathsPerMin": "вдохов/мин",
     "rate": "Частота"
+  },
+  "analytics": {
+    "pageTitle": "Аналитика",
+    "pageDescription": "Обзор активности и прогресса ваших клиентов"
+  },
+  "workoutAnalysis": {
+    "title": "Анализ тренировок",
+    "noData": "Нет данных о тренировках за выбранный период",
+    "noDataShort": "Нет данных",
+    "workouts": "Тренировок",
+    "last30days": "За 30 дней",
+    "avgIntensity": "Сред. интенсивность",
+    "popularType": "Популярный тип",
+    "mostOften": "Чаще всего",
+    "streak": "Серия",
+    "consecutiveDays": "Дней подряд",
+    "typeDistribution": "Распределение типов тренировок",
+    "intensityStrain": "Интенсивность (Strain)",
+    "count": "Количество",
+    "otherActivity": "Другая активность",
+    "nonWorkoutTypes": {
+      "meditation": "Медитация",
+      "massage": "Массаж",
+      "stagePerformance": "Сценическое выступление",
+      "caddy": "Кэдди",
+      "breathingExercise": "Дыхательная практика",
+      "sleep": "Сон"
+    }
   }
 }

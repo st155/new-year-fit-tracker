@@ -33,18 +33,24 @@ export function WorkoutAnalysis({ metrics, clientName }: WorkoutAnalysisProps) {
 
   // Normalize activity types - group similar ones
   const normalizeActivityType = (type: string): string => {
-    // Group numeric "Активность N" types
-    if (/^Активность \d+$/.test(type)) return t('workoutAnalysis.otherActivity');
+    // Group numeric "Активность N" types (both EN and RU)
+    if (/^Активность \d+$/.test(type) || /^Activity \d+$/.test(type)) return t('workoutAnalysis.otherActivity');
     // Group unknown types
-    if (type === 'Тренировка' || type === 'Unknown') return t('workoutAnalysis.otherActivity');
+    if (type === 'Тренировка' || type === 'Workout' || type === 'Unknown') return t('workoutAnalysis.otherActivity');
     return type;
   };
 
   // Core workout types to prioritize (filter out non-workout activities)
   const isRealWorkout = (type: string): boolean => {
+    // Get non-workout type names from translations
     const nonWorkoutTypes = [
-      'Медитация', 'Массаж', 'Сценическое выступление', 'Кэдди',
-      t('workoutAnalysis.otherActivity'), 'Дыхательная практика', 'Сон'
+      'Медитация', 'Meditation',
+      'Массаж', 'Massage',
+      'Сценическое выступление', 'Stage Performance',
+      'Кэдди', 'Caddy',
+      t('workoutAnalysis.otherActivity'),
+      'Дыхательная практика', 'Breathing Exercise',
+      'Сон', 'Sleep'
     ];
     return !nonWorkoutTypes.includes(type);
   };

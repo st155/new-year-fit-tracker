@@ -902,5 +902,6 @@
         "259200": "🎉 After 6 months full recovery"
       }
     }
-  }
+  },
+  "milestoneProgress": "To {{label}}"
 }
