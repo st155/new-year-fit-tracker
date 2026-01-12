@@ -307,9 +307,30 @@
     "reps": "повторений",
     "myPlans": "Мои планы"
   },
-  "exercise": {
-    "defaultName": "Упражнение"
-    "myPlans": "Мои планы"
+  "manual": {
+    "title": "Записать тренировку",
+    "description": "Введите тренировку из текстового описания или заметок тренера",
+    "nameLabel": "Название тренировки",
+    "defaultName": "Силовая тренировка",
+    "trainerLabel": "Тренер",
+    "trainerPlaceholder": "Имя тренера (необязательно)",
+    "dateLabel": "Дата",
+    "selectDate": "Выберите дату",
+    "durationLabel": "Длительность (мин)",
+    "textLabel": "Текст тренировки",
+    "cancel": "Отмена",
+    "parse": "Разобрать",
+    "edit": "Редактировать",
+    "save": "Сохранить",
+    "saving": "Сохранение...",
+    "enterText": "Введите текст тренировки",
+    "parseError": "Не удалось разобрать тренировку",
+    "checkFormat": "Проверьте формат ввода",
+    "saveSuccess": "Тренировка сохранена!",
+    "saveSuccessDesc": "{{exercises}} упражнений, {{sets}} подходов{{whoop}}",
+    "linkedWithWhoop": "Связано с WHOOP",
+    "saveError": "Ошибка сохранения",
+    "tryAgain": "Пожалуйста, попробуйте снова"
   },
   "planGeneration": {
     "analyzing": "Твой AI-тренер анализирует 1ПМ, цели и восстановление...",
@@ -597,7 +618,8 @@
     "planCreated": "План создан!",
     "createError": "Ошибка создания плана",
     "continue": "Продолжить",
-    "continueWithDays": "Продолжить ({{count}} дней)",
+    "continueWithDays": "Продолжить ({{count}} дней)"
+  },
   "map": {
     "title": "Карта маршрута",
     "noGps": "GPS-данные недоступны",
