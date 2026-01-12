@@ -47,7 +47,14 @@
 "metrics": {
     "bloodPressure": "Пульсовое давление",
     "stale": "Устаревшие",
-    "dataQuality": "Качество данных"
+    "dataQuality": "Качество данных",
+    "statistics": "Статистика",
+    "average": "Среднее",
+    "records": "Записей",
+    "maximum": "Максимум",
+    "minimum": "Минимум",
+    "trendDays": "Тренд (7 дней)",
+    "historyDays": "История за последние 90 дней"
   },
   "units": {
     "mlKgMin": "мл/кг/мин",

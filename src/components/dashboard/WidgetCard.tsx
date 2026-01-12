@@ -398,7 +398,7 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { t } = useTranslation('widgets');
+  const { t } = useTranslation(['widgets', 'common']);
   const dateLocale = getDateLocale();
   
   // Load personal baselines for personalized quality assessment
@@ -769,7 +769,7 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
                   </p>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Источник: {getSourceDisplayName(source)} (автовыбор)</p>
+                  <p>{t('common:tooltips.sourceAutoSelect', { source: getSourceDisplayName(source) })}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -830,7 +830,7 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
                       <User className="h-3 w-3 text-primary/60 ml-1" />
                     </TooltipTrigger>
                     <TooltipContent className="max-w-xs">
-                      <p className="text-xs">Персональная оценка на основе твоих данных за {personalBaseline?.days_of_data || 30}+ дней</p>
+                      <p className="text-xs">{t('common:tooltips.personalAssessment', { days: personalBaseline?.days_of_data || 30 })}</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>

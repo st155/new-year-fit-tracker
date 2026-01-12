@@ -572,7 +572,12 @@
       "iconOnlyAria": "Icon-only buttons требуют aria-label",
       "useLoadingState": "Всегда используйте loading state для async операций",
       "disabledTooltip": "Disabled кнопки должны иметь tooltip с объяснением"
-    }
+    },
+    "buttonVariantsContinued": "Button Variants (Продолжение)"
+  },
+  "tooltips": {
+    "sourceAutoSelect": "Источник: {{source}} (автовыбор)",
+    "personalAssessment": "Персональная оценка на основе твоих данных за {{days}}+ дней"
   },
   "actions": {
     "save": "Сохранить",

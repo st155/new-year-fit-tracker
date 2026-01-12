@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Flame, Footprints, Moon, Zap, Heart, LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from 'react-i18next';
 
 interface LeaderboardEntry {
   userId: string;
@@ -49,11 +50,13 @@ interface CategoryLeader extends CategoryInfo {
 }
 
 export function LeaderboardCategoryLeaders({ leaderboard, onCategoryClick }: LeaderboardCategoryLeadersProps) {
+  const { t } = useTranslation('leaderboard');
+  
   // Early return for empty/invalid leaderboard
   if (!leaderboard || leaderboard.length === 0) {
     return (
       <Card className="p-8 text-center">
-        <p className="text-muted-foreground">Недостаточно данных для отображения лидеров</p>
+        <p className="text-muted-foreground">{t('insufficientData')}</p>
       </Card>
     );
   }
