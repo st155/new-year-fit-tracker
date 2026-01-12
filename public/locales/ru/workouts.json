@@ -400,6 +400,15 @@
     "kg": "кг",
     "bpm": "уд/мин"
   },
+  "setFormat": {
+    "sideLeft": "лев",
+    "sideRight": "прав",
+    "durationMinsSecs": "{{mins}}м {{secs}}с",
+    "durationMins": "{{mins}}м",
+    "durationSecs": "{{secs}}с",
+    "weightReps": "{{reps}}×{{weight}}кг",
+    "repsOnly": "{{reps}} повт."
+  },
   "zones": {
     "zone0": "Зона 0",
     "zone1": "Зона 1",

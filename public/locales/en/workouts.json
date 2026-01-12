@@ -398,6 +398,15 @@
     "kg": "kg",
     "bpm": "bpm"
   },
+  "setFormat": {
+    "sideLeft": "L",
+    "sideRight": "R",
+    "durationMinsSecs": "{{mins}}m {{secs}}s",
+    "durationMins": "{{mins}}m",
+    "durationSecs": "{{secs}}s",
+    "weightReps": "{{reps}}×{{weight}}kg",
+    "repsOnly": "{{reps}} reps"
+  },
   "zones": {
     "zone0": "Zone 0",
     "zone1": "Zone 1",

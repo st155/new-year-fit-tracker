@@ -13,6 +13,7 @@
  */
 
 import { normalizeExerciseName, isBodyweightExercise, type NormalizedExercise } from './exercises-aliases';
+import i18n from '@/i18n';
 
 export interface ParsedSet {
   reps?: number;
@@ -492,23 +493,29 @@ export function parseWorkoutText(text: string): ParsedWorkout {
  * Format a set for display
  */
 export function formatSet(set: ParsedSet): string {
-  const sideStr = set.side ? ` (${set.side === 'left' ? 'лев' : 'прав'})` : '';
+  const sideStr = set.side 
+    ? ` (${set.side === 'left' 
+        ? i18n.t('workouts:setFormat.sideLeft') 
+        : i18n.t('workouts:setFormat.sideRight')})`
+    : '';
   
   if (set.duration_seconds) {
     if (set.duration_seconds >= 60) {
       const mins = Math.floor(set.duration_seconds / 60);
       const secs = set.duration_seconds % 60;
-      return (secs > 0 ? `${mins}м ${secs}с` : `${mins}м`) + sideStr;
+      return (secs > 0 
+        ? i18n.t('workouts:setFormat.durationMinsSecs', { mins, secs })
+        : i18n.t('workouts:setFormat.durationMins', { mins })) + sideStr;
     }
-    return `${set.duration_seconds}с` + sideStr;
+    return i18n.t('workouts:setFormat.durationSecs', { secs: set.duration_seconds }) + sideStr;
   }
   
   if (set.weight && set.reps) {
-    return `${set.reps}×${set.weight}кг` + sideStr;
+    return i18n.t('workouts:setFormat.weightReps', { reps: set.reps, weight: set.weight }) + sideStr;
   }
   
   if (set.reps) {
-    return `${set.reps} повт.` + sideStr;
+    return i18n.t('workouts:setFormat.repsOnly', { reps: set.reps }) + sideStr;
   }
   
   return '';
