@@ -206,7 +206,8 @@
     }
   },
   "fallback": {
-    "workout": "Workout"
+    "workout": "Workout",
+    "planName": "Training Plan"
   },
   "source": {
     "manual": "Manual",
