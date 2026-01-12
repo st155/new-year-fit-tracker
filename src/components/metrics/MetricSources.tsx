@@ -7,16 +7,21 @@ interface MetricSourcesProps {
   sources: string[];
 }
 
-const getSourceDisplayName = (source: string): string => {
-  const nameMap: Record<string, string> = {
+const getSourceDisplayName = (source: string, t: ReturnType<typeof useTranslation>['t']): string => {
+  const key = source.toLowerCase();
+  const staticNames: Record<string, string> = {
     whoop: 'Whoop',
     ultrahuman: 'Ultrahuman',
     garmin: 'Garmin',
     withings: 'Withings',
     google: 'Google Fit',
-    manual: 'Ручной ввод',
   };
-  return nameMap[source.toLowerCase()] || source;
+  
+  if (key === 'manual') {
+    return t('metricDetail:history.sources.manual', 'Manual entry');
+  }
+  
+  return staticNames[key] || source;
 };
 
 const getSourceColor = (source: string): string => {
@@ -53,7 +58,7 @@ export function MetricSources({ sources }: MetricSourcesProps) {
                 variant="outline"
                 className={getSourceColor(source)}
               >
-                {getSourceDisplayName(source)}
+                {getSourceDisplayName(source, t)}
               </Badge>
             ))}
           </div>
