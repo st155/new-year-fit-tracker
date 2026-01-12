@@ -4,6 +4,7 @@
 
 import { useMemo } from 'react';
 import { TimeOfDay } from '@/lib/habit-utils-v3';
+import i18n from '@/i18n';
 
 export interface HabitGroup {
   time: TimeOfDay;
@@ -24,56 +25,60 @@ export interface GroupedHabits {
   atRisk: any[];
 }
 
+function createEmptyGroups(): GroupedHabits {
+  return {
+    morning: {
+      time: 'morning',
+      title: i18n.t('habits:groups.morningTitle'),
+      icon: '☀️',
+      habits: [],
+      estimatedDuration: 0,
+      completedCount: 0,
+      totalCount: 0
+    },
+    afternoon: {
+      time: 'afternoon',
+      title: i18n.t('habits:groups.afternoonTitle'),
+      icon: '☕',
+      habits: [],
+      estimatedDuration: 0,
+      completedCount: 0,
+      totalCount: 0
+    },
+    evening: {
+      time: 'evening',
+      title: i18n.t('habits:groups.eveningTitle'),
+      icon: '🌙',
+      habits: [],
+      estimatedDuration: 0,
+      completedCount: 0,
+      totalCount: 0
+    },
+    night: {
+      time: 'night',
+      title: i18n.t('habits:groups.nightTitle'),
+      icon: '✨',
+      habits: [],
+      estimatedDuration: 0,
+      completedCount: 0,
+      totalCount: 0
+    },
+    anytime: {
+      time: 'anytime',
+      title: i18n.t('habits:groups.anytimeTitle'),
+      icon: '🎯',
+      habits: [],
+      estimatedDuration: 0,
+      completedCount: 0,
+      totalCount: 0
+    },
+    atRisk: []
+  };
+}
+
 export function useHabitGrouping(habits: any[]): GroupedHabits {
   return useMemo(() => {
-    const groups: GroupedHabits = {
-      morning: {
-        time: 'morning',
-        title: '☀️ Утренние привычки',
-        icon: '☀️',
-        habits: [],
-        estimatedDuration: 0,
-        completedCount: 0,
-        totalCount: 0
-      },
-      afternoon: {
-        time: 'afternoon',
-        title: '☕ Дневные привычки',
-        icon: '☕',
-        habits: [],
-        estimatedDuration: 0,
-        completedCount: 0,
-        totalCount: 0
-      },
-      evening: {
-        time: 'evening',
-        title: '🌙 Вечерние привычки',
-        icon: '🌙',
-        habits: [],
-        estimatedDuration: 0,
-        completedCount: 0,
-        totalCount: 0
-      },
-      night: {
-        time: 'night',
-        title: '✨ Ночные привычки',
-        icon: '✨',
-        habits: [],
-        estimatedDuration: 0,
-        completedCount: 0,
-        totalCount: 0
-      },
-      anytime: {
-        time: 'anytime',
-        title: '🎯 В любое время',
-        icon: '🎯',
-        habits: [],
-        estimatedDuration: 0,
-        completedCount: 0,
-        totalCount: 0
-      },
-      atRisk: []
-    };
+    const groups = createEmptyGroups();
 
     habits.forEach(habit => {
       const timeGroup = (habit.time_of_day as TimeOfDay) || 'anytime';

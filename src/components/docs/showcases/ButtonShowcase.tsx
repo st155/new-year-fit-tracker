@@ -6,8 +6,11 @@
 import { Button } from '@/components/ui/button';
 import { Plus, Download, Trash2 } from 'lucide-react';
 import { ComponentSection } from '../ComponentSection';
+import { useTranslation } from 'react-i18next';
 
 export function ButtonShowcase() {
+  const { t } = useTranslation('common');
+
   return (
     <div className="space-y-8">
       <ComponentSection
@@ -22,9 +25,9 @@ export function ButtonShowcase() {
 <Button variant="fitness">Fitness</Button>
 <Button variant="success">Success</Button>`}
         bestPractices={[
-          'Используйте "fitness" для основных действий',
-          'Используйте "success" для положительных действий',
-          '"destructive" для опасных действий (удаление)',
+          t('docs.buttonBestPractices.useFitness'),
+          t('docs.buttonBestPractices.useSuccess'),
+          t('docs.buttonBestPractices.useDestructive'),
         ]}
       />
 
@@ -84,9 +87,9 @@ export function ButtonShowcase() {
   <Trash2 className="h-4 w-4" />
 </Button>`}
         bestPractices={[
-          'Иконки слева для действий создания/добавления',
-          'Иконки справа для действий загрузки/перехода',
-          'Icon-only buttons требуют aria-label',
+          t('docs.buttonBestPractices.iconsLeft'),
+          t('docs.buttonBestPractices.iconsRight'),
+          t('docs.buttonBestPractices.iconOnlyAria'),
         ]}
       />
 
@@ -102,8 +105,8 @@ export function ButtonShowcase() {
 <Button loading>Loading</Button>
 <Button>Normal</Button>`}
         bestPractices={[
-          'Всегда используйте loading state для async операций',
-          'Disabled кнопки должны иметь tooltip с объяснением',
+          t('docs.buttonBestPractices.useLoadingState'),
+          t('docs.buttonBestPractices.disabledTooltip'),
         ]}
       />
     </div>
