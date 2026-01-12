@@ -221,7 +221,11 @@
     "recentMeasurements": "Последние замеры",
     "last7days": "Последние 7 дней",
     "recentEntries": "Последние записи",
-    "weekTrend": "Тренд за неделю"
+    "weekTrend": "Тренд за неделю",
+    "noRecords": "Нет записей",
+    "noAttempts": "Нет попыток",
+    "noFastingWindows": "Нет окон голодания",
+    "daysCount": "{{count}} дней"
   },
   "numericWidget": {
     "units": "единиц",

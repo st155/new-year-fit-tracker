@@ -812,12 +812,12 @@ export const AIChatWindow = ({
                         {expanded ? (
                           <>
                             <ChevronUp className="h-3 w-3 mr-1" />
-                            Свернуть
+                            {t('aiChat.collapse')}
                           </>
                         ) : (
                           <>
                             <ChevronDown className="h-3 w-3 mr-1" />
-                            Показать все ({results.length})
+                            {t('aiChat.showAll', { count: results.length })}
                           </>
                         )}
                       </Button>
@@ -869,7 +869,7 @@ export const AIChatWindow = ({
               className="flex-1 justify-center bg-green-600 hover:bg-green-700 text-white"
             >
               {executing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
-              Выполнить
+              {t('aiChat.execute')}
             </Button>
             <Button 
               size="sm" 
@@ -879,7 +879,7 @@ export const AIChatWindow = ({
               className="flex-1 justify-center"
             >
               <XCircle className="h-4 w-4 mr-2" />
-              Пересмотреть
+              {t('aiChat.reconsider')}
             </Button>
           </div>
         </div>
@@ -964,19 +964,19 @@ export const AIChatWindow = ({
                             {message.metadata.status === 'sending' && (
                               <>
                                 <Loader2 className="h-3 w-3 animate-spin" />
-                                <span className="opacity-70">Отправка...</span>
+                                <span className="opacity-70">{t('aiChat.sending')}</span>
                               </>
                             )}
                             {message.metadata.status === 'sent' && (
                               <>
                                 <CheckCircle className="h-3 w-3 text-green-600" />
-                                <span className="opacity-70">✓ Отправлено</span>
+                                <span className="opacity-70">{t('aiChat.sent')}</span>
                               </>
                             )}
                             {message.metadata.status === 'failed' && (
                               <>
                                 <XCircle className="h-3 w-3 text-destructive" />
-                                <span className="text-destructive">Не отправлено</span>
+                                <span className="text-destructive">{t('aiChat.sendFailed')}</span>
                                 <Button 
                                   size="sm" 
                                   variant="ghost"
@@ -985,7 +985,7 @@ export const AIChatWindow = ({
                                     onSendMessage(message.content, 'general', [], undefined, selectedClient?.id, true);
                                   }}
                                 >
-                                  Повторить
+                                  {t('aiChat.retry')}
                                 </Button>
                               </>
                             )}

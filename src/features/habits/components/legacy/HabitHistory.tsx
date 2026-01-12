@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { useTranslation } from "react-i18next";
 
 interface HabitHistoryProps {
   measurements?: Array<{
@@ -28,6 +29,7 @@ export function HabitHistory({
   type,
   maxItems = 5 
 }: HabitHistoryProps) {
+  const { t } = useTranslation(['habits', 'units']);
   
   if (type === 'measurements' && measurements) {
     const recentMeasurements = measurements.slice(0, maxItems);
@@ -35,7 +37,7 @@ export function HabitHistory({
     if (recentMeasurements.length === 0) {
       return (
         <div className="text-xs text-muted-foreground text-center py-2">
-          Нет записей
+          {t('history.noRecords')}
         </div>
       );
     }
@@ -70,7 +72,7 @@ export function HabitHistory({
     if (recentAttempts.length === 0) {
       return (
         <div className="text-xs text-muted-foreground text-center py-2">
-          Нет попыток
+          {t('history.noAttempts')}
         </div>
       );
     }
@@ -87,7 +89,7 @@ export function HabitHistory({
             </span>
             <div className="flex items-center gap-2">
               <span className="font-medium text-foreground">
-                {a.days_lasted || 0} дней
+                {t('history.daysCount', { count: a.days_lasted || 0 })}
               </span>
               {a.reset_reason && (
                 <span className="text-muted-foreground text-xs truncate max-w-[80px]">
@@ -107,7 +109,7 @@ export function HabitHistory({
     if (recentWindows.length === 0) {
       return (
         <div className="text-xs text-muted-foreground text-center py-2">
-          Нет окон голодания
+          {t('history.noFastingWindows')}
         </div>
       );
     }
@@ -128,7 +130,7 @@ export function HabitHistory({
                 {format(new Date(w.eating_start), 'dd MMM HH:mm')}
               </span>
               <span className="font-medium text-foreground">
-                {hours}ч {minutes}м
+                {t('units:duration.hoursMinutes', { hours, minutes })}
               </span>
             </div>
           );
