@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
-import { DEFAULT_HABIT_TEMPLATES } from "@/lib/habit-templates";
+import { getDefaultHabits, getHabitTemplate } from "@/lib/habit-templates";
 import { useGoalsQuery } from "@/features/goals/hooks";
 import { useIsMobile } from "@/hooks/primitive";
 import { cn } from "@/lib/utils";
@@ -88,7 +88,7 @@ export function HabitCreateDialog({ open, onOpenChange, linkedGoalId, prefilledN
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
 
   const applyTemplate = (templateId: string) => {
-    const template = DEFAULT_HABIT_TEMPLATES.find(t => t.id === templateId);
+    const template = getHabitTemplate(templateId);
     if (!template) return;
 
     setName(template.name);
@@ -131,7 +131,7 @@ export function HabitCreateDialog({ open, onOpenChange, linkedGoalId, prefilledN
       }
 
       // Get AI motivation from selected template
-      const template = DEFAULT_HABIT_TEMPLATES.find(t => t.id === selectedTemplate);
+      const template = getHabitTemplate(selectedTemplate);
       const aiMotivation = template?.ai_motivation || null;
 
       const habitData: any = {
@@ -205,7 +205,7 @@ export function HabitCreateDialog({ open, onOpenChange, linkedGoalId, prefilledN
             ? "flex overflow-x-auto pb-2 snap-x -mx-4 px-4" 
             : "grid grid-cols-2"
         )}>
-          {DEFAULT_HABIT_TEMPLATES.map((template) => (
+          {getDefaultHabits().map((template) => (
             <Button
               key={template.id}
               variant={selectedTemplate === template.id ? "default" : "outline"}

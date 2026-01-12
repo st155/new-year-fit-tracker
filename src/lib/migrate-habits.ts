@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { DEFAULT_HABIT_TEMPLATES } from "./habit-templates";
+import { getHabitTemplate } from "./habit-templates";
 import i18n from "@/i18n";
 
 export async function migrateExistingHabits(userId: string) {
@@ -32,15 +32,15 @@ export async function migrateExistingHabits(userId: string) {
 
       // Попытка найти подходящий шаблон по названию
       if (habit.name.toLowerCase().includes("курить") || habit.name.toLowerCase().includes("куря")) {
-        template = DEFAULT_HABIT_TEMPLATES.find(t => t.id === "no-smoking");
+        template = getHabitTemplate("no-smoking");
       } else if (habit.name.toLowerCase().includes("алкоголь") || habit.name.toLowerCase().includes("пить")) {
-        template = DEFAULT_HABIT_TEMPLATES.find(t => t.id === "no-alcohol");
+        template = getHabitTemplate("no-alcohol");
       } else if (habit.name.toLowerCase().includes("fasting") || habit.name.toLowerCase().includes("голод")) {
-        template = DEFAULT_HABIT_TEMPLATES.find(t => t.id === "intermittent-fasting");
+        template = getHabitTemplate("intermittent-fasting");
       } else if (habit.name.toLowerCase().includes("сахар") || habit.name.toLowerCase().includes("сладк")) {
-        template = DEFAULT_HABIT_TEMPLATES.find(t => t.id === "no-sugar");
+        template = getHabitTemplate("no-sugar");
       } else if (habit.name.toLowerCase().includes("фастфуд") || habit.name.toLowerCase().includes("fast")) {
-        template = DEFAULT_HABIT_TEMPLATES.find(t => t.id === "no-junk-food");
+        template = getHabitTemplate("no-junk-food");
       }
 
       if (template) {
