@@ -35,7 +35,6 @@
   },
 "toast": {
     "productEnriched": "✨ Product enriched with AI data",
-    "productEnriched": "✨ Product enriched with AI data",
     "enrichmentFailed": "Failed to enrich product",
     "addedToLibrary": "✅ Added {{count}} supplements to library",
     "libraryUpToDate": "Library is up to date",
@@ -298,11 +297,6 @@
   "progress": {
     "processingSupplements": "Processing supplements...",
     "processingSupplement": "Processing {{name}}..."
-  },
-  "aiGenerator": {
-    "rationaleSimple": "Recommended for {{biomarker}}",
-    "rationaleWithChange": "Recommended for {{biomarker}} (expected improvement: {{percent}}% in {{weeks}} weeks)",
-    "targetOutcome": "Improve {{biomarker}}"
   },
   "correlation": {
     "noActiveSupplements": "No active supplements in stack",
