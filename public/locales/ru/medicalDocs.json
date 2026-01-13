@@ -425,6 +425,7 @@
     "documentsCount_many": "{{count}} документов",
     "documentsCount_other": "{{count}} документов"
   },
+  "measurements": "{{count}} измерение",
   "measurements_one": "{{count}} измерение",
   "measurements_few": "{{count}} измерения",
   "measurements_many": "{{count}} измерений",
