@@ -1,6 +1,5 @@
 import { ReactNode, memo } from "react";
 import { TopNavigation } from "@/components/navigation/TopNavigation";
-import { SafeProfileProvider } from "@/components/error/SafeProfileProvider";
 import { MetricsViewProvider } from "@/contexts/MetricsViewContext";
 import { LAYOUT_SAFE_MODE } from "@/lib/safe-flags";
 
@@ -42,17 +41,15 @@ export const ModernAppLayout = memo(function ModernAppLayout({ children }: Moder
   }
   
   return (
-    <SafeProfileProvider>
-      <MetricsViewProvider>
-        <div className="min-h-screen flex flex-col w-full bg-background">
-          <TopNavigation />
-          <main className="flex-1 overflow-auto pt-16 md:pb-4">
-            {children}
-          </main>
-          <CommandPalette open={open} onOpenChange={setOpen} />
-          <ShortcutsHintPanel open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
-        </div>
-      </MetricsViewProvider>
-    </SafeProfileProvider>
+    <MetricsViewProvider>
+      <div className="min-h-screen flex flex-col w-full bg-background">
+        <TopNavigation />
+        <main className="flex-1 overflow-auto pt-16 md:pb-4">
+          {children}
+        </main>
+        <CommandPalette open={open} onOpenChange={setOpen} />
+        <ShortcutsHintPanel open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
+      </div>
+    </MetricsViewProvider>
   );
 });
