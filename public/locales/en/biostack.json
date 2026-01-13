@@ -325,7 +325,8 @@
     "biomarkerChange": "Biomarker Change",
     "intakeConsistency": "Intake Consistency",
     "overMonths": "Over {{count}} months",
-    "consistencyPercent": "Consistency (%)"
+    "consistencyPercent": "Consistency (%)",
+    "correlation": "Correlation"
   },
   "aiGenerator": {
     "subtitle": "Personalized recommendations based on your blood tests",
