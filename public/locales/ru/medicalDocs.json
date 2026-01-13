@@ -204,7 +204,9 @@
       "cardiovascular": "Сердечно-сосудистая",
       "metabolic": "Метаболизм",
       "body_composition": "Композиция тела",
-      "recovery": "Восстановление"
+      "recovery": "Восстановление",
+      "hormones": "Гормоны",
+      "horm_body_composition": "Гормоны и тело"
     },
     "strengths": "Сильные стороны",
     "concerns": "Требует внимания",

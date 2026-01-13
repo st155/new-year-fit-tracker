@@ -275,5 +275,17 @@
     "loadingGoals": "Error loading goals"
   },
   "noPullUpsData": "No pull-ups data",
-  "addMeasurementsHint": "Add measurements to track progress"
+  "addMeasurementsHint": "Add measurements to track progress",
+  "sources": {
+    "manual": "Manual",
+    "inbody": "InBody",
+    "withings": "Withings",
+    "garmin": "Garmin",
+    "whoop": "WHOOP",
+    "oura": "Oura",
+    "google": "Google Fit",
+    "terra": "Terra",
+    "trainer": "From Trainer",
+    "caliper": "Caliper"
+  }
 }

@@ -1,5 +1,46 @@
-import type { SyncIssue, NamespaceStats, AnalysisReport, JsonValidationError } from '../types';
+import type { SyncIssue, NamespaceStats, AnalysisReport, JsonValidationError, LanguageIssue } from '../types';
 import { validateAllJsonFiles } from './json-validator';
+
+// Regex patterns for language detection
+const CYRILLIC_REGEX = /[а-яА-ЯёЁ]/;
+
+// Check if a string contains Cyrillic characters (Russian text in EN files)
+function containsCyrillic(value: string): boolean {
+  // Skip if it's a placeholder like {{variable}} or contains only special chars
+  if (/^\{\{.*\}\}$/.test(value)) return false;
+  return CYRILLIC_REGEX.test(value);
+}
+
+// Recursively check all values in a translation object for language issues
+function findLanguageIssues(
+  obj: Record<string, unknown>,
+  namespace: string,
+  language: 'en' | 'ru',
+  prefix = ''
+): LanguageIssue[] {
+  const issues: LanguageIssue[] = [];
+  
+  for (const [key, value] of Object.entries(obj)) {
+    const fullKey = prefix ? `${prefix}.${key}` : key;
+    
+    if (typeof value === 'string') {
+      // Check for Cyrillic in EN files
+      if (language === 'en' && containsCyrillic(value)) {
+        issues.push({
+          namespace,
+          key: fullKey,
+          value,
+          language,
+          issue: 'cyrillic_in_en',
+        });
+      }
+    } else if (value && typeof value === 'object' && !Array.isArray(value)) {
+      issues.push(...findLanguageIssues(value as Record<string, unknown>, namespace, language, fullKey));
+    }
+  }
+  
+  return issues;
+}
 
 // Plural suffixes used by i18next - differences between RU and EN are expected
 const PLURAL_SUFFIXES = ['_zero', '_one', '_two', '_few', '_many', '_other'];
@@ -125,6 +166,7 @@ export async function analyzeLocales(): Promise<AnalysisReport> {
   const { errors: jsonErrors, brokenNamespaces } = await validateAllJsonFiles(NAMESPACES);
   
   const syncIssues: SyncIssue[] = [];
+  const languageIssues: LanguageIssue[] = [];
   const namespaceStats: NamespaceStats[] = [];
   let totalKeysRu = 0;
   let totalKeysEn = 0;
@@ -154,6 +196,11 @@ export async function analyzeLocales(): Promise<AnalysisReport> {
     totalKeysEn += enKeys.size;
     totalKeysRu += ruKeys.size;
     
+    // Check for language issues (Cyrillic in EN files)
+    if (en) {
+      languageIssues.push(...findLanguageIssues(en, namespace, 'en'));
+    }
+    
     // Find keys missing in EN (ignore plural form differences)
     for (const key of ruKeys) {
       if (!enKeys.has(key) && !isPluralKeyMismatch(key)) {
@@ -178,6 +225,7 @@ export async function analyzeLocales(): Promise<AnalysisReport> {
 
   return {
     syncIssues,
+    languageIssues,
     stats: {
       totalNamespaces,
       totalKeysRu,

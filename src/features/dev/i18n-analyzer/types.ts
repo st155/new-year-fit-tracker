@@ -23,6 +23,7 @@ export interface JsonValidationError {
 
 export interface AnalysisReport {
   syncIssues: SyncIssue[];
+  languageIssues: LanguageIssue[];
   stats: {
     totalNamespaces: number;
     totalKeysRu: number;
@@ -37,4 +38,12 @@ export interface FilterState {
   namespace: string | null;
   missingIn: 'all' | 'en' | 'ru';
   searchQuery: string;
+}
+
+export interface LanguageIssue {
+  namespace: string;
+  key: string;
+  value: string;
+  language: 'en' | 'ru';
+  issue: 'cyrillic_in_en' | 'latin_in_ru_value';
 }
