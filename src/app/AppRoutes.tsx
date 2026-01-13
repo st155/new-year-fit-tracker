@@ -38,7 +38,7 @@ const GeneratingPlanScreen = lazy(() => import("@/pages/GeneratingPlanScreen"));
 const AIGeneratedPlanReady = lazy(() => import("@/pages/AIGeneratedPlanReady"));
 const Challenges = lazy(() => import("@/pages/Challenges"));
 const ChallengeDetail = lazy(() => import("@/pages/ChallengeDetail"));
-const ChallengeReportPage = lazy(() => import("@/components/challenges/ChallengeReportPage"));
+const ChallengeReportPage = lazy(() => import("@/features/challenges/components/report/ChallengeReportPage"));
 const Habits = lazy(() => import("@/pages/Habits"));
 const HabitDetail = lazy(() => import("@/pages/HabitDetail"));
 const Feed = lazy(() => import("@/pages/Feed"));
