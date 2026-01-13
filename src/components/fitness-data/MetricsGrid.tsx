@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { MetricCard } from './MetricCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Activity } from 'lucide-react';
-import { staggerContainer, staggerItem } from '@/lib/animations';
+import { staggerContainer, staggerItem } from '@/lib/animations-v3';
 
 interface MetricCardData {
   name: string;

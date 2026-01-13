@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useChallengeGoalsQuery as useChallengeGoals, ChallengeGoal } from '@/features/goals';
 import { AnimatedPage } from '@/components/layout/AnimatedPage';
 import { motion } from 'framer-motion';
-import { staggerContainer, staggerItem } from '@/lib/animations';
+import { staggerContainer, staggerItem } from '@/lib/animations-v3';
 import { EnhancedProgressCard } from '@/components/progress/EnhancedProgressCard';
 import { CompactProgressSummary } from '@/components/progress/CompactProgressSummary';
 import { DisciplineRadialChart } from '@/components/progress/DisciplineRadialChart';

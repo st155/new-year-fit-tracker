@@ -43,7 +43,7 @@ import { PageLoader } from '@/components/ui/page-loader';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useMetrics } from '@/hooks/composite/data/useMetrics';
 import { motion } from 'framer-motion';
-import { staggerContainer, staggerItem } from '@/lib/animations';
+import { staggerContainer, staggerItem } from '@/lib/animations-v3';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { VO2MaxUpload } from '@/components/body-composition/VO2MaxUpload';
 

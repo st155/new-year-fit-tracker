@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 import { ExportReportsDialog } from "./ExportReportsDialog";
 import { ClientProgressCharts } from "./ClientProgressCharts";
 import { motion } from 'framer-motion';
-import { staggerContainer, staggerItem } from '@/lib/animations';
+import { staggerContainer, staggerItem } from '@/lib/animations-v3';
 import { Card as TremorCard, Metric, Text, BadgeDelta, ProgressBar, Table, TableHead, TableRow, TableHeaderCell, TableBody, TableCell, Badge as TremorBadge } from '@tremor/react';
 import { useTranslation } from "react-i18next";
 

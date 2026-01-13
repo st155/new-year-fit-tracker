@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Link as LinkIcon, Activity, Clock, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { staggerItem } from '@/lib/animations';
+import { staggerItem } from '@/lib/animations-v3';
 
 interface StatCardProps {
   title: string;

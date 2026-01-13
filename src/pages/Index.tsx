@@ -5,7 +5,7 @@ import { useIsMobile } from '@/hooks';
 import { AnimatedPage } from '@/components/layout/AnimatedPage';
 import { useProgressiveLoad } from '@/hooks/useProgressiveLoad';
 import { motion } from 'framer-motion';
-import { staggerContainer, staggerItem } from '@/lib/animations';
+import { staggerContainer, staggerItem } from '@/lib/animations-v3';
 import { MobileDebugOverlay } from '@/components/debug/MobileDebugOverlay';
 import { 
   useWidgetsQuery, 
