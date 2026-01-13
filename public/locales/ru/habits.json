@@ -473,6 +473,7 @@
   },
   "streak": {
     "resetReason": "Сброс через виджет",
+    "day": "день",
     "day_one": "день",
     "day_few": "дня",
     "day_many": "дней",
