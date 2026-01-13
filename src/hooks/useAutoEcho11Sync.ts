@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { syncTodayToEcho11 } from '@/utils/elite10Connector';
 
 const DEBOUNCE_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -30,14 +29,14 @@ export function useAutoEcho11Sync(userId?: string) {
         console.log('[Echo11] Auto-sync triggered by unified_metrics change');
 
         try {
-          await syncTodayToEcho11({
-            sleep_quality: null,
-            recovery_score: null,
-            workout_type: null,
-            workout_intensity: null,
-            nutrition_status: null,
-          });
-          console.log('[Echo11] Auto-sync completed');
+          // Call sync-echo11 Edge Function which extracts real data from DB
+          const { data, error } = await supabase.functions.invoke('sync-echo11');
+          
+          if (error) {
+            throw error;
+          }
+          
+          console.log('[Echo11] Auto-sync completed:', data);
         } catch (e) {
           console.warn('[Echo11] Auto-sync failed:', e);
         }

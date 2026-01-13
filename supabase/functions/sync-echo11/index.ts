@@ -2,7 +2,6 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const ECHO11_SYNC_URL = "https://ftnlxzcaahvuuisffhka.supabase.co/functions/v1/sync-elite10-data";
-const TARGET_USER_ID = "a527db40-3f7f-448f-8782-da632711e818"; // Sergey Tokarev
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,17 +14,47 @@ serve(async (req) => {
   }
 
   const startTime = Date.now();
-  console.log("[sync-echo11] Starting sync for user:", TARGET_USER_ID);
 
   try {
+    // Authenticate user via JWT
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    // Create client with user's auth to get their ID
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(token);
+    
+    if (claimsError || !claimsData?.claims?.sub) {
+      console.error("[sync-echo11] Auth error:", claimsError);
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid token" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const userId = claimsData.claims.sub as string;
+    console.log("[sync-echo11] Starting sync for user:", userId);
+
+    // Use service role for data access
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
     const syncSecret = Deno.env.get("ELITE10_SYNC_SECRET");
     if (!syncSecret) {
       throw new Error("ELITE10_SYNC_SECRET not configured");
     }
-
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
 
     const today = new Date().toISOString().split("T")[0];
     const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split("T")[0];
@@ -34,7 +63,7 @@ serve(async (req) => {
     const { data: metrics, error: metricsError } = await supabase
       .from("unified_metrics")
       .select("metric_name, value, measurement_date, source")
-      .eq("user_id", TARGET_USER_ID)
+      .eq("user_id", userId)
       .in("metric_name", ["Recovery Score", "Sleep Quality", "Sleep Score", "Sleep Efficiency", "HRV"])
       .gte("measurement_date", yesterday)
       .order("measurement_date", { ascending: false })
@@ -51,7 +80,7 @@ serve(async (req) => {
     const { data: workouts, error: workoutsError } = await supabase
       .from("workouts")
       .select("id, workout_type, start_time, end_time, duration_minutes, calories_burned, heart_rate_avg, source_data")
-      .eq("user_id", TARGET_USER_ID)
+      .eq("user_id", userId)
       .gte("start_time", `${yesterday}T00:00:00Z`)
       .order("start_time", { ascending: false })
       .limit(5);
@@ -94,7 +123,7 @@ serve(async (req) => {
     }
 
     const payload = {
-      user_id: TARGET_USER_ID,
+      user_id: userId,
       date: today,
       sleep_quality: sleepQuality ? Math.round(sleepQuality) : null, // Now passes 95% instead of 1
       recovery_score: getMetricValue("Recovery Score"),
@@ -131,7 +160,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        user_id: TARGET_USER_ID,
+        user_id: userId,
         payload,
         echo11_response: responseText,
         duration_ms: duration,
