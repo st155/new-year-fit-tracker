@@ -58,13 +58,13 @@ export const LazyClientProgressCharts = lazy(() =>
 
 // Challenge components
 export const LazyChallengeFeed = lazy(() =>
-  import('@/components/challenge/ChallengeFeed').then(m => ({
+  import('@/features/challenges/components/social/ChallengeFeed').then(m => ({
     default: m.ChallengeFeed
   }))
 );
 
 export const LazyChallengeLeaderboard = lazy(() =>
-  import('@/components/challenge/ChallengeLeaderboard').then(m => ({
+  import('@/features/challenges/components/social/ChallengeLeaderboard').then(m => ({
     default: m.ChallengeLeaderboard
   }))
 );
