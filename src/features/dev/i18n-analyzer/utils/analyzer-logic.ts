@@ -4,6 +4,19 @@ import { validateAllJsonFiles } from './json-validator';
 // Regex patterns for language detection
 const CYRILLIC_REGEX = /[а-яА-ЯёЁ]/;
 
+// Keys that are allowed to have Cyrillic in EN files (language names, etc.)
+// These are endonyms - language names displayed in their own language
+const CYRILLIC_WHITELIST_PATTERNS = [
+  /^languages\.ru$/,        // common.languages.ru = "Русский"
+  /^languageSwitch\.ru$/,   // privacy.languageSwitch.ru = "Русский"
+  /^language\.options\.ru$/, // possible future keys
+];
+
+// Check if a key is whitelisted for Cyrillic in EN files
+function isWhitelistedKey(key: string): boolean {
+  return CYRILLIC_WHITELIST_PATTERNS.some(pattern => pattern.test(key));
+}
+
 // Check if a string contains Cyrillic characters (Russian text in EN files)
 function containsCyrillic(value: string): boolean {
   // Skip if it's a placeholder like {{variable}} or contains only special chars
@@ -24,8 +37,8 @@ function findLanguageIssues(
     const fullKey = prefix ? `${prefix}.${key}` : key;
     
     if (typeof value === 'string') {
-      // Check for Cyrillic in EN files
-      if (language === 'en' && containsCyrillic(value)) {
+      // Check for Cyrillic in EN files (skip whitelisted keys like language names)
+      if (language === 'en' && containsCyrillic(value) && !isWhitelistedKey(fullKey)) {
         issues.push({
           namespace,
           key: fullKey,
