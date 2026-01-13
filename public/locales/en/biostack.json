@@ -323,6 +323,9 @@
     "correlation": "Correlation"
   },
   "aiGenerator": {
+    "rationaleSimple": "Recommended for {{biomarker}}",
+    "rationaleWithChange": "Recommended for {{biomarker}} (expected improvement: {{percent}}% in {{weeks}} weeks)",
+    "targetOutcome": "Improve {{biomarker}}",
     "subtitle": "Personalized recommendations based on your blood tests",
     "ready": "Ready for personalized recommendations?",
     "description": "Our AI will analyze your latest blood tests and select supplements to address deficiencies",
