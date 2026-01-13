@@ -11,6 +11,7 @@ import {
   SyncIssuesPanel,
   StatsSummary,
   JsonErrorsPanel,
+  LanguageIssuesPanel,
   type FilterState,
 } from '@/features/dev/i18n-analyzer';
 
@@ -61,6 +62,9 @@ export default function I18nAnalyzer() {
           errors={report.jsonErrors} 
           brokenNamespaces={report.brokenNamespaces}
         />
+        
+        {/* Language Issues Panel - Cyrillic in EN files */}
+        <LanguageIssuesPanel issues={report.languageIssues} />
         
         <AnalyzerFilters 
           filters={filters} 

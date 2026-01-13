@@ -276,5 +276,17 @@
     "loadingGoals": "Ошибка загрузки целей"
   },
   "noPullUpsData": "Нет данных о подтягиваниях",
-  "addMeasurementsHint": "Добавьте измерения для отслеживания прогресса"
+  "addMeasurementsHint": "Добавьте измерения для отслеживания прогресса",
+  "sources": {
+    "manual": "Ручное",
+    "inbody": "InBody",
+    "withings": "Withings",
+    "garmin": "Garmin",
+    "whoop": "WHOOP",
+    "oura": "Oura",
+    "google": "Google Fit",
+    "terra": "Terra",
+    "trainer": "От тренера",
+    "caliper": "Калипер"
+  }
 }

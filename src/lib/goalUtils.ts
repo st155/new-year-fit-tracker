@@ -51,18 +51,20 @@ export interface SourceBadgeConfig {
   variant: 'default' | 'secondary' | 'outline';
 }
 
+// Source labels are now in localization files under goals:sources.*
+// This function returns the key to use for translation
 export const getSourceBadge = (source?: SourceType): SourceBadgeConfig | null => {
   if (!source) return null;
   
   const badges: Record<SourceType, SourceBadgeConfig> = {
-    inbody: { label: 'InBody', variant: 'default' },
-    withings: { label: 'Withings', variant: 'secondary' },
-    manual: { label: 'Ручное', variant: 'outline' },
-    garmin: { label: 'Garmin', variant: 'secondary' },
-    whoop: { label: 'WHOOP', variant: 'secondary' },
-    oura: { label: 'Oura', variant: 'secondary' },
-    google: { label: 'Google Fit', variant: 'secondary' },
-    terra: { label: 'Terra', variant: 'secondary' },
+    inbody: { label: 'inbody', variant: 'default' },
+    withings: { label: 'withings', variant: 'secondary' },
+    manual: { label: 'manual', variant: 'outline' },
+    garmin: { label: 'garmin', variant: 'secondary' },
+    whoop: { label: 'whoop', variant: 'secondary' },
+    oura: { label: 'oura', variant: 'secondary' },
+    google: { label: 'google', variant: 'secondary' },
+    terra: { label: 'terra', variant: 'secondary' },
   };
   
   return badges[source];

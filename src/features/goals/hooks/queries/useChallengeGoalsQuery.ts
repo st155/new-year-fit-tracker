@@ -130,7 +130,7 @@ export function useChallengeGoalsQuery(userId?: string) {
               subSources = [];
           if (sources.inbody) subSources.push({ source: 'inbody' as const, value: sources.inbody.value, label: 'InBody' });
           if (sources.withings) subSources.push({ source: 'withings' as const, value: sources.withings.value, label: 'Withings' });
-          if (sources.manual) subSources.push({ source: 'manual' as const, value: sources.manual.value, label: 'Калипер' });
+          if (sources.manual) subSources.push({ source: 'manual' as const, value: sources.manual.value, label: 'caliper' });
             }
 
             if (bodyMetrics.bodyFat?.value !== undefined && bodyMetrics.bodyFat?.value !== null) {

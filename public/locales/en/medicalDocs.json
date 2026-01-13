@@ -204,7 +204,9 @@
       "cardiovascular": "Cardiovascular",
       "metabolic": "Metabolic",
       "body_composition": "Body Composition",
-      "recovery": "Recovery"
+      "recovery": "Recovery",
+      "hormones": "Hormones",
+      "horm_body_composition": "Hormonal & Body"
     },
     "strengths": "Strengths",
     "concerns": "Needs attention",

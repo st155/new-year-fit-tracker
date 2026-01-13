@@ -257,5 +257,8 @@
       "description": "Go to Goals section and set personal goals for the challenge",
       "action": "Set goals"
     }
+  },
+  "preview": {
+    "topDisciplines": "Top Disciplines"
   }
 }
