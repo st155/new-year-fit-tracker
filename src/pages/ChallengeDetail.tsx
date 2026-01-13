@@ -6,10 +6,7 @@ import { useChallengeDetailQuery, useParticipantQuery, useChallengeMutations } f
 import { captureBaseline } from "@/features/challenges/utils";
 import { useDifficultyLevel } from "@/hooks/useDifficultyLevel";
 import { ChallengeFeed, ChallengeChat, ChallengeLeaderboard, DifficultySelectorDialog, DifficultyBadge } from "@/features/challenges/components/social";
-import { ChallengeProgressDashboard } from "@/components/challenges/ChallengeProgressDashboard";
-import { ChallengeInfoBlock } from "@/components/challenges/ChallengeInfoBlock";
-import { ChallengeStatsOverview } from "@/components/challenges/ChallengeStatsOverview";
-import { ExtendChallengeButton } from "@/components/challenges/ExtendChallengeButton";
+import { ChallengeProgressDashboard, ChallengeInfoBlock, ChallengeStatsOverview, ExtendChallengeButton } from "@/features/challenges/components/display";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MessageSquare, Trophy, Target, LogOut, Info, Calendar, Users, UserPlus, ArrowLeft, List, FileText } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";

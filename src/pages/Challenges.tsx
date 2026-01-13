@@ -5,7 +5,7 @@ import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { motion } from "framer-motion";
 import { staggerContainer, staggerItem } from "@/lib/animations-v3";
 import { useChallengesQuery } from "@/features/challenges";
-import { ChallengeCard } from "@/components/challenges/ChallengeCard";
+import { ChallengeCard } from "@/features/challenges/components/display";
 import { Trophy, Target, Users, TrendingUp, Sparkles, Plus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
