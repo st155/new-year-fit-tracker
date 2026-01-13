@@ -7,7 +7,7 @@ import { useFastingWindow } from "@/hooks/useFastingWindow";
 import { useHabitMeasurements } from "@/hooks/useHabitMeasurements";
 import { useHabitAttempts } from "@/hooks/useHabitAttempts";
 import { useDeleteHabit } from "@/hooks/useDeleteHabit";
-import { getHabitIcon, getHabitSentiment, getHabitNeonColor } from "@/lib/habit-utils";
+import { getHabitIcon, getHabitSentiment, getHabitNeonColor } from "@/lib/habit-utils-v3";
 import { CheckCircle2, Flame, TrendingUp, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";

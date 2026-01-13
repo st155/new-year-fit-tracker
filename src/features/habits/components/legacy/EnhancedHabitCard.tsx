@@ -29,7 +29,7 @@ import {
   getHabitSentiment,
   getHabitIcon,
   getHabitNeonColor,
-} from "@/lib/habit-utils";
+} from "@/lib/habit-utils-v3";
 import { cn } from "@/lib/utils";
 
 interface EnhancedHabitCardProps {

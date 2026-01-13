@@ -33,7 +33,7 @@ import {
   getHabitIcon, 
   getHabitCardClass,
   getNeonCircleClass 
-} from "@/lib/habit-utils";
+} from "@/lib/habit-utils-v3";
 
 interface HabitCardProps {
   habit: {
