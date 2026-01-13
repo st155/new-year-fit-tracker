@@ -6,7 +6,7 @@ import { CircularFastingProgress } from "./CircularFastingProgress";
 import { FastingControlButton } from "./FastingControlButton";
 import { HabitHistory } from "./HabitHistory";
 import { Badge } from "@/components/ui/badge";
-import { getHabitSentiment, getHabitCardClass } from "@/lib/habit-utils";
+import { getHabitSentiment, getHabitCardClass } from "@/lib/habit-utils-v3";
 import { useTranslation } from "react-i18next";
 
 interface FastingTrackerProps {

@@ -6,7 +6,7 @@ import {
   getHabitIcon,
   getHabitCardClass,
   getNeonCircleClass 
-} from "@/lib/habit-utils";
+} from "@/lib/habit-utils-v3";
 import { HabitSparkline } from "./HabitSparkline";
 import { HabitHistory } from "./HabitHistory";
 import { useTranslation } from "react-i18next";

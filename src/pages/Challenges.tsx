@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { CreateChallengeDialog } from "@/components/trainer/CreateChallengeDialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { EmptyStateV3 } from "@/components/ui/empty-state-v3";
+import { EmptyStateV3 } from "@/components/ui/empty-state";
 
 export default function Challenges() {
   const { t } = useTranslation('challenges');

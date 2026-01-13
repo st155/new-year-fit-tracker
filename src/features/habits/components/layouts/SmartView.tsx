@@ -5,7 +5,7 @@ import { OverviewStats } from './OverviewStats';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 import { HabitsProgressSection } from '../sections/HabitsProgressSection';
-import { EmptyStateV3 } from '@/components/ui/empty-state-v3';
+import { EmptyStateV3 } from '@/components/ui/empty-state';
 
 interface SmartViewProps {
   habits: any[];

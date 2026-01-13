@@ -16,7 +16,7 @@ import { useHabitCardState } from '@/features/habits/hooks';
 import { HabitCelebration } from '../legacy/HabitCelebration';
 import { HabitOptionsMenu } from '../legacy/HabitOptionsMenu';
 import { Flame, Calendar, Target, Clock, Coins, ChevronDown, ChevronUp, Check } from 'lucide-react';
-import { getHabitIcon } from '@/lib/habit-utils';
+import { getHabitIcon } from '@/lib/habit-utils-v3';
 import { calculateElapsedTime, formatElapsedTime, getMilestoneProgress, calculateMoneySaved } from '@/lib/duration-utils';
 import { FastingInlineWidget, DurationCounterInlineWidget, NumericCounterInlineWidget, DailyMeasurementInlineWidget } from '../widgets';
 import { useAuth } from '@/hooks/useAuth';

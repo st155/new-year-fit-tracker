@@ -14,7 +14,7 @@ import { useMemo, useState } from 'react';
 import { HabitProgressChart } from '@/features/habits/components/legacy/HabitProgressChart';
 import { HabitCalendarHeatmap } from '@/features/habits/components/legacy/HabitCalendarHeatmap';
 import { HabitSocialSection } from '@/features/habits/components/detail/HabitSocialSection';
-import { getHabitIcon, getHabitSentiment } from '@/lib/habit-utils';
+import { getHabitIcon, getHabitSentiment } from '@/lib/habit-utils-v3';
 import { toast } from 'sonner';
 import { exportHabitToPDF } from '@/lib/exporters/pdf-exporter';
 

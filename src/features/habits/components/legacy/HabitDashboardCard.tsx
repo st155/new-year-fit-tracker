@@ -5,7 +5,7 @@ import { FastingControlButton } from "./FastingControlButton";
 import { useFastingWindow } from "@/hooks/useFastingWindow";
 import { useHabitMeasurements } from "@/hooks/useHabitMeasurements";
 import { useHabitAttempts } from "@/hooks/useHabitAttempts";
-import { getHabitIcon, getHabitSentiment, getHabitNeonColor } from "@/lib/habit-utils";
+import { getHabitIcon, getHabitSentiment, getHabitNeonColor } from "@/lib/habit-utils-v3";
 import { CheckCircle2, TrendingUp, Flame } from "lucide-react";
 import { HabitHistory } from "./HabitHistory";
 import { HabitSparkline } from "./HabitSparkline";
