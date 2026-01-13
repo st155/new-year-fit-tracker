@@ -320,7 +320,7 @@
     "months12": "Последние 12 месяцев",
     "analyzingCorrelation": "Анализируем корреляцию...",
     "insufficientData": "Недостаточно данных",
-    "consistencyPercent": "Регулярность (%)"
+    "consistencyPercent": "Регулярность (%)",
     "needIntakeAndBloodTests": "Необходимы регулярные записи о приёме и минимум 2 анализа крови за выбранный период",
     "biomarkerChange": "Изменение биомаркера",
     "intakeConsistency": "Регулярность приёма",

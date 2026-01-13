@@ -117,9 +117,11 @@ export const AppRoutes = () => {
           <>
             <Route path="/__debug" element={<DebugPage />} />
             <Route path="/__smoke" element={<SmokeHome />} />
-            <Route path="/dev/i18n-analyzer" element={<I18nAnalyzer />} />
           </>
         )}
+        
+        {/* Dev tools with own access control */}
+        <Route path="/dev/i18n-analyzer" element={<I18nAnalyzer />} />
         
         {/* Landing page - public */}
         <Route path="/landing" element={<Landing />} />
