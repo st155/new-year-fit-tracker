@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { memo, useState } from "react";
-import { useProfile } from "@/contexts/ProfileContext";
+import { useProfileQuery } from "@/hooks/core/useProfileQuery";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { usePrefetch } from "@/hooks/usePrefetch";
@@ -42,27 +42,8 @@ export const TopNavigation = memo(function TopNavigation({ userName, userRole }:
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   
   // Safe hooks with fallbacks
-  let profile = null;
-  let isTrainer = false;
-  let user = null;
-  
-  try {
-    const profileData = useProfile();
-    profile = profileData?.profile;
-  } catch (error) {
-    console.error('💥 [TopNavigation] useProfile error:', error);
-  }
-  
-  let signOut: () => Promise<any> = async () => {};
-  
-  try {
-    const authData = useAuth();
-    isTrainer = authData?.isTrainer ?? false;
-    user = authData?.user;
-    signOut = authData?.signOut ?? (async () => {});
-  } catch (error) {
-    console.error('💥 [TopNavigation] useAuth error:', error);
-  }
+  const { user, isTrainer, signOut } = useAuth();
+  const { data: profile } = useProfileQuery(user?.id);
 
   // Enable real-time for notifications
   useHabitNotificationsRealtime(!!user?.id);

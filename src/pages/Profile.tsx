@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { useAuth } from "@/hooks/useAuth";
-import { useProfile } from "@/contexts/ProfileContext";
+import { useProfileQuery } from "@/hooks/core/useProfileQuery";
 import { useProfileSummary } from "@/hooks/profile/useProfileSummary";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -29,7 +29,7 @@ const ProfilePage = () => {
   const { t } = useTranslation('profile');
   const { t: tCommon } = useTranslation('common');
   const { user, signOut } = useAuth();
-  const { profile: contextProfile, refetch: refetchProfile } = useProfile();
+  const { data: contextProfile, refetch: refetchProfile } = useProfileQuery(user?.id);
   const { data: summary, isLoading: summaryLoading } = useProfileSummary();
   const { toast } = useToast();
   const navigate = useNavigate();
