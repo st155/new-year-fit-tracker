@@ -20,7 +20,7 @@ import { WidgetErrorBoundary } from '@/components/error/WidgetErrorBoundary';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { staggerContainer, staggerItem } from '@/lib/animations';
+import { staggerContainer, staggerItem } from '@/lib/animations-v3';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PageLoader } from '@/components/ui/page-loader';
 import { toast } from 'sonner';

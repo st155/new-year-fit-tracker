@@ -1,7 +1,7 @@
 import * as React from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { hoverLift } from "@/lib/animations";
+import { hoverLift } from "@/lib/animations-v3";
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   animated?: boolean;

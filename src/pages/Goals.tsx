@@ -5,7 +5,7 @@ import { FAB } from '@/components/ui/fab';
 import { useAuth } from "@/hooks/useAuth";
 import { AnimatedPage } from "@/components/layout/AnimatedPage";
 import { motion } from "framer-motion";
-import { staggerContainer, staggerItem } from "@/lib/animations";
+import { staggerContainer, staggerItem } from "@/lib/animations-v3";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyStateV3 } from "@/components/ui/empty-state-v3";

@@ -1,24 +1,15 @@
-import { useToast } from "@/hooks/use-toast";
-import { Toast, ToastClose, ToastDescription, ToastProvider, ToastTitle, ToastViewport } from "@/components/ui/toast";
+/**
+ * Legacy Toaster Component
+ * 
+ * This component is kept for backward compatibility but is now 
+ * a no-op since we use Sonner for all toasts.
+ * 
+ * The Sonner <Toaster /> is already included in App.tsx.
+ * This file can be removed once all legacy toast usage is migrated.
+ */
 
 export function Toaster() {
-  const { toasts } = useToast();
-
-  return (
-    <ToastProvider>
-      {toasts.map(function ({ id, title, description, action, ...props }) {
-        return (
-          <Toast key={id} {...props}>
-            <div className="grid gap-1">
-              {title && <ToastTitle>{title}</ToastTitle>}
-              {description && <ToastDescription>{description}</ToastDescription>}
-            </div>
-            {action}
-            <ToastClose />
-          </Toast>
-        );
-      })}
-      <ToastViewport />
-    </ToastProvider>
-  );
+  // Sonner handles all toasts now via the Toaster component in App.tsx
+  // This is a no-op component for backward compatibility
+  return null;
 }
