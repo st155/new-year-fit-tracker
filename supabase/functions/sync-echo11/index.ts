@@ -48,6 +48,20 @@ serve(async (req) => {
     const userId = claimsData.claims.sub as string;
     console.log("[sync-echo11] Starting sync for user:", userId);
 
+    // Only sync for Sergey Tokarev
+    const ALLOWED_USER_ID = "a527db40-3f7f-448f-8782-da632711e818";
+    if (userId !== ALLOWED_USER_ID) {
+      console.log("[sync-echo11] Skipping sync for non-allowed user:", userId);
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          skipped: true, 
+          reason: "Sync only enabled for specific user" 
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Use service role for data access
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
