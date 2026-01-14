@@ -10,7 +10,7 @@ import {
 import { useState, useMemo } from "react";
 import { QuickMeasurementDialog } from "../dialogs/QuickMeasurementDialog";
 import { GoalEditDialog } from "../dialogs/GoalEditDialog";
-import { HabitCreateDialog } from "@/features/habits/components/legacy/HabitCreateDialog";
+import { HabitCreateDialog } from "@/features/habits/components/core/HabitCreateDialog";
 import type { ChallengeGoal } from "../../types";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";

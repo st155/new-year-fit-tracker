@@ -11,8 +11,8 @@ import { ArrowLeft, Flame, TrendingUp, Calendar, Target, Download, FileText } fr
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import { ru, enUS } from 'date-fns/locale';
 import { useMemo, useState } from 'react';
-import { HabitProgressChart } from '@/features/habits/components/legacy/HabitProgressChart';
-import { HabitCalendarHeatmap } from '@/features/habits/components/legacy/HabitCalendarHeatmap';
+import { HabitProgressChart } from '@/features/habits/components/charts/HabitProgressChart';
+import { HabitCalendarHeatmap } from '@/features/habits/components/charts/HabitCalendarHeatmap';
 import { HabitSocialSection } from '@/features/habits/components/detail/HabitSocialSection';
 import { getHabitIcon, getHabitSentiment } from '@/lib/habit-utils-v3';
 import { toast } from 'sonner';

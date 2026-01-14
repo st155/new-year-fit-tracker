@@ -11,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useHabitAttempts } from '@/hooks/useHabitAttempts';
+import { useHabitAttemptsQuery as useHabitAttempts } from '@/features/habits/hooks';
 import { cn } from '@/lib/utils';
 import { differenceInDays, parseISO } from 'date-fns';
 import { useTranslation } from 'react-i18next';

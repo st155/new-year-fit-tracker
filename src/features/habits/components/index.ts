@@ -4,10 +4,15 @@
 
 // Core
 export { HabitCardV3 } from './core/HabitCardV3';
+export { HabitCelebration } from './core/HabitCelebration';
+export { HabitOptionsMenu } from './core/HabitOptionsMenu';
+export { HabitCreateDialog } from './core/HabitCreateDialog';
 
 // Charts
 export { SparklineChart } from './charts/SparklineChart';
 export { HabitMiniChart } from './charts/HabitMiniChart';
+export { HabitProgressChart } from './charts/HabitProgressChart';
+export { HabitCalendarHeatmap } from './charts/HabitCalendarHeatmap';
 
 // Layouts
 export { SmartView } from './layouts/SmartView';
@@ -67,6 +72,3 @@ export { NotificationSettings } from './settings/NotificationSettings';
 
 // Other
 export { HabitsInsightBanner } from './HabitsInsightBanner';
-
-// Legacy components (from src/components/habits)
-export * from './legacy';

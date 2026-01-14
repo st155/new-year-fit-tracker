@@ -44,7 +44,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { useMetrics } from '@/hooks/composite/data/useMetrics';
 import { motion } from 'framer-motion';
 import { staggerContainer, staggerItem } from '@/lib/animations-v3';
-import { EmptyState } from '@/components/ui/EmptyState';
+import { EmptyState } from '@/components/ui/empty-state';
 import { VO2MaxUpload } from '@/components/body-composition/VO2MaxUpload';
 
 type TimeFilter = 'today' | 'week' | 'month';

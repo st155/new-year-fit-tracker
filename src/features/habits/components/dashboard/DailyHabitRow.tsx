@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Check, Circle, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useHabitAttempts } from '@/hooks/useHabitAttempts';
+import { useHabitAttemptsQuery as useHabitAttempts } from '@/features/habits/hooks';
 import { differenceInDays, parseISO } from 'date-fns';
 import {
   DropdownMenu,
