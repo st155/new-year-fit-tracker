@@ -128,12 +128,59 @@ export function useChallengeGoalsQuery(userId?: string) {
             const sources = bodyMetrics.bodyFat?.sources;
             if (sources) {
               subSources = [];
-          if (sources.inbody) subSources.push({ source: 'inbody' as const, value: sources.inbody.value, label: 'InBody' });
-          if (sources.withings) subSources.push({ source: 'withings' as const, value: sources.withings.value, label: 'Withings' });
-          if (sources.manual) subSources.push({ source: 'manual' as const, value: sources.manual.value, label: 'caliper' });
+              if (sources.inbody) subSources.push({ source: 'inbody' as const, value: sources.inbody.value, label: 'InBody' });
+              if (sources.withings) subSources.push({ source: 'withings' as const, value: sources.withings.value, label: 'Withings' });
+              if (sources.manual) subSources.push({ source: 'manual' as const, value: sources.manual.value, label: 'caliper' });
             }
 
-            if (bodyMetrics.bodyFat?.value !== undefined && bodyMetrics.bodyFat?.value !== null) {
+            // Collect ALL body fat values from ALL sources to find minimum
+            const allBodyFatValues: number[] = [];
+
+            // From aggregated sparkline data (best values from all sources per day)
+            if (bodyMetrics.bodyFat?.sparklineData) {
+              allBodyFatValues.push(...bodyMetrics.bodyFat.sparklineData.map(d => d.value));
+            }
+
+            // From individual source sparklines (InBody, Withings, Manual separately)
+            if (sources?.inbody?.sparklineData) {
+              allBodyFatValues.push(...sources.inbody.sparklineData.map(d => d.value));
+            }
+            if (sources?.withings?.sparklineData) {
+              allBodyFatValues.push(...sources.withings.sparklineData.map(d => d.value));
+            }
+            if (sources?.manual?.sparklineData) {
+              allBodyFatValues.push(...sources.manual.sparklineData.map(d => d.value));
+            }
+
+            // From unified_metrics (Garmin and other devices)
+            const fatUnifiedMetrics = unifiedHistory.filter(h => 
+              h.metric_name === 'Body Fat Percentage' || 
+              h.metric_name.toLowerCase().includes('fat')
+            );
+            if (fatUnifiedMetrics.length > 0) {
+              allBodyFatValues.push(...fatUnifiedMetrics.map(m => m.value));
+            }
+
+            // From manual measurements
+            if (allMeasurements.length > 0) {
+              allBodyFatValues.push(...allMeasurements.map(m => m.value));
+            }
+
+            // Use MINIMUM value as currentValue (best result for fat loss goal)
+            if (allBodyFatValues.length > 0) {
+              currentValue = Math.min(...allBodyFatValues);
+              // Determine source of minimum value
+              const minVal = currentValue;
+              if (sources?.inbody?.sparklineData?.some(d => d.value === minVal)) {
+                source = 'inbody';
+              } else if (sources?.withings?.sparklineData?.some(d => d.value === minVal)) {
+                source = 'withings';
+              } else if (fatUnifiedMetrics.some(m => m.value === minVal)) {
+                source = 'garmin';
+              } else {
+                source = bodyMetrics.bodyFat?.source as GoalSource || 'manual';
+              }
+            } else if (bodyMetrics.bodyFat?.value !== undefined && bodyMetrics.bodyFat?.value !== null) {
               currentValue = bodyMetrics.bodyFat.value;
               source = bodyMetrics.bodyFat.source as GoalSource;
             } else if (allMeasurements[0]?.value && isRecentDate(allMeasurements[0]?.measurement_date, 30)) {
@@ -141,6 +188,7 @@ export function useChallengeGoalsQuery(userId?: string) {
               source = 'manual';
             }
 
+            // Sparkline data for chart (keep showing full history)
             if (bodyMetrics.bodyFat?.sparklineData) {
               let sparkline = bodyMetrics.bodyFat.sparklineData;
               if (baselineDate) {
