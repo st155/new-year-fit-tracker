@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Plus, Minus, Target } from "lucide-react";
-import { useHabitMeasurements } from "@/hooks/useHabitMeasurements";
+import { useHabitMeasurementsQuery as useHabitMeasurements } from "@/features/habits/hooks";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
 

@@ -15,7 +15,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { formatDuration, getTimeBasedTheme } from '@/lib/habit-utils-v3';
-import { HabitCelebration } from '../legacy/HabitCelebration';
+import { HabitCelebration } from '../core/HabitCelebration';
 import { useTranslation } from 'react-i18next';
 
 interface FocusModeProps {

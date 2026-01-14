@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, DollarSign, TrendingUp } from "lucide-react";
-import { useHabitAttempts } from "@/hooks/useHabitAttempts";
+import { useHabitAttemptsQuery as useHabitAttempts } from "@/features/habits/hooks";
 import { calculateElapsedTime, formatElapsedTime, getMilestoneProgress, calculateMoneySaved } from "@/lib/duration-utils";
 import { Progress } from "@/components/ui/progress";
 import {
