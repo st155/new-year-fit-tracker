@@ -2,10 +2,74 @@ import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 const DEBOUNCE_MS = 5 * 60 * 1000; // 5 minutes
+const INITIAL_SYNC_COOLDOWN_MS = 4 * 60 * 60 * 1000; // 4 hours
+
+const ECHO11_LAST_SYNC_KEY = 'echo11_last_sync_time';
+
+function getLastEcho11SyncTime(): number | null {
+  try {
+    const timestamp = localStorage.getItem(ECHO11_LAST_SYNC_KEY);
+    return timestamp ? parseInt(timestamp, 10) : null;
+  } catch {
+    return null;
+  }
+}
+
+function setLastEcho11SyncTime(time: number = Date.now()): void {
+  try {
+    localStorage.setItem(ECHO11_LAST_SYNC_KEY, time.toString());
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+function shouldSyncOnLoad(): boolean {
+  const lastSync = getLastEcho11SyncTime();
+  if (!lastSync) return true; // Never synced before
+  
+  return (Date.now() - lastSync) >= INITIAL_SYNC_COOLDOWN_MS; // Sync if 4+ hours passed
+}
 
 export function useAutoEcho11Sync(userId?: string) {
   const lastSyncRef = useRef<number>(0);
+  const hasInitialSyncRef = useRef<boolean>(false);
 
+  // Initial sync on app load (morning sync)
+  useEffect(() => {
+    if (!userId || hasInitialSyncRef.current) return;
+
+    const triggerInitialSync = async () => {
+      if (!shouldSyncOnLoad()) {
+        console.log('[Echo11] Skipping initial sync - synced recently');
+        return;
+      }
+
+      console.log('[Echo11] Triggering initial sync on app load...');
+      hasInitialSyncRef.current = true;
+
+      try {
+        const { data, error } = await supabase.functions.invoke('sync-echo11');
+        
+        if (error) {
+          throw error;
+        }
+        
+        setLastEcho11SyncTime();
+        lastSyncRef.current = Date.now();
+        console.log('[Echo11] Initial sync completed:', data);
+      } catch (e) {
+        console.warn('[Echo11] Initial sync failed:', e);
+        // Reset flag so it can retry on next mount
+        hasInitialSyncRef.current = false;
+      }
+    };
+
+    // Delay 3 seconds to not block app loading
+    const timeoutId = setTimeout(triggerInitialSync, 3000);
+    return () => clearTimeout(timeoutId);
+  }, [userId]);
+
+  // Real-time listener for new data
   useEffect(() => {
     if (!userId) return;
 
@@ -29,13 +93,13 @@ export function useAutoEcho11Sync(userId?: string) {
         console.log('[Echo11] Auto-sync triggered by unified_metrics change');
 
         try {
-          // Call sync-echo11 Edge Function which extracts real data from DB
           const { data, error } = await supabase.functions.invoke('sync-echo11');
           
           if (error) {
             throw error;
           }
           
+          setLastEcho11SyncTime();
           console.log('[Echo11] Auto-sync completed:', data);
         } catch (e) {
           console.warn('[Echo11] Auto-sync failed:', e);
