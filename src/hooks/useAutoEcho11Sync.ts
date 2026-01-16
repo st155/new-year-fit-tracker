@@ -36,11 +36,25 @@ export function useAutoEcho11Sync(userId?: string) {
 
   // Initial sync on app load (morning sync)
   useEffect(() => {
-    if (!userId || hasInitialSyncRef.current) return;
+    // Detailed logging for debugging
+    console.log('[Echo11] Hook mounted, userId:', userId);
+    console.log('[Echo11] hasInitialSync:', hasInitialSyncRef.current);
+    console.log('[Echo11] Last sync time:', getLastEcho11SyncTime());
+    console.log('[Echo11] Should sync on load:', shouldSyncOnLoad());
+
+    if (!userId) {
+      console.log('[Echo11] No userId, skipping initial sync');
+      return;
+    }
+
+    if (hasInitialSyncRef.current) {
+      console.log('[Echo11] Already synced this session, skipping');
+      return;
+    }
 
     const triggerInitialSync = async () => {
       if (!shouldSyncOnLoad()) {
-        console.log('[Echo11] Skipping initial sync - synced recently');
+        console.log('[Echo11] Skipping initial sync - synced recently (within 4 hours)');
         return;
       }
 
@@ -48,23 +62,26 @@ export function useAutoEcho11Sync(userId?: string) {
       hasInitialSyncRef.current = true;
 
       try {
+        console.log('[Echo11] Calling sync-echo11 edge function...');
         const { data, error } = await supabase.functions.invoke('sync-echo11');
         
         if (error) {
+          console.error('[Echo11] Edge function returned error:', error);
           throw error;
         }
         
         setLastEcho11SyncTime();
         lastSyncRef.current = Date.now();
-        console.log('[Echo11] Initial sync completed:', data);
+        console.log('[Echo11] Initial sync completed successfully:', data);
       } catch (e) {
-        console.warn('[Echo11] Initial sync failed:', e);
+        console.error('[Echo11] Initial sync failed:', e);
         // Reset flag so it can retry on next mount
         hasInitialSyncRef.current = false;
       }
     };
 
     // Delay 3 seconds to not block app loading
+    console.log('[Echo11] Scheduling sync in 3 seconds...');
     const timeoutId = setTimeout(triggerInitialSync, 3000);
     return () => clearTimeout(timeoutId);
   }, [userId]);
