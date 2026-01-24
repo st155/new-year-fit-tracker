@@ -441,6 +441,11 @@
     "ms": "ms",
     "bpm": "bpm"
   },
+  "zones": {
+    "highPerformance": "High Performance",
+    "moderate": "Moderate",
+    "takeItEasy": "Take it Easy"
+  },
   "metricCard": {
     "withingsInstructions": "To update data:\n1. Step on your Withings scale\n2. Wait for sync with the app\n3. Data will appear here in 1-5 minutes",
     "manualInstructions": "Manual measurement on the device is required to update data",

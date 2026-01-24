@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dumbbell, Brain, Target, Sparkles, CheckCircle2 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { useTranslation } from 'react-i18next';
 
 interface Stage {
   id: number;
   icon: typeof Brain;
-  title: string;
-  description: string;
+  titleKey: string;
+  descriptionKey: string;
   duration: number;
 }
 
@@ -15,29 +16,29 @@ const GENERATION_STAGES: Stage[] = [
   {
     id: 1,
     icon: Brain,
-    title: 'Analyzing your profile',
-    description: 'Processing your goals and experience level...',
+    titleKey: 'generating.stage1.title',
+    descriptionKey: 'generating.stage1.description',
     duration: 2000,
   },
   {
     id: 2,
     icon: Target,
-    title: 'Designing exercise selection',
-    description: 'Selecting optimal exercises for your goals...',
+    titleKey: 'generating.stage2.title',
+    descriptionKey: 'generating.stage2.description',
     duration: 4000,
   },
   {
     id: 3,
     icon: Dumbbell,
-    title: 'Optimizing program structure',
-    description: 'Balancing volume, intensity, and recovery...',
+    titleKey: 'generating.stage3.title',
+    descriptionKey: 'generating.stage3.description',
     duration: 3000,
   },
   {
     id: 4,
     icon: Sparkles,
-    title: 'Finalizing your plan',
-    description: 'Adding progressive overload and periodization...',
+    titleKey: 'generating.stage4.title',
+    descriptionKey: 'generating.stage4.description',
     duration: 2000,
   },
 ];
@@ -47,6 +48,7 @@ interface PlanGenerationProgressProps {
 }
 
 export function PlanGenerationProgress({ onComplete }: PlanGenerationProgressProps) {
+  const { t } = useTranslation('workouts');
   const [currentStage, setCurrentStage] = useState(0);
   const [progress, setProgress] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
@@ -156,10 +158,10 @@ export function PlanGenerationProgress({ onComplete }: PlanGenerationProgressPro
                 className="text-center mb-8"
               >
                 <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-                  {isComplete ? 'Your plan is ready!' : currentStageData.title}
+                  {isComplete ? t('generating.complete.title') : t(currentStageData.titleKey)}
                 </h2>
                 <p className="text-muted-foreground text-lg">
-                  {isComplete ? 'Redirecting to your new training program...' : currentStageData.description}
+                  {isComplete ? t('generating.complete.description') : t(currentStageData.descriptionKey)}
                 </p>
               </motion.div>
             </AnimatePresence>
@@ -168,7 +170,7 @@ export function PlanGenerationProgress({ onComplete }: PlanGenerationProgressPro
             <div className="mb-8">
               <Progress value={progress} className="h-3 mb-2" />
               <p className="text-center text-sm text-muted-foreground">
-                {Math.round(progress)}% complete
+                {t('generating.progress', { percent: Math.round(progress) })}
               </p>
             </div>
 
@@ -195,7 +197,7 @@ export function PlanGenerationProgress({ onComplete }: PlanGenerationProgressPro
               className="mt-8 pt-6 border-t border-border text-center"
             >
               <p className="text-sm italic text-muted-foreground">
-                "The difference between try and triumph is just a little umph!"
+                "{t('generating.quote')}"
               </p>
             </motion.div>
           </div>
