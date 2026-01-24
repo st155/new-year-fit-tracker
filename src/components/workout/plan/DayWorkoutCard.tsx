@@ -163,7 +163,7 @@ export function DayWorkoutCard({
                       <h5 className="font-medium text-sm">{exercise.exercise_name}</h5>
                       <p className="text-xs text-muted-foreground">
                         {exercise.sets}×{exercise.reps}
-                        {exercise.rpe && ` • RPE ${exercise.rpe}`}
+                        {exercise.rpe && ` • ${t('exercise.rpe')} ${exercise.rpe}`}
                         {exercise.rest_seconds && (
                           <> • 💤 {Math.floor(exercise.rest_seconds / 60)}:{(exercise.rest_seconds % 60).toString().padStart(2, '0')}</>
                         )}

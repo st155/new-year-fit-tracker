@@ -63,6 +63,16 @@ const DISCIPLINE_TO_STANDARD: Record<string, {
   key: string;
   direction: 'higher' | 'lower' | 'target';
 }> = {
+  // Technical keys (preferred)
+  'steps': { key: 'steps', direction: 'higher' },
+  'sleep': { key: 'sleep', direction: 'target' },
+  'recovery_score': { key: 'recovery_score', direction: 'higher' },
+  'rhr': { key: 'rhr', direction: 'lower' },
+  'hrv': { key: 'hrv', direction: 'higher' },
+  'vo2max': { key: 'vo2max_male', direction: 'higher' },
+  'run_5k': { key: 'run_5k', direction: 'lower' },
+  'bodyfat': { key: 'bodyfat_male', direction: 'lower' },
+  // Legacy fallback (localized names)
   'Шаги': { key: 'steps', direction: 'higher' },
   'Сон': { key: 'sleep', direction: 'target' },
   'Recovery': { key: 'recovery_score', direction: 'higher' },
@@ -85,7 +95,9 @@ export function DifficultySelectorDialog({
   const getExamples = (level: number) => {
     if (disciplines.length > 0) {
       return disciplines.slice(0, 3).map((d) => {
-        const mapping = DISCIPLINE_TO_STANDARD[d.discipline_name];
+        // Try technical key first (lowercase), then fall back to display name
+        const mapping = DISCIPLINE_TO_STANDARD[d.discipline_name.toLowerCase()] 
+          || DISCIPLINE_TO_STANDARD[d.discipline_name];
         
         if (mapping && BENCHMARK_STANDARDS[mapping.key]) {
           const standard = BENCHMARK_STANDARDS[mapping.key];
