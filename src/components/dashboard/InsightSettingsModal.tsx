@@ -46,28 +46,28 @@ export function InsightSettingsModal({ isOpen, onClose }: InsightSettingsModalPr
     social: t('insightSettings.types.social'),
     trainer: t('insightSettings.types.trainer'),
     temporal: t('insightSettings.types.temporal'),
-    habit_pattern: t('insightSettings.types.habitPattern'),
-    habit_risk: t('insightSettings.types.habitRisk'),
-    habit_optimization: t('insightSettings.types.habitOptimization'),
-    habit_chain: t('insightSettings.types.habitChain'),
+    habit_pattern: t('insightSettings.types.habit_pattern'),
+    habit_risk: t('insightSettings.types.habit_risk'),
+    habit_optimization: t('insightSettings.types.habit_optimization'),
+    habit_chain: t('insightSettings.types.habit_chain'),
   };
 
   const INSIGHT_TYPE_DESCRIPTIONS: Record<InsightType, string> = {
-    critical: t('insightSettings.descriptions.critical'),
-    warning: t('insightSettings.descriptions.warning'),
-    achievement: t('insightSettings.descriptions.achievement'),
-    info: t('insightSettings.descriptions.info'),
-    recommendation: t('insightSettings.descriptions.recommendation'),
-    correlation: t('insightSettings.descriptions.correlation'),
-    anomaly: t('insightSettings.descriptions.anomaly'),
-    prediction: t('insightSettings.descriptions.prediction'),
-    social: t('insightSettings.descriptions.social'),
-    trainer: t('insightSettings.descriptions.trainer'),
-    temporal: t('insightSettings.descriptions.temporal'),
-    habit_pattern: t('insightSettings.descriptions.habitPattern'),
-    habit_risk: t('insightSettings.descriptions.habitRisk'),
-    habit_optimization: t('insightSettings.descriptions.habitOptimization'),
-    habit_chain: t('insightSettings.descriptions.habitChain'),
+    critical: t('insightSettings.typeDescriptions.critical'),
+    warning: t('insightSettings.typeDescriptions.warning'),
+    achievement: t('insightSettings.typeDescriptions.achievement'),
+    info: t('insightSettings.typeDescriptions.info'),
+    recommendation: t('insightSettings.typeDescriptions.recommendation'),
+    correlation: t('insightSettings.typeDescriptions.correlation'),
+    anomaly: t('insightSettings.typeDescriptions.anomaly'),
+    prediction: t('insightSettings.typeDescriptions.prediction'),
+    social: t('insightSettings.typeDescriptions.social'),
+    trainer: t('insightSettings.typeDescriptions.trainer'),
+    temporal: t('insightSettings.typeDescriptions.temporal'),
+    habit_pattern: t('insightSettings.typeDescriptions.habit_pattern'),
+    habit_risk: t('insightSettings.typeDescriptions.habit_risk'),
+    habit_optimization: t('insightSettings.typeDescriptions.habit_optimization'),
+    habit_chain: t('insightSettings.typeDescriptions.habit_chain'),
   };
 
   const insightTypes: InsightType[] = [
@@ -124,7 +124,7 @@ export function InsightSettingsModal({ isOpen, onClose }: InsightSettingsModalPr
 
           {/* Refresh Interval */}
           <div>
-            <h4 className="font-medium mb-3">{t('insightSettings.refreshFrequency')}</h4>
+            <h4 className="font-medium mb-3">{t('insightSettings.refreshInterval')}</h4>
             <Select
               value={preferences.refreshInterval.toString()}
               onValueChange={(val) => updateRefreshInterval(parseInt(val))}
@@ -133,14 +133,14 @@ export function InsightSettingsModal({ isOpen, onClose }: InsightSettingsModalPr
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="30">{t('insightSettings.intervals.30sec')}</SelectItem>
-                <SelectItem value="60">{t('insightSettings.intervals.1min')}</SelectItem>
-                <SelectItem value="120">{t('insightSettings.intervals.2min')}</SelectItem>
-                <SelectItem value="300">{t('insightSettings.intervals.5min')}</SelectItem>
+                <SelectItem value="30">{t('insightSettings.intervals.30s')}</SelectItem>
+                <SelectItem value="60">{t('insightSettings.intervals.1m')}</SelectItem>
+                <SelectItem value="120">{t('insightSettings.intervals.2m')}</SelectItem>
+                <SelectItem value="300">{t('insightSettings.intervals.5m')}</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground mt-2">
-              {t('insightSettings.refreshHint')}
+              {t('insightSettings.refreshIntervalHint')}
             </p>
           </div>
 
