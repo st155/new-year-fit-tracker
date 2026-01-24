@@ -548,5 +548,10 @@
       "muscleKg": "Muscle (kg)",
       "method": "Method"
     }
+  },
+  "metricsGroups": {
+    "recovery": "Recovery Focus",
+    "body": "Body Status",
+    "activity": "Activity"
   }
 }

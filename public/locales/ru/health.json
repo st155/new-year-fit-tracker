@@ -53,6 +53,7 @@
   },
 "metrics": {
     "bloodPressure": "Пульсовое давление",
+    "vo2max": "VO2 Max",
     "stale": "Устаревшие",
     "dataQuality": "Качество данных",
     "statistics": "Статистика",

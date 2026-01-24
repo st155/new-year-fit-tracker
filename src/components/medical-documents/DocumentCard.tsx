@@ -246,7 +246,7 @@ export const DocumentCard = ({
               e.stopPropagation();
               navigate(`/medical-ingestion/${id}`);
             }}
-            title="Open in Cockpit"
+            title={t('actions.openInCockpit')}
           >
             <Eye className="h-3.5 w-3.5" />
           </Button>

@@ -193,8 +193,19 @@
   },
   "units": {
     "kg": "kg",
+    "percent": "%",
+    "bpm": "bpm",
+    "ms": "ms",
     "minutes": "min",
+    "mlKgMin": "ml/kg/min",
     "format": "Format: MM:SS (e.g., 4:40 = 4 min 40 sec)"
+  },
+  "pagination": {
+    "previous": "Previous",
+    "next": "Next",
+    "goToPrevious": "Go to previous page",
+    "goToNext": "Go to next page",
+    "morePages": "More pages"
   },
   "fasting": {
     "started": "Fasting started! 🔥",

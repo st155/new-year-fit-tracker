@@ -6,6 +6,7 @@ import { CreatePostDialog } from "./CreatePostDialog";
 import { Loader2 } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { MessageCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface ChallengeFeedProps {
   challengeId: string;
@@ -13,6 +14,7 @@ interface ChallengeFeedProps {
 
 export const ChallengeFeed = ({ challengeId }: ChallengeFeedProps) => {
   const { user } = useAuth();
+  const { t } = useTranslation('challenges');
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -85,8 +87,8 @@ export const ChallengeFeed = ({ challengeId }: ChallengeFeedProps) => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Challenge Feed</h2>
-          <p className="text-muted-foreground">Share progress and motivate each other</p>
+          <h2 className="text-2xl font-bold text-foreground">{t('feed.title')}</h2>
+          <p className="text-muted-foreground">{t('feed.subtitle')}</p>
         </div>
         <CreatePostDialog challengeId={challengeId} onPostCreated={fetchPosts} />
       </div>
@@ -94,8 +96,8 @@ export const ChallengeFeed = ({ challengeId }: ChallengeFeedProps) => {
       {posts.length === 0 ? (
         <EmptyState
           icon={<MessageCircle className="h-16 w-16" />}
-          title="No posts yet"
-          description="Be the first to share your progress! Create a post and motivate other participants."
+          title={t('feed.noPosts')}
+          description={t('feed.noPostsDesc')}
         />
       ) : (
         <div className="space-y-4">

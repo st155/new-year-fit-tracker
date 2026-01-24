@@ -58,7 +58,8 @@
     "delete": "Delete",
     "extractRecommendations": "Extract Doctor Recommendations",
     "retryProcessing": "Retry Processing",
-    "reprocessDocument": "Reprocess Document"
+    "reprocessDocument": "Reprocess Document",
+    "openInCockpit": "Open in Cockpit"
   },
   "extraction": {
     "reprocessSuccess": "Document reprocessed successfully",

@@ -32,19 +32,19 @@ interface MetricsCarouselProps {
 // Group metrics by category for carousel slides
 const SLIDE_GROUPS = {
   recovery: {
-    title: 'Recovery Focus',
+    titleKey: 'metricsGroups.recovery',
     icon: Heart,
     variant: 'recovery' as const,
     metrics: ['recovery', 'max_hr', 'vo2max', 'hrv'],
   },
   body: {
-    title: 'Body Status',
+    titleKey: 'metricsGroups.body',
     icon: Scale,
     variant: 'body' as const,
     metrics: ['weight', 'body_fat', 'muscle_mass'],
   },
   activity: {
-    title: 'Activity',
+    titleKey: 'metricsGroups.activity',
     icon: Activity,
     variant: 'activity' as const,
     metrics: ['steps', 'strain', 'active_calories'],
@@ -114,7 +114,7 @@ export function MetricsCarousel({ mappedMetrics, selectedMetrics, onMetricClick 
               {slides.map((slide) => (
                 <CarouselItem key={slide.key} className="pl-2 basis-[90%]">
                   <HighlightCard
-                    title={slide.title}
+                    title={t(slide.titleKey)}
                     icon={slide.icon}
                     variant={slide.variant}
                     metrics={slide.metricsData}
