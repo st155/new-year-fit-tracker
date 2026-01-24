@@ -17,18 +17,18 @@ interface NutritionLogSheetProps {
 
 type LogType = "water" | "meal";
 
-const waterOptions = [
-  { id: "250", label: "250 ml", icon: "💧" },
-  { id: "500", label: "500 ml", icon: "💧💧" },
-  { id: "1000", label: "1 L", icon: "🫗" },
-];
+const WATER_OPTIONS = [
+  { id: "250", labelKey: "quickActions.water.250ml", icon: "💧" },
+  { id: "500", labelKey: "quickActions.water.500ml", icon: "💧💧" },
+  { id: "1000", labelKey: "quickActions.water.1l", icon: "🫗" },
+] as const;
 
-const mealOptions = [
-  { id: "breakfast", label: "Breakfast", icon: Coffee },
-  { id: "snack", label: "Snack", icon: Apple },
-  { id: "lunch", label: "Lunch", icon: Salad },
-  { id: "dinner", label: "Dinner", icon: UtensilsCrossed },
-];
+const MEAL_OPTIONS = [
+  { id: "breakfast", icon: Coffee },
+  { id: "snack", icon: Apple },
+  { id: "lunch", icon: Salad },
+  { id: "dinner", icon: UtensilsCrossed },
+] as const;
 
 export function NutritionLogSheet({ open, onOpenChange }: NutritionLogSheetProps) {
   const { t } = useTranslation();
@@ -110,7 +110,7 @@ export function NutritionLogSheet({ open, onOpenChange }: NutritionLogSheetProps
         {/* Options */}
         {logType === "water" ? (
           <div className="flex gap-3 justify-center">
-            {waterOptions.map((option) => (
+            {WATER_OPTIONS.map((option) => (
               <button
                 key={option.id}
                 onClick={() => setSelected(option.id)}
@@ -123,13 +123,13 @@ export function NutritionLogSheet({ open, onOpenChange }: NutritionLogSheetProps
                 )}
               >
                 <span className="text-2xl">{option.icon}</span>
-                <span className="font-medium">{option.label}</span>
+                <span className="font-medium">{t(option.labelKey)}</span>
               </button>
             ))}
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
-            {mealOptions.map((option) => (
+            {MEAL_OPTIONS.map((option) => (
               <button
                 key={option.id}
                 onClick={() => setSelected(option.id)}
@@ -151,7 +151,7 @@ export function NutritionLogSheet({ open, onOpenChange }: NutritionLogSheetProps
                   )} />
                 </div>
                 <span className="font-medium">
-                  {t(`quickActions.meals.${option.id}`, option.label)}
+                  {t(`quickActions.meals.${option.id}`)}
                 </span>
               </button>
             ))}

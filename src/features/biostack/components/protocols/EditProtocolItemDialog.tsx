@@ -1,10 +1,11 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Save, Camera, Pill } from 'lucide-react';
+import { Save, Pill } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
@@ -17,15 +18,16 @@ interface EditProtocolItemDialogProps {
 }
 
 const INTAKE_TIMES = [
-  { value: 'morning', label: 'Morning' },
-  { value: 'afternoon', label: 'Afternoon' },
-  { value: 'evening', label: 'Evening' },
-  { value: 'before_sleep', label: 'Before Sleep' },
-];
+  { value: 'morning', labelKey: 'intakeTimes.morning' },
+  { value: 'afternoon', labelKey: 'intakeTimes.afternoon' },
+  { value: 'evening', labelKey: 'intakeTimes.evening' },
+  { value: 'before_sleep', labelKey: 'intakeTimes.beforeSleep' },
+] as const;
 
 const DOSAGE_UNITS = ['mg', 'g', 'mcg', 'IU', 'ml', 'drops', 'serving'];
 
 export function EditProtocolItemDialog({ item, open, onClose }: EditProtocolItemDialogProps) {
+  const { t } = useTranslation(['biostack', 'common']);
   const [dailyDosage, setDailyDosage] = useState(item.daily_dosage?.toString() || '1');
   const [dosageUnit, setDosageUnit] = useState(item.dosage_unit || 'mg');
   const [intakeTimes, setIntakeTimes] = useState<string[]>(item.intake_times || []);
@@ -57,16 +59,16 @@ export function EditProtocolItemDialog({ item, open, onClose }: EditProtocolItem
       queryClient.invalidateQueries({ queryKey: biostackQueryKeys.protocols.all });
       queryClient.invalidateQueries({ queryKey: biostackQueryKeys.today.all });
       toast({
-        title: '✅ Supplement updated',
-        description: 'Dosage and intake times have been saved.',
+        title: t('protocols.updated'),
+        description: t('protocols.updatedDesc'),
       });
       onClose();
     },
     onError: (error) => {
       console.error('Update item error:', error);
       toast({
-        title: 'Update failed',
-        description: error instanceof Error ? error.message : 'Failed to update supplement',
+        title: t('common:errors.saveFailed'),
+        description: error instanceof Error ? error.message : t('protocols.updateError'),
         variant: 'destructive',
       });
     },
@@ -77,7 +79,7 @@ export function EditProtocolItemDialog({ item, open, onClose }: EditProtocolItem
       <DialogContent className="max-w-lg bg-neutral-950 border-yellow-500/30">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
-            Edit: {item.supplement_products?.name || 'Supplement'}
+            {t('protocols.editTitle')}: {item.supplement_products?.name || t('protocols.supplement')}
           </DialogTitle>
         </DialogHeader>
 
@@ -102,7 +104,7 @@ export function EditProtocolItemDialog({ item, open, onClose }: EditProtocolItem
           {/* Dosage */}
           <div className="space-y-4">
             <div>
-              <Label htmlFor="dosage">Daily Dosage</Label>
+              <Label htmlFor="dosage">{t('protocols.dailyDosage')}</Label>
               <div className="flex gap-2 mt-1">
                 <Input
                   id="dosage"
@@ -129,7 +131,7 @@ export function EditProtocolItemDialog({ item, open, onClose }: EditProtocolItem
 
           {/* Intake Times */}
           <div className="space-y-3">
-            <Label>Intake Times</Label>
+            <Label>{t('protocols.intakeTimes')}</Label>
             <div className="space-y-2">
               {INTAKE_TIMES.map(time => (
                 <div key={time.value} className="flex items-center gap-2">
@@ -142,14 +144,14 @@ export function EditProtocolItemDialog({ item, open, onClose }: EditProtocolItem
                     htmlFor={time.value}
                     className="text-sm font-normal cursor-pointer"
                   >
-                    {time.label}
+                    {t(time.labelKey)}
                   </Label>
                 </div>
               ))}
             </div>
             {intakeTimes.length === 0 && (
               <p className="text-xs text-red-500">
-                ⚠️ Select at least one intake time
+                ⚠️ {t('protocols.selectIntakeTime')}
               </p>
             )}
           </div>
@@ -161,7 +163,7 @@ export function EditProtocolItemDialog({ item, open, onClose }: EditProtocolItem
             className="w-full bg-green-500 hover:bg-green-600"
           >
             <Save className="h-4 w-4 mr-2" />
-            {updateItemMutation.isPending ? 'Saving...' : 'Save Changes'}
+            {updateItemMutation.isPending ? t('common:actions.saving') : t('common:actions.saveChanges')}
           </Button>
         </div>
       </DialogContent>

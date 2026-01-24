@@ -83,7 +83,8 @@
     "addWater": "+250ml",
     "weighIn": "Weigh in",
     "skip": "Skip",
-    "continue": "Continue"
+    "continue": "Continue",
+    "saveChanges": "Save Changes"
   },
 "pwa": {
     "updateAvailable": "Update Available",
