@@ -107,7 +107,29 @@
   },
   "generating": {
     "title": "Generating your AI plan",
-    "status": "GENERATING YOUR NEW PROGRAM..."
+    "status": "GENERATING YOUR NEW PROGRAM...",
+    "stage1": {
+      "title": "Analyzing your profile",
+      "description": "Processing your goals and experience level..."
+    },
+    "stage2": {
+      "title": "Designing exercise selection",
+      "description": "Selecting optimal exercises for your goals..."
+    },
+    "stage3": {
+      "title": "Optimizing program structure",
+      "description": "Balancing volume, intensity, and recovery..."
+    },
+    "stage4": {
+      "title": "Finalizing your plan",
+      "description": "Adding progressive overload and periodization..."
+    },
+    "complete": {
+      "title": "Your plan is ready!",
+      "description": "Redirecting to your new training program..."
+    },
+    "progress": "{{percent}}% complete",
+    "quote": "The difference between try and triumph is just a little umph!"
   },
   "feeling": {
     "title": "How do you feel?",

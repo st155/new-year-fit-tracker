@@ -9,7 +9,7 @@ interface ReadinessDialProps {
 }
 
 export function ReadinessDial({ className }: ReadinessDialProps) {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'dashboard', 'metrics']);
   const { user } = useAuth();
   const { metrics, loading } = useTodayMetrics(user?.id);
   
@@ -17,9 +17,9 @@ export function ReadinessDial({ className }: ReadinessDialProps) {
   
   // Determine color zone
   const getZone = (score: number) => {
-    if (score >= 67) return { color: 'hsl(158, 64%, 52%)', label: 'High Performance', bg: 'from-success/20 to-success/5' };
-    if (score >= 34) return { color: 'hsl(38, 92%, 50%)', label: 'Moderate', bg: 'from-warning/20 to-warning/5' };
-    return { color: 'hsl(0, 84%, 60%)', label: 'Take it Easy', bg: 'from-destructive/20 to-destructive/5' };
+    if (score >= 67) return { color: 'hsl(158, 64%, 52%)', label: t('dashboard:zones.highPerformance'), bg: 'from-success/20 to-success/5' };
+    if (score >= 34) return { color: 'hsl(38, 92%, 50%)', label: t('dashboard:zones.moderate'), bg: 'from-warning/20 to-warning/5' };
+    return { color: 'hsl(0, 84%, 60%)', label: t('dashboard:zones.takeItEasy'), bg: 'from-destructive/20 to-destructive/5' };
   };
   
   const zone = getZone(recovery);
@@ -124,13 +124,13 @@ export function ReadinessDial({ className }: ReadinessDialProps) {
         transition={{ delay: 0.6 }}
       >
         <div className="flex items-center gap-2">
-          <span className="text-muted-foreground">HRV</span>
-          <span className="font-medium text-foreground">{hrv ? `${Math.round(hrv)}ms` : '—'}</span>
+          <span className="text-muted-foreground">{t('metrics:hrv')}</span>
+          <span className="font-medium text-foreground">{hrv ? `${Math.round(hrv)} ${t('common:units.ms')}` : '—'}</span>
         </div>
         <div className="h-4 w-px bg-border" />
         <div className="flex items-center gap-2">
-          <span className="text-muted-foreground">RHR</span>
-          <span className="font-medium text-foreground">{rhr ? `${Math.round(rhr)} bpm` : '—'}</span>
+          <span className="text-muted-foreground">{t('metrics:rhr')}</span>
+          <span className="font-medium text-foreground">{rhr ? `${Math.round(rhr)} ${t('common:units.bpm')}` : '—'}</span>
         </div>
       </motion.div>
     </motion.div>

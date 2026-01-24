@@ -163,9 +163,9 @@ export const DocumentFilters = ({
             <SelectContent>
               <SelectItem value="all">📊 {t('docFilters.allTypes')}</SelectItem>
               <SelectItem value="blood_test">🩸 {t('docFilters.bloodTests')}</SelectItem>
-              <SelectItem value="inbody">💪 InBody</SelectItem>
+              <SelectItem value="inbody">💪 {t('documentTypes.inbody')}</SelectItem>
               <SelectItem value="progress_photo">📸 {t('documentTypes.progress_photo')}</SelectItem>
-              <SelectItem value="vo2max">🫁 VO2max</SelectItem>
+              <SelectItem value="vo2max">🫁 {t('documentTypes.vo2max')}</SelectItem>
               <SelectItem value="fitness_report">📋 {t('docFilters.medReports')}</SelectItem>
               <SelectItem value="caliper">📏 {t('documentTypes.caliper')}</SelectItem>
               <SelectItem value="prescription">💊 {t('documentTypes.prescription')}</SelectItem>

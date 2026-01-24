@@ -30,5 +30,7 @@
   "floorsClimbed": "Этажи",
   "spo2": "SpO2",
   "stressLevel": "Уровень стресса",
-  "bodyBattery": "Body Battery"
+  "bodyBattery": "Body Battery",
+  "hrv": "ВСР",
+  "rhr": "ЧСС покоя"
 }
