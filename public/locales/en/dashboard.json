@@ -553,5 +553,12 @@
     "recovery": "Recovery Focus",
     "body": "Body Status",
     "activity": "Activity"
+  },
+  "weeklyGoals": {
+    "title": "Weekly Goals",
+    "workoutSessions": "Workout Sessions",
+    "sleepQuality": "Sleep Quality",
+    "activeMinutes": "Active Minutes",
+    "hrsAvg": "hrs avg"
   }
 }

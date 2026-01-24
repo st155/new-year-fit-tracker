@@ -554,5 +554,12 @@
     "recovery": "Восстановление",
     "body": "Состояние тела",
     "activity": "Активность"
+  },
+  "weeklyGoals": {
+    "title": "Недельные цели",
+    "workoutSessions": "Тренировки",
+    "sleepQuality": "Качество сна",
+    "activeMinutes": "Активные минуты",
+    "hrsAvg": "ч. средн."
   }
 }

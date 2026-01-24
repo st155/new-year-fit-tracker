@@ -198,7 +198,8 @@
     "ms": "ms",
     "minutes": "min",
     "mlKgMin": "ml/kg/min",
-    "format": "Format: MM:SS (e.g., 4:40 = 4 min 40 sec)"
+    "format": "Format: MM:SS (e.g., 4:40 = 4 min 40 sec)",
+    "sessions": "sessions"
   },
   "pagination": {
     "previous": "Previous",

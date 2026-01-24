@@ -108,5 +108,19 @@
       "hrv": "HRV"
     }
   },
-  "insufficientData": "Insufficient data to display leaders"
+  "insufficientData": "Insufficient data to display leaders",
+  "noData": "No data",
+  "categories": {
+    "mostSteps": "Most Steps",
+    "stepsDesc": "Total steps in the last 7 days",
+    "bestSleep": "Best Sleep",
+    "sleepLabel": "sleep",
+    "sleepDesc": "Sleep quality and duration",
+    "highestStrain": "Highest Strain",
+    "strainDesc": "Average daily strain in the last 7 days",
+    "bestRecovery": "Best Recovery",
+    "recoveryDesc": "Average recovery score in the last 7 days",
+    "longestStreak": "Longest Streak",
+    "streakDesc": "Current activity streak in days"
+  }
 }

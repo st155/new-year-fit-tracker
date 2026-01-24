@@ -62,5 +62,19 @@
     "visceralFatHealthy": "Visceral fat level {{value}} cm² - within healthy range!",
     "visceralFatHigh": "Visceral fat {{value}} cm² - consider more cardio and nutrition focus",
     "bodyFatAthletic": "Body fat {{value}}% - excellent indicator for athletic physique"
+  },
+  "sources": {
+    "inbody": "InBody Data",
+    "inbodyDesc": "Precise segmental analysis from InBody scan",
+    "estimated": "Estimated",
+    "estimatedDesc": "Synthesized from weight and body fat data",
+    "limited": "Limited Data",
+    "limitedDesc": "Insufficient data for analysis",
+    "lastInBody": "Last InBody",
+    "dataUpdated": "Data updated",
+    "dataSources": "Data sources",
+    "weight": "Weight",
+    "bodyFat": "Body Fat",
+    "synthesizedWarning": "Segmental data is estimated. For precise analysis, schedule an InBody scan."
   }
 }

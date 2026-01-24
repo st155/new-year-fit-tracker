@@ -1,4 +1,27 @@
 {
+  "search": {
+    "title": "Search Products",
+    "placeholder": "Search supplements by name or brand...",
+    "button": "Search",
+    "allBrands": "All Brands",
+    "allCategories": "All Categories",
+    "allTypes": "All Types",
+    "dosage": "Dosage",
+    "serving": "Serving",
+    "addToInventory": "Add to Inventory",
+    "noResults": "No products found matching your criteria"
+  },
+  "categories": {
+    "vitamin": "Vitamins",
+    "mineral": "Minerals",
+    "protein": "Protein",
+    "herbal": "Herbal"
+  },
+  "types": {
+    "supplement": "Supplement",
+    "food": "Food",
+    "beverage": "Beverage"
+  },
   "timeline": {
     "status": {
       "ready": "Ready to evaluate effectiveness",

@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Activity, Calculator, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
+import { useTranslation } from "react-i18next";
 import type { DataSource, ConfidenceLevel } from "@/hooks/useEnhancedBodyModel";
 
 interface BodyDataSourceIndicatorProps {
@@ -21,28 +22,30 @@ export function BodyDataSourceIndicator({
   weightSource,
   bodyFatSource,
 }: BodyDataSourceIndicatorProps) {
+  const { t } = useTranslation('bodyComposition');
+  
   const getSourceConfig = () => {
     switch (source) {
       case 'inbody':
         return {
           icon: <Activity className="h-3 w-3" />,
-          label: "InBody Data",
+          label: t('sources.inbody'),
           variant: "default" as const,
-          description: "Precise segmental analysis from InBody scan",
+          description: t('sources.inbodyDesc'),
         };
       case 'synthesized':
         return {
           icon: <Calculator className="h-3 w-3" />,
-          label: "Estimated",
+          label: t('sources.estimated'),
           variant: "secondary" as const,
-          description: "Synthesized from weight and body fat data",
+          description: t('sources.estimatedDesc'),
         };
       case 'none':
         return {
           icon: <AlertCircle className="h-3 w-3" />,
-          label: "Limited Data",
+          label: t('sources.limited'),
           variant: "outline" as const,
-          description: "Insufficient data for analysis",
+          description: t('sources.limitedDesc'),
         };
     }
   };
@@ -79,27 +82,27 @@ export function BodyDataSourceIndicator({
               
               {lastInBodyDate && (
                 <p className="text-xs text-muted-foreground">
-                  Last InBody: {format(lastInBodyDate, 'MMM dd, yyyy')}
+                  {t('sources.lastInBody')}: {format(lastInBodyDate, 'MMM dd, yyyy')}
                 </p>
               )}
               
               {lastUpdated && (
                 <p className="text-xs text-muted-foreground">
-                  Data updated: {format(lastUpdated, 'MMM dd, yyyy')}
+                  {t('sources.dataUpdated')}: {format(lastUpdated, 'MMM dd, yyyy')}
                 </p>
               )}
               
               {(weightSource || bodyFatSource) && (
                 <div className="text-xs text-muted-foreground border-t border-border pt-2">
-                  <p className="font-semibold mb-1">Data sources:</p>
-                  {weightSource && <p>Weight: {weightSource}</p>}
-                  {bodyFatSource && <p>Body Fat: {bodyFatSource}</p>}
+                  <p className="font-semibold mb-1">{t('sources.dataSources')}:</p>
+                  {weightSource && <p>{t('sources.weight')}: {weightSource}</p>}
+                  {bodyFatSource && <p>{t('sources.bodyFat')}: {bodyFatSource}</p>}
                 </div>
               )}
               
               {source === 'synthesized' && (
                 <p className="text-xs text-yellow-400 border-t border-border pt-2">
-                  ⚠️ Segmental data is estimated. For precise analysis, schedule an InBody scan.
+                  ⚠️ {t('sources.synthesizedWarning')}
                 </p>
               )}
             </div>
