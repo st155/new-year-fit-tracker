@@ -260,5 +260,11 @@
   },
   "preview": {
     "topDisciplines": "Top Disciplines"
+  },
+  "feed": {
+    "title": "Challenge Feed",
+    "subtitle": "Share progress and motivate each other",
+    "noPosts": "No posts yet",
+    "noPostsDesc": "Be the first to share your progress! Create a post and motivate other participants."
   }
 }

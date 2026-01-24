@@ -53,6 +53,7 @@
   },
 "metrics": {
     "bloodPressure": "Blood Pressure",
+    "vo2max": "VO2 Max",
     "stale": "Stale",
     "dataQuality": "Data Quality",
     "statistics": "Statistics",

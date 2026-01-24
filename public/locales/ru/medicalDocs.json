@@ -58,7 +58,8 @@
     "delete": "Удалить",
     "extractRecommendations": "Извлечь рекомендации врача",
     "retryProcessing": "Повторить обработку",
-    "reprocessDocument": "Переобработать документ"
+    "reprocessDocument": "Переобработать документ",
+    "openInCockpit": "Открыть в Кокпите"
   },
   "extraction": {
     "reprocessSuccess": "Документ успешно переобработан",

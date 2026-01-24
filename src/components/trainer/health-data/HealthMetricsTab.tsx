@@ -48,7 +48,7 @@ export function HealthMetricsTab({ healthData }: HealthMetricsTabProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <HealthMetricCard
-        title="VO2 Max"
+        title={t('metrics.vo2max')}
         icon="🫁"
         value={getLatestValue('vo2_max') || 0}
         unit={t('units.mlKgMin')}

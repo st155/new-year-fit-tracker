@@ -51,7 +51,7 @@ export function HeartMetrics({ healthData }: HeartMetricsProps) {
         title={t('heartMetrics.avgHr')}
         icon="❤️"
         value={getLatestValue('heart_rate_avg') || 0}
-        unit="bpm"
+        unit={t('units.bpm')}
         source={getLatestSource('heart_rate_avg_source')}
         data={getChartData('heart_rate_avg')}
         trend={getTrend('heart_rate_avg')}
@@ -61,7 +61,7 @@ export function HeartMetrics({ healthData }: HeartMetricsProps) {
         title={t('heartMetrics.restingHr')}
         icon="💓"
         value={getLatestValue('resting_heart_rate') || 0}
-        unit="bpm"
+        unit={t('units.bpm')}
         source={getLatestSource('resting_heart_rate_source')}
         data={getChartData('resting_heart_rate')}
         trend={getTrend('resting_heart_rate')}
@@ -71,17 +71,17 @@ export function HeartMetrics({ healthData }: HeartMetricsProps) {
         title={t('heartMetrics.maxHr')}
         icon="💗"
         value={getLatestValue('max_heart_rate') || 0}
-        unit="bpm"
+        unit={t('units.bpm')}
         source={getLatestSource('max_heart_rate_source')}
         data={getChartData('max_heart_rate')}
         trend={getTrend('max_heart_rate')}
       />
       
       <HealthMetricCard
-        title="HRV"
+        title={t('heartMetrics.hrv')}
         icon="💝"
         value={getLatestValue('hrv') || 0}
-        unit="ms"
+        unit={t('units.ms')}
         source={getLatestSource('hrv_source')}
         data={getChartData('hrv')}
         trend={getTrend('hrv')}
@@ -91,7 +91,7 @@ export function HeartMetrics({ healthData }: HeartMetricsProps) {
         title={t('heartMetrics.sleepHrv')}
         icon="😴"
         value={getLatestValue('sleep_hrv') || 0}
-        unit="ms"
+        unit={t('units.ms')}
         source={getLatestSource('sleep_hrv_source')}
         data={getChartData('sleep_hrv')}
         trend={getTrend('sleep_hrv')}

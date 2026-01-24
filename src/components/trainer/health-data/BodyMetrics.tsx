@@ -61,7 +61,7 @@ export function BodyMetrics({ healthData }: BodyMetricsProps) {
         title={t('metrics.bodyFat')}
         icon="📊"
         value={getLatestValue('body_fat') || 0}
-        unit="%"
+        unit={t('common:units.percent')}
         source={getLatestSource('body_fat_source')}
         data={getChartData('body_fat')}
         trend={getTrend('body_fat')}
@@ -81,7 +81,7 @@ export function BodyMetrics({ healthData }: BodyMetricsProps) {
         title={t('metrics.musclePercent')}
         icon="📈"
         value={getLatestValue('muscle_percent') || 0}
-        unit="%"
+        unit={t('common:units.percent')}
         source={getLatestSource('muscle_percent_source')}
         data={getChartData('muscle_percent')}
         trend={getTrend('muscle_percent')}
