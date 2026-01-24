@@ -219,7 +219,8 @@
       "scanShort": "Scan",
       "aiGenerator": "AI Stack Generator",
       "aiGeneratorShort": "AI Generator",
-      "takeAll": "Take All"
+      "takeAll": "Take All",
+      "syncProtocols": "Sync Protocols"
     },
     "sections": {
       "activeProtocols": "Active Protocols",
@@ -410,15 +411,28 @@
     "decline": "Decline"
   },
   "library": {
+    "title": "My Library",
     "scannedCount": "Scanned {{count}}x",
     "empty": "No supplements in your library",
     "selected": "Selected: {{count}}",
     "addToStack": "Add to Stack ({{count}})",
     "addFromLibrary": "Add from Library",
-    "searchPlaceholder": "Search your library...",
+    "searchPlaceholder": "Search supplements...",
     "inStack": "In Stack",
     "unknownBrand": "Unknown brand",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "recentlyScanned": "Recently Scanned",
+    "tags": "Tags",
+    "filters": {
+      "scanned": "Scanned",
+      "fromProtocol": "From Protocol"
+    },
+    "enriched": "Enriched",
+    "partial": "Partial",
+    "notEnriched": "Not enriched",
+    "firstScan": "First scan",
+    "toStack": "to Stack",
+    "view": "View"
   },
 "protocols": {
     "noItems": "No supplements in this protocol",

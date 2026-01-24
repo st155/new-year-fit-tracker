@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
@@ -8,6 +9,7 @@ interface BodyCompositionHistoryProps {
 }
 
 export function BodyCompositionHistory({ userId }: BodyCompositionHistoryProps) {
+  const { t } = useTranslation('bodyComposition');
   const { data: history, isLoading } = useQuery({
     queryKey: ['body-composition-history', userId],
     queryFn: async () => {
@@ -29,7 +31,7 @@ export function BodyCompositionHistory({ userId }: BodyCompositionHistoryProps) 
     return (
       <Card>
         <CardContent className="pt-6">
-          <p className="text-center text-muted-foreground">Loading...</p>
+          <p className="text-center text-muted-foreground">{t('loading', 'Loading...')}</p>
         </CardContent>
       </Card>
     );
@@ -40,7 +42,7 @@ export function BodyCompositionHistory({ userId }: BodyCompositionHistoryProps) 
       <Card>
         <CardContent className="pt-6">
           <p className="text-center text-muted-foreground">
-            No history available yet. Add measurements to see your progress!
+            {t('noHistory', 'No history available yet. Add measurements to see your progress!')}
           </p>
         </CardContent>
       </Card>
@@ -58,7 +60,7 @@ export function BodyCompositionHistory({ userId }: BodyCompositionHistoryProps) 
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Weight & Body Fat Trend</CardTitle>
+          <CardTitle>{t('weightTrend', 'Weight & Body Fat Trend')}</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
@@ -75,7 +77,7 @@ export function BodyCompositionHistory({ userId }: BodyCompositionHistoryProps) 
                 dataKey="weight"
                 stroke="hsl(var(--primary))"
                 strokeWidth={2}
-                name="Weight (kg)"
+                name={t('weightKg', 'Weight (kg)')}
               />
               <Line
                 yAxisId="right"
@@ -83,7 +85,7 @@ export function BodyCompositionHistory({ userId }: BodyCompositionHistoryProps) 
                 dataKey="bodyFat"
                 stroke="hsl(var(--destructive))"
                 strokeWidth={2}
-                name="Body Fat (%)"
+                name={t('bodyFatPercent', 'Body Fat (%)')}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -92,7 +94,7 @@ export function BodyCompositionHistory({ userId }: BodyCompositionHistoryProps) 
 
       <Card>
         <CardHeader>
-          <CardTitle>Muscle Mass Trend</CardTitle>
+          <CardTitle>{t('muscleTrend', 'Muscle Mass Trend')}</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
@@ -107,7 +109,7 @@ export function BodyCompositionHistory({ userId }: BodyCompositionHistoryProps) 
                 dataKey="muscle"
                 stroke="hsl(var(--chart-2))"
                 strokeWidth={2}
-                name="Muscle Mass (kg)"
+                name={t('muscleKg', 'Muscle Mass (kg)')}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -116,7 +118,7 @@ export function BodyCompositionHistory({ userId }: BodyCompositionHistoryProps) 
 
       <Card>
         <CardHeader>
-          <CardTitle>Measurement History</CardTitle>
+          <CardTitle>{t('measurementHistory', 'Measurement History')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
@@ -126,9 +128,9 @@ export function BodyCompositionHistory({ userId }: BodyCompositionHistoryProps) 
                   {new Date(item.measurement_date).toLocaleDateString()}
                 </div>
                 <div className="text-sm text-muted-foreground space-x-4">
-                  <span>{item.weight} kg</span>
-                  <span>{item.body_fat_percentage}% fat</span>
-                  <span>{item.muscle_mass} kg muscle</span>
+                  <span>{item.weight} {t('common:units.kg', 'kg')}</span>
+                  <span>{item.body_fat_percentage}% {t('fat', 'fat')}</span>
+                  <span>{item.muscle_mass} {t('common:units.kg', 'kg')} {t('muscle', 'muscle')}</span>
                 </div>
               </div>
             ))}
