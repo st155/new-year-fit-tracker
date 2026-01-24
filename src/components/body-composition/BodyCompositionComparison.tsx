@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -9,6 +10,7 @@ interface BodyCompositionComparisonProps {
 }
 
 export function BodyCompositionComparison({ userId }: BodyCompositionComparisonProps) {
+  const { t } = useTranslation('bodyComposition');
   const { data: comparisons, isLoading } = useQuery({
     queryKey: ['body-composition-comparison', userId],
     queryFn: async () => {
@@ -67,7 +69,7 @@ export function BodyCompositionComparison({ userId }: BodyCompositionComparisonP
     return (
       <Card>
         <CardContent className="pt-6">
-          <p className="text-center text-muted-foreground">Loading...</p>
+          <p className="text-center text-muted-foreground">{t('loading', 'Loading...')}</p>
         </CardContent>
       </Card>
     );
@@ -78,7 +80,7 @@ export function BodyCompositionComparison({ userId }: BodyCompositionComparisonP
       <Card>
         <CardContent className="pt-6">
           <p className="text-center text-muted-foreground">
-            No comparison data available. Join a challenge to compare with others!
+            {t('noComparison', 'No comparison data available. Join a challenge to compare with others!')}
           </p>
         </CardContent>
       </Card>
@@ -88,8 +90,8 @@ export function BodyCompositionComparison({ userId }: BodyCompositionComparisonP
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Challenge Leaderboard</CardTitle>
-        <p className="text-sm text-muted-foreground">Ranked by body fat percentage</p>
+        <CardTitle>{t('leaderboard', 'Challenge Leaderboard')}</CardTitle>
+        <p className="text-sm text-muted-foreground">{t('rankedByFat', 'Ranked by body fat percentage')}</p>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -116,8 +118,8 @@ export function BodyCompositionComparison({ userId }: BodyCompositionComparisonP
                   </Avatar>
                   <div>
                     <div className="font-semibold flex items-center gap-2">
-                      {profile?.full_name || profile?.username || 'User'}
-                      {isCurrentUser && <Badge variant="secondary">You</Badge>}
+                      {profile?.full_name || profile?.username || t('user', 'User')}
+                      {isCurrentUser && <Badge variant="secondary">{t('you', 'You')}</Badge>}
                     </div>
                     <div className="text-sm text-muted-foreground">
                       {new Date(comp.measurement_date).toLocaleDateString()}
@@ -130,7 +132,7 @@ export function BodyCompositionComparison({ userId }: BodyCompositionComparisonP
                     {comp.body_fat_percentage}%
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    {comp.weight} kg • {comp.muscle_mass} kg muscle
+                    {comp.weight} {t('common:units.kg', 'kg')} • {comp.muscle_mass} {t('common:units.kg', 'kg')} {t('muscle', 'muscle')}
                   </div>
                 </div>
               </div>

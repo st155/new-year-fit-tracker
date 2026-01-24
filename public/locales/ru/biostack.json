@@ -219,7 +219,8 @@
       "scanShort": "Скан",
       "aiGenerator": "AI генератор стека",
       "aiGeneratorShort": "AI генератор",
-      "takeAll": "Принять всё"
+      "takeAll": "Принять всё",
+      "syncProtocols": "Синхронизировать протоколы"
     },
     "sections": {
       "activeProtocols": "Активные протоколы",
@@ -415,15 +416,28 @@
     "decline": "Ухудшение"
   },
   "library": {
+    "title": "Моя библиотека",
     "scannedCount": "Сканировано {{count}}x",
     "empty": "В вашей библиотеке нет добавок",
     "selected": "Выбрано: {{count}}",
     "addToStack": "Добавить в стек ({{count}})",
     "addFromLibrary": "Добавить из библиотеки",
-    "searchPlaceholder": "Поиск в библиотеке...",
+    "searchPlaceholder": "Поиск добавок...",
     "inStack": "В стеке",
     "unknownBrand": "Неизвестный бренд",
-    "cancel": "Отмена"
+    "cancel": "Отмена",
+    "recentlyScanned": "Недавно отсканированные",
+    "tags": "Теги",
+    "filters": {
+      "scanned": "Отсканированные",
+      "fromProtocol": "Из протокола"
+    },
+    "enriched": "Обогащено",
+    "partial": "Частично",
+    "notEnriched": "Не обогащено",
+    "firstScan": "Первое сканирование",
+    "toStack": "в стек",
+    "view": "Детали"
   },
 "protocols": {
     "noItems": "В этом протоколе нет добавок",

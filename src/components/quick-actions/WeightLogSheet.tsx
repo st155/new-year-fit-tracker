@@ -99,7 +99,7 @@ export function WeightLogSheet({ open, onOpenChange }: WeightLogSheetProps) {
               autoFocus
             />
             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">
-              kg
+              {t('common:units.kg', 'kg')}
             </span>
           </div>
         </div>

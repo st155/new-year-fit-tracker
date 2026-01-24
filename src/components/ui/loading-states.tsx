@@ -33,15 +33,21 @@ export function Spinner({ size = 'md', className }: SpinnerProps) {
 }
 
 interface InlineLoadingProps {
+  /** 
+   * Loading text. Defaults to 'Loading...'.
+   * For i18n, pass t('common:states.loading') from the caller.
+   */
   text?: string;
   size?: 'sm' | 'md' | 'lg';
 }
 
-export function InlineLoading({ text = 'Loading...', size = 'sm' }: InlineLoadingProps) {
+export function InlineLoading({ text, size = 'sm' }: InlineLoadingProps) {
+  // Default text - callers should pass translated text for proper i18n
+  const displayText = text ?? 'Loading...';
   return (
     <span className="flex items-center gap-2">
       <Spinner size={size} />
-      <span className="animate-pulse">{text}</span>
+      <span className="animate-pulse">{displayText}</span>
     </span>
   );
 }

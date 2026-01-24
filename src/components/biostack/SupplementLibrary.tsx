@@ -75,7 +75,7 @@ export function SupplementLibrary() {
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3">
           <Library className="h-6 w-6 text-green-500" />
-          <h2 className="text-2xl font-bold">My Library</h2>
+          <h2 className="text-2xl font-bold">{t('library.title', 'My Library')}</h2>
           <Badge variant="outline">{library?.length || 0}</Badge>
         </div>
         <div className="flex gap-2">
@@ -85,7 +85,7 @@ export function SupplementLibrary() {
             size="sm"
           >
             <Camera className="h-4 w-4 mr-2" />
-            Bulk Upload
+            {t('bulkUpload.title', 'Bulk Upload')}
           </Button>
           <Button
             onClick={() => syncProtocols.mutate()}
@@ -98,7 +98,7 @@ export function SupplementLibrary() {
             ) : (
               <RefreshCw className="h-4 w-4 mr-2" />
             )}
-            Sync Protocols
+            {t('theStack.actions.syncProtocols', 'Sync Protocols')}
           </Button>
         </div>
       </div>
@@ -108,7 +108,7 @@ export function SupplementLibrary() {
         <Card className="p-4 bg-neutral-900/50 border-blue-500/30">
           <div className="flex items-center gap-2 mb-3">
             <Clock className="h-4 w-4 text-blue-400" />
-            <h3 className="font-semibold text-sm">🕐 Recently Scanned</h3>
+            <h3 className="font-semibold text-sm">🕐 {t('library.recentlyScanned', 'Recently Scanned')}</h3>
           </div>
           <div className="flex gap-4 overflow-x-auto pb-2">
             {recentScans.map((scan) => (
@@ -143,7 +143,7 @@ export function SupplementLibrary() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search supplements..."
+            placeholder={t('library.searchPlaceholder', 'Search supplements...')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -157,28 +157,28 @@ export function SupplementLibrary() {
             size="sm"
             onClick={() => setSourceFilter(null)}
           >
-            All
+            {t('theStack.filters.all', 'All')}
           </Button>
           <Button
             variant={sourceFilter === 'scan' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setSourceFilter('scan')}
           >
-            📷 Scanned
+            📷 {t('library.filters.scanned', 'Scanned')}
           </Button>
           <Button
             variant={sourceFilter === 'protocol' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setSourceFilter('protocol')}
           >
-            📋 From Protocol
+            📋 {t('library.filters.fromProtocol', 'From Protocol')}
           </Button>
         </div>
 
         {/* Tag Filters */}
         {allTags.length > 0 && (
           <div className="flex gap-2 flex-wrap">
-            <span className="text-sm text-muted-foreground self-center">Tags:</span>
+            <span className="text-sm text-muted-foreground self-center">{t('library.tags', 'Tags')}:</span>
             {allTags.map(tag => (
               <Button
                 key={tag}
@@ -235,7 +235,7 @@ export function SupplementLibrary() {
                   {entry.supplement_products.name}
                 </h3>
                 <p className="text-sm text-muted-foreground mb-3">
-                  {entry.supplement_products.brand || 'Unknown brand'}
+                  {entry.supplement_products.brand || t('library.unknownBrand', 'Unknown brand')}
                 </p>
 
                 {/* Badges */}
@@ -243,28 +243,28 @@ export function SupplementLibrary() {
                   {/* Enrichment Status */}
                   {entry.enrichment_status === 'enriched' && (
                     <Badge className="bg-green-500/20 text-green-400 border-green-500/50">
-                      ✅ Enriched
+                      ✅ {t('library.enriched', 'Enriched')}
                     </Badge>
                   )}
                   {entry.enrichment_status === 'partial' && (
                     <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/50">
-                      ⚠️ Partial
+                      ⚠️ {t('library.partial', 'Partial')}
                     </Badge>
                   )}
                   {entry.enrichment_status === 'not_enriched' && (
                     <Badge className="bg-red-500/20 text-red-400 border-red-500/50">
-                      ❌ Not enriched
+                      ❌ {t('library.notEnriched', 'Not enriched')}
                     </Badge>
                   )}
                   
                   {entry.source === 'protocol' && (
                     <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/50">
-                      📋 From Protocol
+                      📋 {t('library.filters.fromProtocol', 'From Protocol')}
                     </Badge>
                   )}
                   {entry.is_in_stack && (
                     <Badge className="bg-blue-500/20 text-blue-500 border-blue-500/50">
-                      ✅ In Stack
+                      ✅ {t('library.inStack', 'In Stack')}
                     </Badge>
                   )}
                   {entry.custom_rating && (
@@ -288,7 +288,7 @@ export function SupplementLibrary() {
 
                 {/* Stats */}
                 <p className="text-xs text-muted-foreground mb-4">
-                  Scanned {entry.scan_count} time{entry.scan_count !== 1 ? 's' : ''} · First scan:{' '}
+                  {t('library.scannedCount', 'Scanned {{count}}x', { count: entry.scan_count })} · {t('library.firstScan', 'First scan')}:{' '}
                   {new Date(entry.first_scanned_at).toLocaleDateString()}
                 </p>
 
@@ -330,7 +330,7 @@ export function SupplementLibrary() {
                       className="border-green-500/30 hover:bg-green-500/10 text-green-400"
                     >
                       <Plus className="h-4 w-4 mr-1" />
-                      to Stack
+                      {t('library.toStack', 'to Stack')}
                     </Button>
                   )}
                   <Button
@@ -340,7 +340,7 @@ export function SupplementLibrary() {
                     onClick={() => setViewProduct(entry.supplement_products)}
                   >
                     <Eye className="h-4 w-4 mr-1" />
-                    View
+                    {t('library.view', 'View')}
                   </Button>
                   <Button
                     variant="outline"

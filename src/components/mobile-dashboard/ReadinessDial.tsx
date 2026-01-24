@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useTodayMetrics } from '@/hooks/metrics/useTodayMetrics';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
@@ -8,6 +9,7 @@ interface ReadinessDialProps {
 }
 
 export function ReadinessDial({ className }: ReadinessDialProps) {
+  const { t } = useTranslation('common');
   const { user } = useAuth();
   const { metrics, loading } = useTodayMetrics(user?.id);
   
@@ -36,7 +38,7 @@ export function ReadinessDial({ className }: ReadinessDialProps) {
   if (loading) {
     return (
       <div className={cn("flex items-center justify-center h-[250px] bg-gradient-to-b from-muted/20 to-transparent rounded-3xl", className)}>
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
+        <div className="animate-pulse text-muted-foreground">{t('states.loading', 'Loading...')}</div>
       </div>
     );
   }
