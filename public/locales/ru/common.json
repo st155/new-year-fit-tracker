@@ -83,7 +83,8 @@
     "addWater": "+250мл",
     "weighIn": "Взвеситься",
     "skip": "Пропустить",
-    "continue": "Продолжить"
+    "continue": "Продолжить",
+    "saveChanges": "Сохранить изменения"
   },
 "pwa": {
     "updateAvailable": "Доступно обновление",

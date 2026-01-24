@@ -1,0 +1,17 @@
+{
+  "water": {
+    "250ml": "250 ml",
+    "500ml": "500 ml",
+    "1l": "1 L"
+  },
+  "meals": {
+    "breakfast": "Breakfast",
+    "snack": "Snack",
+    "lunch": "Lunch",
+    "dinner": "Dinner"
+  },
+  "addNutrition": "Add Water/Meal",
+  "waterLogged": "Water intake logged",
+  "mealLogged": "Meal logged",
+  "logError": "Failed to log"
+}

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useSupplementInventory } from "@/hooks/supplements/useSupplementInventory";
 import { useAuth } from "@/hooks/useAuth";
 import { Search } from "lucide-react";
@@ -14,6 +15,7 @@ interface AddInventoryDialogProps {
 }
 
 export function AddInventoryDialog({ onClose }: AddInventoryDialogProps) {
+  const { t } = useTranslation(['biostack', 'common']);
   const { user } = useAuth();
   const { addToInventory } = useSupplementInventory(user?.id);
   const [searchQuery, setSearchQuery] = useState("");
@@ -61,16 +63,16 @@ export function AddInventoryDialog({ onClose }: AddInventoryDialogProps) {
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Add to Inventory</DialogTitle>
+          <DialogTitle>{t('inventory.addTitle')}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label>Search Product</Label>
+            <Label>{t('inventory.searchProduct')}</Label>
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by name or brand..."
+                placeholder={t('inventory.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -108,7 +110,7 @@ export function AddInventoryDialog({ onClose }: AddInventoryDialogProps) {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Number of Servings</Label>
+              <Label>{t('inventory.servings')}</Label>
               <Input
                 type="number"
                 min="1"
@@ -121,7 +123,7 @@ export function AddInventoryDialog({ onClose }: AddInventoryDialogProps) {
             </div>
 
             <div className="space-y-2">
-              <Label>Low Stock Alert (servings)</Label>
+              <Label>{t('inventory.lowStockAlert')}</Label>
               <Input
                 type="number"
                 min="1"
@@ -135,9 +137,9 @@ export function AddInventoryDialog({ onClose }: AddInventoryDialogProps) {
           </div>
 
           <div className="space-y-2">
-            <Label>Storage Location (optional)</Label>
+            <Label>{t('inventory.storageLocation')}</Label>
             <Input
-              placeholder="e.g., Kitchen Cabinet, Bedside Drawer"
+              placeholder={t('inventory.storagePlaceholder')}
               value={formData.storage_location}
               onChange={(e) =>
                 setFormData({ ...formData, storage_location: e.target.value })
@@ -147,10 +149,10 @@ export function AddInventoryDialog({ onClose }: AddInventoryDialogProps) {
 
           <div className="flex gap-3">
             <Button type="button" variant="outline" onClick={onClose} className="flex-1">
-              Cancel
+              {t('common:actions.cancel')}
             </Button>
             <Button type="submit" disabled={!selectedProduct} className="flex-1">
-              Add to Inventory
+              {t('inventory.addButton')}
             </Button>
           </div>
         </form>

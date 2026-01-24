@@ -464,6 +464,30 @@
   },
 "protocols": {
     "noItems": "В этом протоколе нет добавок",
-    "noDocuments": "Нет документов для обработки"
+    "noDocuments": "Нет документов для обработки",
+    "editTitle": "Редактировать",
+    "supplement": "Добавка",
+    "dailyDosage": "Суточная дозировка",
+    "intakeTimes": "Время приёма",
+    "selectIntakeTime": "Выберите хотя бы одно время приёма",
+    "updated": "✅ Добавка обновлена",
+    "updatedDesc": "Дозировка и время приёма сохранены.",
+    "updateError": "Не удалось обновить добавку"
+  },
+  "inventory": {
+    "addTitle": "Добавить в инвентарь",
+    "searchProduct": "Поиск продукта",
+    "searchPlaceholder": "Поиск по названию или бренду...",
+    "servings": "Количество порций",
+    "lowStockAlert": "Порог низкого запаса",
+    "storageLocation": "Место хранения (опционально)",
+    "storagePlaceholder": "например: Кухонный шкаф, Тумбочка",
+    "addButton": "Добавить в инвентарь"
+  },
+  "intakeTimes": {
+    "morning": "Утром",
+    "afternoon": "Днём",
+    "evening": "Вечером",
+    "beforeSleep": "Перед сном"
   }
 }

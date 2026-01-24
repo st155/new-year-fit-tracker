@@ -459,6 +459,30 @@
   },
 "protocols": {
     "noItems": "No supplements in this protocol",
-    "noDocuments": "No documents to process"
+    "noDocuments": "No documents to process",
+    "editTitle": "Edit",
+    "supplement": "Supplement",
+    "dailyDosage": "Daily Dosage",
+    "intakeTimes": "Intake Times",
+    "selectIntakeTime": "Select at least one intake time",
+    "updated": "✅ Supplement updated",
+    "updatedDesc": "Dosage and intake times have been saved.",
+    "updateError": "Failed to update supplement"
+  },
+  "inventory": {
+    "addTitle": "Add to Inventory",
+    "searchProduct": "Search Product",
+    "searchPlaceholder": "Search by name or brand...",
+    "servings": "Number of Servings",
+    "lowStockAlert": "Low Stock Alert (servings)",
+    "storageLocation": "Storage Location (optional)",
+    "storagePlaceholder": "e.g., Kitchen Cabinet, Bedside Drawer",
+    "addButton": "Add to Inventory"
+  },
+  "intakeTimes": {
+    "morning": "Morning",
+    "afternoon": "Afternoon",
+    "evening": "Evening",
+    "beforeSleep": "Before Sleep"
   }
 }
