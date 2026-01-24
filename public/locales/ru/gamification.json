@@ -1,4 +1,10 @@
 {
+  "rarity": {
+    "common": "Обычное",
+    "rare": "Редкое",
+    "epic": "Эпическое",
+    "legendary": "Легендарное"
+  },
   "streaks": {
     "milestones": {
       "started": "Начало пути",

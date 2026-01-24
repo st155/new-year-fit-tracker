@@ -33,7 +33,7 @@ export function AchievementUnlockedToast({ achievement }: AchievementUnlockedToa
               variant="outline"
               className={cn('text-xs capitalize', getRarityColor(achievement.rarity))}
             >
-              {achievement.rarity}
+              {t(`rarity.${achievement.rarity}`)}
             </Badge>
           </div>
           <p className="text-xs text-muted-foreground">{achievement.description}</p>

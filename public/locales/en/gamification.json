@@ -1,4 +1,10 @@
 {
+  "rarity": {
+    "common": "Common",
+    "rare": "Rare",
+    "epic": "Epic",
+    "legendary": "Legendary"
+  },
   "streaks": {
     "milestones": {
       "started": "Journey Begins",

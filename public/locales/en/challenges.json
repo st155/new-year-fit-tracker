@@ -266,5 +266,15 @@
     "subtitle": "Share progress and motivate each other",
     "noPosts": "No posts yet",
     "noPostsDesc": "Be the first to share your progress! Create a post and motivate other participants."
+  },
+  "disciplines": {
+    "steps": "Steps",
+    "sleep": "Sleep",
+    "recovery_score": "Recovery",
+    "rhr": "Resting HR",
+    "hrv": "HRV",
+    "vo2max": "VO2 Max",
+    "run_5k": "5K Run",
+    "bodyfat": "Body Fat"
   }
 }
