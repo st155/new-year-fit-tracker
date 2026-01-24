@@ -30,7 +30,7 @@ interface ProviderData {
 }
 
 export function IntegrationsDataDisplay() {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'metrics']);
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [providers, setProviders] = useState<ProviderData[]>([]);
@@ -96,7 +96,7 @@ export function IntegrationsDataDisplay() {
     }
   };
 
-  // Нормализация названий метрик (русский → английский)
+  // Нормализация названий метрик (русский → английский ключ)
   const normalizeMetricName = (name: string): string => {
     const mapping: Record<string, string> = {
       'Вес': 'Weight',
@@ -107,6 +107,16 @@ export function IntegrationsDataDisplay() {
       'Рост': 'Height'
     };
     return mapping[name] || name;
+  };
+
+  // Локализация названия метрики
+  const getLocalizedMetricName = (metricName: string): string => {
+    // Преобразуем "Recovery Score" -> "recoveryScore"
+    const key = metricName
+      .replace(/\s+/g, '')
+      .replace(/^./, c => c.toLowerCase());
+    
+    return t(`metrics:${key}`, { defaultValue: metricName });
   };
 
   const fetchProviderMetrics = async (provider: string): Promise<MetricData[]> => {
@@ -443,7 +453,7 @@ export function IntegrationsDataDisplay() {
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
                           <p className="text-sm font-medium text-muted-foreground mb-1">
-                            {String(metric.name)}
+                            {getLocalizedMetricName(String(metric.name))}
                           </p>
                           <div className="flex items-baseline gap-1">
                             <span className="text-2xl font-bold" style={{ color: String(metric.color) }}>

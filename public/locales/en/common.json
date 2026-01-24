@@ -200,7 +200,9 @@
     "minutes": "min",
     "mlKgMin": "ml/kg/min",
     "format": "Format: MM:SS (e.g., 4:40 = 4 min 40 sec)",
-    "sessions": "sessions"
+    "sessions": "sessions",
+    "weeks": "weeks",
+    "exercises": "exercises"
   },
   "pagination": {
     "previous": "Previous",
