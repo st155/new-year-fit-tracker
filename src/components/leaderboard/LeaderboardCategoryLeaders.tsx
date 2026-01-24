@@ -103,23 +103,23 @@ export function LeaderboardCategoryLeaders({ leaderboard, onCategoryClick }: Lea
     return [
       {
         icon: Footprints,
-        title: "Most Steps",
+        title: t('categories.mostSteps'),
         value: usersWithSteps.length > 0 
           ? `${Math.round(stepsLeader?.steps_last_7d || 0).toLocaleString()}`
-          : "No data",
+          : t('noData'),
         user: stepsLeader,
         hasData: usersWithSteps.length > 0,
         color: "text-chart-1",
         metricKey: 'steps_last_7d' as CategoryMetric,
         formatValue: (val: number) => `${Math.round(val).toLocaleString()}`,
-        description: "Total steps in the last 7 days"
+        description: t('categories.stepsDesc')
       },
       {
         icon: Moon,
-        title: "Best Sleep",
+        title: t('categories.bestSleep'),
         value: usersWithSleep.length > 0
           ? `${Math.round(sleepLeader?.avgSleepEfficiency || 0)}%`
-          : "No data",
+          : t('noData'),
         secondaryValue: usersWithSleep.length > 0
           ? `${(sleepLeader?.avg_sleep_last_7d || 0).toFixed(1)}h`
           : undefined,
@@ -130,47 +130,47 @@ export function LeaderboardCategoryLeaders({ leaderboard, onCategoryClick }: Lea
         formatValue: (val: number) => `${Math.round(val)}%`,
         secondaryMetricKey: 'avg_sleep_last_7d' as CategoryMetric,
         secondaryFormatValue: (val: number) => `${val.toFixed(1)}h`,
-        secondaryLabel: "sleep",
-        description: "Sleep quality and duration"
+        secondaryLabel: t('categories.sleepLabel'),
+        description: t('categories.sleepDesc')
       },
       {
         icon: Zap,
-        title: "Highest Strain",
+        title: t('categories.highestStrain'),
         value: usersWithStrain.length > 0
           ? `${(strainLeader?.avg_strain_last_7d || 0).toFixed(1)}`
-          : "No data",
+          : t('noData'),
         user: strainLeader,
         hasData: usersWithStrain.length > 0,
         color: "text-chart-5",
         metricKey: 'avg_strain_last_7d' as CategoryMetric,
         formatValue: (val: number) => `${val.toFixed(1)}`,
-        description: "Average daily strain in the last 7 days"
+        description: t('categories.strainDesc')
       },
       {
         icon: Heart,
-        title: "Best Recovery",
+        title: t('categories.bestRecovery'),
         value: usersWithRecovery.length > 0
           ? `${Math.round(recoveryLeader?.avg_recovery_last_7d || 0)}%`
-          : "No data",
+          : t('noData'),
         user: recoveryLeader,
         hasData: usersWithRecovery.length > 0,
         color: "text-chart-3",
         metricKey: 'avg_recovery_last_7d' as CategoryMetric,
         formatValue: (val: number) => `${Math.round(val)}%`,
-        description: "Average recovery score in the last 7 days"
+        description: t('categories.recoveryDesc')
       },
       {
         icon: Flame,
-        title: "Longest Streak",
+        title: t('categories.longestStreak'),
         value: usersWithStreak.length > 0
           ? `${Math.round(streakLeader?.streakDays || 0)} 🔥`
-          : "No data",
+          : t('noData'),
         user: streakLeader,
         hasData: usersWithStreak.length > 0,
         color: "text-chart-4",
         metricKey: 'streakDays' as CategoryMetric,
         formatValue: (val: number) => `${Math.round(val)} 🔥`,
-        description: "Current activity streak in days"
+        description: t('categories.streakDesc')
       }
     ];
   };

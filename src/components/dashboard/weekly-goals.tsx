@@ -2,33 +2,35 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Trophy, Target } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 
 export function WeeklyGoals() {
   const navigate = useNavigate();
+  const { t } = useTranslation(['dashboard', 'common']);
   
   const weeklyGoals = [
     {
-      title: "Workout Sessions",
+      titleKey: "weeklyGoals.workoutSessions",
       current: 4,
       target: 5,
-      unit: "sessions",
+      unitKey: "common:units.sessions",
       progress: 80,
       icon: <Trophy className="h-3.5 w-3.5 text-primary" />
     },
     {
-      title: "Sleep Quality",
+      titleKey: "weeklyGoals.sleepQuality",
       current: 7.8,
       target: 8.0,
-      unit: "hrs avg",
+      unitKey: "weeklyGoals.hrsAvg",
       progress: 97.5,
       icon: <Clock className="h-3.5 w-3.5 text-purple-500" />
     },
     {
-      title: "Active Minutes",
+      titleKey: "weeklyGoals.activeMinutes",
       current: 245,
       target: 300,
-      unit: "min",
+      unitKey: "common:units.minutes",
       progress: 81.7,
       icon: <Target className="h-3.5 w-3.5 text-green-500" />
     }
@@ -39,7 +41,7 @@ export function WeeklyGoals() {
       <div className="flex items-center gap-1.5 px-1">
         <Calendar className="h-3 w-3 text-primary" />
         <h3 className="text-[10px] font-semibold text-foreground uppercase tracking-wide">
-          Weekly Goals
+          {t('weeklyGoals.title')}
         </h3>
       </div>
       
@@ -57,7 +59,7 @@ export function WeeklyGoals() {
                     {goal.icon}
                   </div>
                   <span className="text-[11px] font-medium text-foreground">
-                    {goal.title}
+                    {t(goal.titleKey)}
                   </span>
                 </div>
                 <Badge variant="outline" className="text-[9px] h-3.5 px-1.5">
@@ -67,7 +69,7 @@ export function WeeklyGoals() {
               
               <div className="space-y-1">
                 <div className="text-[9px] text-muted-foreground">
-                  {goal.current} / {goal.target} {goal.unit}
+                  {goal.current} / {goal.target} {t(goal.unitKey)}
                 </div>
                 <div className="w-full bg-muted rounded-full h-1">
                   <div 

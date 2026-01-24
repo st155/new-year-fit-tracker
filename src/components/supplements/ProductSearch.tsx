@@ -6,8 +6,10 @@ import { useState } from "react";
 import { Search, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 export function ProductSearch() {
+  const { t } = useTranslation('biostack');
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState({
     brand: "",
@@ -42,7 +44,7 @@ export function ProductSearch() {
     <div className="space-y-6">
       <Card className="glass-card">
         <CardHeader>
-          <CardTitle>Search Products</CardTitle>
+          <CardTitle>{t('search.title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSearch} className="space-y-4">
@@ -50,7 +52,7 @@ export function ProductSearch() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search supplements by name or brand..."
+                  placeholder={t('search.placeholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-9"
@@ -58,17 +60,17 @@ export function ProductSearch() {
               </div>
               <Button type="submit" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Search
+                {t('search.button')}
               </Button>
             </div>
 
             <div className="grid grid-cols-3 gap-3">
               <Select value={filters.brand} onValueChange={(value) => setFilters({ ...filters, brand: value })}>
                 <SelectTrigger>
-                  <SelectValue placeholder="All Brands" />
+                  <SelectValue placeholder={t('search.allBrands')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Brands</SelectItem>
+                  <SelectItem value="">{t('search.allBrands')}</SelectItem>
                   <SelectItem value="NOW Foods">NOW Foods</SelectItem>
                   <SelectItem value="Thorne">Thorne</SelectItem>
                   <SelectItem value="Life Extension">Life Extension</SelectItem>
@@ -77,26 +79,26 @@ export function ProductSearch() {
 
               <Select value={filters.category} onValueChange={(value) => setFilters({ ...filters, category: value })}>
                 <SelectTrigger>
-                  <SelectValue placeholder="All Categories" />
+                  <SelectValue placeholder={t('search.allCategories')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
-                  <SelectItem value="vitamin">Vitamins</SelectItem>
-                  <SelectItem value="mineral">Minerals</SelectItem>
-                  <SelectItem value="protein">Protein</SelectItem>
-                  <SelectItem value="herbal">Herbal</SelectItem>
+                  <SelectItem value="">{t('search.allCategories')}</SelectItem>
+                  <SelectItem value="vitamin">{t('categories.vitamin')}</SelectItem>
+                  <SelectItem value="mineral">{t('categories.mineral')}</SelectItem>
+                  <SelectItem value="protein">{t('categories.protein')}</SelectItem>
+                  <SelectItem value="herbal">{t('categories.herbal')}</SelectItem>
                 </SelectContent>
               </Select>
 
               <Select value={filters.type} onValueChange={(value) => setFilters({ ...filters, type: value })}>
                 <SelectTrigger>
-                  <SelectValue placeholder="All Types" />
+                  <SelectValue placeholder={t('search.allTypes')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Types</SelectItem>
-                  <SelectItem value="supplement">Supplement</SelectItem>
-                  <SelectItem value="food">Food</SelectItem>
-                  <SelectItem value="beverage">Beverage</SelectItem>
+                  <SelectItem value="">{t('search.allTypes')}</SelectItem>
+                  <SelectItem value="supplement">{t('types.supplement')}</SelectItem>
+                  <SelectItem value="food">{t('types.food')}</SelectItem>
+                  <SelectItem value="beverage">{t('types.beverage')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -128,20 +130,20 @@ export function ProductSearch() {
               <CardContent className="space-y-3">
                 {product.recommended_dosage && (
                   <p className="text-sm">
-                    <span className="text-muted-foreground">Dosage:</span>{" "}
+                    <span className="text-muted-foreground">{t('search.dosage')}:</span>{" "}
                     <span className="font-medium">{product.recommended_dosage}</span>
                   </p>
                 )}
                 {product.serving_size && (
                   <p className="text-sm">
-                    <span className="text-muted-foreground">Serving:</span>{" "}
+                    <span className="text-muted-foreground">{t('search.serving')}:</span>{" "}
                     <span className="font-medium">
                       {product.serving_size} {product.serving_unit}
                     </span>
                   </p>
                 )}
                 <Button variant="outline" className="w-full" size="sm">
-                  Add to Inventory
+                  {t('search.addToInventory')}
                 </Button>
               </CardContent>
             </Card>
@@ -152,7 +154,7 @@ export function ProductSearch() {
       {searchResults && searchResults.length === 0 && (searchQuery || filters.brand || filters.category) && (
         <Card className="glass-card">
           <CardContent className="py-12 text-center text-muted-foreground">
-            No products found matching your criteria
+            {t('search.noResults')}
           </CardContent>
         </Card>
       )}

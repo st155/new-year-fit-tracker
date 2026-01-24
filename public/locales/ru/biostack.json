@@ -1,4 +1,27 @@
 {
+  "search": {
+    "title": "Поиск продуктов",
+    "placeholder": "Поиск добавок по названию или бренду...",
+    "button": "Поиск",
+    "allBrands": "Все бренды",
+    "allCategories": "Все категории",
+    "allTypes": "Все типы",
+    "dosage": "Дозировка",
+    "serving": "Порция",
+    "addToInventory": "Добавить в инвентарь",
+    "noResults": "Продукты не найдены"
+  },
+  "categories": {
+    "vitamin": "Витамины",
+    "mineral": "Минералы",
+    "protein": "Протеин",
+    "herbal": "Травы"
+  },
+  "types": {
+    "supplement": "Добавка",
+    "food": "Еда",
+    "beverage": "Напиток"
+  },
   "timeline": {
     "status": {
       "ready": "Можно оценить эффективность",
