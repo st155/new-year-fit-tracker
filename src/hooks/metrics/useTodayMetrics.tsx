@@ -41,12 +41,32 @@ export function useTodayMetrics(userId: string | undefined) {
       workoutCount = hasWorkoutMetrics ? 1 : 0;
     }
 
+    // Strain fallback: Day Strain → Workout Strain → Activity Score (normalized) → Active Calories (normalized)
+    let strain = grouped.get('Day Strain')?.value || 0;
+    if (strain === 0) {
+      strain = grouped.get('Workout Strain')?.value || 0;
+    }
+    if (strain === 0) {
+      const activityScore = grouped.get('Activity Score')?.value;
+      if (activityScore) {
+        // Normalize 0-100 to 0-21 scale (WHOOP strain scale)
+        strain = Math.min(21, (activityScore / 100) * 21);
+      }
+    }
+    if (strain === 0) {
+      const activeCalories = grouped.get('Active Calories')?.value;
+      if (activeCalories) {
+        // Normalize: 2100 kcal ≈ 14 strain, 3150+ = 21
+        strain = Math.min(21, activeCalories / 150);
+      }
+    }
+
     return {
       steps: grouped.get('Steps')?.value || 0,
       sleepHours: grouped.get('Sleep Duration')?.value || 0,
       workouts: workoutCount,
       recovery: grouped.get('Recovery Score')?.value || 0,
-      strain: grouped.get('Day Strain')?.value || 0,
+      strain,
       hrv: grouped.get('HRV RMSSD')?.value || grouped.get('Sleep HRV RMSSD')?.value || 0,
       rhr: grouped.get('Resting Heart Rate')?.value || 0
     };

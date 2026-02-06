@@ -6301,6 +6301,7 @@ export type Database = {
           event_type: string | null
           id: string
           payload: Json | null
+          processed_at: string | null
           status: string
           terra_user_id: string | null
           user_id: string | null
@@ -6313,6 +6314,7 @@ export type Database = {
           event_type?: string | null
           id?: string
           payload?: Json | null
+          processed_at?: string | null
           status: string
           terra_user_id?: string | null
           user_id?: string | null
@@ -6325,6 +6327,7 @@ export type Database = {
           event_type?: string | null
           id?: string
           payload?: Json | null
+          processed_at?: string | null
           status?: string
           terra_user_id?: string | null
           user_id?: string | null

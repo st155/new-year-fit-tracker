@@ -18,6 +18,7 @@ interface DayData {
 
 interface SyncRequest {
   days: DayData[];
+  user_id?: string; // Optional: provided by service role calls
 }
 
 Deno.serve(async (req) => {
@@ -30,34 +31,56 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Get user from JWT
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const authHeader = req.headers.get("Authorization");
 
-    if (!authHeader) {
+    let userId: string;
+
+    // Parse request body first (we need it for both auth types)
+    const body: SyncRequest = await req.json();
+    const { days, user_id: bodyUserId } = body;
+
+    // Determine auth type and get userId
+    const token = authHeader?.replace("Bearer ", "") || "";
+    const isServiceRoleCall = token === serviceRoleKey;
+
+    if (isServiceRoleCall) {
+      // Service role call (from job-worker) - user_id must be in body
+      if (!bodyUserId) {
+        console.log(`[${requestId}] Service role call missing user_id in body`);
+        return new Response(
+          JSON.stringify({ error: "user_id required for service role calls" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      userId = bodyUserId;
+      console.log(`[${requestId}] Service role auth, user_id from body: ${userId}`);
+    } else if (authHeader) {
+      // User JWT call (from client)
+      const supabase = createClient(supabaseUrl, supabaseKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
+
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        console.log(`[${requestId}] Auth error:`, userError?.message);
+        return new Response(
+          JSON.stringify({ error: "Unauthorized - invalid token" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      userId = user.id;
+      console.log(`[${requestId}] JWT auth, user: ${userId}`);
+    } else {
       console.log(`[${requestId}] No authorization header`);
       return new Response(
         JSON.stringify({ error: "Missing authorization header" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      console.log(`[${requestId}] Auth error:`, userError?.message);
-      return new Response(
-        JSON.stringify({ error: "Unauthorized - invalid token" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    console.log(`[${requestId}] User authenticated: ${user.id}`);
 
     // Get sync secret from environment
     const syncSecret = Deno.env.get("ELITE10_SYNC_SECRET");
@@ -69,10 +92,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Parse request body
-    const body: SyncRequest = await req.json();
-    const { days } = body;
-
     if (!days || !Array.isArray(days) || days.length === 0) {
       return new Response(
         JSON.stringify({ error: "Invalid request: 'days' array required" }),
@@ -80,7 +99,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`[${requestId}] Syncing ${days.length} days for user ${user.id}`);
+    console.log(`[${requestId}] Syncing ${days.length} days for user ${userId}`);
 
     // Process each day
     const results: Array<{ date: string; success: boolean; error?: string }> = [];
@@ -91,7 +110,7 @@ Deno.serve(async (req) => {
     for (const day of days) {
       try {
         const payload = {
-          user_id: user.id,
+          user_id: userId,
           date: day.date,
           sleep_quality: day.sleep_quality,
           recovery_score: day.recovery_score,
