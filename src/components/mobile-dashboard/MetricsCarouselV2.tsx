@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Moon, Activity, Scale, TrendingDown, TrendingUp, Minus } from 'lucide-react';
+import { Moon, Activity, Scale, Heart, TrendingDown, TrendingUp, Minus } from 'lucide-react';
 import { useTodayMetrics } from '@/hooks/metrics/useTodayMetrics';
 import { useUserWeeklySleep } from '@/hooks/useUserWeeklySleep';
 import { useAggregatedBodyMetrics } from '@/hooks/useAggregatedBodyMetrics';
@@ -111,6 +111,27 @@ export function MetricsCarouselV2() {
         </MetricCard>
       </motion.div>
       
+      {/* Heart Rate Card */}
+      <motion.div variants={fadeInUp}>
+        <MetricCard>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Heart className="h-4 w-4 text-destructive" />
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Heart Rate</span>
+            </div>
+          </div>
+          <div className="flex items-baseline gap-3 mt-2">
+            <p className="text-3xl font-bold text-foreground">
+              {metrics?.rhr ? Math.round(metrics.rhr) : '--'}
+              <span className="text-sm font-normal text-muted-foreground ml-1">bpm</span>
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Resting
+            </p>
+          </div>
+        </MetricCard>
+      </motion.div>
+
       {/* Body Card */}
       <motion.div variants={fadeInUp}>
         <MetricCard>
