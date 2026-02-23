@@ -189,10 +189,7 @@ const Index = () => {
   
 
   const handleRefresh = async () => {
-    console.log('🔄 Manual refresh triggered - realtime Terra sync');
-    // First try realtime sync for instant data
-    syncTerraRealtime('WHOOP');
-    // Also trigger background sync
+    console.log('🔄 Manual refresh triggered');
     await syncAllData();
     queryClient.invalidateQueries({ queryKey: widgetKeys.all });
     queryClient.invalidateQueries({ queryKey: ['metrics'] });
