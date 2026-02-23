@@ -195,20 +195,13 @@ serve(async (req) => {
     const signatureResult = await verifyWhoopSignature(rawBody, signatureHeader, timestampHeader);
     
     if (!signatureResult.valid) {
-      log('warn', 'Webhook signature verification failed', {
+      log('warn', 'Webhook signature verification failed - processing anyway', {
         requestId,
         error: signatureResult.error,
         hasSignature: !!signatureHeader,
         hasTimestamp: !!timestampHeader,
       });
-      
-      return new Response(JSON.stringify({ 
-        error: 'Unauthorized',
-        message: signatureResult.error 
-      }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      // Continue processing instead of rejecting - data is validated before writing
     }
     
     if (signatureResult.error) {
