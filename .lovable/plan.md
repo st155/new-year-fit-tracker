@@ -1,100 +1,58 @@
 
-## Plan: Fix Sync Errors and Stale WHOOP Data
+## Fix: Terra WHOOP Users Not Receiving Data
 
-### Root Causes Found
+### Problem
 
-**Problem 1: "Ошибка синхронизации" toast**
-The refresh button in `Index.tsx` (line 194) calls `syncTerraRealtime('WHOOP')`, which invokes `sync-terra-realtime` edge function. This function looks for WHOOP in `terra_tokens` table, but WHOOP is connected via direct webhook (stored in `whoop_tokens`), not via Terra. Result: always fails with "No active WHOOP connection found".
+There are **two types of WHOOP users** in the system:
 
-**Problem 2: Day Strain shows yesterday's data**
-WHOOP webhooks are being rejected with "Invalid signature" error. Every webhook in the last hour was rejected. This means no new WHOOP data (Day Strain, Recovery, etc.) is being written to the database.
+1. **Direct WHOOP users** (4 users via `whoop_tokens`) -- working fine, synced every 15 min by `whoop-scheduled-sync`
+2. **Terra WHOOP users** (7 users via `terra_tokens` with provider='WHOOP') -- **broken since Feb 17**, no data flowing
 
----
+### Root Cause
 
-### Fix 1: Stop calling Terra realtime sync for WHOOP
+The `terra-sync-scheduler` cron job (runs every 2 hours) **times out** because it sequentially calls `terra-integration` for each user, which is too slow. As a result, Terra WHOOP users receive no scheduled data sync.
 
-**File:** `src/pages/Index.tsx` (line 191-198)
+Meanwhile, `scheduled-terra-sync` (a simpler, faster function that calls Terra API directly with `to_webhook=true`) already supports WHOOP but **has no cron job configured**.
 
-Change `handleRefresh` to skip the Terra realtime sync for WHOOP since WHOOP uses direct webhooks, not Terra. Instead, call the WHOOP-specific sync by fetching data directly via the WHOOP API using existing `whoop_tokens`.
+### Fix
 
-```typescript
-const handleRefresh = async () => {
-  console.log('Manual refresh triggered');
-  // Only trigger background sync (which handles all providers correctly)
-  await syncAllData();
-  queryClient.invalidateQueries({ queryKey: widgetKeys.all });
-  queryClient.invalidateQueries({ queryKey: ['metrics'] });
-};
-```
-
-This removes the `syncTerraRealtime('WHOOP')` call that always fails.
-
----
-
-### Fix 2: Create a WHOOP-specific realtime sync edge function
-
-**New file:** `supabase/functions/sync-whoop-realtime/index.ts`
-
-This function will:
-1. Look up the user's `whoop_tokens` (not `terra_tokens`)
-2. Fetch today's data directly from WHOOP v2 API using the stored access token
-3. Upsert metrics into `unified_metrics`
-
-Then update `handleRefresh` to call this new function for WHOOP data.
-
----
-
-### Fix 3: Fix WHOOP webhook signature verification
-
-**File:** `supabase/functions/webhook-whoop/index.ts` (lines 32-87)
-
-The signature verification algorithm matches WHOOP's docs, so the issue is likely the `WHOOP_CLIENT_SECRET` environment variable value. Two options:
-
-**Option A (recommended):** Make signature verification graceful -- if verification fails, log a warning but still process the webhook. This is safe because WHOOP webhooks come from a known endpoint and the data is validated before being written.
-
-**Option B:** Skip signature verification temporarily until the secret is updated.
-
-We'll implement Option A: process webhooks even when signature fails, but log a warning.
-
----
-
-### Summary of Changes
-
-| File | Change |
-|------|--------|
-| `src/pages/Index.tsx` | Remove `syncTerraRealtime('WHOOP')` from `handleRefresh`, add WHOOP-specific sync call |
-| `supabase/functions/webhook-whoop/index.ts` | Make signature verification non-blocking (warn + continue instead of reject) |
+**Add a cron job for `scheduled-terra-sync`** to run every 2 hours, replacing the broken `terra-sync-scheduler`. This function:
+- Queries `terra_tokens` for active GARMIN, ULTRAHUMAN, and WHOOP providers
+- Calls Terra API directly with `to_webhook=true` for each user
+- Data flows back through `webhook-terra` -> `job-worker` -> `unified_metrics`
 
 ### Technical Details
 
-**webhook-whoop/index.ts change (lines 197-212):**
-Instead of returning 401 when signature fails, log a warning and continue processing:
+**Database migration (1 cron job):**
+```sql
+-- Add cron job for scheduled-terra-sync (replaces broken terra-sync-scheduler)
+SELECT cron.schedule(
+  'scheduled-terra-sync-every-2h',
+  '30 */2 * * *',
+  $$
+  SELECT net.http_post(
+    url := 'https://ueykmmzmguzjppdudvef.supabase.co/functions/v1/scheduled-terra-sync',
+    headers := '{"Content-Type": "application/json"}'::jsonb,
+    body := '{"scheduled": true}'::jsonb
+  ) as request_id;
+  $$
+);
 
-```typescript
-if (!signatureResult.valid) {
-  log('warn', 'Webhook signature verification failed - processing anyway', {
-    requestId,
-    error: signatureResult.error,
-    hasSignature: !!signatureHeader,
-    hasTimestamp: !!timestampHeader,
-  });
-  // Continue processing instead of rejecting
-}
+-- Disable broken terra-sync-scheduler cron
+SELECT cron.unschedule(8);
 ```
 
-**Index.tsx change (lines 191-199):**
-Remove the failing `syncTerraRealtime('WHOOP')` call and rely on the working `syncAllData()`:
-
-```typescript
-const handleRefresh = async () => {
-  console.log('Manual refresh triggered');
-  await syncAllData();
-  queryClient.invalidateQueries({ queryKey: widgetKeys.all });
-  queryClient.invalidateQueries({ queryKey: ['metrics'] });
-};
-```
+**No code changes needed** -- `scheduled-terra-sync` already handles WHOOP correctly (line 30: `.in('provider', ['GARMIN', 'ULTRAHUMAN', 'WHOOP'])`).
 
 ### Expected Results
-- No more "Ошибка синхронизации" error toasts on manual refresh
-- WHOOP webhooks will be processed (new Day Strain data will flow in)
-- Day Strain will show today's data instead of yesterday's
+
+- Terra WHOOP users will receive data syncs every 2 hours
+- Data will flow: Terra API -> `webhook-terra` -> `job-worker` -> `unified_metrics`
+- Day Strain, Recovery, HRV, and other metrics will appear for Terra WHOOP users
+- No impact on direct WHOOP users (separate sync path)
+
+### Files Changed
+
+| Change | Details |
+|--------|---------|
+| Database migration | Add cron for `scheduled-terra-sync`, remove broken `terra-sync-scheduler` cron |
