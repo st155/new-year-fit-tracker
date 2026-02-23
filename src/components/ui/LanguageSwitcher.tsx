@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 const languages = [
-  { code: 'ru', name: 'Русский', flag: '🇷🇺' },
+  { code: 'ru', name: 'Русский', flag: '🇺🇦' },
   { code: 'en', name: 'English', flag: '🇬🇧' },
 ] as const;
 
