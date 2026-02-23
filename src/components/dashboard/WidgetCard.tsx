@@ -158,20 +158,22 @@ const formatValue = (value: number | string, metricName: string, unit: string): 
   return value % 1 === 0 ? value.toString() : value.toFixed(1);
 };
 
-// Normalize Activity Score (0-100%) to Day Strain scale (0-21)
-// Used when displaying Activity Score alongside Day Strain in multi-mode
-const normalizeActivityToStrain = (value: number, sourceMetricName: string, widgetMetricName: string): { value: number; unit: string; isNormalized: boolean; originalValue?: number } => {
-  const isActivityScore = sourceMetricName.toLowerCase().includes('activity score');
+// Normalize fallback metrics to Day Strain scale (0-21)
+// Used when displaying Activity Score, Active Calories, or Workout Time in strain widget
+const normalizeToStrain = (value: number, sourceMetricName: string, widgetMetricName: string): { value: number; unit: string; isNormalized: boolean; originalValue?: number } => {
   const isStrainWidget = widgetMetricName.toLowerCase().includes('strain');
+  if (!isStrainWidget) return { value, unit: '', isNormalized: false };
+
+  const nameLower = sourceMetricName.toLowerCase();
   
-  // Normalize Activity Score to Strain scale when shown in Day Strain widget
-  if (isActivityScore && isStrainWidget) {
-    return {
-      value: Math.min(21, (value / 100) * 21),
-      unit: 'strain',
-      isNormalized: true,
-      originalValue: value
-    };
+  if (nameLower.includes('activity score')) {
+    return { value: Math.min(21, (value / 100) * 21), unit: 'strain', isNormalized: true, originalValue: value };
+  }
+  if (nameLower.includes('active calories') || nameLower.includes('workout calories')) {
+    return { value: Math.min(21, value / 150), unit: 'strain', isNormalized: true, originalValue: value };
+  }
+  if (nameLower.includes('workout time')) {
+    return { value: Math.min(21, value / 5), unit: 'strain', isNormalized: true, originalValue: value };
   }
   
   return { value, unit: '', isNormalized: false };
@@ -520,7 +522,7 @@ export const WidgetCard = memo(function WidgetCard({ widget, data, multiSourceDa
               
               // Normalize Activity Score to Strain scale when in Day Strain widget
               const sourceMetricName = src.metric_name || metricName;
-              const normalized = normalizeActivityToStrain(src.value, sourceMetricName, metricName);
+              const normalized = normalizeToStrain(src.value, sourceMetricName, metricName);
               const displayValue = normalized.isNormalized ? normalized.value : src.value;
               const displayUnit = normalized.isNormalized ? normalized.unit : src.unit;
               
